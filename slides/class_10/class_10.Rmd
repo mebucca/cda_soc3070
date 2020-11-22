@@ -747,12 +747,11 @@ print(paste0("AME Years of Marriage: ", ame))
 ---
 ## Efectos marginales sobre la probabilidad de éxito: AME
 
-¿Y si no conocemos la expresión analítica?
---
+
  .bold[Aproximación numérica]:
 --
 
-$$\frac{\partial p_{i}}{\partial x_{k}} \approx  \frac{p_{i}(x_{1}, \dots ,x_{k} = c + \delta) - p_{i}(x_{1}, \dots ,x_{k} = c )}{\delta}$$
+$$\frac{\partial p_{i}}{\partial x_{k}} \approx  \frac{p_{i}(x_{1}, \dots ,x_{k} = c + \delta) - p(x_{1}, \dots ,x_{k} = c )}{\delta}$$
 <br>
 --
 

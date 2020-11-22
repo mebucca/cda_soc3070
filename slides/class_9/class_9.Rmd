@@ -25,7 +25,7 @@ class: inverse, center, middle
 ---
 ## Estructura de un modelo de regresión logística
 
-Podemos pensar en un modeo de regresión logística de la siguiente forma:
+Podemos pensar en un modelo de regresión logística de la siguiente forma:
 
 <br>
 --
@@ -109,7 +109,7 @@ $$p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}} \quad \quad  \text{donde} \quad 
 
 --
 
-- $\beta_{1} \dots \beta_{k}$ son los respectivos "efectos" de los predictores sobre $p_{i}$
+- $\beta_{1} \dots \beta_{k}$ son los respectivos "efectos" de los predictores sobre $\eta_{i}$
 
 --
 
