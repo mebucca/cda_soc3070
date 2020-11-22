@@ -28,7 +28,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
   - Ajuste y Predicción: [`[Presentación]`](https://mebucca.github.io/cda_soc3070/slides/class_12/class_12#1) [`[Código]`](slides/class_12/class_12.Rmd)
 - Modelos de Regresión Logística Multinomial: [`[Presentación]`](https://mebucca.github.io/cda_soc3070/slides/class_13/class_13#1) [`[Código]`](slides/class_13/class_13.Rmd) 
 - Modelos de Regresión Logística Ordenada: [`[Presentación]`](https://mebucca.github.io/cda_soc3070/slides/class_14/class_14#1) [`[Código]`](slides/class_14/class_14.Rmd) 
-- Modelos de Regresión Poisson y alternativas* (Regresión Binomial Negativa)
+- Modelos de Regresión Poisson [`[Presentación]`](https://mebucca.github.io/cda_soc3070/slides/class_15/class_15#1) [`[Código]`](slides/class_15/class_15.Rmd) 
 
 ### Ayudantías
 
