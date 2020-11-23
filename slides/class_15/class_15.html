@@ -33,7 +33,7 @@ class: inverse, center, middle
 
 --
 
-Considerando las últimas dos semanas (previo al el día 19 de noviembre), el promedio de muertes diarias por Covid-19 en el mundo es de 8651.35
+Considerando las últimas dos semanas (previo a el día 19 de noviembre), el promedio de muertes diarias por Covid-19 en el mundo es de 8651.35
 
 --
 
@@ -46,7 +46,7 @@ Considerando las últimas dos semanas (previo al el día 19 de noviembre), el pr
 
 --
 
-- El parámetro de ésta variable es `\(\mu=8651.35\)`, consistente en la .bold[media] de muertes diarias. 
+- El parámetro de esta variable es `\(\mu=8651.35\)`, consistente en la .bold[media] de muertes diarias. 
 
 --
 
@@ -56,7 +56,7 @@ Considerando las últimas dos semanas (previo al el día 19 de noviembre), el pr
 &lt;br&gt;
 --
 
-.bold[Pregunta]: ¿Cual es la probabilidad de observar un determinado número `\(y\)` de muertes diarias?
+.bold[Pregunta]: ¿Cuál es la probabilidad de observar un determinado número `\(y\)` de muertes diarias?
 
 
 --
@@ -143,12 +143,12 @@ Específicamente,
 ---
 class: inverse, center, middle
 
-## Fundamentos teórico de regresión Poisson
+## Fundamentos teóricos de regresión Poisson
 
 ---
 ## Estructura de un modelo de regresión Poisson 
 
-Regresión Poisson es la herramienta estándar para modelar variables de conteo (e.j. cantidad de accidentes, tiempos de espera en linea, etc.). 
+Regresión Poisson es la herramienta estándar para modelar variables de conteo (e.j. cantidad de accidentes, tiempos de espera en línea, etc.). 
 --
  Podemos pensar en un modelo de regresión Poisson de la siguiente forma:
 
@@ -161,7 +161,7 @@ Regresión Poisson es la herramienta estándar para modelar variables de conteo 
 
 --
 
-- Para cada observación observamos datos `\(y_{i}, \dots , y_{n}\)` que actuan como variable dependiente.
+- Para cada observación observamos datos `\(y_{i}, \dots , y_{n}\)` que actúan como variable dependiente.
 
 --
 
@@ -169,7 +169,7 @@ Regresión Poisson es la herramienta estándar para modelar variables de conteo 
 
 --
 
-- Asumimos que estos datos son realizaciones de `\(n\)` variables aleatorias Poisson con parametros desconocidos: `\(Y_{i} \sim \text{Poisson}(\mu_{i})\)`
+- Asumimos que estos datos son realizaciones de `\(n\)` variables aleatorias Poisson con parámetros desconocidos: `\(Y_{i} \sim \text{Poisson}(\mu_{i})\)`
 
 
 --
@@ -207,7 +207,7 @@ Específicamente, una regresión Poisson modela la media condicional de una vari
 
 --
 
-- `\(\mu_{i}\)` .bold[no está relacionado linealmente] con sus predictores 
+- `\(\mu_{i}\)` .bold[no está relacionado linealmente] con sus predictores. 
 
 
 ---
@@ -254,7 +254,7 @@ Si `\(\mu_{i} = e^{\eta_{i}}\)`, entonces ...
 ---
 ## Regresión Poisson para modelar "tasas" 
 
-Si bien la regresión Poisson es una herramienta para modelar conteos, muchas veces verdadero el fenómeno de interés es una "tasa".
+Si bien la regresión Poisson es una herramienta para modelar conteos, muchas veces el verdadero fenómeno de interés es una "tasa".
 
 
 .pull-left[
@@ -264,7 +264,7 @@ Si bien la regresión Poisson es una herramienta para modelar conteos, muchas ve
 --
 
 .pull-right[
-Aumento en número de accidente en bicicleta puede reflejar dos cosas (no excluyentes):
+Aumento en número de accidentes en bicicleta puede reflejar dos cosas (no excluyentes):
 
 - Aumento de la propensión a sufrir un accidente ("tasa")
  
@@ -280,7 +280,7 @@ Formalmente:
 ---
 ## Regresión Poisson para modelar "tasas" 
 
-Usando el la definición de tasa: `\(\theta_{i} = \frac{\mu_{i}}{n_{i}}\)`
+Usando la definición de tasa: `\(\theta_{i} = \frac{\mu_{i}}{n_{i}}\)`
 
 --
 
@@ -308,7 +308,7 @@ El modelo para la "tasa" puede ser re-expresado como un modelo de conteo:
 
 --
 
-En jerga GLM `\(n_{i}\)` es comunmente referido como .bold["exposure"] y `\(\ln(n_{i})\)` como .bold["offset"].
+En jerga GLM `\(n_{i}\)` es comúnmente referido como .bold["exposure"] y `\(\ln(n_{i})\)` como .bold["offset"].
 
 
 ---
@@ -396,18 +396,18 @@ Hasell, J., Mathieu, E., Beltekian, D. et al. A cross-country database of COVID-
 ```
 ## Rows: 210
 ## Columns: 12
-## $ continent                  [3m[38;5;246m&lt;chr&gt;[39m[23m "Asia", "Europe", "Africa", "Europe", "Africa", "North America", "North America", "South…
-## $ location                   [3m[38;5;246m&lt;chr&gt;[39m[23m "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Anguilla", "Antigua and Barbu…
-## $ total_cases                [3m[38;5;246m&lt;dbl&gt;[39m[23m 43468, 28432, 68589, 5914, 13451, 3, 134, 1318371, 118870, 4668, 27750, 207798, 77083, 7…
-## $ total_deaths               [3m[38;5;246m&lt;dbl&gt;[39m[23m 1632, 631, 2168, 76, 322, NA, 4, 35727, 1811, 44, 907, 1741, 985, 163, 337, 6215, 7, 105…
-## $ total_tests                [3m[38;5;246m&lt;lgl&gt;[39m[23m NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, …
-## $ population                 [3m[38;5;246m&lt;dbl&gt;[39m[23m 38928341, 2877800, 43851043, 77265, 32866268, 15002, 97928, 45195777, 2963234, 106766, 2…
-## $ population_density         [3m[38;5;246m&lt;dbl&gt;[39m[23m 54.422, 104.871, 17.348, 163.755, 23.890, NA, 231.845, 16.177, 102.931, 584.800, 3.202, …
-## $ median_age                 [3m[38;5;246m&lt;dbl&gt;[39m[23m 18.6, 38.0, 29.1, NA, 16.8, NA, 32.1, 31.9, 35.7, 41.2, 37.9, 44.4, 32.4, 34.3, 32.4, 27…
-## $ gdp_per_capita             [3m[38;5;246m&lt;dbl&gt;[39m[23m 1803.987, 11803.431, 13913.839, NA, 5819.495, NA, 21490.943, 18933.907, 8787.580, 35973.…
-## $ human_development_index    [3m[38;5;246m&lt;dbl&gt;[39m[23m 498.00, 785.00, 754.00, 858.00, 581.00, NA, 0.78, 825.00, 755.00, NA, 939.00, 908.00, 75…
-## $ diabetes_prevalence        [3m[38;5;246m&lt;dbl&gt;[39m[23m 9.59, 10.08, 6.73, 7.97, 3.94, NA, 13.17, 5.50, 7.11, 11.62, 5.07, 6.35, 7.11, 13.17, 16…
-## $ hospital_beds_per_thousand [3m[38;5;246m&lt;dbl&gt;[39m[23m 0.500, 2.890, 1.900, NA, NA, NA, 3.800, 5.000, 4.200, NA, 3.840, 7.370, 4.700, 2.900, 2.…
+## $ continent                  &lt;chr&gt; "Asia", "Europe", "Africa", "Europe", "Afr…
+## $ location                   &lt;chr&gt; "Afghanistan", "Albania", "Algeria", "Ando…
+## $ total_cases                &lt;dbl&gt; 43468, 28432, 68589, 5914, 13451, 3, 134, …
+## $ total_deaths               &lt;dbl&gt; 1632, 631, 2168, 76, 322, NA, 4, 35727, 18…
+## $ total_tests                &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA…
+## $ population                 &lt;dbl&gt; 38928341, 2877800, 43851043, 77265, 328662…
+## $ population_density         &lt;dbl&gt; 54.422, 104.871, 17.348, 163.755, 23.890, …
+## $ median_age                 &lt;dbl&gt; 18.6, 38.0, 29.1, NA, 16.8, NA, 32.1, 31.9…
+## $ gdp_per_capita             &lt;dbl&gt; 1803.987, 11803.431, 13913.839, NA, 5819.4…
+## $ human_development_index    &lt;dbl&gt; 498.00, 785.00, 754.00, 858.00, 581.00, NA…
+## $ diabetes_prevalence        &lt;dbl&gt; 9.59, 10.08, 6.73, 7.97, 3.94, NA, 13.17, …
+## $ hospital_beds_per_thousand &lt;dbl&gt; 0.50, 2.89, 1.90, NA, NA, NA, 3.80, 5.00, …
 ```
 
 ---
@@ -565,7 +565,7 @@ class: inverse, center, middle
 
 - Coeficientes del modelo de regresión Poisson son estimados via MLE
 
-  - maximización via algoritimo Newton-Rapson 
+  - maximización via algoritmo Newton-Rapson 
 
 &lt;br&gt;
 --
@@ -645,14 +645,22 @@ poisson_death_agecont_rate &lt;- glm(total_deaths ~ median_age + factor(continen
 
 
 ```
-##                                   Estimate   Std. Error      z value     Pr(&gt;|z|)
-## (Intercept)                    -9.98240679 0.0060333313 -1654.543124 0.0000000000
-## median_age                     -0.01290758 0.0001963744   -65.729405 0.0000000000
-## factor(continent)Asia           0.65343822 0.0054896987   119.029887 0.0000000000
-## factor(continent)Europe         2.68065121 0.0066570633   402.677741 0.0000000000
-## factor(continent)North America  3.06765697 0.0056584765   542.134789 0.0000000000
-## factor(continent)Oceania       -0.10274536 0.0307247656    -3.344057 0.0008256284
-## factor(continent)South America  3.16225729 0.0054570847   579.477403 0.0000000000
+##                                   Estimate   Std. Error      z value
+## (Intercept)                    -9.98240679 0.0060333313 -1654.543124
+## median_age                     -0.01290758 0.0001963744   -65.729405
+## factor(continent)Asia           0.65343822 0.0054896987   119.029887
+## factor(continent)Europe         2.68065121 0.0066570633   402.677741
+## factor(continent)North America  3.06765697 0.0056584765   542.134789
+## factor(continent)Oceania       -0.10274536 0.0307247656    -3.344057
+## factor(continent)South America  3.16225729 0.0054570847   579.477403
+##                                    Pr(&gt;|z|)
+## (Intercept)                    0.0000000000
+## median_age                     0.0000000000
+## factor(continent)Asia          0.0000000000
+## factor(continent)Europe        0.0000000000
+## factor(continent)North America 0.0000000000
+## factor(continent)Oceania       0.0008256284
+## factor(continent)South America 0.0000000000
 ```
 
 
@@ -731,7 +739,7 @@ Dado el siguiente modelo de regresión Poisson para tasas:
 &lt;br&gt;
 --
 
-- El intercepto `\(\beta_{0}\)` corresponde al logaritmo natural del valor esperado de la tasa esperada cuando `\(x_{1} = \dots = x_{k} = 0\)` y `\(n_{i}=1\)`
+- El intercepto `\(\beta_{0}\)` corresponde al logaritmo natural de la tasa esperada cuando `\(x_{1} = \dots = x_{k} = 0\)` y `\(n_{i}=1\)`
 
 --
 
@@ -914,7 +922,7 @@ Examinando esta ecuación observamos que cuando `\(x_1 = \dots = x_k = 0\)`,
 
 Es decir:
 
-- `\(e^{\beta_{0}}\)` corresponde a la "tasa" de ocurrencia del eventocuando `\(x_1 = \dots = x_k = 0\)`
+- `\(e^{\beta_{0}}\)` corresponde a la "tasa" de ocurrencia del evento cuando `\(x_1 = \dots = x_k = 0\)`
 
 - `\(e^{\beta_{0}} \cdot n_{i}\)` es el recuento esperado cuando `\(x_1 = \dots = x_k = 0\)`.
 
@@ -931,6 +939,8 @@ Asimismo, si `\(i\)` y `\(j\)` son dos observaciones con `\(x_{k}=c\)` y `\(x_{k
 \mu_{i'}/\mu_{i} &amp;= \frac{ n_{i'} \cdot e^{\beta_{0}} \cdot e^{\beta_{1} x_{i'1}}  \dots (e^{\beta_{k}})^{c+1}}{n_{i} \cdot e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c}} \\ \\
 &amp;= e^{\beta_{k}}
 \end{align}`
+
+--
 
 En otras palabras, 
 
@@ -1098,7 +1108,7 @@ Queremos saber el .bold[efecto marginal] de los predictores sobre el recuento es
 &lt;br&gt;
 --
 
-- Dado que `\(\theta_{i}\)` y `\(n_{i}\)` son estrictamente positivo, el efecto marginal y el coeficiente `\(\beta_{k}\)` tienen el mismo signo.
+- Dado que `\(\theta_{i}\)` y `\(n_{i}\)` son estrictamente positivos, el efecto marginal y el coeficiente `\(\beta_{k}\)` tienen el mismo signo.
 
 ---
 ## Efectos marginales sobre `\(\mu\)`, tasas
@@ -1180,7 +1190,7 @@ Nuestro modelo: `\(\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \s
 
 --
 
-- Efectos marginales son _esencialmente_ heterogeneos. No hay un efecto sino muchos. 
+- Efectos marginales son _esencialmente_ heterogéneos. No hay un efecto sino muchos. 
 
 --
 
@@ -1198,7 +1208,7 @@ Nuestro modelo: `\(\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \s
 
 --
 
-Cantidades de interes:
+Cantidades de interés:
 .pull-right[
 
 * Average Marginal Effects (AME)
@@ -1212,7 +1222,7 @@ Cantidades de interes:
 ---
 ## Efectos marginales sobre `\(\mu\)`, recuentos/tasas
 
-Ejemplo AME de "median age" sobre "tasa de muertes por millón habitantes". .bold[Aproximación numérica]:
+Ejemplo AME de "median age" sobre "tasa de muertes por millón de habitantes". .bold[Aproximación numérica]:
 
 &lt;br&gt;
 --

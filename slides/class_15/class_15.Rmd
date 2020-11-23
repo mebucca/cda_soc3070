@@ -31,7 +31,7 @@ class: inverse, center, middle
 
 --
 
-Considerando las últimas dos semanas (previo al el día 19 de noviembre), el promedio de muertes diarias por Covid-19 en el mundo es de 8651.35
+Considerando las últimas dos semanas (previo a el día 19 de noviembre), el promedio de muertes diarias por Covid-19 en el mundo es de 8651.35
 
 --
 
@@ -44,7 +44,7 @@ Considerando las últimas dos semanas (previo al el día 19 de noviembre), el pr
 
 --
 
-- El parámetro de ésta variable es $\mu=8651.35$, consistente en la .bold[media] de muertes diarias. 
+- El parámetro de esta variable es $\mu=8651.35$, consistente en la .bold[media] de muertes diarias. 
 
 --
 
@@ -54,7 +54,7 @@ Considerando las últimas dos semanas (previo al el día 19 de noviembre), el pr
 <br>
 --
 
-.bold[Pregunta]: ¿Cual es la probabilidad de observar un determinado número $y$ de muertes diarias?
+.bold[Pregunta]: ¿Cuál es la probabilidad de observar un determinado número $y$ de muertes diarias?
 
 
 --
@@ -203,12 +203,12 @@ Específicamente,
 ---
 class: inverse, center, middle
 
-## Fundamentos teórico de regresión Poisson
+## Fundamentos teóricos de regresión Poisson
 
 ---
 ## Estructura de un modelo de regresión Poisson 
 
-Regresión Poisson es la herramienta estándar para modelar variables de conteo (e.j. cantidad de accidentes, tiempos de espera en linea, etc.). 
+Regresión Poisson es la herramienta estándar para modelar variables de conteo (e.j. cantidad de accidentes, tiempos de espera en línea, etc.). 
 --
  Podemos pensar en un modelo de regresión Poisson de la siguiente forma:
 
@@ -221,7 +221,7 @@ Regresión Poisson es la herramienta estándar para modelar variables de conteo 
 
 --
 
-- Para cada observación observamos datos $y_{i}, \dots , y_{n}$ que actuan como variable dependiente.
+- Para cada observación observamos datos $y_{i}, \dots , y_{n}$ que actúan como variable dependiente.
 
 --
 
@@ -229,7 +229,7 @@ Regresión Poisson es la herramienta estándar para modelar variables de conteo 
 
 --
 
-- Asumimos que estos datos son realizaciones de $n$ variables aleatorias Poisson con parametros desconocidos: $Y_{i} \sim \text{Poisson}(\mu_{i})$
+- Asumimos que estos datos son realizaciones de $n$ variables aleatorias Poisson con parámetros desconocidos: $Y_{i} \sim \text{Poisson}(\mu_{i})$
 
 
 --
@@ -267,7 +267,7 @@ $$\mathbb{E}(y_{i} \mid x_{1i}, \dots, x_{ki}) = \mu_{i} = e^{\eta_{i}} \quad \q
 
 --
 
-- $\mu_{i}$ .bold[no está relacionado linealmente] con sus predictores 
+- $\mu_{i}$ .bold[no está relacionado linealmente] con sus predictores. 
 
 
 ---
@@ -314,7 +314,7 @@ $$\quad \quad  \ln \mu_{i} = \eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \b
 ---
 ## Regresión Poisson para modelar "tasas" 
 
-Si bien la regresión Poisson es una herramienta para modelar conteos, muchas veces verdadero el fenómeno de interés es una "tasa".
+Si bien la regresión Poisson es una herramienta para modelar conteos, muchas veces el verdadero fenómeno de interés es una "tasa".
 
 
 .pull-left[
@@ -324,7 +324,7 @@ Si bien la regresión Poisson es una herramienta para modelar conteos, muchas ve
 --
 
 .pull-right[
-Aumento en número de accidente en bicicleta puede reflejar dos cosas (no excluyentes):
+Aumento en número de accidentes en bicicleta puede reflejar dos cosas (no excluyentes):
 
 - Aumento de la propensión a sufrir un accidente ("tasa")
  
@@ -340,7 +340,7 @@ $$\mu_{i} = \underbrace{n_{i}}_{\text{exposición}} \cdot \underbrace{\theta_{i}
 ---
 ## Regresión Poisson para modelar "tasas" 
 
-Usando el la definición de tasa: $\theta_{i} = \frac{\mu_{i}}{n_{i}}$
+Usando la definición de tasa: $\theta_{i} = \frac{\mu_{i}}{n_{i}}$
 
 --
 
@@ -368,7 +368,7 @@ $$\ln(\mu_{i}) = \ln(\theta_{i}) + \ln(n_{i}) = \beta_{0} + \beta_{1}x_{1i} + \d
 
 --
 
-En jerga GLM $n_{i}$ es comunmente referido como .bold["exposure"] y $\ln(n_{i})$ como .bold["offset"].
+En jerga GLM $n_{i}$ es comúnmente referido como .bold["exposure"] y $\ln(n_{i})$ como .bold["offset"].
 
 
 ---
@@ -615,7 +615,7 @@ class: inverse, center, middle
 
 - Coeficientes del modelo de regresión Poisson son estimados via MLE
 
-  - maximización via algoritimo Newton-Rapson 
+  - maximización via algoritmo Newton-Rapson 
 
 <br>
 --
@@ -779,7 +779,7 @@ $$\ln(\mu_{i})= \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik} + \ln(n_
 <br>
 --
 
-- El intercepto $\beta_{0}$ corresponde al logaritmo natural del valor esperado de la tasa esperada cuando $x_{1} = \dots = x_{k} = 0$ y $n_{i}=1$
+- El intercepto $\beta_{0}$ corresponde al logaritmo natural de la tasa esperada cuando $x_{1} = \dots = x_{k} = 0$ y $n_{i}=1$
 
 --
 
@@ -946,7 +946,7 @@ $$\mu_{i} = e^{\beta_{0}} \cdot n_{i}$$
 
 Es decir:
 
-- $e^{\beta_{0}}$ corresponde a la "tasa" de ocurrencia del eventocuando $x_1 = \dots = x_k = 0$
+- $e^{\beta_{0}}$ corresponde a la "tasa" de ocurrencia del evento cuando $x_1 = \dots = x_k = 0$
 
 - $e^{\beta_{0}} \cdot n_{i}$ es el recuento esperado cuando $x_1 = \dots = x_k = 0$.
 
@@ -963,6 +963,8 @@ Asimismo, si $i$ y $j$ son dos observaciones con $x_{k}=c$ y $x_{k}=c+1$ respect
 \mu_{i'}/\mu_{i} &= \frac{ n_{i'} \cdot e^{\beta_{0}} \cdot e^{\beta_{1} x_{i'1}}  \dots (e^{\beta_{k}})^{c+1}}{n_{i} \cdot e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c}} \\ \\
 &= e^{\beta_{k}}
 \end{align}
+
+--
 
 En otras palabras, 
 
@@ -1075,7 +1077,7 @@ $$\frac{\partial \mu_{i}}{\partial x_{k}} =  \beta_{k} \cdot  \mu_{i}$$
 ]
 
 .pull-left[
-```{r, echo=FALSE, fig.width=7, fig.height=6.5}
+```{r, echo=FALSE, fig.width=6, fig.height=5.5}
 
 grid <- covid_subdata %>% data_grid(median_age=seq_range(median_age,n=50),continent,.model = poisson_death_agecont_mean)
 
@@ -1094,7 +1096,7 @@ predictions %>%
 
 
 .pull-left[
-```{r, echo=FALSE, fig.width=7, fig.height=6.5}
+```{r, echo=FALSE, fig.width=6, fig.height=5.5}
 
 beta_age_mean  = poisson_death_agecont_mean$coefficients["median_age"]
 grid <- covid_subdata %>% data_grid(median_age=seq_range(median_age,n=50),continent,.model = poisson_death_agecont_mean)
@@ -1143,7 +1145,7 @@ Queremos saber el .bold[efecto marginal] de los predictores sobre el recuento es
 <br>
 --
 
-- Dado que $\theta_{i}$ y $n_{i}$ son estrictamente positivo, el efecto marginal y el coeficiente $\beta_{k}$ tienen el mismo signo.
+- Dado que $\theta_{i}$ y $n_{i}$ son estrictamente positivos, el efecto marginal y el coeficiente $\beta_{k}$ tienen el mismo signo.
 
 ---
 ## Efectos marginales sobre $\mu$, tasas
@@ -1206,7 +1208,7 @@ predictions %>%
 ]
 
 .pull-right[
-```{r, echo=FALSE, fig.width=7, fig.height=6.5}
+```{r, echo=FALSE, fig.width=6, fig.height=5.5}
 
 beta_age_rate  = poisson_death_agecont_rate$coefficients["median_age"]
 
@@ -1293,7 +1295,7 @@ predictions %>%
 
 --
 
-- Efectos marginales son _esencialmente_ heterogeneos. No hay un efecto sino muchos. 
+- Efectos marginales son _esencialmente_ heterogéneos. No hay un efecto sino muchos. 
 
 --
 
@@ -1311,7 +1313,7 @@ predictions %>%
 
 --
 
-Cantidades de interes:
+Cantidades de interés:
 .pull-right[
 
 * Average Marginal Effects (AME)
@@ -1325,7 +1327,7 @@ Cantidades de interes:
 ---
 ## Efectos marginales sobre $\mu$, recuentos/tasas
 
-Ejemplo AME de "median age" sobre "tasa de muertes por millón habitantes". .bold[Aproximación numérica]:
+Ejemplo AME de "median age" sobre "tasa de muertes por millón de habitantes". .bold[Aproximación numérica]:
 
 <br>
 --
