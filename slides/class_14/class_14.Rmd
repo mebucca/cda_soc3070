@@ -22,7 +22,7 @@ class: inverse, center, middle
 
 
 ---
-## Estructura de un modelo de regresión logística multinomial 
+## Estructura de un modelo de regresión logística multinomial ordenada 
 
 $$\newcommand{\vect}[1]{\boldsymbol{#1}}$$
 Un modelo de regresión logística ordenada generaliza la regresión logística (binomial) a situaciones en que la variable dependiente es una  variable discreta con .bold[ dos o más valores ordenados] (ejemplo: "muy de acuerdo", "algo de acuerdo", "poco de acuerdo", etc..).

@@ -1,0 +1,303 @@
+---
+title: "Análisis de Datos Categóricos (SOC3070)"
+subtitle: "Clase #15"
+author: "<br> Mauricio Bucca<br> Profesor Asistente, Sociología UC"
+date: "[github.com/mebucca](https://github.com/mebucca)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: ["default","default-fonts","gentle-r.css"]
+    df_print: default
+    nature:
+      ratio: 16:9
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: true
+      slideNumberFormat: "%current%"
+editor_options: 
+  chunk_output_type: console
+---
+class: inverse, center, middle
+# Regresión Poisson
+
+
+---
+class: inverse, center, middle
+
+## Distribución Poisson
+
+---
+## Tipos de datos categóricos
+
+Distintas miradas a los datos de infidelidad:
+
+.center[
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+library("tidyverse")
+library("Ecdat")
+library("viridis")
+library("modelr")
+library("MASS")
+library("cowplot")
+library("margins")
+library("sjPlot")
+library("sjmisc")
+library("sjlabelled")
+library("nnet")
+library("lmtest")
+
+theme_set(theme_cowplot())
+
+
+data(Fair)
+affairsdata <- Fair %>% as_tibble()
+
+# create a binary variable indicating whether persons has ever had an affair
+affairsdata <- affairsdata %>% 
+  mutate(affairs_order = case_when(nbaffairs == 0 ~ "fiel",
+                             nbaffairs > 0  & nbaffairs <=3 ~ "ocasional",
+                             nbaffairs >= 7  ~ "compulsivo"))  %>%
+  mutate(affairs_count = nbaffairs) %>%
+  mutate(affairs_binary = case_when(nbaffairs > 0 ~ 1,
+                             nbaffairs == 0 ~ 0)
+)
+
+affairsdata$affairs_order <- ordered(affairsdata$affairs_order, c("fiel","ocasional","compulsivo"))
+```
+
+```{r, echo=F,  include=TRUE, warning=FALSE, message=FALSE, fig.width=16, fig.height=8}
+pcount <- affairsdata %>% ggplot(aes(x=affairs_count, fill="")) + geom_bar() +
+  scale_color_viridis_d() +  scale_fill_viridis_d() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position="none") + 
+  labs(x="Recuendo de affairs")
+
+porder <- affairsdata %>% ggplot(aes(x=affairs_order, fill="")) + geom_bar() +
+  scale_color_viridis_d() +  scale_fill_viridis_d() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position="none") + 
+  labs(x="Categoría de affairs (ordenado)")
+
+pbinary <- affairsdata %>% ggplot(aes(x=factor(affairs_binary), fill="")) + geom_bar() +
+  scale_color_viridis_d() +  scale_fill_viridis_d() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position="none") + 
+  labs(x="Indicador de affairs (binario)")
+
+cowplot::plot_grid(
+  pbinary, porder, pcount,
+  labels = c("A","B","C"), ncol = 2
+)
+
+```
+]
+
+---
+class: inverse, center, middle
+
+## Datos dicotómicos
+### Linear Probability Model y Regresión Logística
+
+---
+## Linear Probability Model
+
+```{r}
+lpm_1 <- lm(affairs_binary ~ ym,  data=affairsdata)
+lpm_2 <- lm(affairs_binary ~ ym + rate,  data=affairsdata)
+
+tab_model(lpm_1,lpm_2, p.style = "stars",   show.ci = FALSE,show.p = FALSE)
+```
+
+---
+## Regresión Logística
+
+```{r}
+logistic_1 <- glm(affairs_binary ~ ym,  family="binomial", data=affairsdata)
+logistic_2 <- glm(affairs_binary ~ ym + rate, family="binomial",  data=affairsdata)
+
+tab_model(logistic_1,logistic_2, p.style = "stars",   show.ci = FALSE, show.p = FALSE, transform = NULL)
+```
+
+---
+## Regresión Logística
+
+
+
+---
+class: inverse, center, middle
+
+## Datos politómicos
+###  Regresión Logística Multinomial y Ordenada
+
+
+---
+## Regresión Logística Multinomial
+
+```{r}
+mlogistic_1 <- multinom(affairs_order ~ ym,  trace=F, data=affairsdata)
+mlogistic_2 <- multinom(affairs_order ~ ym + rate, trace=F,  data=affairsdata)
+```
+
+.pull-left[
+```{r}
+sjPlot::tab_model(mlogistic_1, p.style = "stars",   show.ci = FALSE, show.p = FALSE, transform = NULL)
+```
+]
+
+.pull-right[
+```{r}
+sjPlot::tab_model(mlogistic_2, p.style = "stars",   show.ci = FALSE, show.p = FALSE, transform = NULL)
+```
+]
+
+---
+## Regresión Logística Ordenada
+
+```{r, warning=F, message=F}
+ologistic_1 <- polr(affairs_order ~ ym, data=affairsdata)
+ologistic_2 <- polr(affairs_order ~ ym + rate, data=affairsdata)
+
+tab_model(ologistic_1, ologistic_2, p.style = "stars",   show.ci = FALSE, show.p = FALSE, transform = NULL)
+
+```
+---
+## Regresión Logística Ordenada
+
+```{r, warning=F, message=F}
+library("brant")
+```
+
+.pull-left[
+```{r}
+brant(ologistic_1)
+```
+]
+
+.pull-right[
+```{r}
+brant(ologistic_2)
+```
+]
+
+---
+## Regresión Logística Ordenada
+
+
+```{r, warning=F, message=F}
+AIC(mlogistic_1,mlogistic_2,ologistic_1,ologistic_2)
+```
+
+```{r, warning=F, message=F}
+BIC(mlogistic_1,mlogistic_2,ologistic_1,ologistic_2)
+```
+
+
+
+---
+class: inverse, center, middle
+
+## Datos de recuento
+###  Regresión Poisson y Quasi-Poisson
+
+---
+## Regresión Poisson
+
+```{r, warning=F, message=F}
+poisson_1 <- glm(affairs_count ~ ym, family=poisson(link="log"), data=affairsdata)
+poisson_2 <- glm(affairs_count ~ ym + rate, family=poisson(link="log"), data=affairsdata)
+
+tab_model(poisson_1,poisson_2, p.style = "stars",   show.ci = FALSE, show.p = FALSE, transform = NULL)
+
+```
+
+---
+## Quasi-Poisson
+
+```{r, warning=F, message=F}
+qpoisson_1 <- glm(affairs_count ~ ym, family=quasipoisson(link="log"), data=affairsdata)
+qpoisson_2 <- glm(affairs_count ~ ym + rate, family=quasipoisson(link="log"), data=affairsdata)
+
+tab_model(qpoisson_1,qpoisson_2, p.style = "stars",   show.ci = FALSE, show.p = FALSE, transform = NULL)
+
+```
+
+
+---
+## Inferencia para cantidades de interés
+
+
+
+```{r, warning=F, message=F}
+
+grid <- affairsdata %>% data_grid(ym=median(ym),rate)
+
+grid <- grid %>% mutate(lpm = predict(lpm_2, newdata=grid),
+                logistic = predict(logistic_2, newdata=grid, type="response"),
+                mlogistic = 1- predict(mlogistic_2,newdata=grid, type="probs")[,1],
+                ologistic = 1- predict(ologistic_2,newdata=grid, type="probs")[,1]
+                )
+
+grid %>% pivot_longer(cols = -c(ym,rate), names_to="model", values_to="infiel_hat") %>%
+  ggplot(aes(x=rate,y=infiel_hat, group=model,colour=model)) +
+  geom_line()
+
+```
+
+---
+## Inferencia para cantidades de interés
+
+
+
+```{r, warning=F, message=F}
+
+bs  <- function(x) {
+  grid <- affairsdata %>% data_grid(ym=median(ym),rate)
+  
+  #data_b   <- sample_n(affairsdata,size=nrow(affairsdata),replace=TRUE)
+
+  lpm_2_b <- lm(affairs_binary ~ ym + rate,  data=x)
+  logistic_2_b <- glm(affairs_binary ~ ym + rate, family="binomial",  data=x)
+  mlogistic_2_b <- multinom(affairs_order ~ ym + rate, trace=F,  data=x)
+  ologistic_2_b <- polr(affairs_order ~ ym + rate, data=x)
+
+  
+  grid <- grid %>% mutate(lpm = predict(lpm_2_b, newdata=grid),
+                logistic = predict(logistic_2_b, newdata=grid, type="response"),
+                mlogistic = 1- predict(mlogistic_2_b,newdata=grid, type="probs")[,1],
+                ologistic = 1- predict(ologistic_2_b,newdata=grid, type="probs")[,1]
+                )
+}
+
+# Iterar función y almacenar resultados 
+
+#affairsdata %>% bootstrap(200) %>% mutate(pred = map(strap, ~ bs(.x))) %>% dplyr::select(.id,pred) %>% unnest()
+```
+
+---
+
+
+- comparación entre modelos logísticos anidados
+- inferencia clásica
+- bootstrap 
+- model comparison BIC and AIC
+- quasi-poisson
+- parallel regression assumption
+
+---
+class: inverse, center, middle
+
+.huge[
+**Fin. Gracias!**
+]
+
+<br>
+Mauricio Bucca <br>
+https://mebucca.github.io/ <br>
+github.com/mebucca
+
+
+
+
