@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Ayudantía 6</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Roberto Velázquez" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="gentle-r.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Ayudantía 6
+## Análisis de Datos Categóricos
+### Roberto Velázquez
+### 💻 📊 🎨🎻🎷
+### 26-11-2020
+
+---
+
+
+# A.- Caso de Estudio
+
+Trabajemos sobre los datos de la **National Survey of Culture and the Arts 2018** vista en la ayudantía pasada. Recordemos que la encuesta fue coordinada por el *National Endowment for the Arts USA* con un muestreo representativo de la población de EEUU. La muestra contiene 8609 y 12 de variables de interés.
+
+![](nefa.png)
+
+---
+
+# A.- Caso de Estudio
+
+- Codififación de variables: 
+
+
+```r
+library(tibble)
+```
+
+
+```r
+#Cargar base de datos
+load("nsca2018.Rda")
+tibble(data1)
+```
+
+```
+# # A tibble: 8,609 x 15
+#    sexo   edad raza  educacion hijes jazz  clasica opera ballet museos libros
+#    &lt;fct&gt; &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt;     &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt;   &lt;fct&gt; &lt;fct&gt;  &lt;fct&gt;  &lt;fct&gt; 
+#  1 (2) …    48 (01)… (37) 11t…     0 (2) … (2) No  (2) … (2) No (2) No (2) No
+#  2 (2) …    78 (01)… (39) Hig…     0 (2) … (2) No  (2) … (2) No (2) No (2) No
+#  3 (2) …    72 (01)… (39) Hig…     0 (2) … (2) No  (2) … (2) No (2) No (1) Y…
+#  4 (1) …    51 (01)… (46) Doc…     1 (2) … (2) No  (2) … (2) No (2) No (2) No
+#  5 (2) …    57 (01)… (39) Hig…     0 (2) … (2) No  (2) … (2) No (2) No (2) No
+#  6 (2) …    66 (01)… (39) Hig…     0 (2) … (2) No  (2) … (2) No (2) No (1) Y…
+#  7 (1) …    73 (01)… (39) Hig…     0 (2) … (2) No  (2) … (2) No (2) No (2) No
+#  8 (1) …    19 (01)… (39) Hig…     0 (2) … (2) No  (2) … (2) No (2) No (2) No
+#  9 (2) …    68 (01)… (36) 10t…     0 (2) … (2) No  (2) … (2) No (2) No (2) No
+# 10 (1) …    63 (01)… (39) Hig…     0 (2) … (2) No  (2) … (2) No (2) No (1) Y…
+# # … with 8,599 more rows, and 4 more variables: sexo_b &lt;dbl&gt;, museos_b &lt;dbl&gt;,
+# #   raza_b &lt;dbl&gt;, edu_b &lt;dbl&gt;
+```
+
+---
+
+# B.- Regresión Logística Multinomial - Ejercicio
+
+1.-Ajuste un modelo de regresión logística multinomial para estimar el nivel de educación de los públicos de música en Estados Unidos, a partir de la interacción entre asistencia a eventos de jazz y música clásica. Note que nivel educacional (**edu_b**) es un factor donde **1- Educación Secundaria Completa**, **2- Educación Técnico/Universitaria Completa**, y **3.- Educación de Posgrado Completa**.
+
+--
+
+
+```r
+library(tidyverse)
+library(car)
+```
+
+
+```r
+#Sintaxis
+#Conversión de factor a vector (tidyverse)
+data1 &lt;- data1 %&gt;% 
+  mutate(jazz_b = as.numeric(jazz))
+data1 &lt;- data1 %&gt;% 
+  mutate(clasica_b = as.numeric(clasica))
+data1 &lt;- data1 %&gt;% 
+  mutate(edu_b = as.factor(edu_b))
+
+# Codificación dummies (car)
+data1$clasica_b &lt;- recode(data1$clasica_b, "1=1; 2=0")
+data1$jazz_b &lt;- recode(data1$jazz_b, "1=1; 2=0")
+```
+---
+
+# B.- Regresión Logística Multinomial - Ejercicio
+
+1.-Ajuste un modelo de regresión logística multinomial para estimar el nivel de educación de los públicos de música en Estados Unidos, a partir de la interacción entre asistencia a eventos de jazz y música clásica. Note que nivel educacional (**edu_b**) es un factor donde **1- Educación Secundaria Completa**, **2- Educación Técnico/Universitaria Completa**, y **3.- Educación de Posgrado Completa**.
+
+
+```r
+library(nnet)
+```
+
+*R:*
+
+
+```r
+#Ajuste Modelo
+ml_model1 &lt;- multinom(edu_b ~ jazz_b*clasica_b, data=data1) 
+```
+
+```
+# # weights:  15 (8 variable)
+# initial  value 9457.953193 
+# iter  10 value 8105.400696
+# final  value 8094.860137 
+# converged
+```
+---
+
+# B.- Regresión Logística Multinomial - Ejercicio
+
+1.-Ajuste un modelo de regresión logística multinomial para estimar el nivel de educación de los públicos de música en Estados Unidos, a partir de la interacción entre asistencia a eventos de jazz y música clásica. Note que nivel educacional (**edu_b**) es un factor donde **1- Educación Secundaria Completa**, **2- Educación Técnico/Universitaria Completa**, y **3.- Educación de Posgrado Completa**.
+
+*R:*
+
+
+```r
+summary(ml_model1)
+```
+
+```
+# Call:
+# multinom(formula = edu_b ~ jazz_b * clasica_b, data = data1)
+# 
+# Coefficients:
+#   (Intercept)   jazz_b clasica_b jazz_b:clasica_b
+# 2   0.1087817 1.000061  1.429321       -0.5354649
+# 3  -1.5000821 1.588784  2.542503       -1.0682897
+# 
+# Std. Errors:
+#   (Intercept)    jazz_b clasica_b jazz_b:clasica_b
+# 2  0.02464166 0.1196564 0.1432544        0.2929531
+# 3  0.04189059 0.1466216 0.1546889        0.3140856
+# 
+# Residual Deviance: 16189.72 
+# AIC: 16205.72
+```
+---
+
+# B.- Regresión Logística Multinomial - Ejercicio
+
+1.1-Interprete los coeficientes de asistencia a eventos de jazz y la interacción de asistencia a jazz y música clásica para cada nivel de educación de los públicos asistentes.
+
+--
+
+*R:*
+
+- *(jazz|2)*: El coeficiente asociado a jazz indica que las log-odds de que un asistente a este tipo de eventos musicales tenga educación universitaria completa en comparación con solo tener educación secundaria completa son 1.000061 mayores que las de quienes no han asistido durante el año a eventos de música clásica. 
+
+- *(jazz|3)*: El coeficiente asociado a jazz indica que las log-odds de que un asistente a este tipo de eventos musicales tenga educación de posgrado completa en comparación con solo tener educación secundaria completa son 1.588784 mayores que las de quienes no han asistido durante el año a eventos de música clásica. 
+
+- *(jazz:clasica|2)*: El coeficiente interactivo entre música jazz y clásica indica que las log-odds de que un asistente a este tipo de eventos musicales tenga educación universitaria completa en comparación con solo tener educación secundaria completa son 0.5354649 menores para un asistente a ambos tipos de eventos.
+
+- *(jazz:clasica|3)*: El coeficiente interactivo entre música jazz y clásica indica que las log-odds de que un asistente a este tipo de eventos musicales tenga educación de posgrado completa en comparación con solo tener educación secundaria completa son 1.0682897 menores para un asistente a ambos tipos de eventos.
+
+---
+
+# B.- Regresión Logística Multinomial - Ejercicio
+
+1.2- Transforma e interpreta los coeﬁcientes correspondiente *(clasica|2)* y *(clasica|3)* en términos de *odds ratio* (o probabilidades relativas). 
+
+--
+
+*R:*
+
+Formalmente (Ejemplo nivel 2 en educación):
+
+`\(\ln \frac{\mathbb{P}(\text{2 | clasica=1, jazz=0)}}{\mathbb{P}(\text{1 | clasica=1, jazz=0)}} = \beta_{0} + \beta_{clasica}\)`
+
+Por tanto,
+
+
+- `\(\frac{\mathbb{P}(\text{2 | clasica=1, jazz=0)}}{\mathbb{P}(\text{1 | clasica=1, jazz=0)}} = e^{\beta_{0(2)} + \beta_{clasica(2)}} = e^{\beta_{0(2)}} e^{\beta_{clasica(2)}}\)`
+
+y
+
+- `\(\frac{\mathbb{P}(\text{2 | clasica=1, jazz=0)}}{\mathbb{P}(\text{1 | clasica=1, jazz=0)}} = e^{\beta_{0-(2)}}\)`
+
+Así, se sigue de esto que
+
+
+`\(\frac{\mathbb{P}(\text{2 | clasica=0, jazz=0)}}{\mathbb{P}(\text{1 | clasica=0, jazz=0)}} \bigg/ \frac{\mathbb{P}(\text{2 | clasica=1, jazz=0)}}{\mathbb{P}(\text{1 | clasica=1, jazz=0)}} = e^{\beta_{0(2)}} e^{\beta_{clasica (2)}} / e^{\beta_{0(2)}} = e^{\beta_{clasica (2)}} = e^{1.429321} = 4.1758646\)`
+
+---
+
+# B.- Regresión Logística Multinomial - Ejercicio
+
+1.2- Transforma e interpreta los coeﬁcientes correspondiente *(clasica|2)* y *(clasica|3)* en términos de *odds ratio* (o probabilidades relativas). 
+
+--
+
+*R:*
+
+
+```r
+exp1 &lt;- exp(summary(ml_model1)$coefficients)
+exp1
+```
+
+```
+#   (Intercept)   jazz_b clasica_b jazz_b:clasica_b
+# 2   1.1149189 2.718447  4.175864        0.5853971
+# 3   0.2231118 4.897790 12.711443        0.3435957
+```
+
+```r
+exp(1.429321)
+```
+
+```
+# [1] 4.175863
+```
+
+El ratio entre la probabilidad de tener educación universitaria completa y tener educación secundaria completa por parte de quienes asisten a escuchar música clásica y no música jazz durante el año es 4.175 el ratio observado de quienes tienen educación secundaria completa y escuchan jazz.
+
+---
+
+# B.- Regresión Logística Multinomial - Ejercicio
+
+1.2- Transforma e interpreta los coeﬁcientes correspondiente *(clasica|2)* y *(clasica|3)* en términos de *odds ratio* (o probabilidades relativas). 
+
+--
+
+*R:*
+
+
+```r
+exp1 &lt;- exp(summary(ml_model1)$coefficients)
+exp1
+```
+
+```
+#   (Intercept)   jazz_b clasica_b jazz_b:clasica_b
+# 2   1.1149189 2.718447  4.175864        0.5853971
+# 3   0.2231118 4.897790 12.711443        0.3435957
+```
+
+```r
+exp(2.542503)
+```
+
+```
+# [1] 12.71145
+```
+
+El ratio entre la probabilidad de tener educación de posgrado completa y tener educación secundaria completa por parte de quienes asisten a escuchar música clásica y no música jazz durante el año es 12.71145 el ratio observado de quienes tienen educación secundaria completa y escuchan jazz.
+
+---
+
+# B.- Regresión Logística Multinomial - Ejercicio
+
+1.3. Calcula la odds ratio de tener educación de posgrado completa en vez de educación universitaria completa entre los publicos que no asisten a conciertos de música clásica y sí asisten a conciertos de jazz.
+
+--
+
+*R:*
+
+Formalmente:
+
+`$$e^{\beta_{clasica(3)} - \beta_{clasica(2)}} = e^{(2.542503 - 1.429321)} = 3.044029$$`
+
+```r
+exp1 &lt;- exp(summary(ml_model1)$coefficients)
+exp1
+```
+
+```
+#   (Intercept)   jazz_b clasica_b jazz_b:clasica_b
+# 2   1.1149189 2.718447  4.175864        0.5853971
+# 3   0.2231118 4.897790 12.711443        0.3435957
+```
+
+```r
+oddr_23 &lt;- exp(2.542503 - 1.429321)
+oddr_23
+```
+
+```
+# [1] 3.044029
+```
+---
+
+# B.- Regresión Logística Multinomial - Ejercicio
+
+1.3. Calcula la odds ratio de tener educación de posgrado completa en vez de educación universitaria completa entre los publicos que no asisten a conciertos de música clásica y sí asisten a conciertos de jazz.
+
+--
+
+*R:*
+
+Formalmente:
+
+`$$e^{\beta_{clasica(3)} - \beta_{clasica(2)}} = e^{(12.711443 - 4.175864)} = 3.044029$$` 
+
+El ratio entre la probabilidad de tener educación de posgrado completa para quienes no asisten a conciertos de música clásica pero sí asisten a conciertos de jazz durante el año es 3.044029 el ratio observado de quienes tienen educación universitaria completa y no asisten a conciertos de música clásica pero sí asisten a conciertos de jazz.
+
+---
+
+# B.- Regresión Logística Multinomial - Ejercicio
+
+1.4 Manipula los resultados del modelo para obtener las probabilidades esperadas de que los asistentes a conciertos de música jazz – que además asisten y no asisten a conciertos de música clásica – tengan educación universitaria completa. 
+
+--
+
+*R:*
+
+Considerando que,
+
+`\(p_{ji} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{j=1}  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}\)`
+
+
+Por tanto:
+
+`\(\mathbb{P}(\text{2 | jazz=1, clasica=0}) = \frac{e^{\beta_{0(2)}}}{1 + e^{\beta_{0(2)}} + e^{\beta_{0(3)}} } = e^{0.108}/(1 + e^{0.108} + e^{-1.50}) = 0.591\)`
+
+`\(\mathbb{P}(\text{2 | jazz=1, clasica=1}) = \frac{e^{\beta_{0(2)} + \beta_{clasica(2)}}}{1 + e^{(\beta_{0(2)} + \beta_{clasica (2)}}  + e^{(\beta_{0(3)} + \beta_{clasica (3)})} } = e^{0.108 + 1.429}/(1 + e^{0.108 + 1.429} + e^{-1.50 + 2.542}) = 0.562\)`
+
+---
+
+# B.- Regresión Logística Multinomial - Ejercicio
+
+1.4 Manipula los resultados del modelo para obtener las probabilidades esperadas de que los asistentes a conciertos de música jazz – que además asisten y no asisten a conciertos de música clásica – tengan educación universitaria completa. 
+
+--
+
+*R:*
+
+
+```r
+library(modelr)
+```
+
+
+```r
+newx1 &lt;- data1 %&gt;% data_grid(jazz_b=1,clasica_b,.model=ml_model1) 
+newy1 &lt;- cbind(newx1,predict(ml_model1, newdata = newx1, type = "probs"))
+print(newy1)
+```
+
+```
+#   jazz_b clasica_b          1         2         3
+# 1      1         0 0.19517515 0.5915462 0.2132786
+# 2      1         1 0.07586253 0.5620674 0.3620701
+```
+---
+
+# C.- Regresión Logística Ordenada - Ejercicio
+
+2.- Ajuste un modelo de regresión logística ordenada para estimar el nivel de educación de los públicos de música en Estados Unidos, a partir de la interacción entre asistencia a eventos de jazz y música clásica. Note que nivel educacional (**edu_b**) es un una variable ordenada ascendente donde **1- Educación Secundaria Completa**, **2- Educación Técnico/Universitaria Completa**, y **3.- Educación de Posgrado Completa**.
+
+
+```r
+library(MASS)
+```
+--
+
+*R:*
+
+
+```r
+ologit_1 &lt;- polr(edu_b ~ jazz_b*clasica_b, data=data1)
+```
+
+---
+
+# C.- Regresión Logística Ordenada - Ejercicio
+
+2.- Ajuste un modelo de regresión logística ordenada para estimar el nivel de educación de los públicos de música en Estados Unidos, a partir de la interacción entre asistencia a eventos de jazz y música clásica. Note que nivel educacional (**edu_b**) es un una variable ordenada ascendente donde **1- Educación Secundaria Completa**, **2- Educación Técnico/Universitaria Completa**, y **3.- Educación de Posgrado Completa**.
+
+
+```r
+summary(ologit_1)
+```
+
+```
+# Call:
+# polr(formula = edu_b ~ jazz_b * clasica_b, data = data1)
+# 
+# Coefficients:
+#                    Value Std. Error t value
+# jazz_b            1.0451    0.09021  11.584
+# clasica_b         1.6255    0.08948  18.166
+# jazz_b:clasica_b -0.8586    0.16580  -5.178
+# 
+# Intercepts:
+#     Value    Std. Error t value 
+# 1|2  -0.2988   0.0235   -12.7191
+# 2|3   2.2834   0.0377    60.5111
+# 
+# Residual Deviance: 16197.75 
+# AIC: 16207.75
+```
+
+---
+
+# C.- Regresión Logística Ordenada - Ejercicio
+
+2.1- Interprete los coeficientes de asistencia a eventos de jazz y la interacción de asistencia a jazz y música clásica para cada nivel de educación de los públicos asistentes.
+
+--
+
+*R:*
+
+- *(jazz)*: El coeﬁciente asociado a jazz indica que, en promedio, los no asistentes a espectáculos de música clásica y que sí asisten a espectáculos de jazz tienen 1.0451 punto más en la variable latente de nivel de educación comparado con los no asistentes a música clásica y sí asistentes a espectáculos de jazz de educación escolar completa.
+
+- *(jazz:clasica)*: En tanto, el coeﬁciente asociado a la interacción jazz:clasica indica que los los asistentes a música jazz y clásica tienen, en promedio, 0.1865 puntos más  en la variable latente de nivel de educación comparado con los si asistentes a música clásica y sí asistentes a espectáculos de jazz de educación escolar completa ( `\(\beta_{jazz} + \beta_{jazz:clasica} = 0.1865\)` )  y 0.7669 puntos más en la variable latente de nivel de educación comparado con los no asistentes a música clásica y sí asistentes a espectáculos de jazz de educación escolar completa ( `\(\beta_{clásica} + \beta_{jazz:clasica} = 0.7669\)` ).
+
+---
+
+# C.- Regresión Logística Ordenada - Ejercicio
+
+2.2- Transforma e interpreta el coeficientes correspondiente a "jazz" en términos de odds-ratios acumulativas. 
+
+--
+
+*R:*
+
+Para los asistentes a espectáculos de jazz que no asisten a conciertos de música clásica el logit acumulado de la probabilidadad de educación secundaria o universitaria (categorías 1 o 2) está dado por:
+
+`\(\ln \frac{\mathbb{P}( y \leq \text{2 | jazz=1, clasica=0)}}{\mathbb{P}(y &gt;\text{2 | jazz=1, clasica=0)}} = \alpha_{\text{2|3}} - \beta_{jazz}\)`
+
+y para los no asistentes de música jazz y clásica , el mismo logit está dado por:
+
+`\(\ln \frac{\mathbb{P}( y \leq \text{2 | jazz=0, clasica=0)}}{\mathbb{P}(y &gt;\text{2 | jazz=0, clasica=0)}} = \alpha_{\text{2|3}}\)`
+
+
+En términos de odds:
+
+`\(\frac{\mathbb{P}( y \leq \text{2 | jazz=1, clasica=0)}}{\mathbb{P}(y &gt;\text{2 | jazz=1, clasica=0)}} = e^{\alpha_{\text{2|3}}} \cdot e^{-\beta_{jazz}}\)`
+
+y
+
+`\(\frac{\mathbb{P}(  y \leq \text{2 | jazz=0, clasica=0)}}{\mathbb{P}(y &gt;\text{2 | jazz=0, clasica=0)}} = e^{\alpha_{\text{2|3}}}\)`
+
+---
+
+# C.- Regresión Logística Ordenada - Ejercicio
+
+2.2- Transforma e interpreta el coeficientes correspondiente a "jazz" en términos de odds-ratios acumulativas. 
+
+*R:*
+
+Se sigue de esto que
+
+`\(\frac{\mathbb{P}(y \leq \text{2 | jazz=1, clasica=0)} / \mathbb{P}(y &gt;\text{2 | jazz=1, clasica=0)} }{\mathbb{P}( y \leq \text{2 | jazz=0, clasica=0)} / \mathbb{P}(y &gt;\text{2 | jazz=0, clasica=0)}} = e^{-\beta_{jazz}}\)`
+
+
+```r
+exp(-(summary(ologit_1)$coefficients))
+```
+
+```
+#                      Value Std. Error      t value
+# jazz_b           0.3516621  0.9137352 9.309819e-06
+# clasica_b        0.1968101  0.9144065 1.289742e-08
+# jazz_b:clasica_b 2.3598284  0.8472123 1.773877e+02
+# 1|2              1.3481927  0.9767843 3.340787e+05
+# 2|3              0.1019357  0.9629677 5.252208e-27
+```
+
+Es decir, las odds acumulada de la probabilidadad de educación secundaria o universitaria (categorías 1 o 2) de quienes asistentes a espectáculos de jazz y no asisten a conciertos de música clásica es 0.351 las odds de quienes no asisten a espectaculos de jazz ni de música clásica.
+
+---
+
+# C.- Regresión Logística Ordenada - Ejercicio
+
+2.3- Manipula los resultados del modelo para obtener las probabilidades esperadas de que los asistentes a conciertos de jazz – siendo además asistentes y no asistentes a conciertos de música clásica – tengan educación de posgrado completa. Expresa formalmente las ecuaciones correspondiente a estas predicciones. 
+
+--
+
+*R:*
+
+`\(\mathbb{P}(y = \text{3 | jazz=1, clasica=0)} = 1- \text{logit}^{-1}(\alpha_{\text{2|3}}) = 1 - 1/(1 + e^{-\alpha_{\text{2|3}}}) = 0.2247270\)`
+
+`\(\mathbb{P}(y = \text{3 | jazz=1, clasica=1)} = 1- \text{logit}^{-1}(\alpha_{\text{2|3}}  - \beta_{clasica}) = 1 - 1/(1 + e^{-(\alpha_{\text{2|3}}  - \beta_{clasica})}) = 0.3842845\)`
+---
+
+# C.- Regresión Logística Ordenada - Ejercicio
+
+2.3- Manipula los resultados del modelo para obtener las probabilidades esperadas de que los asistentes a conciertos de jazz – siendo además asistentes y no asistentes a conciertos de música clásica – tengan educación de posgrado completa. Expresa formalmente las ecuaciones correspondiente a estas predicciones. 
+
+*R:*
+
+
+```r
+newx2 &lt;- data1 %&gt;% data_grid(jazz_b=1,clasica_b,.model=ologit_1) 
+newy2 &lt;- cbind(newx2,predict(ologit_1, newdata = newx2, type = "probs"))
+print(newy2)
+```
+
+```
+#   jazz_b clasica_b         1         2         3
+# 1      1         0 0.2068777 0.5683953 0.2247270
+# 2      1         1 0.1080538 0.5076617 0.3842845
+```
+---
+
+# Referencias Sugeridas:
+
+• Laurie Hanquinet &amp; Mike Savage (2016). Routledge International Handbook of the Sociology of Art and Culture. London: Routledge.
+
+• Hadley Wickham (2015). Advanced R, CRC Press, Taylor &amp; Francis Group, Boca Raton, FL. En https://adv-r.hadley.nz/
+
+• Hadley Wickham and Garrett Grolemund (2017). R for Data Science. Import, Tidy, Transform, Visualize, and Model Data. O’Reilly Media, Inc.. En https://r4ds.had.co.nz/
+
+
+---
+
+class: inverse, center, middle
+
+.huge[
+**¡Hasta la próxima!**
+]
+
+ 💻 📊 🎨🎻🎷 
+ 
+&lt;br&gt;
+Roberto Velázquez &lt;br&gt;
+https://github.com/rovelazqu &lt;br&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": true,
+"slideNumberFormat": "%current%"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

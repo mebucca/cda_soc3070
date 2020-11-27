@@ -476,6 +476,23 @@ tab_model(poisson_1,poisson_2, p.style = "stars",   show.ci = FALSE, show.p = FA
 &lt;/tr&gt;
 
 &lt;/table&gt;
+---
+## Over-disperssion en regresión Poisson
+
+- En un modelo de regresión Poisson cada `\(i\)` sigue una distribución `\(y_{i} \sim \text{Poisson}(\mu_{i} = e^{X_{i}\beta})\)`
+
+- No hay un parámetro adicional para la varianza. Por definición: `\(\mathbb{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}=e^{X_{i}\beta}\)`
+
+- Esto puede resultar en una sub-estimación o sobre-estimación de la varianza de los datos. 
+
+  - Por lo general resulta en una subestimación de la varianza de los datos.
+  
+  - Este caso se conocer como "over-disperssion". Los datos son más dispersos de lo esperando de acuerdo al modelo.
+  
+  - lo que hace la inferencia demasiado "liberal".
+
+`\(z_{i} = \frac{y_{i} - \mu_{i}}{\sigma_{i}}\)`
+`\(\frac{1}{n-k}\sum^{n}_{i=1} z^{2}_{i}\)`
 
 ---
 ## Quasi-Poisson
@@ -532,30 +549,40 @@ tab_model(qpoisson_1,qpoisson_2, p.style = "stars",   show.ci = FALSE, show.p = 
 
 
 ---
-## Inferencia para cantidades de interés
-
+## Cantidades de interés
 
 
 
 ```r
 grid &lt;- affairsdata %&gt;% data_grid(ym=median(ym),rate)
-
 grid &lt;- grid %&gt;% mutate(lpm = predict(lpm_2, newdata=grid),
                 logistic = predict(logistic_2, newdata=grid, type="response"),
                 mlogistic = 1- predict(mlogistic_2,newdata=grid, type="probs")[,1],
                 ologistic = 1- predict(ologistic_2,newdata=grid, type="probs")[,1]
                 )
-
-grid %&gt;% pivot_longer(cols = -c(ym,rate), names_to="model", values_to="infiel_hat") %&gt;%
-  ggplot(aes(x=rate,y=infiel_hat, group=model,colour=model)) +
-  geom_line()
 ```
 
-![](class_16_files/figure-html/unnamed-chunk-16-1.png)&lt;!-- --&gt;
+
+.pull-left[
+
+```r
+grid %&gt;% pivot_longer(cols = -c(ym,rate), names_to="model", values_to="infiel_hat") %&gt;%
+  ggplot(aes(x=rate,y=infiel_hat, group=model,colour=model)) +
+  geom_line() +
+  scale_color_viridis_d() +  scale_fill_viridis_d() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position = "none") +
+  labs(x="rate", y=expression("P(Infiel)"))
+```
+]
+
+.pull-right[
+![](class_16_files/figure-html/plot1-out-1.png)&lt;!-- --&gt;
+]
 
 ---
-## Inferencia para cantidades de interés
-
+## Inferencia para cantidades de interés: Bootstrap
 
 
 
@@ -577,11 +604,25 @@ bs  &lt;- function(x) {
                 ologistic = 1- predict(ologistic_2_b,newdata=grid, type="probs")[,1]
                 )
 }
-
-# Iterar función y almacenar resultados 
-
-#affairsdata %&gt;% bootstrap(200) %&gt;% mutate(pred = map(strap, ~ bs(.x))) %&gt;% dplyr::select(.id,pred) %&gt;% unnest()
 ```
+
+---
+## Inferencia para cantidades de interés: Bootstrap
+
+
+
+```r
+# aplica función bootstrap
+grid &lt;- affairsdata %&gt;% bootstrap(10) %&gt;% mutate(pred = map(strap, ~ bs(.x))) %&gt;% 
+  dplyr::select(.id,pred) %&gt;% unnest()
+```
+
+
+![](class_16_files/figure-html/unnamed-chunk-19-1.png)&lt;!-- --&gt;
+
+---
+## Comparasión de modelos: bondad de ajuste
+
 
 ---
 

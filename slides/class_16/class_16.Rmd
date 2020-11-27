@@ -212,6 +212,23 @@ poisson_2 <- glm(affairs_count ~ ym + rate, family=poisson(link="log"), data=aff
 tab_model(poisson_1,poisson_2, p.style = "stars",   show.ci = FALSE, show.p = FALSE, transform = NULL)
 
 ```
+---
+## Over-disperssion en regresión Poisson
+
+- En un modelo de regresión Poisson cada $i$ sigue una distribución $y_{i} \sim \text{Poisson}(\mu_{i} = e^{X_{i}\beta})$
+
+- No hay un parámetro adicional para la varianza. Por definición: $\mathbb{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}=e^{X_{i}\beta}$
+
+- Esto puede resultar en una sub-estimación o sobre-estimación de la varianza de los datos. 
+
+  - Por lo general resulta en una subestimación de la varianza de los datos.
+  
+  - Este caso se conocer como "over-disperssion". Los datos son más dispersos de lo esperando de acuerdo al modelo.
+  
+  - lo que hace la inferencia demasiado "liberal".
+
+$z_{i} = \frac{y_{i} - \mu_{i}}{\sigma_{i}}$
+$\frac{1}{n-k}\sum^{n}_{i=1} z^{2}_{i}$
 
 ---
 ## Quasi-Poisson
@@ -226,33 +243,42 @@ tab_model(qpoisson_1,qpoisson_2, p.style = "stars",   show.ci = FALSE, show.p = 
 
 
 ---
-## Inferencia para cantidades de interés
-
+## Cantidades de interés
 
 
 ```{r, warning=F, message=F}
-
 grid <- affairsdata %>% data_grid(ym=median(ym),rate)
-
 grid <- grid %>% mutate(lpm = predict(lpm_2, newdata=grid),
                 logistic = predict(logistic_2, newdata=grid, type="response"),
                 mlogistic = 1- predict(mlogistic_2,newdata=grid, type="probs")[,1],
                 ologistic = 1- predict(ologistic_2,newdata=grid, type="probs")[,1]
                 )
-
-grid %>% pivot_longer(cols = -c(ym,rate), names_to="model", values_to="infiel_hat") %>%
-  ggplot(aes(x=rate,y=infiel_hat, group=model,colour=model)) +
-  geom_line()
-
 ```
 
----
-## Inferencia para cantidades de interés
 
+.pull-left[
+```{r plot1, warning=F, message=F, eval=F}
+grid %>% pivot_longer(cols = -c(ym,rate), names_to="model", values_to="infiel_hat") %>%
+  ggplot(aes(x=rate,y=infiel_hat, group=model,colour=model)) +
+  geom_line() +
+  scale_color_viridis_d() +  scale_fill_viridis_d() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position = "none") +
+  labs(x="rate", y=expression("P(Infiel)"))
+```
+]
+
+.pull-right[
+```{r plot1-out, ref.label="plot1", warning=F, message=F, echo=F, fig.height=4.5, fig.width=6}
+```
+]
+
+---
+## Inferencia para cantidades de interés: Bootstrap
 
 
 ```{r, warning=F, message=F}
-
 bs  <- function(x) {
   grid <- affairsdata %>% data_grid(ym=median(ym),rate)
   
@@ -271,10 +297,36 @@ bs  <- function(x) {
                 )
 }
 
-# Iterar función y almacenar resultados 
-
-#affairsdata %>% bootstrap(200) %>% mutate(pred = map(strap, ~ bs(.x))) %>% dplyr::select(.id,pred) %>% unnest()
 ```
+
+---
+## Inferencia para cantidades de interés: Bootstrap
+
+
+```{r, warning=F, message=F}
+# aplica función bootstrap
+grid <- affairsdata %>% bootstrap(10) %>% mutate(pred = map(strap, ~ bs(.x))) %>% 
+  dplyr::select(.id,pred) %>% unnest()
+```
+
+
+```{r, echo=F, warning=F, message=F, fig.height=5, fig.width=15}
+library("ggsci")
+# plot resultados
+grid %>% pivot_longer(cols = -c(.id, ym,rate), names_to="model", values_to="infiel_hat") %>%
+  ggplot(aes(x=rate,y=infiel_hat, group=interaction(.id), colour=model)) +
+  geom_line(alpha=.05) +
+  scale_color_lancet() +  scale_fill_lancet() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position = "none") +
+  labs(x="rate", y=expression("P(Infiel)")) +
+  facet_grid( . ~ model)
+```
+
+---
+## Comparasión de modelos: bondad de ajuste
+
 
 ---
 
