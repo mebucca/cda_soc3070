@@ -38,7 +38,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 - Ayudantía 3: [`[Presentación]`](https://mebucca.github.io/cda_soc3070/ta/Ayudantía_3#1)[`[R Script]`](ta/Ayudantía_3.Rmd)[`[Database]`](ta/nsca2018.Rda) 
 - Ayudantía 4: [`[Presentación]`](https://mebucca.github.io/cda_soc3070/ta/Ayudantía_4#1)[`[R Script]`](ta/Ayudantía_4.Rmd)[`[Database]`](ta/nsca2018.Rda) 
 - Ayudantía 5: [`[Presentación]`](https://mebucca.github.io/cda_soc3070/ta/Ayudantía_5#1)[`[R Script]`](ta/Ayudantía_5.Rmd)[`[Database]`](ta/nsca2018.Rda) [`[Video]`](ta/Ayudantía_5.mp4) 
-
+- Ayudantía 6: [`[Presentación]`](https://mebucca.github.io/cda_soc3070/ta/Ayudantía_6#1)[`[R Script]`](ta/Ayudantía_6.Rmd)[`[Database]`](ta/nsca2018.Rda) [`[Video]`](ta/Ayudantía_6.mp4) 
 ---
 
 ### Evaluaciones 
