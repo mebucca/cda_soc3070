@@ -24,7 +24,7 @@ class: inverse, center, middle
 
 
 ---
-## Estructura de un modelo de regresión logística multinomial 
+## Estructura de un modelo de regresión logística multinomial ordenada 
 
 `$$\newcommand{\vect}[1]{\boldsymbol{#1}}$$`
 Un modelo de regresión logística ordenada generaliza la regresión logística (binomial) a situaciones en que la variable dependiente es una  variable discreta con .bold[ dos o más valores ordenados] (ejemplo: "muy de acuerdo", "algo de acuerdo", "poco de acuerdo", etc..).
@@ -100,7 +100,7 @@ y_{i} = \begin{cases}
 ]
 
 
-- `\(\epsilon_{i}\)` sigue una distribución de probabilidad .bold[logística]: `\(\epsilon_{i} \sim \text{logistic}(0,1) \approx \mathcal{N}(0,1.6)\)`
+- `\(\epsilon_{i}\)` sigue una distribución de probabilidad .bold[logística]: `\(\epsilon_{i} \sim \text{logistic}(\mu=0,\sigma=\pi/\sqrt{3}) \approx \mathcal{N}(0,1.6)\)`
 
 &lt;style type="text/css"&gt;
 .pull-right ~ * { clear: unset; }
@@ -143,7 +143,7 @@ y_{i} = \begin{cases}
 ]
 
 
-- `\(\epsilon_{i} \sim \text{logistic}(0,1)\)`
+- `\(\epsilon_{i} \sim \text{logistic}(\mu=0,\sigma=\pi/\sqrt{3})\)`
 
 
 --
@@ -217,7 +217,7 @@ La formulación con variable latente se puede generalizar al caso en que a varia
 ]
 
 .pull-right[
-`$$\epsilon_{i} \sim \text{logistic}(0,1)$$`
+`$$\epsilon_{i} \sim \text{logistic}(\mu=0,\sigma=\pi/\sqrt{3})$$`
 ]
 
 &lt;br&gt;

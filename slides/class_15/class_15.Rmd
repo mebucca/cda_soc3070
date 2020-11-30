@@ -1337,8 +1337,8 @@ $$\frac{\partial \mu_{i}}{\partial x_{k}} \approx  \frac{\mu_{i}(n_{i}=10^{6}, x
 
 ```{r}
 delta = 0.1
-grid <- covid_subdata %>% select(median_age,continent,population) %>% mutate(population = 10^6)
-grid_delta <- covid_subdata %>% select(median_age,continent,population) %>% mutate(population = 10^6) %>% mutate(median_age = median_age + delta) 
+grid <- covid_subdata %>% dplyr::select(median_age,continent,population) %>% mutate(population = 10^6)
+grid_delta <- covid_subdata %>% dplyr::select(median_age,continent,population) %>% mutate(population = 10^6) %>% mutate(median_age = median_age + delta) 
 
 predictions <- grid %>% mutate(mu_hat = predict(poisson_death_agecont_rate, newdata=grid, type="response"))
 predictions_delta <- grid_delta %>% mutate(mu_hat_delta = predict(poisson_death_agecont_rate, newdata=grid_delta, type="response"))

@@ -98,7 +98,7 @@ $y^{*}_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki} + \epsilon_{i
 ]
 
 
-- $\epsilon_{i}$ sigue una distribución de probabilidad .bold[logística]: $\epsilon_{i} \sim \text{logistic}(0,1) \approx \mathcal{N}(0,1.6)$
+- $\epsilon_{i}$ sigue una distribución de probabilidad .bold[logística]: $\epsilon_{i} \sim \text{logistic}(\mu=0,\sigma=\pi/\sqrt{3}) \approx \mathcal{N}(0,1.6)$
 
 ```{css, echo=FALSE}
 .pull-right ~ * { clear: unset; }
@@ -131,7 +131,7 @@ mydata <- data_frame(x = seq(from = -5, to = 5, by =0.01), logistic = dlogis(x),
 plot <- ggplot(data = mydata, mapping = aes(x = x)) +
     ## Entire curve
     geom_path(aes(y=value, group=name, colour=name), size=1.5, alpha=0.8) +
-  labs(title="Densidad de probabilidad", x="e ~ logistic(0,1)", colour="Distribución", y="f(.)") +
+  labs(title="Densidad de probabilidad", x="e ~ logistic(0,pi/sqrt(3))", colour="Distribución", y="f(.)") +
      scale_color_viridis_d() +
       geom_vline(xintercept = 0, color = "blue", size=1.5) +
       theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
@@ -151,7 +151,7 @@ mydata <- data_frame(x = seq(from = -5, to = 5, by =0.01), logistic = plogis(x),
 plot <- ggplot(data = mydata, mapping = aes(x = x)) +
     ## Entire curve
     geom_path(aes(y=value, group=name, colour=name), size=1.5, alpha=0.8) +
-  labs(title="Probabilidad acumulada", x="e ~ logistic(0,1)", colour="Distribución", y="F(.)") +
+  labs(title="Probabilidad acumulada", x="e ~ logistic(0,pi/sqrt(3))", colour="Distribución", y="F(.)") +
      scale_color_viridis_d() +
         geom_vline(xintercept = 0, color = "blue", size=1.5) +
         geom_hline(yintercept = 0.5, color = "blue", size=1.5, linetype="dotted") +
@@ -183,7 +183,7 @@ $y^{*}_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki} + \epsilon_{i
 ]
 
 
-- $\epsilon_{i} \sim \text{logistic}(0,1)$
+- $\epsilon_{i} \sim \text{logistic}(\mu=0,\sigma=\pi/\sqrt{3})$
 
 
 --
@@ -269,7 +269,7 @@ $$y^{*}_{i} = \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki} + \epsilon_{i}$$
 ]
 
 .pull-right[
-$$\epsilon_{i} \sim \text{logistic}(0,1)$$
+$$\epsilon_{i} \sim \text{logistic}(\mu=0,\sigma=\pi/\sqrt{3})$$
 ]
 
 <br>
