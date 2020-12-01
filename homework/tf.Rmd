@@ -15,7 +15,7 @@ BONUS: Responder la pregunta _bonus_ NO es un requisito necesario para obtener p
 
 # Descripción
 
-En el trabajo final del curso trabajarán con el artículo "Complicating Colorism: Race, Skin Color, and the Likelihood of Arrest" (Branigan et at 2017). Link al artículo disponible en el repositorio del curso.
+En el trabajo final del curso trabajarán con el artículo "Complicating Colorism: Race, Skin Color, and the Likelihood of Arrest" (Branigan et al 2017). Link al artículo disponible en el repositorio del curso.
 
 
 ## Preguntas: 
@@ -24,7 +24,7 @@ En el trabajo final del curso trabajarán con el artículo "Complicating Coloris
 
 2.  Describe brevemente la variable dependiente del estudio y su forma de medición.
 
-3.  Describe brevemente la principal variable independiente del estudio y su forma de medición
+3.  Describe brevemente la principal variable independiente del estudio y su forma de medición.
 
 4. En la p.5 los autores señalan: "Given the bimodal distribution of skin color, all models are run separately by race". Explica las razones sustantivas detrás de esta decisión. 
 
@@ -35,14 +35,14 @@ En el trabajo final del curso trabajarán con el artículo "Complicating Coloris
 
 7. En la página 10 los autores sostienen: "The magnitude of the coefficient for white men varies slightly with the addition of fixed effects on birth year and survey center in model 2, and again with the addition of the full battery of controls in model 3. Among black men, the nonsignificant coefficient fluctuates negligibly across models, and by model 3 is still nonsignifi- cant and substantively small.... these coefficients are not directly comparable across race given the differences by race in the distribution of skin color".
 
- - Interpreta el coeficiente de "skin reflectance" en el Modelo 3, Tablas 2, para cada raza. 
+ - Interpreta el coeficiente de "skin reflectance" en el Modelo 3, Tabla 2, para cada raza. 
 
- - A parte de lo señalado por los autores, provee otras razones por las cuales los coeficiente de "skin reflectance" no son directamente comparable entre modelos. 
+ - A parte de lo señalado por los autores, provee otras razones por las cuales los coeficientes de "skin reflectance" no son directamente comparables entre modelos. 
 
 8. Basado en la Figura 2, escribe las equaciones correspondientes a las probabilidades predichas de ser arrestado para una persona blanca y una persona negra con 40% de "skin reflectance". 
-Nota: dado que los "fixed effects" no son reportados en el artículo, omítelos de éstas ecuaciones. 
+Nota: dado que los "fixed effects" no son reportados en el artículo, omítelos de estas ecuaciones. 
 
-9. Las probabilidades predichas en la Figura 2 muestran un efecto no-lineal de color de piel sobre la probabildad de arresto para hombres blancos. Sin embargo, el modelo de regresión sólo considera un efecto lineal para el color de piel. Explica por qué observamos una curva y no una recta. 
+9. Las probabilidades predichas en la Figura 2 muestran un efecto no-lineal de color de piel sobre la probabilidad de arresto para hombres blancos. Sin embargo, el modelo de regresión sólo considera un efecto lineal para el color de piel. Explica por qué observamos una curva y no una recta. 
 
 10. (Bonus) Usando los datos de infidelidad, estima un modelo Poisson para tasa de infidelidad a lo largo del matrimonio, corrigiendo la inferencia por potencial "over-dispersion".
 
@@ -69,7 +69,7 @@ affairsdata <- Fair %>% as_tibble()
  
  - La variable `nbaffairs` mide la cantidad de relaciones extra-matrimoniales que ha tenido una persona. La variable `ym` mide los años que una persona ha estado casada.
  
- - Tienes total libertad especificar el lado derecho la ecuación de regresión.
+ - Tienes total libertad para especificar el lado derecho de la ecuación de regresión.
 
 
  10.1 Interpreta el efecto multiplicativo de tu principal predictor de interés sobre la tasa de infidelidad.
