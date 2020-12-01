@@ -64,6 +64,8 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 
 #### Trabajo Final
 
+
+- Trabajo Final: [`[TF]`](homework/tf/tf.pdf) [`[TF.Rmd]`](homework/tf/tf.Rmd) [`[Paper]`](https://journals.sagepub.com/doi/full/10.1177/2378023117725611)
 ---
 
 ### Recursos para trabajar en `R`
