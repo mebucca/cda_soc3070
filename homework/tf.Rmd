@@ -1,0 +1,79 @@
+---
+title: "SOC3070 Análisis de Datos Categóricos"
+author: "Trabajo final"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+
+
+Ponderación: 30% de la nota final del curso. Entrega: hasta el día 15 de Diciembre a las 23:59 p.m.
+
+BONUS: Responder la pregunta _bonus_ NO es un requisito necesario para obtener puntaje completo. Responder incorrectamente la pregunta _bonus_ no afectará negativamente la nota obtenida, pero responderla correctamente mejorará la nota obtenida en un máximo de 0.7 puntos (o en la cantidad necesaria para obtener nota máxima si la nota original fuera superior a 6.3)
+
+# Descripción
+
+En el trabajo final del curso trabajarán con el artículo "Complicating Colorism: Race, Skin Color, and the Likelihood of Arrest" (Branigan et at 2017). Link al artículo disponible en el repositorio del curso.
+
+
+## Preguntas: 
+
+1. Describe brevemente la pregunta de investigación de este estudio.
+
+2.  Describe brevemente la variable dependiente del estudio y su forma de medición.
+
+3.  Describe brevemente la principal variable independiente del estudio y su forma de medición
+
+4. En la p.5 los autores señalan: "Given the bimodal distribution of skin color, all models are run separately by race". Explica las razones sustantivas detrás de esta decisión. 
+
+5. Basado en la descripción de los predictores y la tabla 2, re-escribe las ecuaciones de regresión descritas en Ecuación 1 (p.7) en versión extensa. Ejemplo: la descripción "P is a vector of family background measures" resume una serie de predictores con sus respectivos efectos. Igualmente, la descipción "B denotes fixed effects on respondent age" refiere a un conjunto de variables dummy para diferentes grupos de edad. La versión extensa de la ecuación debe especificar cada predictor de manera explícita. 
+
+
+6. Al final de la nota al pie número 13 los autores señalan: "Higher order terms on r were nonsignificant and yielded negligible improvement to model fit". Explique brevemente la motivación sustantiva de testear los efectos de "higher order terms".
+
+7. En la página 10 los autores sostienen: "The magnitude of the coefficient for white men varies slightly with the addition of fixed effects on birth year and survey center in model 2, and again with the addition of the full battery of controls in model 3. Among black men, the nonsignificant coefficient fluctuates negligibly across models, and by model 3 is still nonsignifi- cant and substantively small.... these coefficients are not directly comparable across race given the differences by race in the distribution of skin color".
+
+ - Interpreta el coeficiente de "skin reflectance" en el Modelo 3, Tablas 2, para cada raza. 
+
+ - A parte de lo señalado por los autores, provee otras razones por las cuales los coeficiente de "skin reflectance" no son directamente comparable entre modelos. 
+
+8. Basado en la Figura 2, escribe las equaciones correspondientes a las probabilidades predichas de ser arrestado para una persona blanca y una persona negra con 40% de "skin reflectance". 
+Nota: dado que los "fixed effects" no son reportados en el artículo, omítelos de éstas ecuaciones. 
+
+9. Las probabilidades predichas en la Figura 2 muestran un efecto no-lineal de color de piel sobre la probabildad de arresto para hombres blancos. Sin embargo, el modelo de regresión sólo considera un efecto lineal para el color de piel. Explica por qué observamos una curva y no una recta. 
+
+10. (Bonus) Usando los datos de infidelidad, estima un modelo Poisson para tasa de infidelidad a lo largo del matrimonio, corrigiendo la inferencia por potencial "over-dispersion".
+
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+library("tidyverse")
+library("Ecdat")
+library("viridis")
+library("modelr")
+library("MASS")
+library("cowplot")
+library("margins")
+library("sjPlot")
+library("sjmisc")
+library("sjlabelled")
+library("nnet")
+library("lmtest")
+
+theme_set(theme_cowplot())
+
+data(Fair)
+affairsdata <- Fair %>% as_tibble()
+
+```
+ 
+ - La variable `nbaffairs` mide la cantidad de relaciones extra-matrimoniales que ha tenido una persona. La variable `ym` mide los años que una persona ha estado casada.
+ 
+ - Tienes total libertad especificar el lado derecho la ecuación de regresión.
+
+
+ 10.1 Interpreta el efecto multiplicativo de tu principal predictor de interés sobre la tasa de infidelidad.
+
+
+ 10.2 Interpreta el coeficiente de dispersión.
+ 
