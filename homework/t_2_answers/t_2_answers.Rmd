@@ -1,0 +1,272 @@
+---
+title: "SOC3070 Análisis de Datos Categóricos"
+author: "Trabajo 2"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r, echo=FALSE,message=FALSE, warnings=FALSE}
+# Escribir install.packages("tinytex") en la consola para instalar "tinytex"
+# Escribir install.packages("tidyverse") en la consola para instalar "tinytex"
+# Escribir install.packages("modelr") en la consola para instalar "tinytex"
+library("tinytex")
+library("tidyverse")
+library("nnet")
+library("modelr")
+library("MASS")
+```
+
+**Información**
+
+Ponderación: 20% de la nota final del curso.
+Entrega: Desde el momento de entrega, los estudiantes tienen 2 semanas exactas de plazo para completar esta tarea. Responder las preguntas _bonus_ NO es un requisito necesario para obtener puntaje completo. Responder incorrectamente las preguntas _bonus_ no afectará negativamente la nota obtenida, pero responderlas correctamente mejorará la nota obtenida en un máximo de 0.7 puntos (o en la cantidad necesaria para obtener nota máxima si la nota original fuera superior a 6.3)
+
+**Introducción**
+
+En esta tarea usarán regresión logística multinomial (MNLR) y regresión logística ordenada (OLR) para re-analizar un subconjunto de los datos utilizados en el artículo _"It’s not just how the game is played, it’s whether you win or lose"_ (2019). Este estudio utiliza un experimento online para identificar el efecto causal de las desigualdades de oportunidades y de resultados sobre creencias acerca de las causas de la desigualdad y percepciones de justicia. 
+
+En particular, deberán estimar los efectos de las dos manipulaciones experimentales del estudio sobre las probabilidades de atribuir los resultados de la competencia al talento ("talent"), la suerte ("luck") o circunstancias externas al individuo  ("rules"). Estas respuestas se encuentan en la variable `LTC`. Una de las manipulaciones experimentales es el status de ganador o perdedor de los participantes (variable `W`). La otra es el nivel de desigualdad de oportunidades en la competencia, el cual es determinado por el tratamiento al que cada individuo fue asignado (variable `T`). Para esta tarea usarán el subconjunto de datos correspondientes a los tratamientos RA ("random exchange", es decir, "level of redistribution" = 0), RE1 ("regressive exchange" con "level of redistribution" = 1) y RE2 ("regressive exchange" con "level of redistribution" = 2). 
+
+Para mayor contexto pueden revisar el artículo en el link indicado en el repositorio. Igualmente, los datos están disponibles en el repositorio del curso para ser descargados. 
+
+````{r, message=FALSE, warnings=FALSE}
+data_paper <- read_csv("data_t_2.csv") %>% mutate(W=if_else(W=="TRUE",1,0))
+data_paper %>% glimpse()
+````
+
+\pagebreak
+
+**Ejercicios**
+
+1. Usa regresión logística multinomial para estimar el modelo implícito en el panel derecho de la figura 2 (interacción entre variables `T` y `W`). Presenta un `summary()` de los resultados. Usa `LTC = "rules"` como categoría de referencia en la variable dependiente.
+
+````{r}
+data_paper$LTC <- factor(data_paper$LTC, levels = c("rules","talent","luck"))
+mnlr_1 <- multinom(LTC ~ T*W, data=data_paper)
+summary(mnlr_1)
+````
+
+1.1 Interpreta los coeficientes asociados a `TRE1` y  `TRE2:W`.
+
+El coeficiente asociado a `TRE1-talent` indica que las log-odds de un un perdedor del tratamiento RE1 atribuya los resultados al talento en vez de a la reglas del juego son 1.35 puntos menores que la de los perdedores del tratamiento RA. Por su parte, el coeficiente asociado a `TRE1-luck` indica que las log-odds de que un perdedor del tratamiento RE1 atribuya los resultados a la suerte en vez de a la reglas del juego son 1.30 puntos menores que la de los perdedores del tratamiento RA. 
+
+En tanto, el coeficiente asociado a la interacción `TRE2:W-talent` indica que las log-odds de atribuir los resultados al talento en vez de a la reglas del juego por parte de los ganadores del tratamiento RE2 son 2.6 puntos menores que la de los ganadores del tratamiento RA ( $\beta_{RE2-talent} + \beta_{RE2:W-talent} =-2.501769 - 0.07875193 = -2.580521$ ) y 1 punto mayores que la de los perdedores del tratamiento RE2 ( $\beta_{W-talent} + \beta_{RE2:W-talent} = 1.1297749 + -0.07875193 = 1.051023$ ).
+
+Asimismo, el coeficiente asociado a la interacción `TRE2:W-luck` indica que las log-odds de atribuir los resultados a la suerte en vez de a la reglas del juego por parte de los ganadores del tratamiento RE2 son 1.9 puntos menores que la de los ganadores del tratamiento RA  ( $\beta_{RE2-luck} + \beta_{RE2:W-luck} =  -1.873106 - 0.02956029 = -1.902666$ ) y 0.4 puntos menores que la de los perdedores del tratamiento RE2 ( $\beta_{W-luck} + \beta_{RE2:W-luck} = -0.3434807  - 0.02956029 = -0.373041$ ).
+
+1.2 Transforma e interpreta los coeficientes correspondiente `RE1-talent` y `RE1-luck` en términos de odds-ratios (o probabilidades relativas). Presenta el desarrollo formal de una de estas odds-ratios.
+
+Transformamos los coeficientes en odds ratios exponenciando los coeficientes originales:
+````{r}
+exp(summary(mnlr_1)$coefficients)[,"TRE1"]
+````
+
+Formalmente:
+
+$\ln \frac{\mathbb{P}(\text{talent | T=RE1, W=0)}}{\mathbb{P}(\text{rules | T=RE1, W=0)}} = \beta_{0} + \beta_{RE1}$
+
+Por tanto:
+
+
+- $\frac{\mathbb{P}(\text{talent | T=RE1, W=0)}}{\mathbb{P}(\text{rules | T=RE1, W=0)}} = e^{\beta_{0-talent} + \beta_{RE1-talent}} = e^{\beta_{0-talent}} e^{\beta_{RE1-talent}}$
+
+y
+
+- $\frac{\mathbb{P}(\text{talent | T=RA, W=0)}}{\mathbb{P}(\text{rules | T=RA, W=0)}} = e^{\beta_{0-talent}}$
+
+se sigue de esto que
+
+
+$\frac{\mathbb{P}(\text{talent | T=RA, W=0)}}{\mathbb{P}(\text{rules | T=RA, W=0)}} \bigg/ \frac{\mathbb{P}(\text{talent | T=RE1, W=0)}}{\mathbb{P}(\text{rules | T=RE1, W=0)}} = e^{\beta_{0-talent}} e^{\beta_{RE1-talent}} / e^{\beta_{0-talent}} = e^{\beta_{RE1-talent}} = e^{-1.344576} = 0.26$
+
+es decir, el ratio entre la probabilidad de atribuir los resultados al talento y la probabilidad de atribuirlos a las reglas por parte de los perdedores del tratamiento RE1 es 1/4 el ratio observado para los perdedores del tratamiendo RA.
+
+
+1.3. Calcula la odds ratio de atribuir los resultados al talento en vez de a la suerte entre los perdedores del tratamiento RA vs los perdedores de RE2.
+
+
+$e^{\beta_{RE2-talent} - \beta_{RE2-luck}} = e^{(-2.501769 - -1.873106 )} = 0.5333044$
+
+
+1.4 Manipula los resultados del modelo para obtener las probabilidades esperadas de que los participantes del tratamiento RA -- tanto ganadores como perdedores -- sostengan que los resultados de la competencia se deben principalmente al "talento". Expresa formalmente las ecuaciones correspondiente a estas predicciones.
+
+En términos generales sabemos que:
+
+$p_{ji} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{j=1}  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}$
+
+
+Por tanto:
+
+- $\mathbb{P}(\text{talent | T=RA, W=0}) = \frac{e^{\beta_{0-talent}}}{1 + e^{\beta_{0-talent}} + e^{\beta_{0-luck}} } = e^{0.175}/(1 + e^{0.175} + e^{1.743}) = 0.15$
+
+- $\mathbb{P}(\text{talent | T=RA, W=1}) = \frac{e^{\beta_{0-talent} + \beta_{W-talent}}}{1 + e^{(\beta_{0-talent} + \beta_{W-talent})}  + e^{(\beta_{0-luck} + \beta_{W-luck})} } = e^{0.175 + 1.13}/(1 + e^{0.175 + 1.13} + e^{1.743 -0.343}) = 0.422$
+
+Implementación en `R`:  
+```{r}
+newx <- data_paper %>% data_grid(T="RA",W,.model=mnlr_1)
+newy <- cbind(newx,predict(mnlr_1, newdata = newx, type = "probs")) %>% dplyr::select(talent)
+print(newy)
+```
+
+
+1.5 Agrega un control por `age` al modelo estimado en 1. Presenta un `summary()` de los resultados.
+
+```{r}
+mnlr_2 <- multinom(LTC ~ T*W + age, data=data_paper)
+summary(mnlr_2)
+```
+
+
+1.6. (Bonus 1) De acuerdo al modelo estimado en 1.5., ¿cuál es _efecto_ (marginal) de edad sobre la probabilidad de que un perdedor de 20 años en el tratamiento RA atribuya los resultados al talento?
+
+Sabemos que:
+
+- $\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg( \beta_{jk} - \sum^{J-1}_{j=1} \beta_{jk}\cdot p_{ij}\bigg)$
+
+y
+
+- $p_{ji} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{j=1}  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}$
+
+Por tanto:
+
+\begin{align*}
+\mathbb{P}(\text{talent | T=RA, W=0}) &= \frac{e^{\beta_{0-talent} + 20\beta_{age-talent}}}{1 + (e^{\beta_{0-talent}+ 20\beta_{age-talent}}) + (e^{\beta_{0-luck} + 20\beta_{age-luck}})} \\ \\
+&= e^{-0.35 + 20*0.014}/(1 + (e^{-0.35 + 20*0.014}) + (e^{1.76 - 20*0.00})) \\ \\
+&= 0.12
+\end{align*}
+
+
+\begin{align*}
+\mathbb{P}(\text{luck | T=RA, W=0}) &= \frac{e^{\beta_{0-talent} + 20\beta_{age-talent}}}{1 + (e^{\beta_{0-talent}+ 20\beta_{age-talent}}) + (e^{\beta_{0-luck} + 20\beta_{age-luck}})} \\ \\
+&= e^{1.76 - 20*0.00}/(1 + (e^{-0.35 + 20*0.014}) + (e^{1.76 - 20*0.00})) \\ \\
+&= 0.75
+\end{align*}
+
+\begin{align*}
+\frac{\partial \mathbb{P}(\text{talent | T=RA, W=0, age=20})}{\partial \text{age}} &=   p_{\text{talent }i} \cdot (\beta_{age-\text{talent}} - (\beta_{age-\text{talent}}*p_{\text{talent }i} + \beta_{age-\text{luck}}*p_{\text{luck }i} )) \\ \\
+&= 0.12*(0.0135904933  - (0.0135904933*0.12 + -0.0004312425*0.75) ) \\ \\
+&= 0.0014784
+\end{align*}
+
+
+Aproximación numérica:
+
+```{r}
+delta = 0.1
+grid <- data_paper %>% data_grid(T="RA",W=0,age=20, .model=mnlr_2)
+grid_delta <- data_paper %>% data_grid(T="RA",W=0,age=20, .model=mnlr_2) %>% mutate(age = age + delta)
+
+p_hat <- predict(mnlr_2, type="probs", newdata =grid) %>% as_tibble() %>% 
+  mutate(id = c("rules","talent","luck")) %>% rename(p_hat = value)
+
+p_hat_delta <- predict(mnlr_2, type="probs", newdata =grid_delta) %>% as_tibble() %>% 
+  mutate(id = c("rules","talent","luck")) %>% rename(p_hat_delta = value)
+
+p_hat_delta %>% left_join(p_hat, by=c("id")) %>% mutate(me_age = (p_hat_delta  - p_hat)/delta) 
+```
+
+\pagebreak
+
+2. Usa regresión logística ordinal para estimar el modelo implícito en el panel derecho de la figura 2 (interacción entre variables `T` y `W`). Presenta un `summary()` de los resultados. Usa el siguiente orden  para la variable `LTC`: "rules", "luck", "talent" (de menos a más "meritocrático").
+
+````{r}
+data_paper$LTC <- ordered(data_paper$LTC, levels = c("rules","luck","talent"))
+ologit_1 <- polr(LTC ~ T*W, data=data_paper)
+summary(ologit_1)
+````
+
+2.1 Interpreta los coeficientes asociados a `TRE1` y  `TRE2:W`.
+
+El coeficiente asociado a `TRE1` indica que, en promedio, los perdedores del tratamiendo RE1 tienen 0.8 punto menos en la variable latente de atribución meritocrática comparado con los perdedores del tratamiendo RA.
+
+En tanto, el coeficiente asociado a la interacción `TRE2:W` indica que los ganadores del tratamiento RE2 tienen, en promedio, 2.1 puntos menos en la variable latente de atribución meritocrática comparado con los ganadores del tratamiendo RA ($\beta_{RE2} + \beta_{RE2:W} = -1.39112 + -0.74746 = -2.13858$) y 0.1 punto más que los perdedores del tratamiendo RE2 ($\beta_{W} + \beta_{RE2:W} = 0.84860 + -0.74746 = 0.10114$).
+
+
+2.2 Transforma e interpreta el coeficientes correspondiente a `RE1` en términos de odds-ratios acumulativas . Presenta el desarrollo formal de dicha odds-ratio.
+
+Para los perdedores del tratamiendo RE1 el logit acumulado de la probabilidadad de atribuir los resultados del juego a la suerte u otro motivo menos meritocrático ("rules" o "luck") está dado por:
+
+$\ln \frac{\mathbb{P}( y \leq \text{luck | T=RE1, W=0)}}{\mathbb{P}(y >\text{luck | T=RE1, W=0)}} = \alpha_{\text{luck|talent}} - \beta_{RE1}$
+
+mientras que para los perdedores del tratamiendo RA el mismo logit está dado por:
+
+
+$\ln \frac{\mathbb{P}( y \leq \text{luck | T=RA, W=0)}}{\mathbb{P}(y >\text{luck | T=RA, W=0)}} = \alpha_{\text{luck|talent}}$
+
+
+Por tanto, las correspondientes odds son:
+
+
+$\frac{\mathbb{P}( y \leq \text{luck | T=RE1, W=0)}}{\mathbb{P}(y >\text{luck | T=RE1, W=0)}} = e^{\alpha_{\text{luck|talent}}} \cdot e^{-\beta_{RE1}}$
+
+
+y
+
+$\frac{\mathbb{P}( y \leq \text{luck | T=RA, W=0)}}{\mathbb{P}(y >\text{luck | T=RA, W=0)}} = e^{\alpha_{\text{luck|talent}}}$
+
+
+Se sigue de esto que
+
+
+$\frac{\mathbb{P}( y \leq \text{luck | T=RE1, W=0)} / \mathbb{P}(y >\text{luck | T=RE1, W=0)} }{\mathbb{P}( y \leq \text{luck | T=RA, W=0)} / \mathbb{P}(y >\text{luck | T=RA, W=0)}} = e^{-\beta_{RE1}}$
+
+Este coeficiente los obtenemos de la siguiente forma:
+
+````{r, message=FALSE}
+exp(-(summary(ologit_1)$coefficients["TRE1",1]))
+````
+
+Es decir, las odds acumulada de atribuir los resultados del juego a la suerte u otro motivo menos meritocrático ("rules" o "luck") de los perdedores del tratamiento RE1 son aproximadamente el doble de las odds de los perdedores del tratamiento RA.
+
+
+2.3 Manipula los resultados del modelo para obtener las probabilidades esperadas de que los participantes del tratamiento RA -- tanto ganadores como perdedores -- sostengan que los resultados de la competencia se deben principalmente al "talento". Expresa formalmente las ecuaciones correspondiente a estas predicciones.
+
+
+$$\mathbb{P}(y = \text{talent | T=RA, W=0)} = 1- \text{logit}^{-1}(\alpha_{\text{luck|talent}}) = 1 - 1/(1 + e^{-\alpha_{\text{luck|talent}}}) = 0.2319737$$
+
+$$\mathbb{P}(y = \text{talent | T=RA, W=0)} = 1- \text{logit}^{-1}(\alpha_{\text{luck|talent}}  - \beta_{W}) = 1 - 1/(1 + e^{-(\alpha_{\text{luck|talent}}  - \beta_{W})}) = 0.4137196$$
+
+Implementación en `R`:  
+```{r}
+newx <- data_paper %>% data_grid(T="RA",W,.model=ologit_1)
+newy <- cbind(newx,predict(ologit_1, newdata = newx, type = "probs")) %>% dplyr::select(talent)
+print(newy)
+```
+
+2.4 Agrega un control por `age` al modelo estimado en 2. Presenta un `summary()` de los resultados.
+
+```{r}
+ologit_2 <- polr(LTC ~ T*W + age, data=data_paper)
+summary(ologit_2)
+```
+
+
+2.5. (Bonus 2) De acuerdo al modelo estimado en 2.5., ¿cuál es _efecto_ (marginal) de edad sobre la probabilidad de que un perdedor de 20 años en el tratamiento RA atribuya los resultados al talento? Interpreta este resultado.
+
+Talento es la categoría más alta, por tanto:
+
+$\frac{\partial \mathbb{P}(y_{i} = \text{talent | T=RA, W=0, age=20})}{\partial \text{age}} =  \beta_{\text{age}} \cdot \bigg( \mathbb{P}(y_{i} \leq \text{luck | T=RA, W=0, age=20}) \cdot (1 - \mathbb{P}(y_{i} \leq \text{luck | T=RA, W=0, age=20}))\bigg)$
+
+
+$\mathbb{P}(y_{i} \leq \text{luck | T=RA, W=0, age=20}) = \text{logit}^{-1}(\alpha_{\text{luck|talent}} - \beta_{\text{age}}20) =0.7946719$
+
+Por tanto,
+
+$\frac{\partial \mathbb{P}(y_{i} = \text{talent | T=RA, W=0, age=20})}{\partial \text{age}} = 0.009*0.8*(1-0.8) = 0.00144$
+
+Aproximación numérica
+```{r}
+delta = 0.1
+grid <- data_paper %>% data_grid(T="RA",W=0,age=20, .model=ologit_2)
+grid_delta <- data_paper %>% data_grid(T="RA",W=0,age=20, .model=ologit_2) %>% mutate(age = age + delta)
+
+p_hat <- predict(ologit_2, type="probs", newdata =grid) %>% as_tibble() %>% 
+  mutate(id = c("rules","luck","talent")) %>% rename(p_hat = value)
+
+p_hat_delta <- predict(ologit_2, type="probs", newdata =grid_delta) %>% as_tibble() %>% 
+  mutate(id = c("rules","luck","talent")) %>% rename(p_hat_delta = value)
+
+p_hat_delta %>% left_join(p_hat, by=c("id")) %>% mutate(me_age = (p_hat_delta  - p_hat)/delta)
+```
