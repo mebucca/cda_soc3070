@@ -1,0 +1,166 @@
+---
+title: "SOC3070 Análisis de Datos Categóricos"
+author: "Trabajo final"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+
+
+Ponderación: 30% de la nota final del curso. Entrega: hasta el día 15 de Diciembre a las 23:59 p.m.
+BONUS: Responder la pregunta _bonus_ NO es un requisito necesario para obtener puntaje completo. Responder incorrectamente la pregunta _bonus_ no afectará negativamente la nota obtenida, pero responderla correctamente mejorará la nota obtenida en un máximo de 0.7 puntos (o en la cantidad necesaria para obtener nota máxima si la nota original fuera superior a 6.3)
+
+# Descripción
+
+En el trabajo final del curso trabajarán con el artículo "Complicating Colorism: Race, Skin Color, and the Likelihood of Arrest" (Branigan et at 2017), que estudia el efecto del color de la piel (medido como el porcenntaje de luz reflejado en la piel usando un espectrómetro) sobre la probabilidad de ser arrestado por la policía. 
+
+
+## Preguntas: 
+
+1. Describe brevemente la pregunta de investigación de este estudio.
+
+El estudio problematiza que el color de la piel opere solamente como un indicador de raza (por ejemplo, blanco o negro), sino que puede asociarse con variaciones en diferentes outcomes incluso dentro de un mismo grupo racial. Mientras que la comprensión tradicional del «coloris- mo» (colorism) sugiere que el color de la piel genera variación continua entre razas cuando se trata de minorías, pero que debiera generar variación dentro de los blancos. El artículo desafía esta hipótesis al buscar testear un «out-group homogeneity effect», que describe el sesgo que ocurre cuando personas de una misma raza dicen que todos los miembros de otras razas distintas a la suya se «ven igual», pero que los miembros de su propia raza «no se ven igual». Para investigar esta hipótesis, el artículo investiga si el color de la piel se asocia con la probabilidad de ser arresta- do de forma separada para hombres blancos y negros. Así, se puede testear de forma separada el impacto del color de la piel sobre la probabilidad de arresto tanto para blancos como para negros.
+
+*Santiago Ortuzar* 
+
+2.  Describe brevemente la variable dependiente del estudio y su forma de medición.
+
+La  probabilidad  de  un  hombre  de  ser  arrestado.   Los  datos  provienen  de una  encuesta  longitudinal  llamada  CARDIA  sobre  salud  que  incluye  una pregunta sobre arrestos.  Esta pregunta se realizó en la primera y la segunda ola de la encuesta.  En la primera ola se preguntó si la persona había sido arrestada en los  últimos doce meses.  En la segunda ola se preguntó si la persona había sido arrestada alguna vez. Una respuesta afirmativa a cualquiera de esas dos  respuestas  se  codifica  como  que  el  hombre  ha  sido  arrestado. Entonces se trata de una variable dicotómica (ha sido arrestado/no ha sido arrestado) autorreportada a través de una encuesta.
+
+*Daniel Venegas*
+
+
+3.  Describe brevemente la principal variable independiente del estudio y su forma de medición
+
+La variable independiente principal es el color de piel. La manera de medirlo fue mediante los datos de la cuarta ola de CARDIA, a través del porcentaje de luz reflejada en la piel según el brazo volar superior del espectrofotómetro Phovolt 577 (la parte inferior del brazo). Esta medida es del color de piel constitutivo (color de base de piel que no está expuesta a la luz normalmente, y que se mantiene relativamente constante a través del tiempo. Se usó el filtro ámbar. En una escala de 0 a 10(0), donde mayor reflectancia significa un color de piel más alto (claro!), porque la piel más clara refleja más luz.
+
+*Bernardita Becker*
+
+4. En la p.5 los autores señalan: "Given the bimodal distribution of skin color, all models are run separately by race". Explica las razones sustantivas detrás de esta decisión. 
+
+La distribución del color de la piel es bimodal en el sentido de que los valores más frecuentes para blancos no son los valores más frecuentes para negros, y los valores para ambos sólo se super- ponen (overlap) en tramos muy puntuales de la distribución de la variable. De hecho, la varianza de la variable es casi el doble entre negros que entre blancos, lo que sugiere que las personas de raza negra pueden tener una variedad de colores de piel mucho mayor que los blancos.
+
+Además, a la luz de la hipótesis del «out-group homogeneity effect», no se espera que el color de la piel tenga el mismo efecto sobre la probabilidad de arresto de individuos blancos y negros. En esa medida, al estimar modelos separados se puede observar (como ocurre en la Figura 2) cómo se relacionan las probabilidades predichas de arresto para cada raza a medida que varía el color de la piel (i.e. aumenta la skin reflectance). Desde el punto de vista teórico, habría razones para esperar que se observara una variación entre las dos razas, pues la cantidad de oficiales de policía (responsables de arrestar a los individuos) en las zonas donde se realizó el estudio son desproporcionadamente altas en relación a otras razas (en tres de las cuatro localidades del estudio, por ejemplo, el porcentaje de blancos entre los policías superaba el 95 %). Así, se puede testear de forma separada el impacto del color de la piel sobre la probabilidad de arresto tanto para blancos como para negros, pues los oficiales (blancos) de policía debieran ser más sensibles a las variaciones del color de piel entre individuos blancos y ser insensibles a las variaciones del color de piel entre individuos negros.
+
+*Santiago Ortuzar* 
+
+5. Basado en la descripción de los predictores y la tabla 2, re-escribe las ecuaciones de regresión descritas en Ecuación 1 (p.7) en versión extensa. Ejemplo: la descripción "P is a vector of family background measures" resume una serie de predictores con sus respectivos efectos. Igualmente, la descipción "B denotes fixed effects on respondent age" refiere a un conjunto de variables dummy para diferentes grupos de edad. La versión extensa de la ecuación debe especificar cada predictor de manera explícita. 
+
+
+\begin{align*}
+\ln \bigg( \frac{p_{ij}}{1-p_{ij}}\bigg) &= \beta_{1j} \text{skinreflectance} \\
+&+ \beta_{2j} \text{education}\\
+&+ \beta_{3j} \text{SEI}\\
+&+ \beta_{4j} \text{mother´s education}\\
+&+ \beta_{5j} \text{father´s education}\\
+&+ \beta_{6j} \text{mother´s SEI}\\
+&+ \beta_{7j} \text{father´s SEI}\\
+&+ \beta_{8j} \text{number siblings} \\
+&+ \beta_{9j} \text{Non-same-race parent}\\
+&+ \beta_{10j} \text{missing mother´s education}\\
+&+ \beta_{11j} \text{missing father´s education}\\
+&+ \beta_{12j} \text{missing mother´s SEI}\\
+&+ \beta_{13j} \text{missing father´s SEI}\\
+&+ \sum^{B}_{b=1} \beta_{bj} 1\{\text{age}=b\}\\
+&+ \sum^{S}_{s=1} \beta_{sj} 1\{\text{age}=s\}\\
+&+ \sum^{C}_{c=1} \beta_{cj} 1\{\text{season}=c\}
+\end{align*}
+
+6. Al final de la nota al pie número 13 los autores señalan: "Higher order terms on r were nonsignificant and yielded negligible improvement to model fit". Explique brevemente la motivación sustantiva de testear los efectos de "higher order terms".
+
+Los términos de nivel superior o “higher order terms” se emplean para probar efectos no lineales de la variable independiente color de piel. En términos sustantivos, ello se hace para saber si dentro de la escala de esta variable existe un efecto continuo sobre la probabilidad de haber sufrido detenciones, o si en ciertos niveles el efecto cambia o se neutraliza. Ello permitiría contestar con mayor precisión la pregunta por los tonos de piel en que opera efectivamente un sesgo racista de la policía una vez que se emplea una variable continua en vez de una variable dicotómica que pre define la frontera de este sesgo.
+
+*Nicolás Selamé* 
+
+7. En la página 10 los autores sostienen: "The magnitude of the coefficient for white men varies slightly with the addition of fixed effects on birth year and survey center in model 2, and again with the addition of the full battery of controls in model 3. Among black men, the nonsignificant coefficient fluctuates negligibly across models, and by model 3 is still nonsignifi- cant and substantively small.... these coefficients are not directly comparable across race given the differences by race in the distribution of skin color".
+
+ - Interpreta el coeficiente de "skin reflectance" en el Modelo 3 para cada raza. 
+
+
+El coeficiente de “skin reflectance” para hombres blancos es de -0.072. Es decir, que el coeficiente asociado alporcentaje de reflectancia de la piel indica que las log-odds esperadas de que un hombre blanco sea arrestadoson 0.072 puntos menores a medida que aumenta un punto porcentual (es decir, aumenta la blancura de lapersona) de “skin reflectance” en hombres blancos, controlando por todas las covariables. Este coeficiente essignificativo con un p>0.05.
+
+El coeficiente de “skin reflectance” para hombres negros es de 0.004.  Lo que significa que el coeficiente asociado al porcentaje de reflectancia de la piel indica que las log-odds esperadas de que un hombre negro sea arrestado son 0.004 puntos mayores a medida que aumenta un punto porcentual (es decir, los hombres de piel menos oscuras) de “skin reflectance” en hombres negros, controlando por todas las covariables.Este coeficiente no es significativo. 
+
+*Karina Maldonado* 
+
+ - A parte de lo señalado por los autores, provee otras razones por las cuales los coeficiente de "skin reflectance" no son directamente comparable entre modelos. 
+
+En la regresión logística, el valor de la varianza residual es fijada por diseño, de manera que la varianzade la variable dependiente puede variar entre modelos, dependiendo de los predictores dispuestos. Para laconsulta en cuestión, los coeficientes entre los modelos de hombre blanco y hombre negro, poseen predictoresque no sólo discrepan en su dispersión, (como en el caso de “skin reflectance”), sino también se vuelven odejan de ser significativos dependiendo del modelo. Este hecho, implicaría un reescalamiento de la variabledependiente y de los coeficientes, por tanto la comparación directa entre los coeficientes, podría interpretarerronéamente como sustantivos, cambios que en realidad se deben principalmente al re escalamiento de lasvariables.
+
+*Mario Villagrán* 
+
+8. Basado en la Figura 2, escribe las equaciones correspondientes a las probabilidades predichas de ser arrestado para una persona blanca y una persona negra con 40% de "skin reflectance". 
+Nota: dado que los "fixed effects" no son reportados en el artículo, omítelos de éstas ecuaciones. 
+
+La predicción lineal para cada raza $j$ está dado por:
+
+\begin{align*}
+\eta_{j} = \ln \bigg( \frac{p_{ij}}{1-p_{ij}}\bigg) &= \beta_{1j} 40 \\
+&+ \beta_{2j} \overline{\text{education}}\\
+&+ \beta_{3j} \overline{\text{SEI}}\\
+&+ \beta_{4j} \overline{\text{mother´s education}}\\
+&+ \beta_{5j} \overline{\text{father´s education}}\\
+&+ \beta_{6j} \overline{\text{mother´s SEI}}\\
+&+ \beta_{7j} \overline{\text{father´s SEI}}\\
+&+ \beta_{8j} \overline{\text{number siblings}} \\
+&+ \beta_{9j} \overline{\text{Non-same-race parent}}\\
+&+ \beta_{10j} \overline{\text{missing mother´s education}}\\
+&+ \beta_{11j} \overline{\text{missing father´s education}}\\
+&+ \beta_{12j} \overline{\text{missing mother´s SEI}}\\
+&+ \beta_{13j} \overline{\text{missing father´s SEI}}
+\end{align*}
+
+Por tanto, las probabilidad predichas se calculan del siguiente modo:
+
+$p_{j} = \frac{1}{1 + e^{-\eta_{j}}}$
+
+
+9. Las probabilidades predichas en la Figura 2 muestran un efecto no-lineal de color de piel sobre la probabildad de arresto para hombres blancos. Sin embargo, el modelo de regresión sólo considera un efecto lineal para el color de piel. Explica por qué observamos una curva y no una recta. 
+
+Porque la función que vincula $p_{j}$ y  $\eta_{j}$ no es lineal. 
+
+10. (Bonus) Usando los datos de infidelidad, estima un modelo Poisson para tasa de infidelidad a lo largo del matrimonio, corrigiendo la inferencia por potencial "over-dispersion".
+
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+library("tidyverse")
+library("Ecdat")
+library("viridis")
+library("modelr")
+library("MASS")
+library("cowplot")
+library("margins")
+library("sjPlot")
+library("sjmisc")
+library("sjlabelled")
+library("nnet")
+library("lmtest")
+
+theme_set(theme_cowplot())
+
+data(Fair)
+affairsdata <- Fair %>% as_tibble()
+
+```
+
+ 
+ - La variable `nbaffairs` mide la cantidad de relaciones extra-matrimoniales que ha tenido una persona. La variable `ym` mide los años que una persona ha estado casada
+ 
+ - Tienes total libertad especificar el lado derecho la ecuación de regresión.
+
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+model <- glm(nbaffairs ~  rate + factor(sex), family=quasipoisson(link=log), offset = log(ym), data=affairsdata)
+summary(model)
+```
+
+ 10.1 Interpreta el efecto multiplicativo de tu predictor de interés sobre la tasa de infidelidad.
+
+Un aumento en una unidad de evaluación de felicidad en el matrimonio disminuye en un 30%  ( $e^{-0.35311} - 1$ ) la tasa de infidelidad.
+
+
+ 10.2 Interpreta el coeficiente de dispersión.
+ 
+ La varianza residual del modelo ( $\mathbb{V}\text{ar}(y_{i} \mid x_1 ... x_n) = 12.75\mu_{i}$ ) es 12.75 veces la varianza esperada bajo los supuestos de un modelo Poisson estándar. 
+ 
+ 
