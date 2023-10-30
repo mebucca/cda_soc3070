@@ -5,9 +5,8 @@
     <meta charset="utf-8" />
     <meta name="author" content="  Mauricio Bucca  Profesor Asistente, Sociología UC" />
     <script src="libs/header-attrs-2.24/header-attrs.js"></script>
-    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
-    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
     <link rel="stylesheet" href="gentle-r.css" type="text/css" />
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
   <body>
     <textarea id="source">
@@ -23,13 +22,14 @@ class: center, middle, inverse, title-slide
 ### <br> Mauricio Bucca<br> Profesor Asistente, Sociología UC
 ]
 .date[
-### <a href="https://github.com/mebucca">github.com/mebucca</a>
+### 29 October, 2023
 ]
 
 ---
 
-
 class: inverse, center, middle
+
+
 
 #Regresión Logística, inferencia
 
@@ -299,14 +299,6 @@ confint(logit_affairs_sex_ym)
 
 
 
-
-```
-## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
-## ℹ Please use `linewidth` instead.
-## This warning is displayed once every 8 hours.
-## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was generated.
-```
-
 ![](class_11_files/figure-html/unnamed-chunk-12-1.png)&lt;!-- --&gt;
 
 ---
@@ -315,7 +307,7 @@ confint(logit_affairs_sex_ym)
 --
 
 .content-box-blue[
-.bold[Calculemos ahora un IC al 95% para efecto multiplicativo de "years of marriage" sobre las odds de ser infiel:] `\(e^{\beta_{2}}\)`= 0.0584296
+.bold[Calculemos ahora un IC al 95% para efecto multiplicativo de "years of marriage" sobre las odds de ser infiel:] `\(e^{\beta_{2}}\)`= 1.0601703
 ]
 
 --
@@ -460,9 +452,9 @@ betas2_mc &lt;- replicate(nreps,mc_beta2()); head(betas2_mc)
 
 ```
 ## affairsdata$ym affairsdata$ym affairsdata$ym affairsdata$ym affairsdata$ym 
-##     0.08635557     0.05644411     0.06313969     0.06969216     0.06408296 
+##     0.07241428     0.02401836     0.02024283     0.03212078     0.06309094 
 ## affairsdata$ym 
-##     0.06902825
+##     0.09024342
 ```
 
 ---
@@ -479,10 +471,10 @@ betasall_mc %&gt;% head(4)
 
 ```
 ##      (Intercept) factor(sex)male         ym
-## [1,]   -1.546444      0.50433264 0.03971113
-## [2,]   -1.941748      0.44683177 0.06948123
-## [3,]   -1.544295      0.07139542 0.06442736
-## [4,]   -1.820750      0.44953653 0.06915637
+## [1,]   -1.659303       0.1047370 0.05795337
+## [2,]   -1.738712       0.7046885 0.04697189
+## [3,]   -1.687760       0.4309905 0.05170573
+## [4,]   -1.601947       0.1459253 0.04622857
 ```
 
 ```r
@@ -490,7 +482,7 @@ se_beta2_mc &lt;- sd(betasall_mc[,"ym"]); se_beta2_mc
 ```
 
 ```
-## [1] 0.01722213
+## [1] 0.0176273
 ```
 
 ```r
@@ -501,21 +493,13 @@ ci_beta2_mc &lt;-
 
 ```
 ##         6%      97.5% 
-## 0.03154617 0.08940231
+## 0.03134346 0.09058808
 ```
 ]
 
 --
 
 .pull-right[
-
-```
-## Warning: The `&lt;scale&gt;` argument of `guides()` cannot be `FALSE`. Use "none" instead as of
-## ggplot2 3.3.4.
-## This warning is displayed once every 8 hours.
-## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was generated.
-```
-
 ![](class_11_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
 ]
 
@@ -544,12 +528,12 @@ expbetasall_mc %&gt;% head()
 
 ```
 ##      (Intercept) factor(sex)male       ym
-## [1,]   0.1315928       1.4557890 1.072694
-## [2,]   0.1943587       1.1392999 1.070347
-## [3,]   0.2195208       1.0486397 1.037595
-## [4,]   0.1560091       1.3736044 1.065374
-## [5,]   0.2113443       0.9168028 1.049068
-## [6,]   0.1687781       1.2101163 1.073399
+## [1,]   0.1159930        1.256675 1.104506
+## [2,]   0.1853349        1.179847 1.047651
+## [3,]   0.1890543        1.306970 1.059296
+## [4,]   0.1540209        1.669214 1.070950
+## [5,]   0.1660182        1.141184 1.073907
+## [6,]   0.1860146        1.519387 1.049715
 ```
 
 
@@ -565,7 +549,7 @@ se_exbeta2_mc &lt;- sd(expbetasall_mc[,"ym"]); se_exbeta2_mc
 ```
 
 ```
-## [1] 0.01743977
+## [1] 0.01835203
 ```
 
 ```r
@@ -576,7 +560,7 @@ ci_expbeta2_mc &lt;-
 
 ```
 ##     2.5%    97.5% 
-## 1.026090 1.094859
+## 1.022341 1.095118
 ```
 ]
 
@@ -636,7 +620,7 @@ ame_ym_mc &lt;- replicate(nreps,mc_ame_beta2()); head(ame_ym_mc,4)
 ```
 
 ```
-## [1] 0.011550954 0.003041689 0.010857658 0.006835100
+## [1] 0.01263685 0.01429206 0.01151473 0.01461580
 ```
 
 ---
@@ -660,7 +644,7 @@ se_ame_ym_bs &lt;- sd(ame_ym_mc); se_ame_ym_bs
 ```
 
 ```
-## [1] 0.003043496
+## [1] 0.003132528
 ```
 
 ```r
@@ -671,7 +655,7 @@ ci_ame_ym_mc &lt;-
 
 ```
 ##        2.5%       97.5% 
-## 0.004499754 0.016648981
+## 0.004675556 0.016996328
 ```
 ]
 
@@ -836,7 +820,7 @@ betas2_bs &lt;- replicate(nreps,bs_beta2()); head(betas2_bs)
 
 ```
 ##         ym         ym         ym         ym         ym         ym 
-## 0.05076714 0.08616966 0.06053101 0.01950397 0.06029373 0.07943868
+## 0.08253480 0.08079907 0.05588718 0.05727603 0.04368868 0.04519877
 ```
 
 ---
@@ -850,7 +834,7 @@ se_beta2_bs
 ```
 
 ```
-## [1] 0.0168079
+## [1] 0.0169734
 ```
 
 ```r
@@ -861,7 +845,7 @@ ci_beta2_bs &lt;-
 
 ```
 ##       2.5%      97.5% 
-## 0.02538871 0.09261106
+## 0.02509236 0.09121385
 ```
 ]
 
@@ -916,7 +900,7 @@ expbetas2_bs &lt;- replicate(nreps,bs_expbeta2()); head(expbetas2_bs)
 
 ```
 ##       ym       ym       ym       ym       ym       ym 
-## 1.065567 1.052295 1.054422 1.058430 1.073671 1.045645
+## 1.062876 1.045326 1.069507 1.067573 1.085140 1.057137
 ```
 
 ---
@@ -930,7 +914,7 @@ se_expbeta2_bs
 ```
 
 ```
-## [1] 0.01770712
+## [1] 0.01750567
 ```
 
 ```r
@@ -941,7 +925,7 @@ ci_expbeta2_bs &lt;-
 
 ```
 ##     2.5%    97.5% 
-## 1.028556 1.096396
+## 1.027315 1.094531
 ```
 ]
 
@@ -995,7 +979,7 @@ ame_ym_bs &lt;- replicate(nreps,bs_ame_ym()); head(ame_ym_bs)
 ```
 
 ```
-## [1] 0.009290676 0.011140370 0.011209738 0.010485524 0.010641425 0.010031726
+## [1] 0.009937388 0.010173981 0.007888228 0.013113860 0.008724063 0.012083610
 ```
 
 
@@ -1020,7 +1004,7 @@ se_ame_ym_bs
 ```
 
 ```
-## [1] 0.002952024
+## [1] 0.00307173
 ```
 
 ```r
@@ -1030,8 +1014,8 @@ ci_ame_ym_bs &lt;-
 ```
 
 ```
-##       2.5%      97.5% 
-## 0.00479275 0.01645881
+##        2.5%       97.5% 
+## 0.004740442 0.016774769
 ```
 ]
 
@@ -1059,9 +1043,8 @@ ci_ame_ym_bs &lt;-
 ---
 class: inverse, center, middle
 
-.huge[
-**Hasta la próxima clase. Gracias!**
-]
+
+##Hasta la próxima clase. Gracias!
 
 &lt;br&gt;
 Mauricio Bucca &lt;br&gt;

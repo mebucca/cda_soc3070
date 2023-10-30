@@ -67,7 +67,7 @@ bibliography: catagorical_data.bib
 ```
 </head>
 
-En este ejercicio vamos a utilizar nuevamente ELSOC en su versión 2019. Esta vez nos preguntamos acerca de los determinantes que influten en la probabilidad de armar vinculos de confidencia con vecinos. La pregunta es del todo relevante, puesto que los vínculos vecinales la mayoría de las veces constituyen el contexto que da forma a la estructura de oportunidades de interacción con otros (as) en la vida cotidiana [@blauInequalityHeterogeneityPrimitive1977; @feldFocusedOrganizationSocial1981]. La especificidad de los vecindarios es que son contextos en los cuales la actividad e interacción social están fuertemente condicionados por la proximidad física y social [@feldSocialStructuralDeterminants1982]. Asimismo, suelen contener a otros focos de interacción [@feldFocusedOrganizationSocial1981] como escuelas o asociaciones voluntarias. Por esta razón, los barrios o vecindarios implican más oportunidades y probabilidades de encuentro y vinculación entre sus integrantes.
+En este ejercicio vamos a utilizar nuevamente ELSOC en su versión 2019. Esta vez nos preguntamos acerca de los determinantes que influten en la probabilidad de armar vinculos de confidencia con vecinos. La pregunta es del todo relevante, puesto que la mayoría de las veces los vínculos vecinales constituyen el contexto que da forma a la estructura de oportunidades de interacción con otros (as) en la vida cotidiana de las personas [@blauInequalityHeterogeneityPrimitive1977; @feldFocusedOrganizationSocial1981]. La especificidad de los vecindarios es que son contextos en los cuales la actividad e interacción social están fuertemente condicionados por la proximidad física y social [@feldSocialStructuralDeterminants1982]. Asimismo, suelen contener a otros focos de interacción [@feldFocusedOrganizationSocial1981] como escuelas o asociaciones voluntarias. Por esta razón, los barrios o vecindarios implican más oportunidades y probabilidades de encuentro y vinculación entre sus integrantes.
 
 @wellmanArePersonalCommunities1996 y @fernandezReviewAmericanApartheid1993 indican que aún cuando los lazos locales generalmente sean débiles, son contactos frecuentes. Su mayor frecuencia deriva de la cantidad relativa de tiempo que pasamos en nuestros vecindarios y hogares. Razón por la cual puede ser inevitable el encuentro con aquellos con los cuales compartimos un vecindario. Si consideramos que los barrios y los lugares de trabajo suelen ser socialmente más homogéneos @feldFocusedOrganizationSocial1981, el predominio de este tipo de lazos puede indicar altos niveles de segregación y aislamiento social [@dipreteSegregationSocialNetworks2011; @masseyAmericanApartheidSegregation2003]. Por lo tanto, las áreas locales son un campo de investigación óptimo para estudiar cómo los extraños se convierten en amigos [@volkerSixteenMillionNeighbors2007] y para el estudio general de las desigualdades persistentes [@tillyDurableInequality2009].
 
@@ -92,7 +92,8 @@ En la sesión del miércoles 26 de septiembre:
 ## Librerías
 
 ```{r, message=F}
-pacman::p_load(tidymodels,
+pacman::p_load(GLMMadaptive,
+               tidymodels,
                tidyverse,
                kableExtra,
                interplot,
@@ -100,6 +101,7 @@ pacman::p_load(tidymodels,
                sjPlot,
                stargazer,
                httr,
+               brm,
                car,
                lmtest,
                sandwich,
@@ -246,6 +248,34 @@ obs%>%
   theme_minimal()
 ```
 
+
+
+### ICC 
+
+```{r}
+obs$barrio<-as.factor(obs$barrio)
+obs<-obs%>%drop_na(barrio)%>%mutate(barrio=case_when(barrio==1~1,TRUE~0))
+obs$idencuesta<-as.factor(obs$idencuesta)
+
+# calcular grado 
+obs <- obs %>% group_by(idencuesta) %>% mutate(grado = n()) %>% ungroup()
+
+# modelo
+m_nulo <- mixed_model(barrio ~ 1, 
+                      random =~ 1 | idencuesta, 
+                      data=obs, 
+                      family = binomial, 
+                      nAGQ=11, 
+                      iter_EM=60)
+
+summary(m_nulo)
+icc_result <- performance::icc(m_nulo)
+icc_result
+```
+
+
+
+
 ## Modelo de regresión logística
 
 ### Modelo 1
@@ -327,6 +357,8 @@ Con la transformación exponencial (a OR) se puede decir, "con el incremento en 
 ### Tidy model y plot de coeficientes con OR
 
 ```{r}
+obs$barrio<-as.factor(obs$barrio)
+
 tidy_m3<- logistic_reg() %>%
         # Set the engine
         set_engine("glm") %>%
@@ -354,8 +386,21 @@ data_model_plot<-tidy(tidy_m3, exponentiate = FALSE, conf.int = TRUE) |>
   mutate_if(is.numeric, round, 4) 
  # select(-std.error, -statistic)
 
-data_model_plot
+glimpse(data_model_plot)
 ```
+
+### Interpretación de las interacciones.
+
+- ego_educ2:educ_dist1: El odds ratio es aproximadamente 1.476. Esto significa que cuando la distancia educativa (educ_dist1) aumenta en una unidad y el nivel de educación es 2 (ego_educ2), las probabilidades de que la variable dependiente sea "1" en lugar de "0" se multiplican por 1.476.
+
+- ego_educ3:educ_dist1: El odds ratio es aproximadamente 2.065. De manera similar, cuando la distancia educativa aumenta en una unidad y el nivel de educación es 3 (ego_educ3), las probabilidades de que la variable dependiente sea "1" en lugar de "0" se multiplican por 2.065.
+
+- ego_educ4:educ_dist1: El odds ratio es aproximadamente 3.581. Cuando la distancia educativa aumenta en una unidad y el nivel de educación es 4 (ego_educ4), las probabilidades de que la variable dependiente sea "1" en lugar de "0" se multiplican por 3.581.
+
+Estos odds ratios indican cómo cambian las probabilidades de éxito en comparación con un punto de referencia (en este caso, cuando la distancia educativa es cero y el nivel de educación es ego_educ1). Si el odds ratio es mayor que 1, indica un aumento en las probabilidades de éxito. Si es menor que 1, indica una disminución.
+
+Por ejemplo, si ego_educ2:educ_dist1 es 1.476, entonces cuando la distancia educativa aumenta en una unidad y el nivel de educación es 2 (ego_educ2), las probabilidades de éxito son aproximadamente un 47.6% más altas en comparación con el punto de referencia.
+
 
 ### Plot
 
@@ -426,6 +471,82 @@ data_model_plot %>%
                               "Nivel educativo superior (ego)*Educ. dist."))
 ```
 
+
+### Bootstrap 
+
+Podemos usar la función `bootstraps()` en el paquete `rsample` para muestrear. Primero, construimos 1000 réplicas de arranque de los datos, cada una de las cuales ha sido muestreada aleatoriamente con reemplazo. El objeto resultante es un rset, que es un marco de datos con una columna de objetos rsplit.
+
+Un objeto `rsplit` tiene dos componentes principales: un conjunto de datos de análisis y un conjunto de datos de evaluación, accesibles mediante análisis (rsplit) y evaluación (rsplit) respectivamente. Para las muestras de arranque, el conjunto de datos de análisis es la muestra de arranque en sí y el conjunto de datos de evaluación consta de todas las muestras listas para usar.
+
+```{r}
+# segmentamos
+set.seed(27)
+boots <- bootstraps(obs, times = 1000, apparent = TRUE)
+#boots
+```
+
+
+Creemos una función auxiliar para ajustar un modelo `logistic_reg()` en cada muestra de arranque y luego usemos `purrr::map()` para aplicar esta función a todas las muestras de arranque a la vez. De manera similar, creamos una columna de información de coeficientes ordenada al desanidar.
+
+
+```{r}
+# creamos función.
+fit_logit_bootstrap <- function(split) {
+  logistic_reg() %>%
+        # Set the engine
+        set_engine("glm") %>%
+        # Set the mode
+        set_mode("classification") %>%
+    fit(barrio~
+          ego_sexo
+        + ego_educ
+        + ego_edad
+        + expresivas
+        + instrument
+        + t01
+        + neigh_attach
+        + sexo_dist1 
+        + educ_dist1 
+        + ideol_dist1
+        + relig_dist1
+        + ego_educ*educ_dist1, analysis(split), start = list(k = 1, b = 0))
+}
+
+# aplicamos función.
+boot_models <-
+  boots %>% 
+  mutate(model = map(splits, fit_logit_bootstrap),
+         coef_info = map(model, tidy))
+
+# revisamos coeficientes.
+boot_coefs <- 
+  boot_models %>% 
+  unnest(coef_info)
+```
+
+
+```{r}
+head(boot_coefs)
+```
+
+### Intervalos de confianza (con gráficos)
+```{r}
+percentile_intervals <- int_pctl(boot_models, coef_info)
+head(percentile_intervals)
+```
+
+
+```{r}
+ggplot(boot_coefs, aes(estimate)) +
+  geom_histogram(bins = 30) +
+  facet_wrap( ~ term, scales = "free") +
+  geom_vline(aes(xintercept = .lower), data = percentile_intervals, col = "blue") +
+  geom_vline(aes(xintercept = .upper), data = percentile_intervals, col = "blue")
+```
+
+
+
+
 ## Train y Test data
 
 En esta sección trabajaremos con la idea de predicción. Por lo general, para realizar la predicción de una clasificación los datos completos se divide en un 75% que usa como "data train" y un 25% que se usa como "test data". El 75% de los datos de entrenamiento se utiliza para el entrenamiento del modelo, mientras que el 25% restante se utiliza para comprobar cómo se generalizó el modelo en un conjunto de datos de prueba o no vistos.
@@ -433,9 +554,6 @@ En esta sección trabajaremos con la idea de predicción. Por lo general, para r
 Para dividir los datos vamos a utilizar la función `inicial_split()` de la librería `tidymodels`. En esta, se deben especificar el nombre del objeto de datos, la proporción y un argumento de estrato. Al proporcionar su variable dependiente en el atributo estratos se realiza un muestreo estratificado. El muestreo estratificado es útil si su variable dependiente tiene un desequilibrio de clases.
 
 El siguiente paso es llamar a las funciones de `entrenamiento()` y `prueba()` para guardar ambos conjuntos de datos (train y test).
-
-
-
 
 ```{r}
 # seed
@@ -451,8 +569,6 @@ vecino_split <- initial_split(obs,
 vecino_split
 ```
 
-
-
 ```{r}
 # training data
 vecino_train <- vecino_split %>% training()
@@ -465,16 +581,13 @@ nrow(vecino_train)
 nrow(vecino_test)
 ```
 
-
-
 A continuación ajustamos los modelos:
 
-1. Primero, utilizamos la fución `logistic_reg()`.
-2. Luego usamos la función `set_engine()` para indicar la familia del modelo. 
-3. Usamos la función `set_mode()`, para indicar el tipo de modelo a utilizar. En este caso queremos clasificar positivos y negativos, razón por la cual es un modelo de clasificación. 
-4. Espeicifamos el modelo con la función `fit()` 
-5. Finalmente, generamos una tabla de resumen usando la función `tidy()` de la librería `broom` (que viene incorporada con la biblioteca tidymodels). Los coeficientes informados están en términos de log odds.
-
+1.  Primero, utilizamos la fución `logistic_reg()`.
+2.  Luego usamos la función `set_engine()` para indicar la familia del modelo.
+3.  Usamos la función `set_mode()`, para indicar el tipo de modelo a utilizar. En este caso queremos clasificar positivos y negativos, razón por la cual es un modelo de clasificación.
+4.  Espeicifamos el modelo con la función `fit()`
+5.  Finalmente, generamos una tabla de resumen usando la función `tidy()` de la librería `broom` (que viene incorporada con la biblioteca tidymodels). Los coeficientes informados están en términos de log odds.
 
 ### Volver a ajustar modelo
 
@@ -499,46 +612,39 @@ nm3<- logistic_reg() %>%
 tidy(nm3)    
 ```
 
-
 ### OR
 
-En el summery anterior la interpretación de los coeficientes en el término de probabilidades logarítmicas no tiene mucho sentido si el objetivo es la publicación o la divulgación. Para esto, es preferible usar OR. Las OR es el ratio de la probabilidad de que ocurra un evento a la de que el evento no ocurra. Cuando tomamos un ratio de dos de esas probabilidades, se llama Odds Ratio. 
-
+En el summery anterior la interpretación de los coeficientes en el término de probabilidades logarítmicas no tiene mucho sentido si el objetivo es la publicación o la divulgación. Para esto, es preferible usar OR. Las OR es el ratio de la probabilidad de que ocurra un evento a la de que el evento no ocurra. Cuando tomamos un ratio de dos de esas probabilidades, se llama Odds Ratio.
 
 ::: column-margin
 $$ ODDS = \frac{Evento \; ocurre}{Evento \; No \; ocurre} = \frac{Probabilidad}{1-Probabilidad} $$
 
 $$ OR = \frac{odds\;1}{odds\;2} $$
 
-
 $$ OR \neq Probabilidad $$
-
 :::
 
-Los OR se pueden calcular con el exponente de los coeficientes estimados en el modelo anterior. Con `R` estyo se puede hacer  con la función `tidy()`, especificando el argumento `exponentiate=TRUE`.
+Los OR se pueden calcular con el exponente de los coeficientes estimados en el modelo anterior. Con `R` esto se puede hacer con la función `tidy()`, especificando el argumento `exponentiate=TRUE`.
 
 ```{r}
 tidy(nm3, exponentiate = TRUE)
 ```
 
+### Efectos marginales
 
-### Efectos marginales 
+En una regresión logística, el efecto marginal se refiere al cambio en la probabilidad de éxito (es decir, la categoría 1 de la variable dependiente) asociado con un cambio de una unidad en la variable independiente, manteniendo todas las demás variables constantes.
 
-El cáculo de otras cantidades de interés puedes ser revisadas en @leeperInterpretingRegressionResults2017. Adcionalmente pueden visitar el siguiente [link](https://www.andrewheiss.com/blog/2022/05/20/marginalia/). 
-
+El cáculo de otras cantidades de interés puedes ser revisadas en @leeperInterpretingRegressionResults2017. Adcionalmente pueden visitar el siguiente [link](https://www.andrewheiss.com/blog/2022/05/20/marginalia/).
 
 ```{r}
 me<-summary(margins(m3, variables = c("ego_educ")))
 glimpse(me)
 ```
 
-
 ```{r}
 me2 <- summary(margins(m3, at = list(educ_dist1 = c(0,1)), variables = "ego_educ"))
 me2 %>% kbl(caption = "Efectos marginales") %>% kable_classic("hover", full_width = T)
 ```
-
-
 
 ```{r}
 me2%>%
@@ -565,7 +671,6 @@ me2%>%
                                     size = 10)) 
 ```
 
-
 ### Test Data Class Prediction
 
 ```{r}
@@ -576,7 +681,6 @@ pred_class <- predict(nm3,
 
 pred_class[1:20,]
 ```
-
 
 ### Test Data Class Probabilities
 
@@ -589,8 +693,8 @@ pred_proba <- predict(nm3,
 pred_proba[1:20,]
 ```
 
-
 ### Preparación final de datos para evaluación
+
 ```{r}
 vecino_r <- vecino_test %>%
   dplyr::select(barrio) %>%
@@ -598,7 +702,6 @@ vecino_r <- vecino_test %>%
 
 vecino_r[1:20, ]
 ```
-
 
 ## Evaluación del modelo (Confusion Matrix, Accuracy, Sensitivity, etc.)
 
@@ -611,56 +714,29 @@ conf_mat(vecino_r, truth = barrio,
          estimate = .pred_class)
 ```
 
-### Otras métricas 
+### Otras métricas
 
 Ejemplo:
 
-**Precisión** responde a la pregunta ¿Cuántos de todos los positivos se clasificaron correctamente como positivos? 
+**Precisión** responde a la pregunta ¿Cuántos de todos los positivos se clasificaron correctamente como positivos?
 
-**F-measure**  es una media armónica ponderada de "precisión" y "recall" con la mejor puntuación de 1 y la peor puntuación de 0. La puntuación transmite el equilibrio entre precisión y recuperación. La puntuación F es de aproximadamente 0.59, lo que indica que el modelo entrenado tiene una potencia de clasificación del 59 %.
+**F-measure** es una media armónica ponderada de "precisión" y "recall" con la mejor puntuación de 1 y la peor puntuación de 0. La puntuación transmite el equilibrio entre precisión y recuperación. La puntuación F es de aproximadamente 0.59, lo que indica que el modelo entrenado tiene una potencia de clasificación del 59 %.
 
-**Matthews correlation coefficient (MCC)** se utiliza como medida de la calidad de un clasificador binario. El valor oscila entre −1 y +1. MCC: -1 indica total desacuerdo, MCC: 0 indica que no hay acuerdo, MCC: +1 indica agregación total. 
-
-
+**Matthews correlation coefficient (MCC)** se utiliza como medida de la calidad de un clasificador binario. El valor oscila entre −1 y +1. MCC: -1 indica total desacuerdo, MCC: 0 indica que no hay acuerdo, MCC: +1 indica agregación total.
 
 ```{r}
 custom_metrics <- metric_set(accuracy, sens, precision, recall, f_meas, kap, mcc)
 custom_metrics(vecino_r, truth = barrio, estimate = .pred_class)
 ```
 
-
 ROC-AUC es una medida de rendimiento para el problema de clasificación en varios umbrales. ROC_AUC indica la capacidad del modelo de distinguir entre clases. El modelo de regresión logística entrenado tiene un ROC-AUC de 0,7, lo que indica un *pobre* rendimiento predictivo general.
-
 
 ```{r}
 roc_auc(vecino_r, truth = barrio, .pred_0)
 ```
-
-
 
 ```{r}
 vecino_r %>%
   roc_curve(truth = barrio, .pred_0) %>%
   autoplot()
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

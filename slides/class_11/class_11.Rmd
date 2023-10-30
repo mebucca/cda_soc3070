@@ -2,11 +2,11 @@
 title: "Análisis de Datos Categóricos (SOC3070)"
 subtitle: "Clase #11"
 author: "<br> Mauricio Bucca<br> Profesor Asistente, Sociología UC"
-date: "[github.com/mebucca](https://github.com/mebucca)"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   xaringan::moon_reader:
     lib_dir: libs
-    css: ["default","default-fonts","gentle-r.css"]
+    css: ["gentle-r.css","xaringan-themer.css"]
     df_print: default
     nature:
       ratio: 16:9
@@ -15,10 +15,22 @@ output:
       countIncrementalSlides: true
       slideNumberFormat: "%current%"
 editor_options: 
-  chunk_output_type: console
----
-
+  chunz_output_type: console
+  
+---  
 class: inverse, center, middle
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(tidyverse)
+library(xaringanthemer)
+style_duo_accent(primary_color ="#8B0000", secondary_color = "#B0C4DE",
+                 background_color = "#f8f7f3",
+                 header_font_google = google_font("Archivo"),
+                 text_font_google   = google_font("Inconsolata"), 
+                 link_color= "#4682B4"
+
+)
+```
 
 #Regresión Logística, inferencia
 
@@ -268,7 +280,7 @@ beta2_se = (summary(logit_affairs_sex_ym)$coefficients)[3,2]
 beta2_samplingdistr = rnorm(n=1200, mean=0, sd=beta2_se)  
 ```
 
-```{r, echo=FALSE, fig.width=7, fig.height=6}
+```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
 
 beta2_samplingdistr %>% as_tibble() %>% ggplot(aes(x=value)) + 
       geom_density(colour="black", fill="blue", alpha=0.1, size=1.5) +
@@ -286,7 +298,7 @@ beta2_samplingdistr %>% as_tibble() %>% ggplot(aes(x=value)) +
 --
 
 .content-box-blue[
-.bold[Calculemos ahora un IC al 95% para efecto multiplicativo de "years of marriage" sobre las odds de ser infiel:] $e^{\beta_{2}}$= `r expbeta2=logit_affairs_sex_ym$coefficients[3]; expbeta2`
+.bold[Calculemos ahora un IC al 95% para efecto multiplicativo de "years of marriage" sobre las odds de ser infiel:] $e^{\beta_{2}}$= `r expbeta2=exp(logit_affairs_sex_ym$coefficients[3]); expbeta2`
 ]
 
 --
@@ -449,7 +461,7 @@ ci_beta2_mc <-
 --
 
 .pull-right[
-```{r, echo=FALSE, fig.width=7, fig.height=6}
+```{r, echo=FALSE, fig.width=7, fig.height=6,message=FALSE, warning=FALSE}
 ci95 = round(ci_beta2_mc,2)
 
 betasall_mc %>% as_tibble() %>% ggplot(aes(x=ym)) + 
@@ -510,13 +522,13 @@ ci_expbeta2_mc <-
 --
 
 .pull-right[
-```{r, echo=FALSE, fig.width=7, fig.height=6}
+```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
 ci95 = round(ci_expbeta2_mc,2)
 
 expbetasall_mc %>% as_tibble() %>% ggplot(aes(x=ym)) + 
       geom_density(colour="black", fill="blue", alpha=0.1, size=1.5) +
       scale_color_viridis_d() + 
-      geom_vline(aes(xintercept = expbeta2, colour=paste0("beta2=",round(expbeta2,2)) ), size=1.5) +
+      geom_vline(aes(xintercept = expbeta2, colour=paste0("exp(beta2)=",round(expbeta2,2)) ), size=1.5) +
       geom_vline(aes(xintercept = ci_expbeta2_mc[1],
                      colour=paste0("95% CI: (",ci95[1],",",ci95[2],")")), linetype="dashed", size=1.5) +
       geom_vline(aes(xintercept = ci_expbeta2_mc[2], 
@@ -598,7 +610,7 @@ ci_ame_ym_mc <-
 --
 
 .pull-right[
-```{r, echo=FALSE, fig.width=7, fig.height=6}
+```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
 ci95 = round(ci_ame_ym_mc,3)
 
 ame_ym_mc %>% as_tibble() %>% ggplot(aes(x=value)) + 
@@ -787,7 +799,7 @@ ci_beta2_bs <-
 --
 
 .pull-right[
-```{r, echo=FALSE, fig.width=7, fig.height=6}
+```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
 ci95 = round(ci_beta2_bs,2)
 
 betas2_bs %>% as_tibble() %>% ggplot(aes(x=value)) + 
@@ -866,7 +878,7 @@ ci_expbeta2_bs <-
 --
 
 .pull-right[
-```{r, echo=FALSE, fig.width=7, fig.height=6}
+```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
 ci95 = round(ci_expbeta2_bs,2)
 
 expbetas2_bs %>% as_tibble() %>% ggplot(aes(x=value)) + 
@@ -951,7 +963,7 @@ ci_ame_ym_bs <-
 --
 
 .pull-right[
-```{r, echo=FALSE, fig.width=7, fig.height=6}
+```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
 ci95 = round(ci_ame_ym_bs,3)
 
 ame_ym_bs %>% as_tibble() %>% ggplot(aes(x=value)) + 
@@ -973,7 +985,7 @@ ame_ym_bs %>% as_tibble() %>% ggplot(aes(x=value)) +
 ---
 ## Bootstrap Method: más ... 
 
-```{r, echo=FALSE, fig.width=7, fig.height=6}
+```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
 # function to implement within each sample (regression model)
 logit_fit <- function(split){
   model_bs = glm(everaffair_d ~ factor(sex) + ym, family=binomial(link="logit"), data=analysis(split))
@@ -1012,7 +1024,7 @@ boots %>%
 --
 
 .pull-right[
-```{r, echo=FALSE, fig.width=7, fig.height=6, warning=F}
+```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
 grid <- affairsdata %>% data_grid(sex, ym = seq(0,75,1),.model=logit_affairs_sex_ym)
 
 predict_new <- function(fit){
@@ -1041,9 +1053,8 @@ boots %>%
 ---
 class: inverse, center, middle
 
-.huge[
-**Hasta la próxima clase. Gracias!**
-]
+
+##Hasta la próxima clase. Gracias!
 
 <br>
 Mauricio Bucca <br>
