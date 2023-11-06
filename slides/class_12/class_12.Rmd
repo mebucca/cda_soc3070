@@ -2,11 +2,11 @@
 title: "Análisis de Datos Categóricos (SOC3070)"
 subtitle: "Clase #12"
 author: "<br> Mauricio Bucca<br> Profesor Asistente, Sociología UC"
-date: "[github.com/mebucca](https://github.com/mebucca)"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   xaringan::moon_reader:
     lib_dir: libs
-    css: ["default","default-fonts","gentle-r.css"]
+    css: ["gentle-r.css","xaringan-themer.css"]
     df_print: default
     nature:
       ratio: 16:9
@@ -15,9 +15,23 @@ output:
       countIncrementalSlides: true
       slideNumberFormat: "%current%"
 editor_options: 
-  chunk_output_type: console
----
+  chunz_output_type: console
+  
+---  
 class: inverse, center, middle
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(tidyverse)
+library(xaringanthemer)
+style_duo_accent(primary_color ="#D20404", secondary_color = "#808080",
+                 background_color = "#f8f7f3",
+                 header_font_google = google_font("Archivo"),
+                 text_font_google   = google_font("Inconsolata"), 
+                 link_color= "#FFFFFF"
+
+)
+```
+
 #Ajuste y Predicción
 
 ---
@@ -725,19 +739,24 @@ inf_crit(logit_affairs1)
 ---
 ## k-fold cross-Validation
 
-.img-right-top[
+.pull-left[
 ![kfold](kfold_cv.gif)
 
 ]
 
-.bold[Algoritmo:]
 --
+
+.pull-right[
+.bold[Algoritmo:]
+
 
 - (1) Divide los datos en $k$ grupos (folds) del mismo tamaño. 
 
   - (1.1) Reserva la $i$-fold como test set.
 
   - (1.2) Ajusta el modelo en las restantes $k-1$ folds (training set). 
+
+]
 
 <br>
 --
@@ -759,14 +778,14 @@ $$\text{CV-error} =  \frac{1}{k} \sum_{i=1}^{k} E_{i}$$
 
 .pull-left[
 .bold[M0]
-```{r,echo=FALSE}
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
 logit_affairs0 <-  glm(everaffair_d ~ ym + factor(child) + rate ,family=binomial(link="logit"), data=affairsdata)
 summary(logit_affairs0)$coefficients[,1:2]
 ```
 ]
 .pull-right[
 .bold[M1]
-```{r,echo=FALSE}
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
 logit_affairs1 <-  glm(everaffair_d ~ ym*rate + I(ym^2)*rate, family=binomial(link="logit"), data=affairsdata)
 summary(logit_affairs1)$coefficients[,1:2]
 ```
@@ -778,7 +797,7 @@ summary(logit_affairs1)$coefficients[,1:2]
 --
  Usando funciones paquete `caret()` 
  
-```{r}
+```{r, message=FALSE, warning=FALSE}
 # especifica tipo de cross-validation
 ctrl <- trainControl(method = "repeatedcv", number = 10, savePredictions = TRUE)
 
@@ -794,14 +813,14 @@ cv_logit_affairs1 <- train(factor(everaffair_d) ~ factor(child)*ym*rate +  facto
 
 .pull-left[
 .bold[M0]
-```{r}
+```{r, message=FALSE, warning=FALSE}
 confusionMatrix(cv_logit_affairs0)
 ```
 ]
 
 .pull-right[
 .bold[M1]
-```{r}
+```{r, message=FALSE, warning=FALSE}
 confusionMatrix(cv_logit_affairs1)
 ```
 ]
@@ -815,9 +834,8 @@ confusionMatrix(cv_logit_affairs1)
 ---
 class: inverse, center, middle
 
-.huge[
-**Hasta la próxima clase. Gracias!**
-]
+
+##Hasta la próxima clase. Gracias!
 
 <br>
 Mauricio Bucca <br>
