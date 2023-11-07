@@ -7,7 +7,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Cantillan, R. | Bucca, M.">
-<meta name="dcterms.date" content="2023-10-25">
 
 <title>Ejercicio 6</title>
 <style>
@@ -129,7 +128,7 @@ div.csl-indent {
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">10/25/23</p>
+        <p class="date">11/7/23</p>
       </div>
     </div>
     
@@ -1559,6 +1558,17 @@ $ conf.high &lt;dbl&gt; 0.8856, 0.2385, -0.3497, -0.8158, -1.4937, -0.0028, 0.13
 </section>
 <section id="bootstrap" class="level3" data-number="4.11">
 <h3 data-number="4.11" class="anchored" data-anchor-id="bootstrap"><span class="header-section-number">4.11</span> Bootstrap</h3>
+<p>El “bootstrap” es un método de remuestreo que permite estimar la distribución muestral de un estadístico a partir de los datos.</p>
+<ol type="1">
+<li>Funciona tomando muestras aleatorias con reemplazo de los datos originales. Como es con reemplazo, cualquier observación de los datos originales puede aparecer repetida en esta muestra bootstrap</li>
+</ol>
+<p>El tamaño de la muestra bootstrap es ser menor a N. Por ejemplo, N/2. Lo importante es que el tamaño de cada muestra bootstrap sea fijo. Por ejemplo, si la primera muestra es de tamaño N/2, las demás también serán de tamaño N/2. Esto se hace para que en el proceso de remuestreo bootstrap, las muestras sean comparables entre sí.</p>
+<ol start="2" type="1">
+<li><p>Se calcula el estadístico de interés (media, desviación estándar, etc) para cada muestra bootstrap. Esto genera una distribución bootstrap del estadístico. La media y desviación estándar de la distribución bootstrap son usadas como estimadores puntual y de error estándar del parámetro poblacional.</p></li>
+<li><p>Se repiten los pasos 1 y 2 muchas veces, (ej. 1000). Cada vez se obtiene una muestra bootstrap de tamaño N y se calcula el estadístico en ella. Todos los valores del estadístico en las 1000 muestras bootstrap conforman su distribución bootstrap.</p></li>
+<li><p>Permite estimar intervalos de confianza sin asumir normalidad. Es útil con muestras pequeñas o distribuciones no normales.</p></li>
+<li><p>Puede usarse para validación cruzada, remuestreo, o estimar sesgo y varianza de modelo.</p></li>
+</ol>
 <p>Podemos usar la función <code>bootstraps()</code> en el paquete <code>rsample</code> para muestrear. Primero, construimos 1000 réplicas de arranque de los datos, cada una de las cuales ha sido muestreada aleatoriamente con reemplazo. El objeto resultante es un rset, que es un marco de datos con una columna de objetos rsplit.</p>
 <p>Un objeto <code>rsplit</code> tiene dos componentes principales: un conjunto de datos de análisis y un conjunto de datos de evaluación, accesibles mediante análisis (rsplit) y evaluación (rsplit) respectivamente. Para las muestras de arranque, el conjunto de datos de análisis es la muestra de arranque en sí y el conjunto de datos de evaluación consta de todas las muestras listas para usar.</p>
 <div class="cell">
