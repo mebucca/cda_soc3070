@@ -4,23 +4,33 @@
     <title>Análisis de Datos Categóricos (SOC3070)</title>
     <meta charset="utf-8" />
     <meta name="author" content="  Mauricio Bucca  Profesor Asistente, Sociología UC" />
-    <script src="libs/header-attrs-2.10/header-attrs.js"></script>
-    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
-    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+    <script src="libs/header-attrs-2.24/header-attrs.js"></script>
     <link rel="stylesheet" href="gentle-r.css" type="text/css" />
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
   <body>
     <textarea id="source">
 class: center, middle, inverse, title-slide
 
+.title[
 # Análisis de Datos Categóricos (SOC3070)
-## Clase #13
+]
+.subtitle[
+## Clase #13: Regresión Logística Multinomial
+]
+.author[
 ### <br> Mauricio Bucca<br> Profesor Asistente, Sociología UC
-### <a href="https://github.com/mebucca">github.com/mebucca</a>
+]
+.date[
+### 12 November, 2023
+]
 
 ---
 
 class: inverse, center, middle
+
+
+
 # Regresión Logística Multinomial
 
 
@@ -346,7 +356,7 @@ Para ejemplificar el uso de regresión logística multinomial trabajaremos con l
 ##  8 SA         250000 M        66 S          35000     -1.31 &lt;NA&gt; 
 ##  9 SA         250000 F        25 S          15000     -1.31 A    
 ## 10 S          250000 F        39 S          15000     -1.31 N    
-## # … with 2,690 more rows
+## # ℹ 2,690 more rows
 ```
 
 &lt;br&gt;
@@ -1067,6 +1077,30 @@ p_hat_delta %&gt;% dplyr::summarise(across(A:Y, ~ mean(.x)))
 ```
 
 ---
+## Efectos marginales sobre la probabilidad de la categoría `\(j\)`: AME
+
+--
+
+Usando el paquete `marginaleffects`:
+
+
+```r
+avg_slopes(mlogit_vote_sq_sex, variables="statusquo")
+```
+
+```
+## 
+##  Group      Term Estimate Std. Error      z Pr(&gt;|z|)    S     2.5 %   97.5 %
+##      A statusquo  0.00448    0.00181   2.47   0.0135  6.2  0.000924  0.00803
+##      N statusquo -0.26361    0.00372 -70.86   &lt;0.001  Inf -0.270898 -0.25632
+##      U statusquo  0.02473    0.00348   7.11   &lt;0.001 39.7  0.017914  0.03154
+##      Y statusquo  0.23440    0.00210 111.83   &lt;0.001  Inf  0.230293  0.23851
+## 
+## Columns: term, group, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high 
+## Type:  probs
+```
+
+---
 ## Efectos marginales sobre la probabilidad de la categoría `\(j\)`: MEM
 
 `$$\text{Aproximación numérica:} \quad \frac{\partial p_{ij}}{\partial x_{k}} \approx  \frac{p_{ij}(x_{1}=\bar{x_{1}}, \dots ,x_{k} = \bar{x_{k}} + \delta) - p_{ij}(x_{1}=\bar{x_{1}}, \dots ,x_{k} =\bar{x_{k}} )}{\delta}$$`
@@ -1074,8 +1108,7 @@ p_hat_delta %&gt;% dplyr::summarise(across(A:Y, ~ mean(.x)))
 MEM de apoyo al status-quo:
 
 ```r
-delta = 0.1
-grid &lt;- plebs_1988 %&gt;% data_grid(sex, .model=mlogit_vote_sq_sex)
+delta = 0.1; grid &lt;- plebs_1988 %&gt;% data_grid(sex, .model=mlogit_vote_sq_sex)
 grid_delta &lt;- plebs_1988 %&gt;% data_grid(sex, .model=mlogit_vote_sq_sex) %&gt;% mutate(statusquo = statusquo + delta)
 
 p_hat &lt;- predict(mlogit_vote_sq_sex, type="probs", newdata =grid) %&gt;% as_tibble() %&gt;% 
@@ -1094,6 +1127,37 @@ p_hat_delta &lt;- p_hat_delta %&gt;% left_join(p_hat, by=c("id","vote")) %&gt;% 
 ## 1 F     -0.0542 -0.306 -0.0436 0.404
 ## 2 M     -0.0111 -0.521  0.0852 0.447
 ```
+
+---
+## Efectos marginales sobre la probabilidad de la categoría `\(j\)`: MEM
+
+--
+
+Usando el paquete `marginaleffects`:
+
+
+
+```r
+grid &lt;- plebs_1988 %&gt;% data_grid(sex, .model=mlogit_vote_sq_sex)
+marginaleffects(mlogit_vote_sq_sex, variables="statusquo", newdata=grid)
+```
+
+```
+## 
+##  Group      Term  Estimate Std. Error        z Pr(&gt;|z|)     S   2.5 %  97.5 %
+##      A statusquo -0.047033     0.0117  -4.0106   &lt;0.001  14.0 -0.0700 -0.0240
+##      A statusquo  0.000272     0.0118   0.0229    0.982   0.0 -0.0229  0.0235
+##      N statusquo -0.330959     0.0192 -17.2699   &lt;0.001 219.6 -0.3685 -0.2934
+##      N statusquo -0.543301     0.0213 -25.5651   &lt;0.001 476.5 -0.5850 -0.5016
+##      U statusquo -0.014003     0.0205  -0.6815    0.496   1.0 -0.0543  0.0263
+##      U statusquo  0.114537     0.0207   5.5260   &lt;0.001  24.9  0.0739  0.1552
+##      Y statusquo  0.391995     0.0165  23.7259   &lt;0.001 411.0  0.3596  0.4244
+##      Y statusquo  0.428492     0.0217  19.7362   &lt;0.001 285.6  0.3859  0.4710
+## 
+## Columns: rowid, term, group, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted, sex, statusquo, vote 
+## Type:  probs
+```
+
 
 ---
 class: inverse, center, middle
@@ -1148,9 +1212,9 @@ Existe una variedad de tests para el supuesto de IIA, pero ninguno ha mostrado s
 ---
 class: inverse, center, middle
 
-.huge[
-**Hasta la próxima clase. Gracias!**
-]
+
+##Hasta la próxima clase. Gracias!
+
 
 &lt;br&gt;
 Mauricio Bucca &lt;br&gt;
@@ -1209,6 +1273,19 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
     deleted = true;
   });
 })();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
 (function() {
   "use strict"
   // Replace <script> tags in slides area to make them executable

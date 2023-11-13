@@ -474,6 +474,22 @@ data_model_plot %>%
 
 ### Bootstrap 
 
+El "bootstrap" es un método de remuestreo que permite estimar la distribución muestral de un estadístico a partir de los datos. 
+
+1. Funciona tomando muestras aleatorias con reemplazo de los datos originales. Como es con reemplazo, cualquier observación de los datos originales puede aparecer repetida en esta muestra bootstrap
+
+El tamaño de la muestra bootstrap es ser menor a N. Por ejemplo, N/2. Lo importante es que el tamaño de cada muestra bootstrap sea fijo. Por ejemplo, si la primera muestra es de tamaño N/2, las demás también serán de tamaño N/2. Esto se hace para que en el proceso de remuestreo bootstrap, las muestras sean comparables entre sí.
+
+2. Se calcula el estadístico de interés (media, desviación estándar, etc) para cada muestra bootstrap. Esto genera una distribución bootstrap del estadístico. La media y desviación estándar de la distribución bootstrap son usadas como estimadores puntual y de error estándar del parámetro poblacional.
+
+3. Se repiten los pasos 1 y 2 muchas veces, (ej. 1000). Cada vez se obtiene una muestra bootstrap de tamaño N y se calcula el estadístico en ella. Todos los valores del estadístico en las 1000 muestras bootstrap conforman su distribución bootstrap.
+
+
+4. Permite estimar intervalos de confianza sin asumir normalidad. Es útil con muestras pequeñas o distribuciones no normales. 
+
+5. Puede usarse para validación cruzada, remuestreo, o estimar sesgo y varianza de modelo.
+
+
 Podemos usar la función `bootstraps()` en el paquete `rsample` para muestrear. Primero, construimos 1000 réplicas de arranque de los datos, cada una de las cuales ha sido muestreada aleatoriamente con reemplazo. El objeto resultante es un rset, que es un marco de datos con una columna de objetos rsplit.
 
 Un objeto `rsplit` tiene dos componentes principales: un conjunto de datos de análisis y un conjunto de datos de evaluación, accesibles mediante análisis (rsplit) y evaluación (rsplit) respectivamente. Para las muestras de arranque, el conjunto de datos de análisis es la muestra de arranque en sí y el conjunto de datos de evaluación consta de todas las muestras listas para usar.

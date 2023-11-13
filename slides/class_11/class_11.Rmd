@@ -1,6 +1,6 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Clase #11"
+subtitle: "Clase #11: Regresión Logística -  Inferencia"
 author: "<br> Mauricio Bucca<br> Profesor Asistente, Sociología UC"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:

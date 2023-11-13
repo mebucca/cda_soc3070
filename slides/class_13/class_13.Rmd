@@ -1,12 +1,12 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Clase #13"
+subtitle: "Clase #13: Regresión Logística Multinomial"
 author: "<br> Mauricio Bucca<br> Profesor Asistente, Sociología UC"
-date: "[github.com/mebucca](https://github.com/mebucca)"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   xaringan::moon_reader:
     lib_dir: libs
-    css: ["default","default-fonts","gentle-r.css"]
+    css: ["gentle-r.css","xaringan-themer.css"]
     df_print: default
     nature:
       ratio: 16:9
@@ -15,9 +15,23 @@ output:
       countIncrementalSlides: true
       slideNumberFormat: "%current%"
 editor_options: 
-  chunk_output_type: console
----
+  chunz_output_type: console
+  
+---  
 class: inverse, center, middle
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(tidyverse)
+library(xaringanthemer)
+style_duo_accent(primary_color ="#556B2F", secondary_color = "#317589",
+                 background_color = "#f8f7f3",
+                 header_font_google = google_font("Archivo"),
+                 text_font_google   = google_font("Inconsolata"), 
+                 link_color= "#C19A6B"
+
+)
+```
+
 # Regresión Logística Multinomial
 
 
@@ -331,7 +345,7 @@ library("DescTools")
 library("caret")
 library("carData")
 library("nnet")
-library("margins")
+library("marginaleffects")
 
 
 theme_set(theme_cowplot())
@@ -351,7 +365,7 @@ plebs_1988 %>% arrange(statusquo)
 ---
 ## Regresión logística multinomial en la práctica
 
-```{r, message=F, warning=F}
+```{r, message=F, warning=F, message=FALSE}
 mlogit_vote_sq <- multinom(vote ~ statusquo, trace=F, data=plebs_1988); 
 summary(mlogit_vote_sq)
 ```
@@ -361,7 +375,7 @@ summary(mlogit_vote_sq)
 
 
 .pull-left[
-```{r, echo=FALSE}
+```{r, echo=FALSE,warning=FALSE, message=FALSE}
 # plot the result
 grid <- plebs_1988  %>% data_grid(statusquo=seq_range(statusquo,30),.model=mlogit_vote_sq)
 
@@ -386,7 +400,7 @@ predictions %>% filter(str_detect(quant, "^l")) %>% separate(quant,sep=8, into=c
 --
 
 .pull-right[
-```{r, echo=FALSE}
+```{r, echo=FALSE,  warning=FALSE, message=FALSE}
 predictions %>% filter(str_detect(quant, "^p")) %>%  separate(quant,sep=2, into=c("quant","vote")) %>%
   ggplot(aes(x=statusquo, y=est, colour=vote, group=vote)) +
   geom_path(alpha=0.5, size=1.5) +
@@ -1022,14 +1036,24 @@ p_hat_delta %>% dplyr::summarise(across(A:Y, ~ mean(.x)))
 ```
 
 ---
+## Efectos marginales sobre la probabilidad de la categoría $j$: AME
+
+--
+
+Usando el paquete `marginaleffects`:
+
+```{r}
+avg_slopes(mlogit_vote_sq_sex, variables="statusquo")
+```
+
+---
 ## Efectos marginales sobre la probabilidad de la categoría $j$: MEM
 
 $$\text{Aproximación numérica:} \quad \frac{\partial p_{ij}}{\partial x_{k}} \approx  \frac{p_{ij}(x_{1}=\bar{x_{1}}, \dots ,x_{k} = \bar{x_{k}} + \delta) - p_{ij}(x_{1}=\bar{x_{1}}, \dots ,x_{k} =\bar{x_{k}} )}{\delta}$$
 --
 MEM de apoyo al status-quo:
 ```{r}
-delta = 0.1
-grid <- plebs_1988 %>% data_grid(sex, .model=mlogit_vote_sq_sex)
+delta = 0.1; grid <- plebs_1988 %>% data_grid(sex, .model=mlogit_vote_sq_sex)
 grid_delta <- plebs_1988 %>% data_grid(sex, .model=mlogit_vote_sq_sex) %>% mutate(statusquo = statusquo + delta)
 
 p_hat <- predict(mlogit_vote_sq_sex, type="probs", newdata =grid) %>% as_tibble() %>% 
@@ -1040,6 +1064,21 @@ p_hat_delta <- predict(mlogit_vote_sq_sex, type="probs", newdata =grid_delta) %>
 
 p_hat_delta <- p_hat_delta %>% left_join(p_hat, by=c("id","vote")) %>% mutate(me_sq = (prob_delta  - prob)/delta) %>% dplyr::select(id,vote,me_sq) %>% pivot_wider(names_from = "vote", values_from = "me_sq") %>% drop_na(); p_hat_delta
 ```
+
+---
+## Efectos marginales sobre la probabilidad de la categoría $j$: MEM
+
+--
+
+Usando el paquete `marginaleffects`:
+
+
+```{r}
+grid <- plebs_1988 %>% data_grid(sex, .model=mlogit_vote_sq_sex)
+marginaleffects(mlogit_vote_sq_sex, variables="statusquo", newdata=grid)
+
+```
+
 
 ---
 class: inverse, center, middle
@@ -1094,9 +1133,9 @@ Existe una variedad de tests para el supuesto de IIA, pero ninguno ha mostrado s
 ---
 class: inverse, center, middle
 
-.huge[
-**Hasta la próxima clase. Gracias!**
-]
+
+##Hasta la próxima clase. Gracias!
+
 
 <br>
 Mauricio Bucca <br>
