@@ -106,7 +106,13 @@ pacman::p_load(GLMMadaptive,
                lmtest,
                sandwich,
                texreg,
-               visreg)
+               visreg, 
+               tinytex, 
+               vcdExtra,
+               margins,
+               modelr,
+               msm)
+
 ```
 
 ## data (ELSOC 2019 w4)
@@ -248,9 +254,7 @@ obs%>%
   theme_minimal()
 ```
 
-
-
-### ICC 
+### ICC
 
 ```{r}
 obs$barrio<-as.factor(obs$barrio)
@@ -272,9 +276,6 @@ summary(m_nulo)
 icc_result <- performance::icc(m_nulo)
 icc_result
 ```
-
-
-
 
 ## Modelo de regresión logística
 
@@ -391,16 +392,15 @@ glimpse(data_model_plot)
 
 ### Interpretación de las interacciones.
 
-- ego_educ2:educ_dist1: El odds ratio es aproximadamente 1.476. Esto significa que cuando la distancia educativa (educ_dist1) aumenta en una unidad y el nivel de educación es 2 (ego_educ2), las probabilidades de que la variable dependiente sea "1" en lugar de "0" se multiplican por 1.476.
+-   ego_educ2:educ_dist1: El odds ratio es aproximadamente 1.476. Esto significa que cuando la distancia educativa (educ_dist1) aumenta en una unidad y el nivel de educación es 2 (ego_educ2), las probabilidades de que la variable dependiente sea "1" en lugar de "0" se multiplican por 1.476.
 
-- ego_educ3:educ_dist1: El odds ratio es aproximadamente 2.065. De manera similar, cuando la distancia educativa aumenta en una unidad y el nivel de educación es 3 (ego_educ3), las probabilidades de que la variable dependiente sea "1" en lugar de "0" se multiplican por 2.065.
+-   ego_educ3:educ_dist1: El odds ratio es aproximadamente 2.065. De manera similar, cuando la distancia educativa aumenta en una unidad y el nivel de educación es 3 (ego_educ3), las probabilidades de que la variable dependiente sea "1" en lugar de "0" se multiplican por 2.065.
 
-- ego_educ4:educ_dist1: El odds ratio es aproximadamente 3.581. Cuando la distancia educativa aumenta en una unidad y el nivel de educación es 4 (ego_educ4), las probabilidades de que la variable dependiente sea "1" en lugar de "0" se multiplican por 3.581.
+-   ego_educ4:educ_dist1: El odds ratio es aproximadamente 3.581. Cuando la distancia educativa aumenta en una unidad y el nivel de educación es 4 (ego_educ4), las probabilidades de que la variable dependiente sea "1" en lugar de "0" se multiplican por 3.581.
 
 Estos odds ratios indican cómo cambian las probabilidades de éxito en comparación con un punto de referencia (en este caso, cuando la distancia educativa es cero y el nivel de educación es ego_educ1). Si el odds ratio es mayor que 1, indica un aumento en las probabilidades de éxito. Si es menor que 1, indica una disminución.
 
 Por ejemplo, si ego_educ2:educ_dist1 es 1.476, entonces cuando la distancia educativa aumenta en una unidad y el nivel de educación es 2 (ego_educ2), las probabilidades de éxito son aproximadamente un 47.6% más altas en comparación con el punto de referencia.
-
 
 ### Plot
 
@@ -471,24 +471,21 @@ data_model_plot %>%
                               "Nivel educativo superior (ego)*Educ. dist."))
 ```
 
+### Bootstrap
 
-### Bootstrap 
+El "bootstrap" es un método de remuestreo que permite estimar la distribución muestral de un estadístico a partir de los datos.
 
-El "bootstrap" es un método de remuestreo que permite estimar la distribución muestral de un estadístico a partir de los datos. 
-
-1. Funciona tomando muestras aleatorias con reemplazo de los datos originales. Como es con reemplazo, cualquier observación de los datos originales puede aparecer repetida en esta muestra bootstrap
+1.  Funciona tomando muestras aleatorias con reemplazo de los datos originales. Como es con reemplazo, cualquier observación de los datos originales puede aparecer repetida en esta muestra bootstrap
 
 El tamaño de la muestra bootstrap es ser menor a N. Por ejemplo, N/2. Lo importante es que el tamaño de cada muestra bootstrap sea fijo. Por ejemplo, si la primera muestra es de tamaño N/2, las demás también serán de tamaño N/2. Esto se hace para que en el proceso de remuestreo bootstrap, las muestras sean comparables entre sí.
 
-2. Se calcula el estadístico de interés (media, desviación estándar, etc) para cada muestra bootstrap. Esto genera una distribución bootstrap del estadístico. La media y desviación estándar de la distribución bootstrap son usadas como estimadores puntual y de error estándar del parámetro poblacional.
+2.  Se calcula el estadístico de interés (media, desviación estándar, etc) para cada muestra bootstrap. Esto genera una distribución bootstrap del estadístico. La media y desviación estándar de la distribución bootstrap son usadas como estimadores puntual y de error estándar del parámetro poblacional.
 
-3. Se repiten los pasos 1 y 2 muchas veces, (ej. 1000). Cada vez se obtiene una muestra bootstrap de tamaño N y se calcula el estadístico en ella. Todos los valores del estadístico en las 1000 muestras bootstrap conforman su distribución bootstrap.
+3.  Se repiten los pasos 1 y 2 muchas veces, (ej. 1000). Cada vez se obtiene una muestra bootstrap de tamaño N y se calcula el estadístico en ella. Todos los valores del estadístico en las 1000 muestras bootstrap conforman su distribución bootstrap.
 
+4.  Permite estimar intervalos de confianza sin asumir normalidad. Es útil con muestras pequeñas o distribuciones no normales.
 
-4. Permite estimar intervalos de confianza sin asumir normalidad. Es útil con muestras pequeñas o distribuciones no normales. 
-
-5. Puede usarse para validación cruzada, remuestreo, o estimar sesgo y varianza de modelo.
-
+5.  Puede usarse para validación cruzada, remuestreo, o estimar sesgo y varianza de modelo.
 
 Podemos usar la función `bootstraps()` en el paquete `rsample` para muestrear. Primero, construimos 1000 réplicas de arranque de los datos, cada una de las cuales ha sido muestreada aleatoriamente con reemplazo. El objeto resultante es un rset, que es un marco de datos con una columna de objetos rsplit.
 
@@ -501,9 +498,7 @@ boots <- bootstraps(obs, times = 1000, apparent = TRUE)
 #boots
 ```
 
-
 Creemos una función auxiliar para ajustar un modelo `logistic_reg()` en cada muestra de arranque y luego usemos `purrr::map()` para aplicar esta función a todas las muestras de arranque a la vez. De manera similar, creamos una columna de información de coeficientes ordenada al desanidar.
-
 
 ```{r}
 # creamos función.
@@ -540,17 +535,16 @@ boot_coefs <-
   unnest(coef_info)
 ```
 
-
 ```{r}
 head(boot_coefs)
 ```
 
 ### Intervalos de confianza (con gráficos)
+
 ```{r}
 percentile_intervals <- int_pctl(boot_models, coef_info)
 head(percentile_intervals)
 ```
-
 
 ```{r}
 ggplot(boot_coefs, aes(estimate)) +
@@ -560,6 +554,40 @@ ggplot(boot_coefs, aes(estimate)) +
   geom_vline(aes(xintercept = .upper), data = percentile_intervals, col = "blue")
 ```
 
+
+### Bootstrap 2: Aproximación alternativa para el cálculo de diferencias entre categorías de una variable 
+
+```{r}
+# modelo de interés
+modelo1<-glm(barrio~ego_sexo + ego_educ + ego_edad, family=binomial(link="logit"), data=obs)
+
+# función para cálculo de bootstrap
+bs_beta2 <- function(x) {
+data_b <- sample_n(obs,size=nrow(obs),replace=TRUE)
+logit_b <- glm(barrio~ego_sexo + ego_educ + ego_edad, family=binomial(link="logit"), data=data_b)
+grid <- obs %>% data_grid(ego_sexo,ego_educ=ego_educ, ego_edad = ego_edad,.model=modelo1)
+newx <- grid %>% mutate(logit = predict(logit_b, newdata = grid), p_hat = 1/(1 + exp(-logit)))
+diff_sexo <- newx$p_hat[2] - newx$p_hat[1]
+return(diff_sexo)
+}
+
+# aplicamos 
+nreps =1200
+betas2_bs <- replicate(nreps,bs_beta2()); head(betas2_bs) 
+
+# intervalo 
+ci_beta2_bs <- quantile(betas2_bs, p=c(0.04,0.96))
+
+# objeto para plot
+betas2_bs <- replicate(nreps,bs_beta2())%>%as_tibble()
+
+# plot
+betas2_bs %>% ggplot(aes(x=value)) +
+  geom_density(color="blue") +
+  geom_vline(xintercept = -0.0013870315, color="green") +
+  geom_vline(xintercept = -0.0001360474, color="green") +
+  labs(x= "Diferencia entre mujer y hombre sobre probabilidad incluir a vecinos en las redes personales")
+```
 
 
 
