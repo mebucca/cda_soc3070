@@ -1,0 +1,283 @@
+---
+title: "SOL3070 Análisis de Datos Categóricos"
+author: "Trabajo 1"
+format: pdf
+editor: visual
+---
+
+```{r, echo=FALSE,message=FALSE, warnings=FALSE}
+# Escribir install.packages("tinytex") en la consola para instalar "tinytex"
+# Escribir install.packages("tidyverse") en la consola para instalar "tinytex"
+# Escribir install.packages("modelr") en la consola para instalar "tinytex"
+library("tinytex")
+library("tidyverse")
+library("modelr")
+library("httr")
+library("ggsci")
+```
+
+## Información
+
+-   Ponderación: 20% de la nota final del curso.
+
+-   Bonus: Responder la pregunta *bonus* NO es un requisito necesario para obtener puntaje completo.
+    Responder incorrectamente la pregunta *bonus* no afectará negativamente la nota obtenida, pero responderla correctamente mejorará la nota obtenida en un máximo de 0.5 puntos (o en la cantidad necesaria para obtener nota máxima si la nota original fuera superior a 6.5)
+
+## Introducción
+
+En esta tarea usarán el modelo lineal de probabilidad (LPM) y regresión logística para re-analizar los datos utilizados en el artículo *"It's not just how the game is played, it's whether you win or lose"* (2019).
+Este estudio utiliza un experimento online para identificar el efecto causal de las desigualdades de oportunidades y de resultados sobre creencias acerca de las causas de la desigualdad y percepciones de justicia.
+Para mayor contexto pueden revisar el artículo en el link indicado en el repositorio.
+
+Específicamente, deberán trabajar con un modelo de regresión perteneciente a la sección "Supplementary Materials".
+Tanto el artículo como el material suplementario se encuentran disponibles en el repositorio.
+En ambos documentos encontrarán destacadas las partes relevantes para desarrollar esta tarea.
+
+## Datos
+
+Los datos están disponibles en el repositorio del curso para ser descargados.
+Visualización rápida de la base de datos:
+
+```{r, message=FALSE, warnings=FALSE}
+
+path <- "/Users/Mauricio/Library/Mobile Documents/com~apple~CloudDocs/Teaching/ISUC/2023_2_categorical_data_analysis/repo/homework/t_1"
+setwd(path)
+data_paper <-  read_csv("data_paper.csv")
+data_paper %>% glimpse()
+
+```
+
+## Descripción de variables relevantes
+
+-   `wg` indica si el jugador ganó (`wg`=1) o perdió el juego (`wg`=0).
+
+-   `pid` indica si el jugador es "player 1" (`pid`=0) o "player 2" (`pid`=1).
+
+-   `hs` corresponde a "hand strength".
+    La variable utilizada acá es equivalente a la usada en el artículo pero multiplicada por 100 para facilitar la interpretación de resultados.
+    Valores cercanos a cero indican que el jugador tenía carta débiles y valores cercanos a 100 indican que el jugador tenía cartas fuertes.
+
+-   `wt` indica si el jugador ganó (`wt`=1) o perdió la sesión de entrenamiento (`wt`=0).
+
+## Ejercicios
+
+1.  Usa un LPM para estimar el modelo implícito en la Figura S3 de la sección "Supplementary Materials" del artículo. Puedes encontrar mayores detalles sobre la especificación del modelo en la ecuación 4 y en la Tabla S3, columna 1. Escribe la escuación de regresión y presenta un `summary()` de los resultados.
+
+La ecuación de regresión es: $\mathbb{P}(\text{wg | pid, hs, wt)} = y = \beta_{0} + \beta_{pid}\text{pid} + \beta_{hs}\text{hs} + \beta_{wt}\text{wt}$
+
+Implementación en `R`:
+
+```{r}
+lpm_1 <- lm(wg ~ factor(pid) + hs + factor(wt) , data=data_paper)
+summary(lpm_1)
+```
+
+1.1 Interpreta el coeficiente asociado a `wt`.
+
+El coeficiente asociado a `wt` indica que, manteniendo los otros factores constantes, la probabilidad esperada de que un ganador de la sesión de entrenamiendo gane el juego es `r round(summary(lpm_1)$coefficients[4,1],2)*100` punto porcentuales mayor que la de un jugador que perdió en el entrenamiento.
+
+1.2 De acuerdo al modelo estimado en 1., ¿cuál es el efecto marginal de "hand strength" sobre la probabilidad esperada de ganar el juego?
+
+El coeficiente asociado a `hs` indica que, manteniendo los otros factores constantes, un aumento en 1 unidad de "hand strength" se traduce en un aumento de `r round(summary(lpm_1)$coefficients[3,1],2)*100` puntos porcentuales en la probabilidad esperada ganar el jugo.
+
+1.3 En base al modelo usado en 1., calcula las probabilidades esperadas de que un "player 1" que ganó el entrenamiento gane el juego si su "hand strength" es 50 y 60, respectivamente.
+Expresa formalmente las ecuaciones correspondiente a estas predicciones.
+
+Formalmente:
+
+-   $\mathbb{P}(\text{wg | pid=0, hs=50, wt=1)} = \beta_{0} + \beta_{hs}*50 + \beta_{wt} = -2.373112 + 0.059134*50 + 0.050784 = 0.634372$
+
+-   $\mathbb{P}(\text{wg | pid=0, hs=60, wt=1)} = \beta_{0} + \beta_{hs}*60 + \beta_{wt} = -2.373112 + 0.059134*60 + 0.050784 = 1.225712$
+
+Implementación en `R`:
+
+```{r}
+newx <- data_paper %>% data_grid(pid=0,hs=c(50,60),wt=1,.model=lpm_1)
+newy <- newx %>% mutate(pred_prob = predict(lpm_1, newdata = newx)) 
+print(newy)
+```
+
+1.4.
+Agrega una interacción entre `hs` y `wt` al modelo estimado en 1.
+Escribe la ecuación de regresión y presenta un `summary()` de los resultados.
+Interpreta el efecto de "hand strength" estimado en este modelo.
+
+La ecuación de regresión es: $\mathbb{P}(\text{wg | pid, hs, wt)} = y = \beta_{0} + \beta_{pid}\text{pid} + \beta_{hs}\text{hs} + \beta_{wt}\text{wt} + \beta_{hs:wt}\text{hs}*\text{wt}$
+
+Implementación en `R`:
+
+```{r}
+lpm_2 <- lm(wg ~ factor(pid) + hs*wt , data=data_paper)
+summary(lpm_2)
+```
+
+Al añadir una interacción entre `hs` y `wt` permitimos que el efecto de "hand strength" dependa de si el jugador ganó o no la sesión de entrenamiento (y viceversa).
+Es decir, no hay un único efecto de "hand strength" si no dos.
+Para los perdedores de la sesión de entrenamiento la probabilidad esperada de ganar el juego viene dada por:
+
+-   $\mathbb{P}(\text{wg | pid, hs, wt=0)} = \beta_{0} + \beta_{pid}\text{pid} + \beta_{hs}\text{hs}$.
+
+Por tanto, el efecto de `hs` sobre la probabilidad de ganar el juego es: $\frac{\partial \mathbb{P}(\text{wg} \mid \text{pid, hs, wt=0})}{\partial \text{hs}} = \beta_{hs}$
+
+Por su parte, para los ganadores de la sesión de entrenamiento la probabilidad esperada de ganar el juego viene dada por:
+
+-   $\mathbb{P}(\text{wg | pid, hs, wt=1)} = \beta_{0} + \beta_{pid}\text{pid} + \beta_{hs}\text{hs} + \beta_{wt} + \beta_{hs:wt}\text{hs} = \beta_{0} + \beta_{pid}\text{pid} + \beta_{wt} + (\beta_{hs} + \beta_{hs:wt})\text{hs}$
+
+Por tanto: $\frac{\partial \mathbb{P}(\text{wg} \mid \text{pid, hs, wt=1})}{\partial \text{hs}} = \beta_{hs} + \beta_{hs:wt}$
+
+1.5 En base a los resultados del modelo en 1.4.
+calcula las probabilidades esperadas de que un "player 1" que ganó el entrenamiento gane el juego si su "hand strength" es 60.
+Expresa formalmente la ecuación correspondiente a esta predicción.
+
+-   $\mathbb{P}(\text{wg | pid=0, hs=60, wt=1)} = \beta_{0} + \beta_{wt} + (\beta_{hs} + \beta_{hs:wt})*60 = -2.3680716 + 0.0409646 + (0.0590335 + 0.0001964)*60 = 1.226687$
+
+Implementación en `R`:
+
+```{r}
+newx <- data_paper %>% data_grid(pid=0,hs=60,wt=1,.model=lpm_2)
+newy <- newx %>% mutate(pred_prob = predict(lpm_2, newdata = newx)) 
+print(newy)
+```
+
+2.  Usa una regresión logística para estimar el modelo implícito en la Figura S3 de la sección "Supplementary Materials" del artículo. Puedes encontrar mayores detalles sobre la especificación del modelo en la ecuación 4 y en la Tabla S3, columna 1. Escribe la escuación de regresión y presenta un `summary()` de los resultados.
+
+La ecuación de regresión es: $\ln\frac{\mathbb{P}(\text{wg | pid, h, wt)}}{1-\mathbb{P}(\text{wg | pid, h, wt)}} = \beta_{0} + \beta_{pid}\text{pid} + \beta_{hs}\text{hs} + \beta_{wt}\text{wt}$
+
+Implementación en `R`:
+
+```{r}
+logit_1 <- glm(wg ~ factor(pid) + hs + wt, family = binomial(link=logit), data=data_paper)
+summary(logit_1)
+```
+
+2.1 Interpreta el coeficiente asociado a `wt`.
+
+El coeficiente asociado a `wt` indica que, manteniendo los otros factores constantes, las log-odds de ganar el juego de los ganadores de la sesión de entrenamiento son `r round(summary(logit_1)$coefficients[4],2)` puntos mayores que las de los perdedores.
+
+2.2 Transforma e interpreta el coeficiente de interés de 2.1.
+en términos de odds-ratios.
+Presenta el desarrollo formal.
+
+Transformamos los coeficientes en odds ratios exponenciando los coeficientes originales:
+
+Implementación en `R`:
+
+```{r}
+exp(summary(logit_1)$coefficients[4,1])
+```
+
+Formalmente: Dado la ecuación de regresión logística,
+
+$\ln\frac{\mathbb{P}(\text{wg | pid, h, wt)}}{1-\mathbb{P}(\text{wg | pid, h, wt)}} =\beta_{0} + \beta_{pid}\text{pid} + \beta_{hs}\text{hs} + \beta_{wt}\text{wt}$
+
+podemos re-expresar el modelo en términos de odds de ganar el juego:
+
+$\frac{\mathbb{P}(\text{wg | pid, h, wt)}}{1-\mathbb{P}(\text{wg | pid, h, wt)}} =e^{\beta_{0}} e^{\beta_{pid}\text{pid}} e^{\beta_{hs}\text{hs}} e^{\beta_{wt}\text{wt}}$
+
+Por tanto, las odds de ganar el juego para un ganador de la sesión de entrenamiento son:
+
+$\text{odds}_{\text{wt}=1}: \frac{\mathbb{P}(\text{wg | pid, h, wt=1)}}{1-\mathbb{P}(\text{wg | pid, h, wt=1)}} =e^{\beta_{0}} e^{\beta_{pid}\text{pid}} e^{\beta_{hs}\text{hs}} e^{\beta_{wt}}$
+
+y las odds de ganar el juego para un perdedor de la sesión de entrenamiento son:
+
+$\text{odds}_{\text{wt}=0}: \frac{\mathbb{P}(\text{wg | pid, h, wt=0)}}{1-\mathbb{P}(\text{wg | pid, h, wt=0)}} =e^{\beta_{0}} e^{\beta_{pid}\text{pid}} e^{\beta_{hs}\text{hs}}$
+
+Luego, la razón de las odds de ganar el juego entre un ganador y un perdedorde la sesión de entrenamiento es:
+
+$\frac{\text{odds}_{\text{wt}=1}}{\text{odds}_{\text{wt}=0}} = \frac{e^{\beta_{0}} e^{\beta_{pid}\text{pid}} e^{\beta_{hs}\text{hs}} e^{\beta_{wt}}}{e^{\beta_{0}} e^{\beta_{pid}\text{pid}} e^{\beta_{hs}\text{hs}}}=e^{\beta_{wt}}$
+
+Es decir, las odds de ganar el juego de un ganador de la sesión de entrenamiento son `r round(exp(summary(logit_1)$coefficients[4,1]),2)` veces las odds de un perdedor del entrenamiento (`r round(exp(summary(logit_1)$coefficients[4,1]) - 1,2)*100`% más altas).
+
+2.3 De acuerdo al modelo estimado en 2, calcula las probabilidades esperadas de que un "player 1" que ganó el entrenamiento gane el juego si su "hand strength" es 50 y 60, respectivamente.
+Expresa formalmente las ecuaciones correspondiente a estas predicciones.
+Compara este resultado con el obtenido en 1.3.
+
+Formalmente:
+
+-   $\mathbb{P}(\text{wg | pid=0, hs=50, wt=1)} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{hs}*50 + \beta_{wt})}} = 1/(1 + \exp(-(-33.18254 + 0.67661*50 + 0.30697))) = 0.7221056$
+
+-   $\mathbb{P}(\text{wg | pid=0, hs=60, wt=1)} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{hs}*60 + \beta_{wt})}}=1/(1 + \exp(-(-33.18254 + 0.67661*60 + 0.30697))) = 0.9995568$
+
+Implementación en `R`:
+
+```{r}
+newx <- data_paper %>% data_grid(pid=0,hs=c(50,60),wt=1,.model=logit_1)
+newy <- newx %>% mutate(pred_prob = predict(logit_1, newdata = newx, type="response")) 
+print(newy)
+```
+
+A diferencia del LPM, el sigmoide $1/(1 + e^{-x})$ garantiza que las probabilidades predichas siempre serán restringidas al rango 0-1.
+
+2.4.
+De acuerdo al modelo estimado en 2., ¿cual es el efecto marginal de "hand strength" sobre la probabilidad esperada de ganar el juego?
+Calcula esta cantidad para un "Player 1" que ganó el entrenamiento si su "hand strength" es 50 y si su "hand strength" es 60.
+Expresa formalmente las ecuaciones correspondientes a estas cantidades.
+Compara esta respuesta con la respuesta dada en 1.2.
+
+Recordar que: $\frac{\partial p_{i} }{\partial \text{hs}} = \beta_{\text{hs}} \times p_{i}(1-p_{i})$
+
+donde $p_{i} = \mathbb{P}(\text{wg | pid, hs, wt)} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{pid}\text{pid} + \beta_{hs}\text{hs}+ \beta_{wt}\text{wt})}})$
+
+De 2.3.
+sabemos que para un "player 1" que ganó el entrenamiento y cuyo "hand strength" es 50, $\mathbb{P}(\text{wg | pid=0, hs=50, wt=1)} = 0.7221056$.
+Por tanto,
+
+-   $\frac{\partial p_{i} }{\partial \text{hs}} = \beta_{\text{hs}} \times p_{i}(1-p_{i}) = 0.67661*0.7221056*(1-0.7221056) = 0.1357747$
+
+Es decir, incrementar desde `hs=50` a `hs=51` implica un aumento de 14 puntos porcentuales en la probabilidad de ganar el juego.
+
+Por su parte, de 2.3.
+sabemos que para un "player 1" que ganó el entrenamiento y cuyo "hand strength" es 60, $\mathbb{P}(\text{wg | pid=0, hs=60, wt=1)} = 0.9995568$.
+Por tanto,
+
+-   $\frac{\partial p_{i} }{\partial \text{hs}} = \beta_{\text{hs}} \times p_{i}(1-p_{i}) = 0.67661*0.9995568*(1-0.9995568) = 0.0002997406$
+
+Es decir, incrementar desde `hs=60` a `hs=61` implica un aumento prácticamente nulo en la probabilidad de ganar el juego.
+
+A diferencia del LPM, en el modelo de regresión logística el efecto de "hand stregth" depende del valor de la misma variable y del valor de otras covariables.
+Esta característica regula que los efectos sean muy limitados cuando las probabilidades se acercan a cero o uno, mientras que pueden ser mayores lejos de dichos valores.
+
+\pagebreak
+
+## Bonus:
+
+El siguiente gráfico describe las probabilidad predichas por el LMP estimado en 1.
+y la regresión logística estimada en 2.
+de que un "player 1" que ganó la sesión de entrenamiento gane el juego, para diferentes valores de "hand strength".
+
+Implementación en `R`:
+
+```{r}
+# crea un nuevo set de datos sobre los cuales crear predicciones
+newx <- data_paper %>% data_grid(pid=0,hs=seq(35,65,by=1),wt=1, .model=lpm_1)
+
+# crea valores predichos para el nuevo set de datos
+xb_lpm = predict(lpm_1 , newdata = newx)
+xb_logit = predict(logit_1, newdata = newx)
+prob_lpm = xb_lpm
+prob_logit = 1/(1 + exp(-xb_logit))
+
+newy <- newx %>% mutate(prob_lpm = prob_lpm, prob_logit = prob_logit) 
+
+# crea gráfico 
+newy %>% ggplot(aes(x=hs, y=prob_lpm, colour="LPM")) +
+  geom_line(size=1.5) +
+  geom_line(aes(x=hs, y=prob_logit, colour="Logística"), size=1.5) +
+  labs(y="P(wg | pid=0, hs, wt=1)", x="hand strength", colour="modelo") +
+  scale_color_aaas() + theme_bw()
+```
+
+3.1 Inspecciona visualmente la figura y determina la "hand strength" aproximada en la cual encontramos el mayor *efecto* de "hand strength" sobre la probabilidad de que un "player 1" que ganó el entrenamiento gane el juego.
+
+El mayor efecto marginal de "hand strength" se da cuando la "hand strength" es aproximádamente 48.
+
+3.2 ¿Cuál es el mayor efecto posible de "hand strength"?
+
+El mayor efecto de "hand strength" ocurre cuando $p_{i}=0.5$, por tanto el mayor efecto marginal de "hand strength" es $\frac{\partial p_{i} }{\partial \text{hs}} = \beta_{\text{hs}}/4 = 0.67661/4= 0.17$
+
+3.3 Verdadero o falso: "el efecto no lineal de `hs` en el modelo de regresión logística (linea azul) se debe a que la especificación del modelo permite tal no-linealidad (por ejemplo, usando un término cuadrático o cúbico)".
+Justifica tu respuesta.
+
+Falso.
+La especificación del modelo no considera un efecto no-lineal de "hand strength".
+La relación no lineal respecto de la probabilidad de ganar el juego es inducida por el la "link function" logit.
