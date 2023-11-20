@@ -1,12 +1,12 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Clase #14"
+subtitle: "Bonus: Regresión Logística (Multinomial) Ordenada"
 author: "<br> Mauricio Bucca<br> Profesor Asistente, Sociología UC"
-date: "[github.com/mebucca](https://github.com/mebucca)"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   xaringan::moon_reader:
     lib_dir: libs
-    css: ["default","default-fonts","gentle-r.css"]
+    css: ["gentle-r.css","xaringan-themer.css"]
     df_print: default
     nature:
       ratio: 16:9
@@ -15,9 +15,23 @@ output:
       countIncrementalSlides: true
       slideNumberFormat: "%current%"
 editor_options: 
-  chunk_output_type: console
----
+  chunz_output_type: console
+  
+---  
 class: inverse, center, middle
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(tidyverse)
+library(xaringanthemer)
+style_duo_accent(primary_color ="#FF0000", secondary_color = "#0000FF",
+                 background_color = "#f8f7f3",
+                 header_font_google = google_font("Archivo"),
+                 text_font_google   = google_font("Inconsolata"), 
+                 link_color= "#FFFF00"
+
+)
+```
+
 # Regresión Logística (Multinomial) Ordenada
 
 
@@ -85,12 +99,11 @@ Ejemplo: si $\eta_{i}=0$, entonces: $p_{i}=1/(1+1)=0.5$
 Una formulación alternativa describe la variable dependiente $y$ como una .bold[manifestación discreta] de una .bold[variable latente] (inobservada) continua, $y^{*}$.
 
 .pull-left[
-\begin{align}
-y_{i} = \begin{cases}
+$$y_{i} = \begin{cases}
 1 \quad \text{si} \quad y^{*}_{i} > 0 \\
 0 \quad \text{si} \quad y^{*}_{i} < 0
-\end{cases}
-\end{align}
+\end{cases}$$
+
 ]
 
 .pull-right[
@@ -168,12 +181,10 @@ print(plot)
 
 
 .pull-left[
-\begin{align}
-y_{i} = \begin{cases}
+$$y_{i} = \begin{cases}
   1 \quad \text{si} \quad y^{*}_{i} > 0 \\
   0 \quad \text{si} \quad y^{*}_{i} < 0
-  \end{cases}
-\end{align}
+  \end{cases}$$
 ]
 
 
@@ -186,16 +197,17 @@ $y^{*}_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki} + \epsilon_{i
 - $\epsilon_{i} \sim \text{logistic}(\mu=0,\sigma=\pi/\sqrt{3})$
 
 
+<br>
 --
 
 
-\begin{align}
+$$\begin{align}
 \mathbb{P}(y_{i}=0) &= \mathbb{P}(y^{*}_{i}<0) \\  \\
 &= \mathbb{P}(\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki} + \epsilon_{i}  < 0) \\ \\
 &= \mathbb{P}(\epsilon_{i} < -(\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})) \\ \\
 &= F_{\epsilon_{i}}(-(\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})) \quad \text{ i.e. función de probabilidad acumulada} \\ \\ 
-&= \text{logit}^{-1}(-(\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))
-\end{align}
+&= \text{logit}^{-1}(-(\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})
+\end{align}$$
 
 
 ---
@@ -302,12 +314,12 @@ print(plot)
 ]
 
 .pull-right[
-\begin{align}
+$$\begin{align}
 y_{i}=1 \quad \text{si }&  y^{*}_{i} < \alpha_{1} \\  \\  
 y_{i}=2 \quad \text{si }&  \alpha_{1} < y^{*}_{i} < \alpha_{2} \\ \\  
 & \vdots \\  \\  
 y_{i}=J \quad \text{si }&  y^{*}_{i} > \alpha_{J-1}
-\end{align}
+\end{align}$$
 ]
 
 ```{css, echo=FALSE}
@@ -346,13 +358,13 @@ print(plot)
 ]
 
 .pull-right[
-\begin{align}
+$$\begin{align}
 \mathbb{P}(y_{i}\leq 1) &= \mathbb{P}(y^{*}_{i}< \alpha_{1}) \\  \\
 &= \mathbb{P}(\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki} + \epsilon_{i}  < \alpha_{1}) \\ \\
 &= \mathbb{P}(\epsilon_{i} < \alpha_{1} -(\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})) \\ \\
 &= F_{\epsilon_{i}}(\alpha_{1} -(\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))  \\ \\ 
 &= \text{logit}^{-1}(\alpha_{1} -(\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))
-\end{align}
+\end{align}$$
 ]
 
 ```{css, echo=FALSE}
@@ -391,13 +403,13 @@ print(plot)
 ]
 
 .pull-right[
-\begin{align}
+$$\begin{align}
 \mathbb{P}(y_{i}\leq 2) &= \mathbb{P}(y^{*}_{i}< \alpha_{2}) \\  \\
 &= \mathbb{P}(\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki} + \epsilon_{i}  < \alpha_{2}) \\ \\
 &= \mathbb{P}(\epsilon_{i} < \alpha_{2} -(\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})) \\ \\
 &= F_{\epsilon_{i}}(\alpha_{2} -(\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))  \\ \\ 
 &= \text{logit}^{-1}(\alpha_{2} -(\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))
-\end{align}
+\end{align}$$
 ]
 
 <br>
@@ -836,11 +848,11 @@ Podemos calcular la probabilidad de ocurrencia de la categoría $j$ como sigue:
 <br>
 --
 
-\begin{align}
+$$\begin{align}
 \mathbb{P}(y_{i} = j) &= \mathbb{P}(y_{i}<j) - \mathbb{P}(y_{i}< j-1) \\ \\
 &= \text{logit}^{-1}(\alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}) ) - \text{logit}^{-1}(\alpha_{j-1} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})) \\ \\
 &= \frac{1}{1 + e^{-(\alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}) )}} - \frac{1}{1 + e^{-(\alpha_{j-1} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))}}
-\end{align}
+\end{align}$$
 
 
 ---
@@ -1282,9 +1294,7 @@ Considera la situación en que $i$ y $i^{´}$ son dos observaciones con $x_{k}=c
 
 El ratio de las odds entre $i^{´}$ e $i$ está dado por:
 
-\begin{align}
-\frac{\mathbb{P}(y_i^{´} \leq j)/\mathbb{P}(y_i^{´} > j)}{\mathbb{P}(y_{i} \leq j)/\mathbb{P}(y_{i} > j)} &= \frac{e^{\alpha_{j}} \cdot e^{-\beta_{1} x_{i^{´}1}}  \cdots (e^{-\beta_{k}})^{c+1}}{e^{\alpha_{j}} \cdot e^{-\beta_{1} x_{i1}}  \cdots (e^{-\beta_{k}})^{c}} = e^{-\beta_{k}}
-\end{align}
+$$\frac{\mathbb{P}(y_i^{´} \leq j)/\mathbb{P}(y_i^{´} > j)}{\mathbb{P}(y_{i} \leq j)/\mathbb{P}(y_{i} > j)} = \frac{e^{\alpha_{j}} \cdot e^{-\beta_{1} x_{i^{´}1}}  \cdots (e^{-\beta_{k}})^{c+1}}{e^{\alpha_{j}} \cdot e^{-\beta_{1} x_{i1}}  \cdots (e^{-\beta_{k}})^{c}} = e^{-\beta_{k}}$$
 
 
 <br>
@@ -1449,10 +1459,10 @@ Dado el siguiente modelo de regresión logística multinomial:
 $$\ln \frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} > j) } = \alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})$$
 y
 
-\begin{align}
+$$\begin{align}
 \mathbb{P}(y_{i} = j) &= \mathbb{P}(y_{i}<j) - \mathbb{P}(y_{i}< j-1) \\ \\
 &= \frac{1}{1 + e^{-(\alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}) )}} - \frac{1}{1 + e^{-(\alpha_{j-1} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))}}
-\end{align}
+\end{align}$$
 
 <br>
 --
@@ -1719,9 +1729,8 @@ p_hat_delta <- p_hat_delta %>% left_join(p_hat, by=c("id","affair")) %>% mutate(
 ---
 class: inverse, center, middle
 
-.huge[
-**Hasta la próxima clase. Gracias!**
-]
+
+##Hasta la próxima clase. Gracias!
 
 <br>
 Mauricio Bucca <br>

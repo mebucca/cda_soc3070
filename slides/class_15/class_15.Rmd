@@ -1,12 +1,12 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Clase #15"
+subtitle: "Clase #15: Regresión Poisson"
 author: "<br> Mauricio Bucca<br> Profesor Asistente, Sociología UC"
-date: "[github.com/mebucca](https://github.com/mebucca)"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   xaringan::moon_reader:
     lib_dir: libs
-    css: ["default","default-fonts","gentle-r.css"]
+    css: ["gentle-r.css","xaringan-themer.css"]
     df_print: default
     nature:
       ratio: 16:9
@@ -15,9 +15,23 @@ output:
       countIncrementalSlides: true
       slideNumberFormat: "%current%"
 editor_options: 
-  chunk_output_type: console
----
+  chunz_output_type: console
+  
+---  
 class: inverse, center, middle
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(tidyverse)
+library(xaringanthemer)
+style_duo_accent(primary_color ="#7BB661", secondary_color = "#D9CAB3",
+                 background_color = "#f8f7f3",
+                 header_font_google = google_font("Archivo"),
+                 text_font_google   = google_font("Inconsolata"), 
+                 link_color= "#A2CFFE"
+
+)
+```
+
 # Regresión Poisson
 
 
@@ -282,38 +296,34 @@ Sin embargo, $\eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$ 
 <br>
 --
 
-Por tanto, es conveniente expresar $\eta_{i}$ en función de $\mu_{i}$ ...
+Por tanto, es conveniente expresar $\eta_{i}$ en función de $\mu_{i}$. Si $\mu_{i} = e^{\eta_{i}}$, entonces ...
 
---
-.img-right-top[
-![facile](https://i.gifer.com/5gf.gif)
-]
-
-<br>
---
-
-Si $\mu_{i} = e^{\eta_{i}}$, entonces ...
 
 --
 
 .pull-left[
+
+![facile](https://i.gifer.com/5gf.gif)
+
+
 .content-box-yellow[
 $$\quad \quad  \ln \mu_{i} = \eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$$
 ]
 ]
 
+--
+
 .pull-right[
 
-]
-
---
 <br>
 
 - En resumen, un modelo de regressión Poisson describe $\ln \mathbb{E}(y_{i} \mid x_{1i}, \dots, x_{ki}) = \ln \mu_{i}$.
 
---
 
 - Recordar que esto es distinto de  modelar el logaritmo de la variable dependiente: $\mathbb{E}(\ln y_{i} \mid x_{1i}, \dots, x_{ki})$
+
+]
+
 
 ---
 ## Regresión Poisson para modelar "tasas" 
