@@ -1,0 +1,80 @@
+---
+title: "El efecto de X sobre Y"
+subtitle: ""
+author: "<br> Violeta Parra <br> Nicanor Parra"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: ["default","default-fonts","gentle-r.css"]
+    df_print: default
+    nature:
+      ratio: 16:9
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: true
+      slideNumberFormat: "%current%"
+editor_options: 
+  chunk_output_type: console
+---
+## Pregunta de investigación
+
+
+- X e Y son muy imporantes y están asociados estadísticamente
+
+--
+
+- Nos interesa saber si X tiene un efecto sobre Y, controlando por Z
+
+--
+
+- Dado que Z afecta X e Y, es posible que el efecto de X sobre Y sea espurio
+
+
+---
+## Datos y Métodos
+
+- Para testear esta hipótesis usaremos una base de datos muy grande.
+
+--
+
+- Dado que Y es una variable de tipo ..........., usaremos un modelo de regresión ........ Este tipo de regresión es ideal por muchas razones.
+
+--
+
+- Específicamente, estimaremos el siguiente modelo de regresión:
+
+$$g(\eta_{i}) = \alpha + \gamma \ln(x_{i}) + \delta z_{i}$$
+donde $\gamma$ es ....
+
+---
+## Resultados
+
+
+```{r, echo=F}
+library("knitr")
+z <- rnorm(1000)
+x <- 0.3*z + rnorm(1000)
+y <- 0.2*z + 0.4*x + rnorm(1000)
+```
+
+```{r, echo=F, message=FALSE}
+mimodelo <- lm(y ~ log(x) + z)
+tab_model(summary(mimodelo))
+```
+
+
+---
+class: inverse, center, middle
+
+.huge[
+**Fin. Gracias!**
+]
+
+<br>
+Violeta Parra <br> Nicanor Parra <br>
+https://vparra.github.io/ <br>
+github.com/vparra
+
+
+
+

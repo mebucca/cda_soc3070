@@ -72,8 +72,8 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | Tarea corta 4 | 11 septiembre       | 20 septiembre    | [`[Soluciones TC4]`](homework/tc_4_answers.pdf) [`[Soluciones TC4.qmd]`](homework/tc_4_answers.qmd) |
 | Trabajo 1     | 16 octubre          | 31 octubre       | [`[Soluciones T1]`](homework/t_1_answers/t_1_answers.pdf) [`[Soluciones T1.qmd]`](homework/t_1_answers/t_1_answers.qmd) [`[Paper]`](homework/t_1/paper.pdf)  [`[Material Suplementario]`](homework/t_1/sm.pdf)                                        |
 | Tarea corta 5 | 7 noviembre          | 14 noviembre      |  [`[Soluciones TC5]`](https://mebucca.github.io/cda_soc3070/homework/tc_5_answers#1)  [`[Soluciones TC5.qmd]`](homework/t_5_answers/t_5_answers.qmd)                                                                   |
-| Trabajo 2     | 13 noviembre        | 28 noviembre     |                                           |
-| Trabajo final | 20 noviembre        | 5 diciembre      |                                           |
+| Trabajo 2     | 13 noviembre        | 28 noviembre     |   [`[T2]`](https://mebucca.github.io/cda_soc3070/homework/t_2/t_2#1) [`[Paper]`](homework/t_1/paper.pdf) [`[Supplementary Materials]`](homework/t_1/sm.pdf) [`[Database]`](homework/t_2/data_t_2.csv)                                        |
+| Trabajo final | 20 noviembre        | 5 diciembre      |    [`[TF]`](https://mebucca.github.io/cda_soc3070/homework/tf/tf#1) [`[Paper 2018]`](homework/tf/Silberzahn-etal-2018.pdf) [`[Paper 2021]`](homework/tf/Auspurg-Bruderl-2021.pdf) [`[Database]`](homework/tf/redcard_data.csv) [`[Ejemplo Elevator speech]`](https://mebucca.github.io/cda_soc3070/homework/tf/elevator_speech#1)                                         |
 
 
 
