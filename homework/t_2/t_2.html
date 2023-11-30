@@ -1569,23 +1569,17 @@ overflow-y: auto;
 border: 1px solid #ddd;
 border-radius: 4px;
 }
-.tabset-dropdown > .nav-tabs > li.active:before {
-content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+content: "\e259";
 font-family: 'Glyphicons Halflings';
 display: inline-block;
 padding: 10px;
 border-right: 1px solid #ddd;
 }
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-content: "";
-border: none;
-}
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-content: "";
+content: "\e258";
 font-family: 'Glyphicons Halflings';
-display: inline-block;
-padding: 10px;
-border-right: 1px solid #ddd;
+border: none;
 }
 .tabset-dropdown > .nav-tabs > li.active {
 display: block;
@@ -1719,9 +1713,9 @@ affairsdata &lt;- Fair %&gt;% as_tibble()</code></pre>
 <li><p>La variable <code>nbaffairs</code> mide la cantidad de relaciones
 extra-matrimoniales que ha tenido una persona. La variable
 <code>ym</code> mide los años que una persona ha estado casada.</p></li>
-<li><p>Modela la cantidad de relaciones extra-matrimoniales que ha
-tenido una persona como función de su genero (<code>age</code>), su
-felicidad en el matrimonio (<code>rate</code>) y la interacción entre
+<li><p>Modela la tasa de relaciones extra-matrimoniales que ha tenido
+una persona como función de su genero (<code>age</code>), su felicidad
+en el matrimonio (<code>rate</code>) y la interacción entre
 ambas.</p></li>
 </ul>
 <p>2.1 Interpreta el efecto multiplicativo de la variable felicidad en

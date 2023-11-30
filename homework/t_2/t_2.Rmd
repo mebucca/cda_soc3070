@@ -76,7 +76,7 @@ affairsdata <- Fair %>% as_tibble()
 
 - La variable `nbaffairs` mide la cantidad de relaciones extra-matrimoniales que ha tenido una persona. La variable `ym` mide los años que una persona ha estado casada.
  
-- Modela la cantidad de relaciones extra-matrimoniales que ha tenido una persona como función de su genero (`age`), su felicidad en el matrimonio (`rate`) y la interacción entre ambas.
+- Modela la tasa de relaciones extra-matrimoniales que ha tenido una persona como función de su genero (`age`), su felicidad en el matrimonio (`rate`) y la interacción entre ambas.
 
 
 2.1 Interpreta el efecto multiplicativo de la variable felicidad en el matrimonio sobre la tasa de infidelidad de los hombres.
