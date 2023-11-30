@@ -34,7 +34,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | 6   | Noviembre | Regresión Logística: ajuste y predicción        |  [`[Presentación]`](https://mebucca.github.io/cda_soc3070/slides/class_12/class_12#1) [`[Código]`](slides/class_12/class_12.Rmd)                                                                                                                                              |
 | 20  | Noviembre | Regresión Logística Multinomial                 |  [`[Presentación]`](https://mebucca.github.io/cda_soc3070/slides/class_13/class_13#1) [`[Código]`](slides/class_13/class_13.Rmd)                                                                                                                                  |
 |     |           | Regresión Logística Ordenada                    |  [`[Presentación]`](https://mebucca.github.io/cda_soc3070/slides/class_14/class_14#1) [`[Código]`](slides/class_14/class_14.Rmd)                                                                                                                                  |
-| 28  | Noviembre | Regresión Poisson                               | [`[Presentación]`](https://mebucca.github.io/cda_soc3070/slides/class_15/class_15#1) [`[Código]`](slides/class_15/class_15.Rmd)                                                                                                                                  |
+| 27  | Noviembre | Regresión Poisson                               | [`[Presentación]`](https://mebucca.github.io/cda_soc3070/slides/class_15/class_15#1) [`[Código]`](slides/class_15/class_15.Rmd)                                                                                                                                  |
 
 
 ## Ayudantías
@@ -51,7 +51,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | 20  | Septiembre  | Regresión logística                       | [`[Presentación]`](https://mebucca.github.io/cda_soc3070/ayudantia/05_regresion_logistica/index) [`[Código]`](https://github.com/mebucca/cda_soc3070/blob/gh-pages/ayudantia/05_regresion_logistica/index.qmd) |
 | 27  | Septiembre  | Regresión logística                       | [`[Presentación]`](https://mebucca.github.io/cda_soc3070/ayudantia/06_regresion_logistica%20II/index) [`[Código]`](https://github.com/mebucca/cda_soc3070/blob/gh-pages/ayudantia/06_regresion_logistica%20II/index.qmd) |
 | 25  | Octubre     | Bootstrap y cross-validation              |            |
-| 8   | Noviembre   | Regresión logística multinomial           |            |
+| 8   | Noviembre   | Regresión logística multinomial           | [`[Presentación]`](https://mebucca.github.io/cda_soc3070/ayudantia/08_regresion_multinomial/index) [`[Código]`](https://github.com/mebucca/cda_soc3070/blob/gh-pages/ayudantia/08_regresion_multinomial/index.qmd)    |
 | 22  | Noviembre   | Regresión logística ordenada y poisson    |            |
 | 29  | Noviembre   | Sobre trabajo final                       |            |
 
@@ -73,7 +73,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | Trabajo 1     | 16 octubre          | 31 octubre       | [`[Soluciones T1]`](homework/t_1_answers/t_1_answers.pdf) [`[Soluciones T1.qmd]`](homework/t_1_answers/t_1_answers.qmd) [`[Paper]`](homework/t_1/paper.pdf)  [`[Material Suplementario]`](homework/t_1/sm.pdf)                                        |
 | Tarea corta 5 | 7 noviembre          | 14 noviembre      |  [`[Soluciones TC5]`](https://mebucca.github.io/cda_soc3070/homework/tc_5_answers#1)  [`[Soluciones TC5.qmd]`](homework/t_5_answers/t_5_answers.qmd)                                                                   |
 | Trabajo 2     | 13 noviembre        | 28 noviembre     |   [`[T2]`](https://mebucca.github.io/cda_soc3070/homework/t_2/t_2#1) [`[Paper]`](homework/t_1/paper.pdf) [`[Supplementary Materials]`](homework/t_1/sm.pdf) [`[Database]`](homework/t_2/data_t_2.csv)                                        |
-| Trabajo final | 20 noviembre        | 5 diciembre      |    [`[TF]`](https://mebucca.github.io/cda_soc3070/homework/tf/tf#1) [`[Paper 2018]`](homework/tf/Silberzahn-etal-2018.pdf) [`[Paper 2021]`](homework/tf/Auspurg-Bruderl-2021.pdf) [`[Database]`](homework/tf/redcard_data.csv) [`[Ejemplo Elevator speech]`](https://mebucca.github.io/cda_soc3070/homework/tf/elevator_speech#1)                                         |
+| Trabajo final | 20 noviembre        | 11 diciembre      |    [`[TF]`](https://mebucca.github.io/cda_soc3070/homework/tf/tf#1) [`[Paper 2018]`](homework/tf/Silberzahn-etal-2018.pdf) [`[Paper 2021]`](homework/tf/Auspurg-Bruderl-2021.pdf) [`[Database]`](homework/tf/redcard_data.csv) [`[Ejemplo Elevator speech]`](https://mebucca.github.io/cda_soc3070/homework/tf/elevator_speech#1)                                         |
 
 
 
