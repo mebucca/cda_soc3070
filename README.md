@@ -82,14 +82,13 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 Los mejores trabajos del curso (sin orden particular) son los siguientes:
 
 
-- [`[Nuñez & Vives]`](https://mebucca.github.io/cda_soc3070/homework/tf_cda_1.pdf)
+- [`[Nuñez & Vives]`](homework/tf_cda_1.pdf)
 
-- [`[Rosemblatt & Perez]`](https://mebucca.github.io/cda_soc3070/homework/tf_cda_2.pdf)
+- [`[Rosemblatt & Perez]`](homework/tf_cda_2.pdf)
 
-- [`[Arancibia & Barrientos]`](https://mebucca.github.io/cda_soc3070/homework/tf_cda_3.pdf)
+- [`[Arancibia & Barrientos]`](homework/tf_cda_3.pdf)
 
-- [`[Alarcón, Chackiel & Echeverría]`](https://mebucca.github.io/cda_soc3070/homework/tf_cda_4.pdf)
-
+- [`[Alarcón, Chackiel & Echeverría]`](homework/tf_cda_4.pdf)
 
 
 ## Recursos computacion
