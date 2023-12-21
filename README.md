@@ -76,6 +76,20 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | Trabajo final | 20 noviembre        | 11 diciembre      |    [`[TF]`](https://mebucca.github.io/cda_soc3070/homework/tf/tf#1) [`[Paper 2018]`](homework/tf/Silberzahn-etal-2018.pdf) [`[Paper 2021]`](homework/tf/Auspurg-Bruderl-2021.pdf) [`[Database]`](homework/tf/redcard_data.csv) [`[Ejemplo Elevator speech]`](https://mebucca.github.io/cda_soc3070/homework/tf/elevator_speech#1)  [`[Ejemplo 1]`](files/TF_1.pdf) [`[Ejemplo 2]`](files/TF_2.pdf)                                      |
 
 
+## Podio de honor trabajo final
+
+
+Los mejores trabajos del curso (sin orden particular) son los siguientes:
+
+
+- [`[Nuñez & Vives]`](https://mebucca.github.io/cda_soc3070/homework/tf_cda_1.pdf)
+
+- [`[Rosemblatt & Perez]`](https://mebucca.github.io/cda_soc3070/homework/tf_cda_2.pdf)
+
+- [`[Arancibia & Barrientos]`](https://mebucca.github.io/cda_soc3070/homework/tf_cda_3.pdf)
+
+- [`[Alarcón, Chackiel & Echeverría]`](https://mebucca.github.io/cda_soc3070/homework/tf_cda_4.pdf)
+
 
 
 ## Recursos computacion
