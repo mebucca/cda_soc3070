@@ -1,0 +1,66 @@
+---
+title: "SOL3070 Análisis de Datos Categóricos"  
+author: "Tarea corta 2"  
+format: html
+editor: visual  
+---
+
+```{r, echo=FALSE}
+# Escribir install.packages("tinytex") en la consola para instalar "tinytex"
+# Carga "tinytex" para compilar PDF
+library("tinytex")
+```
+
+**`Ponderación:`**`6% de la nota final del curso.`
+
+<br>
+
+La final del Mundial 2006 -- Italia vs. Francia -- se definió por penales. La tabla a continuación resume la información de la ronda de penales. La columna X registra los resultados de cada lanzamiento, donde $X_{i}=1$ indica que el jugador $i$ convirtió el penal y $X_{i}=0$ indica que el penal fue atajado o perdido.
+
+| Jugador   | Equipo  | X: Resultado |
+|-----------|---------|:------------:|
+| Pirlo     | Italia  |      1       |
+| Wiltord   | Francia |      1       |
+| Materazzi | Italia  |      1       |
+| Trezeguet | Francia |      0       |
+| De Rossi  | Italia  |      1       |
+| Abidal    | Francia |      1       |
+| Del Piero | Italia  |      1       |
+| Sagnol    | Francia |      1       |
+| Grosso    | Italia  |      1       |
+
+<br>
+
+![El momento que lo cambió todo](zidane.jpeg)
+
+<br>
+
+Asumiendo que el tiro de cada jugador no es afectado por los resultados en los tiros anteriores, es razonable sostener que el resultado de cada penal sigue una distribución Bernoulli. Formalmente: $X_{i} \sim \text{Bernoulli}(p_{i})$, donde $p_{i}$ es la probabilidad de que cada jugador marque su penal.
+
+## Preguntas:
+
+1)  Expresa la función de probabilidad de cada variable aleatoria $X_{i}$.
+
+2)  Asumiendo que todos los jugadores de un mismo equipo tienen la misma probabilidad de marcar su penal ($p$ para Italia y $q$ para Francia), expresa la "Likelihood function" de $p$ y $q$.
+
+3)  Grafica la función $\mathcal{L}(q)$ ( $q$ en el eje-x y $\mathcal{L}(q)$ en el eje y).
+
+Para hacerlo, debes reemplazar la variable `L_francia` en el siguiente código por la expresión obtenida en la pregunta (2). Es decir, `L_francia = (q-1^1)*(1-q)^2` sirven a modo de ejemplo.
+
+```{r, echo=T, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(dplyr)
+
+mydata <- data_frame(q = seq(from = 0, to = 1, by=0.01), L_francia = (q-1^1)*(1-q)^2)
+
+plot <- ggplot(data = mydata) +
+       geom_path(aes(x = q, y=L_francia, colour="Francia"), linewidth=1.5) +
+       labs(y="Likelihood", x="probabilidad marcar penal", title="Likelihood function de q", colour="") +
+       scale_color_manual(values = c("Francia" = "blue")) +
+       theme_bw() 
+print(plot)
+```
+
+4)  Estima visualmente cuál es el valor de $q$ que maximiza $\mathcal{L}(q)$. Explica el significado de éste número.
+
+5)  Supón la siguiente situación: Es sabido que $P(\text{marcar penal} \mid \text{Francia}) = 0.75$. Un fanático nervioso se resiste a ver la transmisión del primer penal y tampoco sabe qué equipo empieza pateando. Pasados unos segundos, escucha gritos de celebración indicando que el penal fue convertido. El pobre tifoso recuerda que puede usar el Teorema de Bayes para conocer la probabilidad de que el penal haya sido marcado por un jugador francés — $P(\text{Francia} \mid \text{marcar penal})$ — pero no recuerda cómo hacerlo. Realiza tú el cálculo requerido.

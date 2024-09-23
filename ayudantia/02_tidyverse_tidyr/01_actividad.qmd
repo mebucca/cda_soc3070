@@ -1,0 +1,82 @@
+---
+title: "Ejercicios Adicionales de Tidyverse y Tidyr"
+subtitle: "Análisis de Redes de Comercio Internacional"
+author: "Cantillan, R. | Bucca, M."
+format: 
+  pdf:
+    pdf-engine: pdflatex
+    documentclass: article
+    papersize: letter
+    fontfamily: roboto #courier
+    fontsize: 11pt
+editor: visual
+---
+
+
+
+
+## Ejercicio 1: Análisis de la evolución del comercio por continente
+
+Utilizando los datos de comercio internacional, crea un análisis que muestre cómo ha evolucionado el volumen total de exportaciones por continente a lo largo del tiempo.
+
+Pasos sugeridos:
+
+1. Crea una función para asignar países a continentes.
+2. Utiliza `mutate()` para añadir una columna de continente a los datos.
+3. Usa `group_by()`{.function} y `summarise()`{.function} para calcular el total de exportaciones por continente y año.
+4. Crea una visualización con `ggplot2` que muestre la evolución del comercio por continente.
+
+## Ejercicio 2: Análisis de la diversificación del comercio
+
+Investiga cómo ha cambiado la diversificación del comercio de los países a lo largo del tiempo. La diversificación se puede medir por el número de socios comerciales únicos que tiene un país.
+
+Pasos sugeridos:
+
+1. Utiliza `group_by()` y `summarise()` para contar el número de socios comerciales únicos por país y año.
+2. Calcula la media y la desviación estándar del número de socios comerciales por año.
+3. Crea una visualización que muestre cómo ha cambiado la distribución del número de socios comerciales a lo largo del tiempo.
+
+## Ejercicio 3: Identificación de patrones de comercio regionales
+
+Analiza cómo el comercio dentro de las regiones ha cambiado en comparación con el comercio entre regiones a lo largo del tiempo.
+
+Pasos sugeridos:
+
+1. Crea una columna que indique si un par de países está en la misma región o no.
+2. Utiliza `group_by()` y `summarise()` para calcular el volumen de comercio dentro de las regiones y entre regiones para cada año.
+3. Calcula la proporción de comercio intra-regional vs. inter-regional para cada año.
+4. Visualiza cómo ha cambiado esta proporción a lo largo del tiempo.
+
+
+
+
+::: {.callout-note}
+## Datos y paquetes necesarios
+
+Para el ejericio deben instalar el paquete `countrycode`, disponible en CRAN. Los datos son los mismos que utilizamos para el ejercicio. Abajo cómo pueden cargarlos. 
+
+```{r}
+#| echo: true
+#| warning: false
+
+# carga de datos 
+# data(trade, package = "qss")
+
+# instalar paquete `countrycode`
+# install.packages("countrycode")
+# library(countrycode)
+
+# Función para asignar continentes
+# get_continent <- function(country) {
+#   countrycode(country, origin = "country.name", 
+#   destination = "continent")
+# }
+
+# Función para obtener la región
+# get_region <- function(country) {
+#   countrycode(country, origin = "country.name", 
+#   destination = "region")
+# }
+```
+:::
+

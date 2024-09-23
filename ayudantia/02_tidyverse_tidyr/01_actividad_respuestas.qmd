@@ -1,0 +1,119 @@
+---
+title: "Ejercicios Adicionales de Tidyverse y Tidyr (respuestas)"
+subtitle: "Análisis de Redes de Comercio Internacional"
+author: "Cantillan, R. | Bucca, M."
+format: 
+  pdf:
+    pdf-engine: pdflatex
+    documentclass: article
+    papersize: letter
+    fontfamily: roboto #courier
+    fontsize: 11pt
+editor: visual
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+#install.packages("countrycode")
+library(tidyverse)
+library(countrycode)
+data(trade, package = "qss")
+
+trade <- trade %>%
+  select(-`.row`) %>%
+  mutate(exports = replace_na(exports, 0))
+```
+
+## Ejercicio 1: Análisis de la evolución del comercio por continente
+
+```{r}
+# Función para asignar continentes
+get_continent <- function(country) {
+  countrycode(country, origin = "country.name", destination = "continent")
+}
+
+# Añadir columna de continente
+trade_with_continent <- trade %>%
+  mutate(continent = get_continent(country1))
+
+# Calcular total de exportaciones por continente y año
+exports_by_continent <- trade_with_continent %>%
+  group_by(year, continent) %>%
+  summarise(total_exports = sum(exports, na.rm = TRUE)) %>%
+  filter(!is.na(continent))
+
+# Visualización
+ggplot(exports_by_continent, aes(x = year, y = total_exports, color = continent)) +
+  geom_line() +
+  geom_point() +
+  scale_y_log10() +
+  labs(title = "Evolución del comercio por continente",
+       x = "Año", y = "Total de exportaciones (log scale)",
+       color = "Continente") +
+  theme_minimal()
+```
+
+## Ejercicio 2: Análisis de la diversificación del comercio
+
+```{r}
+# Contar socios comerciales únicos
+trade_partners <- trade %>%
+  group_by(year, country1) %>%
+  summarise(n_partners = n_distinct(country2)) %>%
+  ungroup()
+
+# Calcular estadísticas por año
+partner_stats <- trade_partners %>%
+  group_by(year) %>%
+  summarise(
+    mean_partners = mean(n_partners),
+    sd_partners = sd(n_partners)
+  )
+
+# Visualización
+ggplot(partner_stats, aes(x = year)) +
+  geom_line(aes(y = mean_partners)) +
+  geom_ribbon(aes(ymin = mean_partners - sd_partners, 
+                  ymax = mean_partners + sd_partners), 
+              alpha = 0.2) +
+  labs(title = "Evolución del número de socios comerciales",
+       x = "Año", y = "Número medio de socios comerciales") +
+  theme_minimal()
+```
+
+## Ejercicio 3: Identificación de patrones de comercio regionales
+
+```{r}
+# Función para obtener la región
+get_region <- function(country) {
+  countrycode(country, origin = "country.name", destination = "region")
+}
+
+# Añadir columnas de región
+trade_with_region <- trade %>%
+  mutate(
+    region1 = get_region(country1),
+    region2 = get_region(country2),
+    same_region = region1 == region2
+  )
+
+# Calcular comercio intra e inter-regional
+regional_trade <- trade_with_region %>%
+  group_by(year, same_region) %>%
+  summarise(total_trade = sum(exports, na.rm = TRUE)) %>%
+  ungroup() %>%
+  pivot_wider(names_from = same_region, values_from = total_trade) %>%
+  rename(intra_regional = `TRUE`, inter_regional = `FALSE`) %>%
+  mutate(
+    total_trade = intra_regional + inter_regional,
+    intra_proportion = intra_regional / total_trade
+  )
+
+# Visualización
+ggplot(regional_trade, aes(x = year, y = intra_proportion)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Proporción de comercio intra-regional a lo largo del tiempo",
+       x = "Año", y = "Proporción de comercio intra-regional") +
+  theme_minimal()
+```

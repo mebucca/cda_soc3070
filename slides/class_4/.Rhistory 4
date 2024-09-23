@@ -1,0 +1,108 @@
+library("tidyverse")
+set.seed(481)
+data_coins <- data.frame(X = rbinom(n=100, size=1, prob=0.8))
+data_coins %>%
+ggplot(aes(x=factor(X))) +
+geom_bar(aes(fill=factor(X)), width = 1, color = "black") +
+geom_text(aes(label=..count.., y = ..count..), stat='count', vjust=-0.5, size = 5) +
+scale_fill_manual(values = c("#FFD58D", "#FFD58D")) +
+labs(y="Recuentos", x="", title="Resultados de los lanzamientos de la moneda") +
+guides(fill=FALSE) +
+ylim(0,90) +
+theme_minimal() +
+theme(
+axis.text.y = element_text(size = 22),
+axis.text.x = element_text(size = 22),
+axis.title.y = element_text(size = 24),
+panel.border = element_rect(color = "black", fill = NA, linewidth = 1)
+)
+data_coins <- data.frame(X = rbinom(n=100, size=1, prob=0.8))
+data_coins %>%
+ggplot(aes(x=factor(X))) +
+geom_bar(aes(fill=factor(X)), width = 1, color = "black") +
+geom_text(aes(label=..count.., y = ..count..), stat='count', vjust=-0.5, size = 5) +
+scale_fill_manual(values = c("#FFD58D", "#FFD58D")) +
+labs(y="Recuentos", x="", title="Resultados de los lanzamientos de la moneda") +
+guides(fill=FALSE) +
+ylim(0,90) +
+theme_minimal() +
+theme(
+axis.text.y = element_text(size = 22),
+axis.text.x = element_text(size = 22),
+axis.title.y = element_text(size = 24),
+panel.border = element_rect(color = "black", fill = NA, linewidth = 1)
+)
+library("tidyverse")
+set.seed(481)
+data_coins <- data.frame(X = rbinom(n=100, size=1, prob=0.8))
+data_coins %>%
+ggplot(aes(x=factor(X))) +
+geom_bar(aes(fill=factor(X)), width = 1, color = "black") +
+geom_text(aes(label=..count.., y = ..count..), stat='count', vjust=-0.5, size = 5) +
+scale_fill_manual(values = c("#FFD58D", "#FFD58D")) +
+labs(y="Recuentos", x="", title="Resultados de los lanzamientos de la moneda") +
+guides(fill=FALSE) +
+ylim(0,90) +
+theme_minimal() +
+theme(
+axis.text.y = element_text(size = 22),
+axis.text.x = element_text(size = 22),
+axis.title.y = element_text(size = 24),
+panel.border = element_rect(color = "black", fill = NA, linewidth = 1)
+)
+likelihood(p=0.1, n=100, k=82)
+# Función de likelihood
+likelihood <- function(p, n, k) {
+L = p^k * (1-p)^(n-k)
+return(L)
+}
+# Función de log-likelihood
+ll <- function(p, n, k) {
+ell = k * log(p) + (n - k) * log(1-p)
+return(ell)
+}
+likelihood(p=0.1, n=100, k=82)
+likelihood(p=0.7, n=100, k=82)
+likelihood(p=0.1, n=100, k=82)
+ll(p=0.1, n=100, k=82)
+likelihood(p=0.8, n=100, k=82)
+ll(p=0.8, n=100, k=82)
+tibble(p=seq(0,1,by=0.01))
+espacio_parametros <- tibble(p=seq(0,1,by=0.01)) %>%
+mutate(loglik = ll(p, n=100, k=82))
+espacio_parametros
+espacio_parametros %>%
+ggplot(aes(x=p, y=loglik)) +
+geom_line(aes(color=loglik), size=1.5) +
+geom_point(aes(x=p_optimo$p, y=p_optimo$loglik), size=2.5, color="#FFD58D") +
+scale_color_gradient(low = "#4953A6", high = "#FFD58D") +
+labs(title="Función de Log-likelihood", x="p", y="k*log(p) + (n - k)*log(1-p)") +
+annotate(geom="text", x=p_optimo$p, y=-35, label='bold("0.82")', color="black", parse=TRUE, size=8) +
+theme(
+axis.text.y = element_text(size = 22),
+axis.text.x = element_text(size = 22),
+axis.title.y = element_text(size = 24),
+axis.title.x = element_text(size = 24),
+title=element_text(size = 24),
+legend.text = element_text(size = 18),
+legend.position="bottom"
+) + theme_bw()
+p_optimo <- espacio_parametros[which.max(espacio_parametros$loglik),]
+p_optimo
+espacio_parametros %>%
+ggplot(aes(x=p, y=loglik)) +
+geom_line(aes(color=loglik), size=1.5) +
+geom_point(aes(x=p_optimo$p, y=p_optimo$loglik), size=2.5, color="#FFD58D") +
+scale_color_gradient(low = "#4953A6", high = "#FFD58D") +
+labs(title="Función de Log-likelihood", x="p", y="k*log(p) + (n - k)*log(1-p)") +
+annotate(geom="text", x=p_optimo$p, y=-35, label='bold("0.82")', color="black", parse=TRUE, size=8) +
+theme(
+axis.text.y = element_text(size = 22),
+axis.text.x = element_text(size = 22),
+axis.title.y = element_text(size = 24),
+axis.title.x = element_text(size = 24),
+title=element_text(size = 24),
+legend.text = element_text(size = 18),
+legend.position="bottom"
+) + theme_bw()
+espacio_parametros
