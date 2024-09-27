@@ -45,7 +45,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | 13  | 08  | R base & quarto                                                 | [`[Pres]`](https://mebucca.github.io/cda_soc3070/ayudantia/01_prob/index) [`[Code]`](https://github.com/mebucca/cda_soc3070/blob/gh-pages/ayudantia/01_prob/index.qmd) |
 | 20  | 08  | `dplyr` & `tidyr`                                               | [`[Pres]`](https://mebucca.github.io/cda_soc3070/ayudantia/02_tidyverse_tidyr/index) [`[Code]`](https://github.com/mebucca/cda_soc3070/blob/gh-pages/ayudantia/02_tidyverse_tidyr/index.qmd) |
 | día | mes | `ggplot()` & `stargazer()`                                      | [`[Pres]`](https://mebucca.github.io/cda_soc3070/ayudantia/03_ggplot/index) [`[Code]`](https://github.com/mebucca/cda_soc3070/blob/gh-pages/ayudantia/03_ggplot/index.qmd)  |
-| día | mes | Regresión lineal, LPM - fit `lm()`                              |                                                                                                                                                            |
+| 24 | 09 | Regresión lineal, LPM - fit `lm()`                                |  [`[Pres]`](https://mebucca.github.io/cda_soc3070/ayudantia/04_lpm/index) [`[Code]`](https://github.com/mebucca/cda_soc3070/blob/gh-pages/ayudantia/04_lpm/index.qmd) |
 | día | mes | Regresión logística - fit `glm()`                               |                                                                                                                                                            |
 | día | mes | Probabilidades predichas, efectos marginales & clasificación - `ggplot()` |                                                                                                                                                            |
 | día | mes | Bootstrap & cross-validation                                    |                                                                                                                                                            |
@@ -65,7 +65,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | Tarea           | Asignación       | Entrega         | Material                                                                                  |
 |-----------------|------------------|-----------------|-------------------------------------------------------------------------------------------|
 | Tarea corta 1   | 5 de Agosto      | 12 de Agosto    | [`[TC1 sols]`](https://mebucca.github.io/cda_soc3070/homework/tc_1_answers#1) [`[TC1.qmd sols]`](homework/tc_1_answers.qmd)  |
-| Tarea corta 2   | 19 de Agosto     | 26 de Agosto    | [`[TC2]`](https://mebucca.github.io/cda_soc3070/homework/tc_2#1) [`[TC2.qmd]`](homework/tc_2.qmd)  |
+| Tarea corta 2   | 19 de Agosto     | 26 de Agosto    | [`[TC2 sols]`](https://mebucca.github.io/cda_soc3070/homework/tc_2_answers#1) [`[TC2.qmd sols]`](homework/tc_2_answers.qmd)  |
 | Trabajo 1       | 12 de Septiembre  | 07 de Octubre |   [`[T1]`](https://mebucca.github.io/cda_soc3070/homework/t_1/t_1#1) [`[wikidata]`](homework/t_1/wiki_chileans.csv)                                                                                        |
 | Tarea corta 4   | 14 de Octubre    | 21 de Octubre   |                                                                                           |
 | Trabajo 2       | 21 de Octubre    | 11 de Noviembre |                                                                                           |
