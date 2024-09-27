@@ -31,7 +31,7 @@ reference-location: margin
 citation-location: margin
 ---
 
-```{r setup, include=FALSE}
+```{r setup}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 library(AER)
 library(lmtest)
@@ -44,8 +44,6 @@ library(margins)
 library(scales)
 library(dplyr)
 ```
-
-
 
 ```{r}
 # Configuración del tema personalizado para ggplot
@@ -73,13 +71,11 @@ theme_custom <- function() {
 theme_set(theme_custom())
 ```
 
-
-
 # Introducción a los Modelos Lineales de Probabilidad (LPM)
 
 Los Modelos Lineales de Probabilidad (LPM) son una herramienta estadística utilizada para modelar variables dependientes binarias. A pesar de sus limitaciones, son valiosos por su simplicidad y facilidad de interpretación.
 
-::: {.callout-note}
+::: callout-note
 ## Definición Formal del LPM
 
 El modelo de regresión lineal con una variable dependiente binaria $Y_i$ se define como:
@@ -113,11 +109,11 @@ stargazer(modelo_simple, type = "html",
           dep.var.labels = "Negación de Hipoteca")
 ```
 
-::: {.callout-important}
+::: callout-important
 ## Interpretación del Modelo Simple
 
-- **Intercepto (-0.07991)**: Cuando la proporción de pagos a ingresos es 0, la probabilidad estimada de negación del préstamo es aproximadamente -7.99%.
-- **Coeficiente de pirat (0.60353)**: Por cada unidad de aumento en la proporción de pagos a ingresos, la probabilidad de negación del préstamo aumenta en aproximadamente 60.35 puntos porcentuales.
+-   **Intercepto (-0.07991)**: Cuando la proporción de pagos a ingresos es 0, la probabilidad estimada de negación del préstamo es aproximadamente -7.99%.
+-   **Coeficiente de pirat (0.60353)**: Por cada unidad de aumento en la proporción de pagos a ingresos, la probabilidad de negación del préstamo aumenta en aproximadamente 60.35 puntos porcentuales.
 :::
 
 ## Visualización Avanzada
@@ -141,10 +137,10 @@ ggplot(HMDA, aes(x = pirat, y = deny)) +
 
 Este gráfico muestra la relación entre el ratio pago/ingreso (eje X) y la probabilidad de negación de hipoteca (eje Y):
 
-1. **Puntos**: Cada punto representa una solicitud de hipoteca. La transparencia (alpha = 0.3) ayuda a visualizar la densidad de puntos.
-2. **Línea roja**: Es la línea de regresión del modelo LPM simple. Su pendiente positiva indica que a mayor ratio pago/ingreso, mayor es la probabilidad de negación.
-3. **Anotaciones**: "Hipoteca denegada" e "Hipoteca aprobada" ayudan a interpretar los valores 1 y 0 en el eje Y.
-4. **Limitación visible**: Nótese que la línea de regresión se extiende más allá de 1 en el eje Y para ratios altos, lo cual es una limitación del LPM.
+1.  **Puntos**: Cada punto representa una solicitud de hipoteca. La transparencia (alpha = 0.3) ayuda a visualizar la densidad de puntos.
+2.  **Línea roja**: Es la línea de regresión del modelo LPM simple. Su pendiente positiva indica que a mayor ratio pago/ingreso, mayor es la probabilidad de negación.
+3.  **Anotaciones**: "Hipoteca denegada" e "Hipoteca aprobada" ayudan a interpretar los valores 1 y 0 en el eje Y.
+4.  **Limitación visible**: Nótese que la línea de regresión se extiende más allá de 1 en el eje Y para ratios altos, lo cual es una limitación del LPM.
 
 ## Errores Estándar Robustos
 
@@ -156,7 +152,7 @@ stargazer(coef_robust, type = "html",
           covariate.labels = c("(Intercepto)", "Ratio Pago/Ingreso"))
 ```
 
-::: {.callout-tip}
+::: callout-tip
 ## Importancia de los Errores Estándar Robustos
 
 En los LPM, es crucial usar errores estándar robustos debido a la heteroscedasticidad inherente del modelo. Esto asegura inferencias estadísticas más confiables.
@@ -179,7 +175,7 @@ stargazer(modelo_simple, modelo_ampliado, type = "html",
           add.lines = list(c("Errores Estándar", "Robustos", "Robustos")))
 ```
 
-::: {.callout-warning}
+::: callout-warning
 ## Interpretación del Coeficiente de 'black'
 
 El coeficiente positivo y significativo de 'black' (0.177) sugiere que, manteniendo constante el ratio pago/ingreso, ser afroamericano aumenta la probabilidad de denegación de una hipoteca en aproximadamente 17.7 puntos porcentuales. Este hallazgo podría indicar discriminación racial, pero se deben considerar posibles variables omitidas antes de llegar a conclusiones definitivas.
@@ -212,11 +208,10 @@ HMDA %>%
 
 Este gráfico muestra cómo la relación entre el ratio pago/ingreso y la probabilidad de negación de hipoteca varía según la raza del solicitante:
 
-1. **Líneas de regresión**: La línea roja (afroamericanos) está consistentemente por encima de la línea azul (no afroamericanos), indicando una mayor probabilidad de negación para afroamericanos en todos los niveles de ratio pago/ingreso.
-2. **Pendientes**: Ambas líneas tienen pendientes positivas, lo que significa que para ambos grupos, un mayor ratio pago/ingreso se asocia con una mayor probabilidad de negación.
-3. **Brecha**: La distancia vertical entre las líneas representa la diferencia en la probabilidad de negación entre afroamericanos y no afroamericanos con el mismo ratio pago/ingreso.
-4. **Interpretación**: Este gráfico sugiere una posible discriminación racial en la concesión de hipotecas, ya que los solicitantes afroamericanos tienen una mayor probabilidad de negación incluso con el mismo ratio pago/ingreso que los solicitantes no afroamericanos.
-
+1.  **Líneas de regresión**: La línea roja (afroamericanos) está consistentemente por encima de la línea azul (no afroamericanos), indicando una mayor probabilidad de negación para afroamericanos en todos los niveles de ratio pago/ingreso.
+2.  **Pendientes**: Ambas líneas tienen pendientes positivas, lo que significa que para ambos grupos, un mayor ratio pago/ingreso se asocia con una mayor probabilidad de negación.
+3.  **Brecha**: La distancia vertical entre las líneas representa la diferencia en la probabilidad de negación entre afroamericanos y no afroamericanos con el mismo ratio pago/ingreso.
+4.  **Interpretación**: Este gráfico sugiere una posible discriminación racial en la concesión de hipotecas, ya que los solicitantes afroamericanos tienen una mayor probabilidad de negación incluso con el mismo ratio pago/ingreso que los solicitantes no afroamericanos.
 
 ## Efectos Marginales
 
@@ -244,29 +239,29 @@ ggplot(summary_efectos, aes(x = factor, y = AME)) +
 
 Este gráfico muestra los efectos marginales promedio (AME) de cada variable en el modelo:
 
-1. **Puntos**: Representan el efecto marginal promedio de cada variable.
-2. **Barras de error**: Indican el intervalo de confianza para cada efecto marginal.
-3. **Interpretación**:
-   - Para 'pirat': Un aumento de una unidad en el ratio pago/ingreso se asocia con un aumento promedio de aproximadamente 0.56 en la probabilidad de negación.
-   - Para 'black': Ser afroamericano se asocia con un aumento promedio de aproximadamente 0.18 en la probabilidad de negación, manteniendo constante el ratio pago/ingreso.
-4. **Significancia**: Ambos efectos son estadísticamente significativos, ya que sus intervalos de confianza no incluyen el cero.
+1.  **Puntos**: Representan el efecto marginal promedio de cada variable.
+2.  **Barras de error**: Indican el intervalo de confianza para cada efecto marginal.
+3.  **Interpretación**:
+    -   Para 'pirat': Un aumento de una unidad en el ratio pago/ingreso se asocia con un aumento promedio de aproximadamente 0.56 en la probabilidad de negación.
+    -   Para 'black': Ser afroamericano se asocia con un aumento promedio de aproximadamente 0.18 en la probabilidad de negación, manteniendo constante el ratio pago/ingreso.
+4.  **Significancia**: Ambos efectos son estadísticamente significativos, ya que sus intervalos de confianza no incluyen el cero.
 
 # Limitaciones y Consideraciones
 
-1. **Predicciones fuera del rango [0,1]**: Los LPM pueden predecir probabilidades ilógicas.
-2. **Heterocedasticidad**: Viola el supuesto de homocedasticidad de OLS.
-3. **Efectos marginales constantes**: Asume efectos lineales que pueden no ser realistas.
-4. **Interpretación del R²**: No tiene una interpretación clara en LPM.
+1.  **Predicciones fuera del rango \[0,1\]**: Los LPM pueden predecir probabilidades ilógicas.
+2.  **Heterocedasticidad**: Viola el supuesto de homocedasticidad de OLS.
+3.  **Efectos marginales constantes**: Asume efectos lineales que pueden no ser realistas.
+4.  **Interpretación del R²**: No tiene una interpretación clara en LPM.
 
-::: {.callout-note}
+::: callout-note
 ## Alternativas a LPM
 
 Para abordar las limitaciones de los LPM, se pueden considerar modelos más sofisticados:
 
-1. **Modelo Logit**: Utiliza la función logística para modelar probabilidades.
-2. **Modelo Probit**: Emplea la función de distribución acumulativa normal.
+1.  **Modelo Logit**: Utiliza la función logística para modelar probabilidades.
+2.  **Modelo Probit**: Emplea la función de distribución acumulativa normal.
 
-Estos modelos garantizan predicciones dentro del rango [0,1] y permiten efectos marginales no lineales.
+Estos modelos garantizan predicciones dentro del rango \[0,1\] y permiten efectos marginales no lineales.
 :::
 
 # Conclusión
@@ -274,6 +269,3 @@ Estos modelos garantizan predicciones dentro del rango [0,1] y permiten efectos 
 Los Modelos Lineales de Probabilidad ofrecen una aproximación simple y directamente interpretable para analizar variables dependientes binarias. En el contexto de préstamos hipotecarios, nos han permitido identificar factores que influyen en la probabilidad de denegación, incluyendo posibles indicios de discriminación racial.
 
 Sin embargo, las limitaciones de los LPM sugieren que para análisis más robustos, especialmente cuando se trabaja con probabilidades cercanas a los extremos o se sospecha de relaciones no lineales, modelos como logit o probit podrían ser más apropiados. En efecto, este tipo de aproximaciones sirven como punto de partida para investigaciones más profundas sobre prácticas de préstamo justas y factores que influyen en las decisiones de aprobación de hipotecas.
-
-
-
