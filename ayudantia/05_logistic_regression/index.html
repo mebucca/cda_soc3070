@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Cantillan, R. | Bucca, M.">
+
+<title>Análisis de Regresión Logística: Vínculos de Confianza con Vecinos</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="index_files/libs/clipboard/clipboard.min.js"></script>
+<script src="index_files/libs/quarto-html/quarto.js"></script>
+<script src="index_files/libs/quarto-html/popper.min.js"></script>
+<script src="index_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="index_files/libs/quarto-html/anchor.min.js"></script>
+<link href="index_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="index_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="index_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="index_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="index_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+<script src="index_files/libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="index_files/libs/lightable-0.0.1/lightable.css" rel="stylesheet">
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="custom.scss">
+</head>
+
+<body>
+
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Análisis de Regresión Logística: Vínculos de Confianza con Vecinos</h1>
+            <p class="subtitle lead">Teoría y Aplicación</p>
+                      </div>
+  </div>
+    
+  <div class="quarto-title-meta-author">
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-heading">Affiliation</div>
+    
+      <div class="quarto-title-meta-contents">
+      <p class="author">Cantillan, R. | Bucca, M. </p>
+    </div>
+      <div class="quarto-title-meta-contents">
+          <p class="affiliation">
+              ISUC
+            </p>
+        </div>
+      </div>
+
+  <div class="quarto-title-meta">
+
+        
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">9/30/24</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">En este manual</h2>
+   
+  <ul>
+  <li><a href="#fundamentos-teóricos-modelos-lineales-generalizados-y-regresión-logística" id="toc-fundamentos-teóricos-modelos-lineales-generalizados-y-regresión-logística" class="nav-link active" data-scroll-target="#fundamentos-teóricos-modelos-lineales-generalizados-y-regresión-logística"><span class="header-section-number">1</span> Fundamentos Teóricos: Modelos Lineales Generalizados y Regresión Logística</a>
+  <ul class="collapse">
+  <li><a href="#introducción-a-los-modelos-lineales-generalizados-glm" id="toc-introducción-a-los-modelos-lineales-generalizados-glm" class="nav-link" data-scroll-target="#introducción-a-los-modelos-lineales-generalizados-glm"><span class="header-section-number">1.1</span> Introducción a los Modelos Lineales Generalizados (GLM)</a></li>
+  <li><a href="#regresión-logística" id="toc-regresión-logística" class="nav-link" data-scroll-target="#regresión-logística"><span class="header-section-number">1.2</span> Regresión Logística</a></li>
+  <li><a href="#estimación-y-evaluación-del-modelo" id="toc-estimación-y-evaluación-del-modelo" class="nav-link" data-scroll-target="#estimación-y-evaluación-del-modelo"><span class="header-section-number">1.3</span> Estimación y Evaluación del Modelo</a></li>
+  </ul></li>
+  <li><a href="#aplicación-vínculos-de-confianza-con-vecinos" id="toc-aplicación-vínculos-de-confianza-con-vecinos" class="nav-link" data-scroll-target="#aplicación-vínculos-de-confianza-con-vecinos"><span class="header-section-number">2</span> Aplicación: Vínculos de Confianza con Vecinos</a></li>
+  <li><a href="#librerías-y-datos" id="toc-librerías-y-datos" class="nav-link" data-scroll-target="#librerías-y-datos"><span class="header-section-number">3</span> Librerías y Datos</a></li>
+  <li><a href="#preparación-de-datos" id="toc-preparación-de-datos" class="nav-link" data-scroll-target="#preparación-de-datos"><span class="header-section-number">4</span> Preparación de Datos</a>
+  <ul class="collapse">
+  <li><a href="#datos-de-ego-y-alter" id="toc-datos-de-ego-y-alter" class="nav-link" data-scroll-target="#datos-de-ego-y-alter"><span class="header-section-number">4.1</span> Datos de Ego y Alter</a></li>
+  </ul></li>
+  <li><a href="#análisis-descriptivo-de-la-variable-dependiente" id="toc-análisis-descriptivo-de-la-variable-dependiente" class="nav-link" data-scroll-target="#análisis-descriptivo-de-la-variable-dependiente"><span class="header-section-number">5</span> Análisis Descriptivo de la Variable Dependiente</a>
+  <ul class="collapse">
+  <li><a href="#coeficiente-de-correlación-intraclase-icc" id="toc-coeficiente-de-correlación-intraclase-icc" class="nav-link" data-scroll-target="#coeficiente-de-correlación-intraclase-icc"><span class="header-section-number">5.1</span> Coeficiente de Correlación Intraclase (ICC)</a></li>
+  </ul></li>
+  <li><a href="#modelo-de-regresión-logística-1" id="toc-modelo-de-regresión-logística-1" class="nav-link" data-scroll-target="#modelo-de-regresión-logística-1"><span class="header-section-number">6</span> Modelo de Regresión Logística</a>
+  <ul class="collapse">
+  <li><a href="#interpretación-de-los-coeficientes" id="toc-interpretación-de-los-coeficientes" class="nav-link" data-scroll-target="#interpretación-de-los-coeficientes"><span class="header-section-number">6.1</span> Interpretación de los Coeficientes</a></li>
+  <li><a href="#efectos-marginales" id="toc-efectos-marginales" class="nav-link" data-scroll-target="#efectos-marginales"><span class="header-section-number">6.2</span> Efectos Marginales</a></li>
+  <li><a href="#visualización-de-efectos-marginales" id="toc-visualización-de-efectos-marginales" class="nav-link" data-scroll-target="#visualización-de-efectos-marginales"><span class="header-section-number">6.3</span> Visualización de Efectos Marginales</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<main class="content quarto-banner-title-block page-columns page-full" id="quarto-document-content">
+
+
+
+
+<section id="fundamentos-teóricos-modelos-lineales-generalizados-y-regresión-logística" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="fundamentos-teóricos-modelos-lineales-generalizados-y-regresión-logística"><span class="header-section-number">1</span> Fundamentos Teóricos: Modelos Lineales Generalizados y Regresión Logística</h2>
+<section id="introducción-a-los-modelos-lineales-generalizados-glm" class="level3" data-number="1.1">
+<h3 data-number="1.1" class="anchored" data-anchor-id="introducción-a-los-modelos-lineales-generalizados-glm"><span class="header-section-number">1.1</span> Introducción a los Modelos Lineales Generalizados (GLM)</h3>
+<p>Los Modelos Lineales Generalizados (GLM) son una extensión flexible de los modelos lineales ordinarios que permiten trabajar con variables respuesta que tienen distribuciones no normales y que presentan varianzas no constantes. Los GLM unifican diversos modelos estadísticos, incluyendo la regresión lineal, la regresión logística y la regresión de Poisson, bajo un solo marco teórico.</p>
+<section id="componentes-de-un-glm" class="level4" data-number="1.1.1">
+<h4 data-number="1.1.1" class="anchored" data-anchor-id="componentes-de-un-glm"><span class="header-section-number">1.1.1</span> Componentes de un GLM</h4>
+<p>Un GLM consta de tres componentes principales:</p>
+<ol type="1">
+<li><p><strong>Componente aleatorio</strong>: Especifica la distribución condicional de la variable respuesta (<span class="math inline">\(Y\)</span>) dado el vector de predictores (<span class="math inline">\(X\)</span>). Esta distribución debe pertenecer a la familia exponencial.</p></li>
+<li><p><strong>Componente sistemático</strong>: Define el predictor lineal <span class="math inline">\(\eta\)</span> como una combinación lineal de las variables predictoras:</p>
+<p><span class="math display">\[\eta = \beta_0 + \beta_1X_1 + \beta_2X_2 + ... + \beta_pX_p = X\beta\]</span></p></li>
+<li><p><strong>Función de enlace</strong>: Relaciona el valor esperado de la respuesta <span class="math inline">\(\mu = E(Y|X)\)</span> con el predictor lineal <span class="math inline">\(\eta\)</span>:</p>
+<p><span class="math display">\[g(\mu) = \eta\]</span></p>
+<p>donde <span class="math inline">\(g()\)</span> es la función de enlace.</p></li>
+</ol>
+</section>
+<section id="familia-exponencial" class="level4" data-number="1.1.2">
+<h4 data-number="1.1.2" class="anchored" data-anchor-id="familia-exponencial"><span class="header-section-number">1.1.2</span> Familia Exponencial</h4>
+<p>La familia exponencial incluye muchas distribuciones comunes como la normal, binomial, Poisson, gamma, entre otras. Su forma general es:</p>
+<p><span class="math display">\[f(y;\theta,\phi) = \exp\left(\frac{y\theta - b(\theta)}{a(\phi)} + c(y,\phi)\right)\]</span></p>
+<p>donde <span class="math inline">\(\theta\)</span> es el parámetro canónico y <span class="math inline">\(\phi\)</span> es el parámetro de dispersión.</p>
+</section>
+</section>
+<section id="regresión-logística" class="level3" data-number="1.2">
+<h3 data-number="1.2" class="anchored" data-anchor-id="regresión-logística"><span class="header-section-number">1.2</span> Regresión Logística</h3>
+<p>La regresión logística es un tipo específico de GLM utilizado cuando la variable respuesta es binaria (0/1, éxito/fracaso). Es ampliamente utilizada en ciencias sociales, medicina y marketing, entre otros campos.</p>
+<section id="modelo-de-regresión-logística" class="level4" data-number="1.2.1">
+<h4 data-number="1.2.1" class="anchored" data-anchor-id="modelo-de-regresión-logística"><span class="header-section-number">1.2.1</span> Modelo de Regresión Logística</h4>
+<p>En la regresión logística, modelamos la probabilidad de éxito <span class="math inline">\(\pi = P(Y=1|X)\)</span> como:</p>
+<p><span class="math display">\[\log\left(\frac{\pi}{1-\pi}\right) = \beta_0 + \beta_1X_1 + \beta_2X_2 + ... + \beta_pX_p\]</span></p>
+<p>donde <span class="math inline">\(\log\left(\frac{\pi}{1-\pi}\right)\)</span> es el logaritmo de las odds (logit).</p>
+<p>La función de enlace en este caso es la función logit:</p>
+<p><span class="math display">\[g(\mu) = \log\left(\frac{\mu}{1-\mu}\right)\]</span></p>
+<p>Y la inversa de la función de enlace (función de respuesta media) es:</p>
+<p><span class="math display">\[\mu = \frac{e^\eta}{1 + e^\eta} = \frac{1}{1 + e^{-\eta}}\]</span></p>
+</section>
+<section id="interpretación-de-coeficientes" class="level4" data-number="1.2.2">
+<h4 data-number="1.2.2" class="anchored" data-anchor-id="interpretación-de-coeficientes"><span class="header-section-number">1.2.2</span> Interpretación de Coeficientes</h4>
+<p>En la regresión logística, los coeficientes se interpretan en términos de odds ratios:</p>
+<ul>
+<li><span class="math inline">\(e^{\beta_j}\)</span> es el odds ratio para un incremento de una unidad en <span class="math inline">\(X_j\)</span>, manteniendo las demás variables constantes.</li>
+<li>Si <span class="math inline">\(\beta_j &gt; 0\)</span>, un incremento en <span class="math inline">\(X_j\)</span> aumenta la probabilidad de éxito.</li>
+<li>Si <span class="math inline">\(\beta_j &lt; 0\)</span>, un incremento en <span class="math inline">\(X_j\)</span> disminuye la probabilidad de éxito.</li>
+</ul>
+</section>
+<section id="comparación-de-funciones-de-enlace" class="level4" data-number="1.2.3">
+<h4 data-number="1.2.3" class="anchored" data-anchor-id="comparación-de-funciones-de-enlace"><span class="header-section-number">1.2.3</span> Comparación de Funciones de Enlace</h4>
+<p>Existen otras funciones de enlace para modelos con respuesta binaria. La siguiente tabla compara las más comunes:</p>
+<table class="table">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 35%">
+<col style="width: 54%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Nombre</th>
+<th>Función de Enlace <span class="math inline">\(g(\mu)\)</span></th>
+<th>Función de Respuesta Media <span class="math inline">\(g^{-1}(\eta)\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Logit</td>
+<td><span class="math inline">\(\log(\frac{\mu}{1-\mu})\)</span></td>
+<td><span class="math inline">\(\frac{1}{1 + e^{-\eta}}\)</span></td>
+</tr>
+<tr class="even">
+<td>Probit</td>
+<td><span class="math inline">\(\Phi^{-1}(\mu)\)</span></td>
+<td><span class="math inline">\(\Phi(\eta)\)</span></td>
+</tr>
+<tr class="odd">
+<td>Complementary log-log</td>
+<td><span class="math inline">\(\log(-\log(1-\mu))\)</span></td>
+<td><span class="math inline">\(1 - e^{-e^\eta}\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>donde <span class="math inline">\(\Phi\)</span> es la función de distribución acumulativa de la distribución normal estándar.</p>
+</section>
+</section>
+<section id="estimación-y-evaluación-del-modelo" class="level3" data-number="1.3">
+<h3 data-number="1.3" class="anchored" data-anchor-id="estimación-y-evaluación-del-modelo"><span class="header-section-number">1.3</span> Estimación y Evaluación del Modelo</h3>
+<section id="estimación-de-parámetros" class="level4" data-number="1.3.1">
+<h4 data-number="1.3.1" class="anchored" data-anchor-id="estimación-de-parámetros"><span class="header-section-number">1.3.1</span> Estimación de Parámetros</h4>
+<p>Los parámetros en GLM, incluyendo la regresión logística, se estiman generalmente por el método de máxima verosimilitud. La función de verosimilitud para la regresión logística es:</p>
+<p><span class="math display">\[L(\beta) = \prod_{i=1}^n \pi_i^{y_i}(1-\pi_i)^{1-y_i}\]</span></p>
+</section>
+<section id="evaluación-del-modelo" class="level4" data-number="1.3.2">
+<h4 data-number="1.3.2" class="anchored" data-anchor-id="evaluación-del-modelo"><span class="header-section-number">1.3.2</span> Evaluación del Modelo</h4>
+<ol type="1">
+<li><p><strong>Devianza</strong>: Mide la bondad de ajuste del modelo. Se define como:</p>
+<p><span class="math display">\[D = -2\log\left(\frac{L(\text{modelo actual})}{L(\text{modelo saturado})}\right)\]</span></p></li>
+<li><p><strong>Test de Wald</strong>: Evalúa la significancia de los coeficientes individuales.</p></li>
+<li><p><strong>Test de razón de verosimilitud</strong>: Compara modelos anidados.</p></li>
+<li><p><strong>Curva ROC y AUC</strong>: Evalúan la capacidad predictiva del modelo.</p></li>
+</ol>
+</section>
+</section>
+</section>
+<section id="aplicación-vínculos-de-confianza-con-vecinos" class="level2 page-columns page-full" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="aplicación-vínculos-de-confianza-con-vecinos"><span class="header-section-number">2</span> Aplicación: Vínculos de Confianza con Vecinos</h2>
+<p>En este ejercicio, aplicaremos los conceptos de regresión logística para analizar los determinantes que influyen en la probabilidad de formar vínculos de confianza con vecinos. Esta pregunta es relevante porque los vínculos vecinales a menudo constituyen el contexto que da forma a la estructura de oportunidades de interacción en la vida cotidiana <span class="citation" data-cites="blauInequalityHeterogeneityPrimitive1977 feldFocusedOrganizationSocial1981">(<a href="#ref-blauInequalityHeterogeneityPrimitive1977" role="doc-biblioref">Blau 1977</a>; <a href="#ref-feldFocusedOrganizationSocial1981" role="doc-biblioref">Scott L. Feld 1981</a>)</span>.</p>
+<div class="no-row-height column-margin column-container"><div id="ref-blauInequalityHeterogeneityPrimitive1977" class="csl-entry" role="listitem">
+Blau, Peter Michael. 1977. <em>Inequality and Heterogeneity: <span>A</span> Primitive Theory of Social Structure</em>. Vol. 7. <span>Free Press New York</span>.
+</div><div id="ref-feldSocialStructuralDeterminants1982" class="csl-entry" role="listitem">
+Feld, Scott L. 1982. <span>“Social Structural Determinants of Similarity Among Associates.”</span> <em>American Sociological Review</em>, 797–801.
+</div></div><p>Los vecindarios son contextos donde la actividad e interacción social están fuertemente condicionados por la proximidad física y social <span class="citation" data-cites="feldSocialStructuralDeterminants1982">(<a href="#ref-feldSocialStructuralDeterminants1982" role="doc-biblioref">Scott L. Feld 1982</a>)</span>. Además, suelen contener otros focos de interacción como escuelas o asociaciones voluntarias <span class="citation" data-cites="feldFocusedOrganizationSocial1981">(<a href="#ref-feldFocusedOrganizationSocial1981" role="doc-biblioref">Scott L. Feld 1981</a>)</span>, lo que aumenta las oportunidades y probabilidades de encuentro y vinculación entre sus integrantes.</p>
+<p><span class="citation" data-cites="wellmanArePersonalCommunities1996">Wellman (<a href="#ref-wellmanArePersonalCommunities1996" role="doc-biblioref">1996</a>)</span> y <span class="citation" data-cites="fernandezReviewAmericanApartheid1993">Fernandez (<a href="#ref-fernandezReviewAmericanApartheid1993" role="doc-biblioref">1993</a>)</span> señalan que, aunque los lazos locales suelen ser débiles, son contactos frecuentes debido al tiempo que pasamos en nuestros vecindarios y hogares. Considerando que los barrios y lugares de trabajo tienden a ser socialmente homogéneos <span class="citation" data-cites="feldFocusedOrganizationSocial1981">(<a href="#ref-feldFocusedOrganizationSocial1981" role="doc-biblioref">Scott L. Feld 1981</a>)</span>, el predominio de estos lazos puede indicar altos niveles de segregación y aislamiento social <span class="citation" data-cites="dipreteSegregationSocialNetworks2011 masseyAmericanApartheidSegregation2003">(<a href="#ref-dipreteSegregationSocialNetworks2011" role="doc-biblioref">DiPrete et al. 2011</a>; <a href="#ref-masseyAmericanApartheidSegregation2003" role="doc-biblioref">Massey and Denton 2003</a>)</span>.</p>
+<div class="no-row-height column-margin column-container"><div id="ref-wellmanArePersonalCommunities1996" class="csl-entry" role="listitem">
+Wellman, Barry. 1996. <span>“Are Personal Communities Local? <span>A Dumptarian</span> Reconsideration.”</span> <em>Social Networks</em> 18 (4): 347–54. <a href="https://doi.org/10.1016/0378-8733(95)00282-0">https://doi.org/10.1016/0378-8733(95)00282-0</a>.
+</div><div id="ref-fernandezReviewAmericanApartheid1993" class="csl-entry" role="listitem">
+Fernandez, R. 1993. <span>“Review of <span>American</span> Apartheid.”</span> <em>Contemporary Sociology</em> 22 (5): 365–66. <a href="https://doi.org/10.2307/2074502">https://doi.org/10.2307/2074502</a>.
+</div><div id="ref-feldFocusedOrganizationSocial1981" class="csl-entry" role="listitem">
+Feld, Scott L. 1981. <span>“The <span>Focused Organization</span> of <span>Social Ties</span>.”</span> <em>American Journal of Sociology</em> 86 (5): 1015–35. <a href="https://www.jstor.org/stable/2778746">https://www.jstor.org/stable/2778746</a>.
+</div><div id="ref-dipreteSegregationSocialNetworks2011" class="csl-entry" role="listitem">
+DiPrete, Thomas A., Andrew Gelman, Tyler McCormick, Julien Teitler, and Tian Zheng. 2011. <span>“Segregation in <span>Social Networks Based</span> on <span>Acquaintanceship</span> and <span>Trust</span>.”</span> <em>American Journal of Sociology</em> 116 (4): 1234–83. <a href="https://doi.org/10.1086/659100">https://doi.org/10.1086/659100</a>.
+</div><div id="ref-masseyAmericanApartheidSegregation2003" class="csl-entry" role="listitem">
+Massey, Douglas S., and Nancy A. Denton. 2003. <em>American Apartheid: Segregation and the Making of the Underclass</em>. 10. print. <span>Cambridge, Mass.</span>: <span>Harvard Univ. Press</span>.
+</div><div id="ref-volkerSixteenMillionNeighbors2007" class="csl-entry" role="listitem">
+Völker, Beate, and Henk Flap. 2007. <span>“Sixteen <span>Million Neighbors</span>: <span>A Multilevel Study</span> of the <span>Role</span> of <span>Neighbors</span> in the <span>Personal Networks</span> of the <span>Dutch</span>.”</span> <em>Urban Affairs Review</em> 43 (2): 256–84. <a href="https://doi.org/10.1177/1078087407302001">https://doi.org/10.1177/1078087407302001</a>.
+</div><div id="ref-tillyDurableInequality2009" class="csl-entry" role="listitem">
+Tilly, Charles. 2009. <em>Durable Inequality</em>. Nachdr. <span>Berkeley</span>: <span>Univ. of California Press</span>.
+</div></div><p>Las áreas locales, por tanto, son un campo de investigación óptimo para estudiar cómo los extraños se convierten en amigos <span class="citation" data-cites="volkerSixteenMillionNeighbors2007">(<a href="#ref-volkerSixteenMillionNeighbors2007" role="doc-biblioref">Völker and Flap 2007</a>)</span> y para el estudio general de las desigualdades persistentes <span class="citation" data-cites="tillyDurableInequality2009">(<a href="#ref-tillyDurableInequality2009" role="doc-biblioref">Tilly 2009</a>)</span>.</p>
+<p>Nuestras preguntas de investigación son: 1. ¿Sobre qué bases los individuos establecen o no relaciones de cercanía con sus vecinos? 2. ¿Por qué algunas personas incluyen a sus vecinos en sus redes de confianza y otras no?</p>
+</section>
+<section id="librerías-y-datos" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="librerías-y-datos"><span class="header-section-number">3</span> Librerías y Datos</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, message=FALSE}</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(kableExtra)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(httr)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GLMMadaptive)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(performance)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargar datos ELSOC 2017</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>url <span class="ot">&lt;-</span> <span class="st">"https://github.com/rcantillan/ricantillan.rbind.io/raw/main/dat/ELSOC/ELSOC_W02_v3.00_R.RData"</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>response <span class="ot">&lt;-</span> <span class="fu">GET</span>(url)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>local_path <span class="ot">&lt;-</span> <span class="st">"ELSOC_W02_v3.00_R.RData"</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">writeBin</span>(response<span class="sc">$</span>content, local_path)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">load</span>(<span class="st">"ELSOC_W02_v3.00_R.RData"</span>)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargar datos ELSOC 2016</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>url <span class="ot">&lt;-</span> <span class="st">"https://github.com/rcantillan/ricantillan.rbind.io/raw/main/dat/ELSOC/ELSOC_W01_v4.01_R.RData"</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>response <span class="ot">&lt;-</span> <span class="fu">GET</span>(url)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>local_path <span class="ot">&lt;-</span> <span class="st">"ELSOC_W01_v4.01_R.RData"</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">writeBin</span>(response<span class="sc">$</span>content, local_path)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="fu">load</span>(<span class="st">"ELSOC_W01_v4.01_R.RData"</span>)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="preparación-de-datos" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="preparación-de-datos"><span class="header-section-number">4</span> Preparación de Datos</h2>
+<section id="datos-de-ego-y-alter" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="datos-de-ego-y-alter"><span class="header-section-number">4.1</span> Datos de Ego y Alter</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Datos de ego</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>egos <span class="ot">&lt;-</span> elsoc_2017 <span class="sc">%&gt;%</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(idencuesta, <span class="at">ego_sexo =</span> m0_sexo, <span class="at">ego_edad =</span> m0_edad,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">ego_ideol =</span> c15, <span class="at">ego_educ =</span> m01, <span class="at">ego_relig =</span> m38,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>         t01, t02_01, t02_02, t02_03, t02_04, ponderador02)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Recodificación de variables para ego</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>egos <span class="ot">&lt;-</span> egos <span class="sc">%&gt;%</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">ego_educ =</span> <span class="fu">factor</span>(<span class="fu">case_when</span>(</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>      ego_educ <span class="sc">%in%</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>      ego_educ <span class="sc">%in%</span> <span class="dv">4</span><span class="sc">:</span><span class="dv">5</span> <span class="sc">~</span> <span class="dv">2</span>,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>      ego_educ <span class="sc">%in%</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">7</span> <span class="sc">~</span> <span class="dv">3</span>,</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>      ego_educ <span class="sc">%in%</span> <span class="dv">8</span><span class="sc">:</span><span class="dv">10</span> <span class="sc">~</span> <span class="dv">4</span>,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>      ego_educ <span class="sc">%in%</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">888</span>, <span class="sc">-</span><span class="dv">999</span>) <span class="sc">~</span> <span class="cn">NA_real_</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="fu">as.numeric</span>(ego_educ)</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    )),</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">ego_relig =</span> <span class="fu">factor</span>(<span class="fu">case_when</span>(</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>      ego_relig <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>      ego_relig <span class="sc">==</span> <span class="dv">2</span> <span class="sc">~</span> <span class="dv">2</span>,</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>      ego_relig <span class="sc">==</span> <span class="dv">9</span> <span class="sc">~</span> <span class="dv">3</span>,</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>      ego_relig <span class="sc">%in%</span> <span class="dv">7</span><span class="sc">:</span><span class="dv">8</span> <span class="sc">~</span> <span class="dv">4</span>,</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>      ego_relig <span class="sc">%in%</span> <span class="dv">3</span><span class="sc">:</span><span class="dv">6</span> <span class="sc">~</span> <span class="dv">5</span>,</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>      ego_relig <span class="sc">%in%</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">888</span>, <span class="sc">-</span><span class="dv">999</span>) <span class="sc">~</span> <span class="cn">NA_real_</span>,</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="fu">as.numeric</span>(ego_relig)</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    )),</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">ego_ideol =</span> <span class="fu">factor</span>(<span class="fu">case_when</span>(</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>      ego_ideol <span class="sc">%in%</span> <span class="dv">9</span><span class="sc">:</span><span class="dv">10</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>      ego_ideol <span class="sc">%in%</span> <span class="dv">6</span><span class="sc">:</span><span class="dv">8</span> <span class="sc">~</span> <span class="dv">2</span>,</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>      ego_ideol <span class="sc">==</span> <span class="dv">5</span> <span class="sc">~</span> <span class="dv">3</span>,</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>      ego_ideol <span class="sc">%in%</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">4</span> <span class="sc">~</span> <span class="dv">4</span>,</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>      ego_ideol <span class="sc">%in%</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">1</span> <span class="sc">~</span> <span class="dv">5</span>,</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>      ego_ideol <span class="sc">%in%</span> <span class="dv">11</span><span class="sc">:</span><span class="dv">12</span> <span class="sc">~</span> <span class="dv">6</span>,</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>      ego_ideol <span class="sc">%in%</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">888</span>, <span class="sc">-</span><span class="dv">999</span>) <span class="sc">~</span> <span class="cn">NA_real_</span>,</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="fu">as.numeric</span>(ego_ideol)</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    )),</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">ego_sexo =</span> <span class="fu">factor</span>(<span class="fu">case_when</span>(</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>      ego_sexo <span class="sc">%in%</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span> <span class="sc">~</span> ego_sexo,</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>      ego_sexo <span class="sc">%in%</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">888</span>, <span class="sc">-</span><span class="dv">999</span>) <span class="sc">~</span> <span class="cn">NA_real_</span>,</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="fu">as.numeric</span>(ego_sexo)</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    ))</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="co"># Datos de alter</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>columnas <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"sexo"</span>, <span class="st">"edad"</span>, <span class="st">"educ"</span>, <span class="st">"relig"</span>, <span class="st">"ideol"</span>, <span class="st">"barrio"</span>, <span class="st">"relacion"</span>)</span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>num_alters <span class="ot">&lt;-</span> <span class="dv">5</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>alteris <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(<span class="dv">1</span><span class="sc">:</span>num_alters, <span class="sc">~</span>{</span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>  alter_cols <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"r13_"</span>, columnas, <span class="st">"_"</span>, <span class="fu">sprintf</span>(<span class="st">"%02d"</span>, .x))</span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>  elsoc_2017 <span class="sc">%&gt;%</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(idencuesta, <span class="fu">all_of</span>(alter_cols)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rename_with</span>(<span class="sc">~</span> columnas, alter_cols) <span class="sc">%&gt;%</span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">n =</span> .x)</span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>}) <span class="sc">%&gt;%</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(idencuesta)</span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a><span class="co"># Recodificación de variables para alteris</span></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>alteris <span class="ot">&lt;-</span> alteris <span class="sc">%&gt;%</span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a>    <span class="at">educ =</span> <span class="fu">factor</span>(<span class="fu">case_when</span>(</span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>      educ <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a>      educ <span class="sc">%in%</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">3</span> <span class="sc">~</span> <span class="dv">2</span>,</span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>      educ <span class="sc">==</span> <span class="dv">4</span> <span class="sc">~</span> <span class="dv">3</span>,</span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>      educ <span class="sc">==</span> <span class="dv">5</span> <span class="sc">~</span> <span class="dv">4</span>,</span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>      educ <span class="sc">%in%</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">888</span>, <span class="sc">-</span><span class="dv">999</span>) <span class="sc">~</span> <span class="cn">NA_real_</span>,</span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="fu">as.numeric</span>(educ)</span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a>    )),</span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>    <span class="at">relig =</span> <span class="fu">factor</span>(<span class="fu">case_when</span>(</span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>      relig <span class="sc">%in%</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span> <span class="sc">~</span> relig,</span>
+<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a>      relig <span class="sc">%in%</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">888</span>, <span class="sc">-</span><span class="dv">999</span>) <span class="sc">~</span> <span class="cn">NA_real_</span>,</span>
+<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="fu">as.numeric</span>(relig)</span>
+<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>    )),</span>
+<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a>    <span class="at">ideol =</span> <span class="fu">factor</span>(<span class="fu">case_when</span>(</span>
+<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a>      ideol <span class="sc">%in%</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span> <span class="sc">~</span> ideol,</span>
+<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a>      ideol <span class="sc">%in%</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">888</span>, <span class="sc">-</span><span class="dv">999</span>) <span class="sc">~</span> <span class="cn">NA_real_</span>,</span>
+<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="fu">as.numeric</span>(ideol)</span>
+<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a>    )),</span>
+<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a>    <span class="at">edad =</span> <span class="fu">factor</span>(<span class="fu">case_when</span>(</span>
+<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a>      edad <span class="sc">&lt;=</span> <span class="dv">18</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a>      edad <span class="sc">&lt;=</span> <span class="dv">29</span> <span class="sc">~</span> <span class="dv">2</span>,</span>
+<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a>      edad <span class="sc">&lt;=</span> <span class="dv">40</span> <span class="sc">~</span> <span class="dv">3</span>,</span>
+<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a>      edad <span class="sc">&lt;=</span> <span class="dv">51</span> <span class="sc">~</span> <span class="dv">4</span>,</span>
+<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a>      edad <span class="sc">&lt;=</span> <span class="dv">62</span> <span class="sc">~</span> <span class="dv">5</span>,</span>
+<span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a>      edad <span class="sc">&lt;=</span> <span class="dv">100</span> <span class="sc">~</span> <span class="dv">6</span>,</span>
+<span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a>      edad <span class="sc">%in%</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">888</span>, <span class="sc">-</span><span class="dv">999</span>) <span class="sc">~</span> <span class="cn">NA_real_</span>,</span>
+<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="fu">as.numeric</span>(edad)</span>
+<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a>    )),</span>
+<span id="cb2-89"><a href="#cb2-89" aria-hidden="true" tabindex="-1"></a>    <span class="at">sexo =</span> <span class="fu">factor</span>(<span class="fu">case_when</span>(</span>
+<span id="cb2-90"><a href="#cb2-90" aria-hidden="true" tabindex="-1"></a>      sexo <span class="sc">%in%</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span> <span class="sc">~</span> sexo,</span>
+<span id="cb2-91"><a href="#cb2-91" aria-hidden="true" tabindex="-1"></a>      sexo <span class="sc">%in%</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">888</span>, <span class="sc">-</span><span class="dv">999</span>) <span class="sc">~</span> <span class="cn">NA_real_</span>,</span>
+<span id="cb2-92"><a href="#cb2-92" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="fu">as.numeric</span>(sexo)</span>
+<span id="cb2-93"><a href="#cb2-93" aria-hidden="true" tabindex="-1"></a>    )),</span>
+<span id="cb2-94"><a href="#cb2-94" aria-hidden="true" tabindex="-1"></a>    <span class="at">barrio =</span> <span class="fu">factor</span>(<span class="fu">case_when</span>(</span>
+<span id="cb2-95"><a href="#cb2-95" aria-hidden="true" tabindex="-1"></a>      barrio <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb2-96"><a href="#cb2-96" aria-hidden="true" tabindex="-1"></a>      barrio <span class="sc">==</span> <span class="dv">2</span> <span class="sc">~</span> <span class="dv">0</span>,</span>
+<span id="cb2-97"><a href="#cb2-97" aria-hidden="true" tabindex="-1"></a>      barrio <span class="sc">%in%</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">888</span>, <span class="sc">-</span><span class="dv">999</span>) <span class="sc">~</span> <span class="cn">NA_real_</span>,</span>
+<span id="cb2-98"><a href="#cb2-98" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="fu">as.numeric</span>(barrio)</span>
+<span id="cb2-99"><a href="#cb2-99" aria-hidden="true" tabindex="-1"></a>    ))</span>
+<span id="cb2-100"><a href="#cb2-100" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb2-101"><a href="#cb2-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-102"><a href="#cb2-102" aria-hidden="true" tabindex="-1"></a><span class="co"># Unir datos de ego y alter</span></span>
+<span id="cb2-103"><a href="#cb2-103" aria-hidden="true" tabindex="-1"></a>obs <span class="ot">&lt;-</span> <span class="fu">left_join</span>(egos, alteris, <span class="at">by =</span> <span class="st">"idencuesta"</span>)</span>
+<span id="cb2-104"><a href="#cb2-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-105"><a href="#cb2-105" aria-hidden="true" tabindex="-1"></a><span class="co"># Creación de variables de distancia</span></span>
+<span id="cb2-106"><a href="#cb2-106" aria-hidden="true" tabindex="-1"></a>obs <span class="ot">&lt;-</span> obs <span class="sc">%&gt;%</span></span>
+<span id="cb2-107"><a href="#cb2-107" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb2-108"><a href="#cb2-108" aria-hidden="true" tabindex="-1"></a>    <span class="at">sexo_dist1 =</span> <span class="fu">as.integer</span>(<span class="fu">as.numeric</span>(<span class="fu">as.character</span>(sexo)) <span class="sc">!=</span> <span class="fu">as.numeric</span>(<span class="fu">as.character</span>(ego_sexo))),</span>
+<span id="cb2-109"><a href="#cb2-109" aria-hidden="true" tabindex="-1"></a>    <span class="at">educ_dist1 =</span> <span class="fu">as.integer</span>(<span class="fu">as.numeric</span>(<span class="fu">as.character</span>(educ)) <span class="sc">!=</span> <span class="fu">as.numeric</span>(<span class="fu">as.character</span>(ego_educ))),</span>
+<span id="cb2-110"><a href="#cb2-110" aria-hidden="true" tabindex="-1"></a>    <span class="at">ideol_dist1 =</span> <span class="fu">as.integer</span>(<span class="fu">as.numeric</span>(<span class="fu">as.character</span>(ideol)) <span class="sc">!=</span> <span class="fu">as.numeric</span>(<span class="fu">as.character</span>(ego_ideol))),</span>
+<span id="cb2-111"><a href="#cb2-111" aria-hidden="true" tabindex="-1"></a>    <span class="at">relig_dist1 =</span> <span class="fu">as.integer</span>(<span class="fu">as.numeric</span>(<span class="fu">as.character</span>(relig)) <span class="sc">!=</span> <span class="fu">as.numeric</span>(<span class="fu">as.character</span>(ego_relig))),</span>
+<span id="cb2-112"><a href="#cb2-112" aria-hidden="true" tabindex="-1"></a>    <span class="at">neigh_attach =</span> (t02_01 <span class="sc">+</span> t02_02 <span class="sc">+</span> t02_03 <span class="sc">+</span> t02_04) <span class="sc">/</span> <span class="dv">4</span></span>
+<span id="cb2-113"><a href="#cb2-113" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb2-114"><a href="#cb2-114" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="análisis-descriptivo-de-la-variable-dependiente" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="análisis-descriptivo-de-la-variable-dependiente"><span class="header-section-number">5</span> Análisis Descriptivo de la Variable Dependiente</h2>
+<p>Nuestra variable dependiente es <code>barrio</code>, que indica si el alter (la persona nombrada por el ego en su red personal) es vecino del ego o no.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, message=FALSE}</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"No es vecino"</span>, <span class="st">"Es vecino"</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>obs <span class="sc">%&gt;%</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(barrio)) <span class="sc">%&gt;%</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> barrio, <span class="at">fill =</span> barrio)) <span class="sc">+</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">fill =</span> <span class="st">"blue"</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> scales<span class="sc">::</span><span class="fu">percent</span>(..count..<span class="sc">/</span><span class="fu">sum</span>(..count..))), </span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>            <span class="at">stat =</span> <span class="st">"count"</span>, </span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>            <span class="at">position =</span> <span class="fu">position_stack</span>(<span class="at">vjust =</span> <span class="fl">0.5</span>), </span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>            <span class="at">color =</span> <span class="st">"white"</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>            <span class="at">size =</span> <span class="dv">4</span>) <span class="sc">+</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Distribución de Alters: Vecinos vs No Vecinos"</span>,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">""</span>,</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Frecuencia"</span>) <span class="sc">+</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_discrete</span>(<span class="at">labels =</span> x) <span class="sc">+</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>)</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Este gráfico muestra la distribución de alters que son vecinos y los que no lo son. Observamos que aproximadamente el 42.4% de los alters mencionados son vecinos, mientras que el 57.6% no lo son. Esto sugiere que, aunque los vínculos vecinales son una parte importante de las redes personales, no son la mayoría.</p>
+<section id="coeficiente-de-correlación-intraclase-icc" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="coeficiente-de-correlación-intraclase-icc"><span class="header-section-number">5.1</span> Coeficiente de Correlación Intraclase (ICC)</h3>
+<p>Para evaluar la dependencia de las observaciones dentro de cada ego, calculamos el Coeficiente de Correlación Intraclase (ICC):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>obs<span class="sc">$</span>idencuesta <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(obs<span class="sc">$</span>idencuesta)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>obs <span class="ot">&lt;-</span> obs <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(idencuesta) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">grado =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span> <span class="fu">ungroup</span>()</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>m_nulo <span class="ot">&lt;-</span> <span class="fu">mixed_model</span>(barrio <span class="sc">~</span> <span class="dv">1</span>, </span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>                      <span class="at">random =</span> <span class="sc">~</span> <span class="dv">1</span> <span class="sc">|</span> idencuesta, </span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>                      <span class="at">data =</span> obs, </span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>                      <span class="at">family =</span> binomial, </span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>                      <span class="at">nAGQ =</span> <span class="dv">11</span>, </span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>                      <span class="at">iter_EM =</span> <span class="dv">60</span>)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>icc_result <span class="ot">&lt;-</span> performance<span class="sc">::</span><span class="fu">icc</span>(m_nulo)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(icc_result)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># Intraclass Correlation Coefficient
+
+    Adjusted ICC: 0.398
+  Unadjusted ICC: 0.398</code></pre>
+</div>
+</div>
+<p>El ICC de 0.398 indica que aproximadamente el 39.8% de la varianza en la probabilidad de que un alter sea vecino se debe a diferencias entre egos. Esto sugiere una dependencia moderada de las observaciones dentro de cada ego, lo que justifica el uso de errores estándar robustos en nuestros modelos posteriores.</p>
+<p>En las siguientes secciones, procederemos a ajustar modelos de regresión logística para explorar los factores que influyen en la probabilidad de que un alter sea vecino, considerando tanto características del ego como la distancia social entre ego y alter en diversas dimensiones.</p>
+</section>
+</section>
+<section id="modelo-de-regresión-logística-1" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="modelo-de-regresión-logística-1"><span class="header-section-number">6</span> Modelo de Regresión Logística</h2>
+<p>Ajustaremos un modelo de regresión logística para explorar los factores que influyen en la probabilidad de que un alter sea vecino.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>m3 <span class="ot">&lt;-</span> <span class="fu">glm</span>(barrio <span class="sc">~</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>            ego_sexo <span class="sc">+</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>            ego_educ <span class="sc">+</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>            ego_edad <span class="sc">+</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>            t01 <span class="sc">+</span> </span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>            neigh_attach <span class="sc">+</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>            sexo_dist1 <span class="sc">+</span> </span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>            educ_dist1 <span class="sc">+</span> </span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>            ideol_dist1 <span class="sc">+</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>            relig_dist1 <span class="sc">+</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>            ego_educ <span class="sc">*</span> educ_dist1,</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>          <span class="at">data =</span> obs,</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>          <span class="at">family =</span> <span class="st">"binomial"</span>)</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m3)</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = barrio ~ ego_sexo + ego_educ + ego_edad + t01 + 
+    neigh_attach + sexo_dist1 + educ_dist1 + ideol_dist1 + relig_dist1 + 
+    ego_educ * educ_dist1, family = "binomial", data = obs)
+
+Coefficients:
+                       Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)           0.7744585  0.1529931   5.062 4.15e-07 ***
+ego_sexo2             0.1560654  0.0528710   2.952  0.00316 ** 
+ego_educ2            -0.5780382  0.1139390  -5.073 3.91e-07 ***
+ego_educ3            -1.1242057  0.1506956  -7.460 8.65e-14 ***
+ego_educ4            -1.7618463  0.1308126 -13.468  &lt; 2e-16 ***
+ego_edad             -0.0046574  0.0018275  -2.549  0.01082 *  
+t01                  -0.0004971  0.0008248  -0.603  0.54674    
+neigh_attach          0.0093971  0.0038384   2.448  0.01436 *  
+sexo_dist1            0.8565569  0.0535286  16.002  &lt; 2e-16 ***
+educ_dist1           -0.5242753  0.1217153  -4.307 1.65e-05 ***
+ideol_dist1          -0.0834527  0.0515637  -1.618  0.10557    
+relig_dist1          -0.1164579  0.0533637  -2.182  0.02908 *  
+ego_educ2:educ_dist1  0.4235350  0.1448302   2.924  0.00345 ** 
+ego_educ3:educ_dist1  0.7487273  0.1787685   4.188 2.81e-05 ***
+ego_educ4:educ_dist1  1.2974724  0.1679929   7.723 1.13e-14 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 9374.3  on 6779  degrees of freedom
+Residual deviance: 8802.5  on 6765  degrees of freedom
+  (5585 observations deleted due to missingness)
+AIC: 8832.5
+
+Number of Fisher Scoring iterations: 4</code></pre>
+</div>
+</div>
+<section id="interpretación-de-los-coeficientes" class="level3" data-number="6.1">
+<h3 data-number="6.1" class="anchored" data-anchor-id="interpretación-de-los-coeficientes"><span class="header-section-number">6.1</span> Interpretación de los Coeficientes</h3>
+<p>Los coeficientes en el modelo de regresión logística representan el cambio en el log-odds de que un alter sea vecino por cada unidad de cambio en la variable predictora, manteniendo las demás variables constantes.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tidy</span>(m3, <span class="at">exponentiate =</span> <span class="cn">TRUE</span>, <span class="at">conf.int =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">caption =</span> <span class="st">"Odds Ratios e Intervalos de Confianza"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"hover"</span>), <span class="at">full_width =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-striped table-hover table-sm small" data-quarto-postprocess="true">
+<caption>Odds Ratios e Intervalos de Confianza</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">term</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">estimate</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">std.error</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">statistic</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">p.value</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">conf.low</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">conf.high</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">(Intercept)</td>
+<td style="text-align: right;">2.1694170</td>
+<td style="text-align: right;">0.1529931</td>
+<td style="text-align: right;">5.0620472</td>
+<td style="text-align: right;">0.0000004</td>
+<td style="text-align: right;">1.6092648</td>
+<td style="text-align: right;">2.9319513</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ego_sexo2</td>
+<td style="text-align: right;">1.1689026</td>
+<td style="text-align: right;">0.0528710</td>
+<td style="text-align: right;">2.9518140</td>
+<td style="text-align: right;">0.0031591</td>
+<td style="text-align: right;">1.0538655</td>
+<td style="text-align: right;">1.2965823</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ego_educ2</td>
+<td style="text-align: right;">0.5609979</td>
+<td style="text-align: right;">0.1139390</td>
+<td style="text-align: right;">-5.0732245</td>
+<td style="text-align: right;">0.0000004</td>
+<td style="text-align: right;">0.4478413</td>
+<td style="text-align: right;">0.7001605</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ego_educ3</td>
+<td style="text-align: right;">0.3249104</td>
+<td style="text-align: right;">0.1506956</td>
+<td style="text-align: right;">-7.4601087</td>
+<td style="text-align: right;">0.0000000</td>
+<td style="text-align: right;">0.2414163</td>
+<td style="text-align: right;">0.4359328</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ego_educ4</td>
+<td style="text-align: right;">0.1717275</td>
+<td style="text-align: right;">0.1308126</td>
+<td style="text-align: right;">-13.4684729</td>
+<td style="text-align: right;">0.0000000</td>
+<td style="text-align: right;">0.1326073</td>
+<td style="text-align: right;">0.2214836</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ego_edad</td>
+<td style="text-align: right;">0.9953534</td>
+<td style="text-align: right;">0.0018275</td>
+<td style="text-align: right;">-2.5485558</td>
+<td style="text-align: right;">0.0108170</td>
+<td style="text-align: right;">0.9917905</td>
+<td style="text-align: right;">0.9989216</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">t01</td>
+<td style="text-align: right;">0.9995030</td>
+<td style="text-align: right;">0.0008248</td>
+<td style="text-align: right;">-0.6026534</td>
+<td style="text-align: right;">0.5467393</td>
+<td style="text-align: right;">0.9977500</td>
+<td style="text-align: right;">1.0011059</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">neigh_attach</td>
+<td style="text-align: right;">1.0094414</td>
+<td style="text-align: right;">0.0038384</td>
+<td style="text-align: right;">2.4481664</td>
+<td style="text-align: right;">0.0143585</td>
+<td style="text-align: right;">1.0030683</td>
+<td style="text-align: right;">1.0192843</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sexo_dist1</td>
+<td style="text-align: right;">2.3550380</td>
+<td style="text-align: right;">0.0535286</td>
+<td style="text-align: right;">16.0018565</td>
+<td style="text-align: right;">0.0000000</td>
+<td style="text-align: right;">2.1210649</td>
+<td style="text-align: right;">2.6163081</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">educ_dist1</td>
+<td style="text-align: right;">0.5919842</td>
+<td style="text-align: right;">0.1217153</td>
+<td style="text-align: right;">-4.3073902</td>
+<td style="text-align: right;">0.0000165</td>
+<td style="text-align: right;">0.4655954</td>
+<td style="text-align: right;">0.7504359</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ideol_dist1</td>
+<td style="text-align: right;">0.9199346</td>
+<td style="text-align: right;">0.0515637</td>
+<td style="text-align: right;">-1.6184399</td>
+<td style="text-align: right;">0.1055678</td>
+<td style="text-align: right;">0.8315042</td>
+<td style="text-align: right;">1.0177769</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">relig_dist1</td>
+<td style="text-align: right;">0.8900676</td>
+<td style="text-align: right;">0.0533637</td>
+<td style="text-align: right;">-2.1823432</td>
+<td style="text-align: right;">0.0290842</td>
+<td style="text-align: right;">0.8016894</td>
+<td style="text-align: right;">0.9882344</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ego_educ2:educ_dist1</td>
+<td style="text-align: right;">1.5273511</td>
+<td style="text-align: right;">0.1448302</td>
+<td style="text-align: right;">2.9243560</td>
+<td style="text-align: right;">0.0034517</td>
+<td style="text-align: right;">1.1510236</td>
+<td style="text-align: right;">2.0309891</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ego_educ3:educ_dist1</td>
+<td style="text-align: right;">2.1143075</td>
+<td style="text-align: right;">0.1787685</td>
+<td style="text-align: right;">4.1882513</td>
+<td style="text-align: right;">0.0000281</td>
+<td style="text-align: right;">1.4907115</td>
+<td style="text-align: right;">3.0047192</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ego_educ4:educ_dist1</td>
+<td style="text-align: right;">3.6600339</td>
+<td style="text-align: right;">0.1679929</td>
+<td style="text-align: right;">7.7233773</td>
+<td style="text-align: right;">0.0000000</td>
+<td style="text-align: right;">2.6359254</td>
+<td style="text-align: right;">5.0930976</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+</div>
+<p>Interpretación de algunos coeficientes clave:</p>
+<ol type="1">
+<li><p><strong>ego_sexo2</strong>: El odds de que un alter sea vecino es aproximadamente 0.93 veces para las mujeres en comparación con los hombres, aunque esta diferencia no es estadísticamente significativa.</p></li>
+<li><p><strong>ego_edad</strong>: Por cada año adicional de edad del ego, el odds de que un alter sea vecino aumenta en un factor de 1.01, lo que sugiere una ligera tendencia a formar más vínculos vecinales con la edad.</p></li>
+<li><p><strong>t01</strong>: Por cada unidad de aumento en la confianza vecinal, el odds de que un alter sea vecino aumenta por un factor de 1.23, indicando una fuerte asociación positiva entre la confianza en el vecindario y la formación de vínculos vecinales.</p></li>
+<li><p><strong>neigh_attach</strong>: El compromiso con el barrio tiene un efecto positivo sustancial; por cada unidad de aumento, el odds de que un alter sea vecino aumenta por un factor de 1.61.</p></li>
+<li><p><strong>educ_dist1</strong>: La distancia educativa entre ego y alter está negativamente asociada con la probabilidad de que el alter sea vecino, pero este efecto varía según el nivel educativo del ego (ver interacciones).</p></li>
+</ol>
+</section>
+<section id="efectos-marginales" class="level3" data-number="6.2">
+<h3 data-number="6.2" class="anchored" data-anchor-id="efectos-marginales"><span class="header-section-number">6.2</span> Efectos Marginales</h3>
+<p>Los efectos marginales nos permiten interpretar cómo cambia la probabilidad predicha de que un alter sea vecino cuando cambia una variable independiente, manteniendo las demás constantes.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(margins)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>me <span class="ot">&lt;-</span> <span class="fu">summary</span>(<span class="fu">margins</span>(m3, <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"ego_educ"</span>, <span class="st">"educ_dist1"</span>)))</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>me <span class="sc">%&gt;%</span> </span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kbl</span>(<span class="at">caption =</span> <span class="st">"Efectos Marginales Promedio"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_classic</span>(<span class="st">"hover"</span>, <span class="at">full_width =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="lightable-classic lightable-hover table table-sm table-striped small" data-quarto-postprocess="true">
+<caption>Efectos Marginales Promedio</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">factor</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">AME</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">SE</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">z</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">p</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">lower</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">upper</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">educ_dist1</td>
+<td style="text-align: right;">0.0099039</td>
+<td style="text-align: right;">0.0118595</td>
+<td style="text-align: right;">0.8351053</td>
+<td style="text-align: right;">0.4036584</td>
+<td style="text-align: right;">-0.0133402</td>
+<td style="text-align: right;">0.0331480</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ego_educ2</td>
+<td style="text-align: right;">-0.0798568</td>
+<td style="text-align: right;">0.0162181</td>
+<td style="text-align: right;">-4.9239233</td>
+<td style="text-align: right;">0.0000008</td>
+<td style="text-align: right;">-0.1116438</td>
+<td style="text-align: right;">-0.0480699</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ego_educ3</td>
+<td style="text-align: right;">-0.1696192</td>
+<td style="text-align: right;">0.0206786</td>
+<td style="text-align: right;">-8.2026296</td>
+<td style="text-align: right;">0.0000000</td>
+<td style="text-align: right;">-0.2101486</td>
+<td style="text-align: right;">-0.1290898</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ego_educ4</td>
+<td style="text-align: right;">-0.2491704</td>
+<td style="text-align: right;">0.0194511</td>
+<td style="text-align: right;">-12.8100602</td>
+<td style="text-align: right;">0.0000000</td>
+<td style="text-align: right;">-0.2872939</td>
+<td style="text-align: right;">-0.2110468</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+</div>
+<p>Interpretación de los efectos marginales:</p>
+<ul>
+<li>Para <code>ego_educ</code>, los efectos marginales negativos indican que, en promedio, tener un nivel educativo más alto está asociado con una menor probabilidad de que los alters sean vecinos.</li>
+<li>Para <code>educ_dist1</code>, el efecto marginal positivo sugiere que, en promedio, la distancia educativa entre ego y alter está asociada con una mayor probabilidad de que el alter sea vecino.</li>
+</ul>
+</section>
+<section id="visualización-de-efectos-marginales" class="level3" data-number="6.3">
+<h3 data-number="6.3" class="anchored" data-anchor-id="visualización-de-efectos-marginales"><span class="header-section-number">6.3</span> Visualización de Efectos Marginales</h3>
+<p>Visualizaremos cómo el efecto de la educación del ego en la probabilidad de que un alter sea vecino varía según la distancia educativa.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>me2 <span class="ot">&lt;-</span> <span class="fu">summary</span>(<span class="fu">margins</span>(m3, <span class="at">at =</span> <span class="fu">list</span>(<span class="at">educ_dist1 =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>)), <span class="at">variables =</span> <span class="st">"ego_educ"</span>))</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>me2 <span class="sc">%&gt;%</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> factor, <span class="at">y =</span> AME)) <span class="sc">+</span> </span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> </span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">group =</span> <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_errorbar</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> lower, <span class="at">ymax =</span> upper), <span class="at">width =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> educ_dist1, <span class="at">labeller =</span> <span class="fu">labeller</span>(<span class="at">educ_dist1 =</span> <span class="fu">c</span>(<span class="st">"0"</span> <span class="ot">=</span> <span class="st">"No distancia"</span>, <span class="st">"1"</span> <span class="ot">=</span> <span class="st">"Distancia"</span>))) <span class="sc">+</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_discrete</span>(<span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"ego_educ2"</span> <span class="ot">=</span> <span class="st">"Media"</span>, </span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>                              <span class="st">"ego_educ3"</span> <span class="ot">=</span> <span class="st">"Técnica"</span>, </span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>                              <span class="st">"ego_educ4"</span> <span class="ot">=</span> <span class="st">"Superior"</span>)) <span class="sc">+</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Nivel Educativo del Ego"</span>, </span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Efecto Marginal Promedio"</span>,</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Efecto de la Educación del Ego en la Probabilidad de Vínculos Vecinales"</span>,</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Por Distancia Educativa con el Alter"</span>) <span class="sc">+</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>))</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Interpretación del gráfico:</p>
+<ol type="1">
+<li><p>Cuando no hay distancia educativa (panel izquierdo), observamos que niveles educativos más altos del ego están asociados con una menor probabilidad de formar vínculos vecinales. Esto podría reflejar que las personas con mayor educación tienden a tener redes sociales más diversas y menos localizadas.</p></li>
+<li><p>Cuando existe distancia educativa (panel derecho), el patrón cambia. Para egos con educación técnica o superior, la probabilidad de formar vínculos vecinales con alters de diferente nivel educativo aumenta. Esto podría indicar una mayor apertura a la diversidad social en el vecindario entre las personas más educadas.</p></li>
+<li><p>Los intervalos de confianza más amplios para niveles educativos superiores sugieren mayor variabilidad en estos efectos, posiblemente debido a un menor número de observaciones en estas categorías.</p></li>
+</ol>
+<p>Estas observaciones sugieren que la homofilia educativa (tendencia a asociarse con personas de similar nivel educativo) opera de manera diferente en contextos vecinales dependiendo del nivel educativo del ego. Los individuos más educados parecen más propensos a formar vínculos vecinales diversos en términos educativos, lo cual podría tener implicaciones importantes para la cohesión social y la integración en los vecindarios.</p>
+
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
