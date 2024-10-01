@@ -291,7 +291,7 @@ obs <- obs %>%
 Nuestra variable dependiente es `barrio`, que indica si el alter (la persona nombrada por el ego en su red personal) es vecino del ego o no.
 
 ```{r, message=FALSE}
-x <- c("No es vecino", "Es vecino")
+x <- c("Es vecino", "No es vecino")
 
 obs %>%
   filter(!is.na(barrio)) %>%
@@ -310,7 +310,7 @@ obs %>%
   theme(legend.position = "none")
 ```
 
-Este gráfico muestra la distribución de alters que son vecinos y los que no lo son. Observamos que aproximadamente el 42.4% de los alters mencionados son vecinos, mientras que el 57.6% no lo son. Esto sugiere que, aunque los vínculos vecinales son una parte importante de las redes personales, no son la mayoría.
+Este gráfico muestra la distribución de alters que son vecinos y los que no lo son. Observamos que aproximadamente el 47% de los alters mencionados son vecinos, mientras que el 53% no lo son. Esto sugiere que, aunque los vínculos vecinales son una parte importante de las redes personales, no son la mayoría.
 
 ### Coeficiente de Correlación Intraclase (ICC)
 

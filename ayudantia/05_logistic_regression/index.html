@@ -455,7 +455,7 @@ Tilly, Charles. 2009. <em>Durable Inequality</em>. Nachdr. <span>Berkeley</span>
 <p>Nuestra variable dependiente es <code>barrio</code>, que indica si el alter (la persona nombrada por el ego en su red personal) es vecino del ego o no.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, message=FALSE}</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"No es vecino"</span>, <span class="st">"Es vecino"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Es vecino"</span>, <span class="st">"No es vecino"</span>)</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>obs <span class="sc">%&gt;%</span></span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(barrio)) <span class="sc">%&gt;%</span></span>
@@ -477,7 +477,7 @@ Tilly, Charles. 2009. <em>Durable Inequality</em>. Nachdr. <span>Berkeley</span>
 <p><img src="index_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-<p>Este gráfico muestra la distribución de alters que son vecinos y los que no lo son. Observamos que aproximadamente el 42.4% de los alters mencionados son vecinos, mientras que el 57.6% no lo son. Esto sugiere que, aunque los vínculos vecinales son una parte importante de las redes personales, no son la mayoría.</p>
+<p>Este gráfico muestra la distribución de alters que son vecinos y los que no lo son. Observamos que aproximadamente el 47% de los alters mencionados son vecinos, mientras que el 53% no lo son. Esto sugiere que, aunque los vínculos vecinales son una parte importante de las redes personales, no son la mayoría.</p>
 <section id="coeficiente-de-correlación-intraclase-icc" class="level3" data-number="5.1">
 <h3 data-number="5.1" class="anchored" data-anchor-id="coeficiente-de-correlación-intraclase-icc"><span class="header-section-number">5.1</span> Coeficiente de Correlación Intraclase (ICC)</h3>
 <p>Para evaluar la dependencia de las observaciones dentro de cada ego, calculamos el Coeficiente de Correlación Intraclase (ICC):</p>
