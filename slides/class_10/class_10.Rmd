@@ -1,6 +1,6 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Clase #10"
+subtitle: "Clase #9: Regresión Logística"
 author: "<br> Mauricio Bucca <br> [github.com/mebucca](https://github.com/mebucca) <br> mebucca@uc.cl"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
@@ -248,35 +248,6 @@ guides(fill="none", color="none") +
 ]
 
 ---
-## Efectos marginales sobre el logit 
-
-
-.pull-left[
-```{r, echo=FALSE}
-summary(logit_affairs_sex_ym)$coefficients[,c(1,2)]
-```
-]
-.pull-right[
-Si `male=1` y `ym=10`, entonces `logit(p)`=
-```{r}
--1.714 + 0.222*1 + 0.05843*10
-```
-
-Si `male=1` y `ym=11`, entonces `logit(p)`=
-```{r}
--1.714 + 0.222*1 + 0.05843*11
-```
-
-]
-
---
-
-Por tanto, $\beta_{ym}$=
-```{r}
-((-1.714 + 0.222*1 + 0.05843*11)-(-1.714 + 0.222*1 + 0.05843*10))/(11 - 10)
-```
-
----
 class: inverse, center, middle
 
 ## Efectos multiplicativos sobre las odds de éxito 
@@ -291,7 +262,7 @@ $$\text{logit}(p_{i}) = \ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i
 <br>
 --
 
-exponenciando a ambos lados obtenemos 
+exponenciando a ambos lados obtenemos las .bold[odds de éxito]:
 
 $$\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}$$
 
@@ -425,35 +396,7 @@ exp(summary(logit_affairs_sex_ym)$coefficients[,c(1)])
   ```
 ]
 
----
-## Efectos multiplicativos sobre las odds 
 
-
-.pull-left[
-```{r, echo=FALSE}
-data.frame(coef=summary(logit_affairs_sex_ym)$coefficients[,c(1)], `exp(coef)`=exp(summary(logit_affairs_sex_ym)$coefficients[,c(1)]))
-```
-]
-.pull-right[
-Si `male=1` y `ym=10`, entonces las odds de tener un affair =
-```{r}
-exp(-1.714 + 0.222*1 + 0.05843*10)
-```
-
-Si `male=1` y `ym=11`, entonces las odds de tener un affair =
-```{r}
-exp(-1.714 + 0.222*1 + 0.05843*11)
-```
-
-]
-
---
-
-Por tanto, $e^{\beta_{ym}}$=
-```{r}
-exp(-1.714 + 0.222*1 + 0.05843*11)/exp(-1.714 + 0.222*1 + 0.05843*10)
-```
- 
 ---
 class: inverse, center, middle
 
@@ -722,7 +665,7 @@ Cantidades de interes:
 En `R` pueden usar el nuevo paquete `marginaleffects` (o comando `margins` en `Stata` )
 
 ```{r}
-summary(marginaleffects(logit_affairs_sex_ym))
+avg_slopes(logit_affairs_sex_ym)
 ```
 
 --
@@ -748,24 +691,20 @@ En `R`:
 ```{r}
 beta_ym = logit_affairs_sex_ym$coefficients[3] # coeficiente ym 
 p_hat <- predict(logit_affairs_sex_ym, type="response") # prob predichas cada obs.
-me_ym = beta_ym*p_hat*(1-p_hat) # efector marginal para cada obs.
+me_ym = tibble(me_ym=beta_ym*p_hat*(1-p_hat)) # efector marginal para cada obs.
 ```
 
 --
 
 .pull-left[
 ```{r, echo=FALSE, fig.width=4.5, fig.height=3.7, message=FALSE}
-me_ym %>% as_tibble() %>% 
-  ggplot(aes(x=value)) +
-  geom_histogram(size=1.5) +
-  scale_color_viridis_d() +
-  labs(x="efecto marginal ym")
+me_ym
 ```
 ]
 
 .pull-right[
 ```{r}
-ame = round(mean(me_ym),4)
+ame = round(mean(me_ym$me_ym),4)
 print(paste0("AME Years of Marriage: ", ame))
 ```
 ]

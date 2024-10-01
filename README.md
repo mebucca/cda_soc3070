@@ -28,7 +28,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | 2     | Septiembre | Tablas de contingencia                                    | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_5/class_5#1) [`[Code]`](slides/class_5/class_5.Rmd)        |
 | 9     | Septiembre | Modelo Lineal de Probabilidad (LPM)                       | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_6/class_6#1) [`[Code]`](slides/class_6/class_6.Rmd)        |
 | 23    | Septiembre | Regresión Logística: estructura teórica y MLE             | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_8/class_8#1) [`[Code]`](slides/class_8/class_8.Rmd)                                                                                                                               |
-| 30    | Septiembre | Regresión Logística: interpretación de efectos            |                                                                                                                              |
+| 30    | Septiembre | Regresión Logística: interpretación de efectos            | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_10/class_10#1) [`[Code]`](slides/class_10/class_10.Rmd)                                                                                                                             |
 | 7     | Octubre    | Regresión Logística: inferencia                           |                                                                                                                              |
 | 14    | Octubre    | Regresión Logística: ajuste, predicción & cross-validation|                                                                                                                              |
 | 21    | Octubre    | Regresión Logística Multinomial: estructura teórica       |                                                                                                                              |
@@ -65,7 +65,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | Tarea           | Asignación       | Entrega         | Material                                                                                  |
 |-----------------|------------------|-----------------|-------------------------------------------------------------------------------------------|
 | Tarea corta 1   | 5 de Agosto      | 12 de Agosto    | [`[TC1 sols]`](https://mebucca.github.io/cda_soc3070/homework/tc_1_answers#1) [`[TC1.qmd sols]`](homework/tc_1_answers.qmd)  |
-| Tarea corta 2   | 19 de Agosto     | 26 de Agosto    | [`[TC2]`](https://mebucca.github.io/cda_soc3070/homework/tc_2#1) [`[TC2.qmd]`](homework/tc_2.qmd)  |
+| Tarea corta 2   | 19 de Agosto     | 26 de Agosto    | [`[TC2 sols]`](https://mebucca.github.io/cda_soc3070/homework/tc_2_answers#1) [`[TC2.qmd sols]`](homework/tc_2_answers.qmd)  |
 | Trabajo 1       | 12 de Septiembre  | 07 de Octubre |   [`[T1]`](https://mebucca.github.io/cda_soc3070/homework/t_1/t_1#1) [`[wikidata]`](homework/t_1/wiki_chileans.csv)                                                                                        |
 | Tarea corta 4   | 14 de Octubre    | 21 de Octubre   |                                                                                           |
 | Trabajo 2       | 21 de Octubre    | 11 de Noviembre |                                                                                           |
