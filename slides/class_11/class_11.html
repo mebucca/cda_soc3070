@@ -4,7 +4,7 @@
     <title>Análisis de Datos Categóricos (SOC3070)</title>
     <meta charset="utf-8" />
     <meta name="author" content="  Mauricio Bucca  Profesor Asistente, Sociología UC" />
-    <script src="libs/header-attrs-2.24/header-attrs.js"></script>
+    <script src="libs/header-attrs-2.27/header-attrs.js"></script>
     <link rel="stylesheet" href="gentle-r.css" type="text/css" />
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
@@ -22,7 +22,7 @@ class: center, middle, inverse, title-slide
 ### <br> Mauricio Bucca<br> Profesor Asistente, Sociología UC
 ]
 .date[
-### 12 November, 2023
+### 07 October, 2024
 ]
 
 ---
@@ -175,7 +175,7 @@ Retomando nuestro modelo de clases anteriores: `\(\ln \frac{p_{i}}{ 1 - p_{i}}  
 --
 
 
-```r
+``` r
 beta2 &lt;- summary(logit_affairs_sex_ym)$coefficients["ym","Estimate"]
 se_beta2 &lt;- summary(logit_affairs_sex_ym)$coefficients["ym","Std. Error"]
 ci_beta2 &lt;- beta2 + c(-2,2)*se_beta2; ci_beta2
@@ -188,7 +188,7 @@ ci_beta2 &lt;- beta2 + c(-2,2)*se_beta2; ci_beta2
 --
 
 
-```r
+``` r
 confint(logit_affairs_sex_ym)
 ```
 
@@ -436,7 +436,7 @@ Siguiendo con `\(\ln \frac{p_{i}}{ 1 - p_{i}}    = \beta_{0} + \beta_{1}\text{ma
 --
 
 
-```r
+``` r
 # Escribir una función que ejecute re-sampling y la estimación
 mc_beta2  &lt;- function(x) {
   p_hat   &lt;- predict(logit_affairs_sex_ym, type="response")
@@ -452,9 +452,9 @@ betas2_mc &lt;- replicate(nreps,mc_beta2()); head(betas2_mc)
 
 ```
 ## affairsdata$ym affairsdata$ym affairsdata$ym affairsdata$ym affairsdata$ym 
-##     0.03926745     0.03385421     0.04671143     0.05074587     0.05338709 
+##     0.09087138     0.07304262     0.02730421     0.07032617     0.06581289 
 ## affairsdata$ym 
-##     0.04086738
+##     0.06386119
 ```
 
 ---
@@ -464,28 +464,28 @@ betas2_mc &lt;- replicate(nreps,mc_beta2()); head(betas2_mc)
 
 .pull-left[
 
-```r
+``` r
 betasall_mc &lt;- sim(logit_affairs_sex_ym, n.sims=1200)@coef
 betasall_mc %&gt;% head(4)
 ```
 
 ```
 ##      (Intercept) factor(sex)male         ym
-## [1,]   -1.558323      0.06240665 0.05907903
-## [2,]   -1.130309     -0.03766723 0.03046209
-## [3,]   -1.356473      0.00820868 0.03994985
-## [4,]   -1.751682      0.18559695 0.05788292
+## [1,]   -1.686012      -0.1180453 0.06461125
+## [2,]   -1.708559       0.2383098 0.05787842
+## [3,]   -1.963841       0.2445484 0.06912406
+## [4,]   -1.887371       0.5150242 0.07103016
 ```
 
-```r
+``` r
 se_beta2_mc &lt;- sd(betasall_mc[,"ym"]); se_beta2_mc
 ```
 
 ```
-## [1] 0.01678429
+## [1] 0.01761518
 ```
 
-```r
+``` r
 ci_beta2_mc &lt;- 
   quantile(betasall_mc[,"ym"], p=c(0.06,0.975))
   ci_beta2_mc
@@ -493,7 +493,7 @@ ci_beta2_mc &lt;-
 
 ```
 ##         6%      97.5% 
-## 0.03377706 0.09134438
+## 0.03105430 0.09183556
 ```
 ]
 
@@ -520,7 +520,7 @@ Simulando ...
 --
 
 
-```r
+``` r
 betasall_mc &lt;- sim(logit_affairs_sex_ym, n.sims=1200)@coef
 expbetasall_mc &lt;- exp(betasall_mc)
 expbetasall_mc %&gt;% head()
@@ -528,12 +528,12 @@ expbetasall_mc %&gt;% head()
 
 ```
 ##      (Intercept) factor(sex)male       ym
-## [1,]   0.1740622       1.2940075 1.075169
-## [2,]   0.1641289       0.8321784 1.094834
-## [3,]   0.2241170       1.1941362 1.038896
-## [4,]   0.1945643       1.4296076 1.058273
-## [5,]   0.1704301       1.2278654 1.051255
-## [6,]   0.1874583       1.6517038 1.047260
+## [1,]   0.1418026        1.354819 1.081355
+## [2,]   0.1443566        1.486687 1.076918
+## [3,]   0.1479306        1.183595 1.077943
+## [4,]   0.2111782        1.341189 1.059357
+## [5,]   0.1518279        1.021064 1.077740
+## [6,]   0.1784247        1.455114 1.056227
 ```
 
 
@@ -544,15 +544,15 @@ expbetasall_mc %&gt;% head()
 
 .pull-left[
 
-```r
+``` r
 se_exbeta2_mc &lt;- sd(expbetasall_mc[,"ym"]); se_exbeta2_mc
 ```
 
 ```
-## [1] 0.01883666
+## [1] 0.01860613
 ```
 
-```r
+``` r
 ci_expbeta2_mc &lt;- 
   quantile(expbetasall_mc[,"ym"], p=c(0.025,0.975))
   ci_expbeta2_mc
@@ -560,7 +560,7 @@ ci_expbeta2_mc &lt;-
 
 ```
 ##     2.5%    97.5% 
-## 1.023270 1.096956
+## 1.025699 1.097896
 ```
 ]
 
@@ -603,7 +603,7 @@ Simulando ...
 
 
 
-```r
+``` r
 mc_ame_beta2  &lt;- function(x) {
   p_hat   &lt;- predict(logit_affairs_sex_ym, type="response")
   y_m     &lt;- rbinom(n=length(p_hat),size=1,prob=p_hat)
@@ -620,7 +620,7 @@ ame_ym_mc &lt;- replicate(nreps,mc_ame_beta2()); head(ame_ym_mc,4)
 ```
 
 ```
-## [1] 0.007366364 0.014410864 0.011458352 0.010159493
+## [1] 0.013108847 0.010047768 0.006705262 0.016470641
 ```
 
 ---
@@ -629,7 +629,7 @@ ame_ym_mc &lt;- replicate(nreps,mc_ame_beta2()); head(ame_ym_mc,4)
 
 .pull-left[
 
-```r
+``` r
 p_hat   &lt;- predict(logit_affairs_sex_ym, type = "response")
 me_ym   &lt;- beta2*p_hat*(1-p_hat)
 ame_ym  &lt;- mean(me_ym); ame_ym
@@ -639,15 +639,15 @@ ame_ym  &lt;- mean(me_ym); ame_ym
 ## [1] 0.01070277
 ```
 
-```r
+``` r
 se_ame_ym_bs &lt;- sd(ame_ym_mc); se_ame_ym_bs 
 ```
 
 ```
-## [1] 0.003137912
+## [1] 0.003076211
 ```
 
-```r
+``` r
 ci_ame_ym_mc &lt;- 
   quantile(ame_ym_mc, p=c(0.025,0.975))
   ci_ame_ym_mc
@@ -655,7 +655,7 @@ ci_ame_ym_mc &lt;-
 
 ```
 ##        2.5%       97.5% 
-## 0.004745705 0.016649611
+## 0.004389195 0.016570634
 ```
 ]
 
@@ -804,7 +804,7 @@ Siguiendo con `\(\ln \frac{p_{i}}{ 1 - p_{i}}    = \beta_{0} + \beta_{1}\text{ma
 --
 
 
-```r
+``` r
 # Escribir una función que ejecute re-sampling y la estimación
 bs_beta2  &lt;- function(x) {
   data_b  &lt;- sample_n(affairsdata,size=nrow(affairsdata),replace=TRUE)
@@ -820,7 +820,7 @@ betas2_bs &lt;- replicate(nreps,bs_beta2()); head(betas2_bs)
 
 ```
 ##         ym         ym         ym         ym         ym         ym 
-## 0.06387802 0.05182594 0.05893172 0.06522773 0.05220053 0.08821608
+## 0.04670347 0.06872105 0.05126156 0.06176617 0.06029531 0.06977116
 ```
 
 ---
@@ -828,16 +828,16 @@ betas2_bs &lt;- replicate(nreps,bs_beta2()); head(betas2_bs)
 
 .pull-left[
 
-```r
+``` r
 se_beta2_bs &lt;- sd(betas2_bs)
 se_beta2_bs
 ```
 
 ```
-## [1] 0.01686049
+## [1] 0.01625864
 ```
 
-```r
+``` r
 ci_beta2_bs &lt;- 
   quantile(betas2_bs, p=c(0.025,0.975))
   ci_beta2_bs
@@ -845,7 +845,7 @@ ci_beta2_bs &lt;-
 
 ```
 ##       2.5%      97.5% 
-## 0.02663479 0.09105399
+## 0.02745074 0.09025337
 ```
 ]
 
@@ -884,7 +884,7 @@ Bootstrapeando ...
 
 
 
-```r
+``` r
 # Escribir una función que ejecute re-sampling y la estimación
 bs_expbeta2  &lt;- function(x) {
   data_b  &lt;- sample_n(affairsdata,size=nrow(affairsdata),replace=TRUE)
@@ -900,7 +900,7 @@ expbetas2_bs &lt;- replicate(nreps,bs_expbeta2()); head(expbetas2_bs)
 
 ```
 ##       ym       ym       ym       ym       ym       ym 
-## 1.068795 1.077166 1.065415 1.028511 1.030065 1.070682
+## 1.052029 1.068133 1.052111 1.082566 1.036200 1.050303
 ```
 
 ---
@@ -908,16 +908,16 @@ expbetas2_bs &lt;- replicate(nreps,bs_expbeta2()); head(expbetas2_bs)
 
 .pull-left[
 
-```r
+``` r
 se_expbeta2_bs &lt;- sd(expbetas2_bs)
 se_expbeta2_bs
 ```
 
 ```
-## [1] 0.01796938
+## [1] 0.01789252
 ```
 
-```r
+``` r
 ci_expbeta2_bs &lt;- 
   quantile(expbetas2_bs, p=c(0.025,0.975))
   ci_expbeta2_bs
@@ -925,7 +925,7 @@ ci_expbeta2_bs &lt;-
 
 ```
 ##     2.5%    97.5% 
-## 1.025962 1.097030
+## 1.025829 1.096832
 ```
 ]
 
@@ -962,7 +962,7 @@ Bootstrapeando ...
 Bootstrapeando ...
 
 
-```r
+``` r
 # Escribir una función que ejecute re-sampling y la estimación
 bs_ame_ym  &lt;- function(x) {
   data_b   &lt;- sample_n(affairsdata,size=nrow(affairsdata),replace=TRUE)
@@ -979,7 +979,7 @@ ame_ym_bs &lt;- replicate(nreps,bs_ame_ym()); head(ame_ym_bs)
 ```
 
 ```
-## [1] 0.014240658 0.008336191 0.012065062 0.010263690 0.010457193 0.006595455
+## [1] 0.012671879 0.015056605 0.012993359 0.014819770 0.009671341 0.012022913
 ```
 
 
@@ -988,7 +988,7 @@ ame_ym_bs &lt;- replicate(nreps,bs_ame_ym()); head(ame_ym_bs)
 
 .pull-left[
 
-```r
+``` r
 p_hat   &lt;- predict(logit_affairs_sex_ym, type = "response")
 me_ym   &lt;- beta2*p_hat*(1-p_hat)
 ame_ym  &lt;- mean(me_ym); ame_ym
@@ -998,16 +998,16 @@ ame_ym  &lt;- mean(me_ym); ame_ym
 ## [1] 0.01070277
 ```
 
-```r
+``` r
 se_ame_ym_bs &lt;- sd(ame_ym_bs)
 se_ame_ym_bs
 ```
 
 ```
-## [1] 0.002948873
+## [1] 0.002910774
 ```
 
-```r
+``` r
 ci_ame_ym_bs &lt;- 
   quantile(ame_ym_bs, p=c(0.025,0.975))
   ci_ame_ym_bs
@@ -1015,7 +1015,7 @@ ci_ame_ym_bs &lt;-
 
 ```
 ##        2.5%       97.5% 
-## 0.004538478 0.016381331
+## 0.004640685 0.016080838
 ```
 ]
 
