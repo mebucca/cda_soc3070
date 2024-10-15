@@ -42,17 +42,17 @@ Los Modelos Lineales Generalizados (GLM) son una extensión flexible de los mode
 
 Un GLM consta de tres componentes principales:
 
-1. **Componente aleatorio**: Especifica la distribución condicional de la variable respuesta ($Y$) dado el vector de predictores ($X$). Esta distribución debe pertenecer a la familia exponencial.
+1.  **Componente aleatorio**: Especifica la distribución condicional de la variable respuesta ($Y$) dado el vector de predictores ($X$). Esta distribución debe pertenecer a la familia exponencial.
 
-2. **Componente sistemático**: Define el predictor lineal $\eta$ como una combinación lineal de las variables predictoras:
+2.  **Componente sistemático**: Define el predictor lineal $\eta$ como una combinación lineal de las variables predictoras:
 
-   $$\eta = \beta_0 + \beta_1X_1 + \beta_2X_2 + ... + \beta_pX_p = X\beta$$
+    $$\eta = \beta_0 + \beta_1X_1 + \beta_2X_2 + ... + \beta_pX_p = X\beta$$
 
-3. **Función de enlace**: Relaciona el valor esperado de la respuesta $\mu = E(Y|X)$ con el predictor lineal $\eta$:
+3.  **Función de enlace**: Relaciona el valor esperado de la respuesta $\mu = E(Y|X)$ con el predictor lineal $\eta$:
 
-   $$g(\mu) = \eta$$
+    $$g(\mu) = \eta$$
 
-   donde $g()$ es la función de enlace.
+    donde $g()$ es la función de enlace.
 
 #### Familia Exponencial
 
@@ -86,19 +86,19 @@ $$\mu = \frac{e^\eta}{1 + e^\eta} = \frac{1}{1 + e^{-\eta}}$$
 
 En la regresión logística, los coeficientes se interpretan en términos de odds ratios:
 
-- $e^{\beta_j}$ es el odds ratio para un incremento de una unidad en $X_j$, manteniendo las demás variables constantes.
-- Si $\beta_j > 0$, un incremento en $X_j$ aumenta la probabilidad de éxito.
-- Si $\beta_j < 0$, un incremento en $X_j$ disminuye la probabilidad de éxito.
+-   $e^{\beta_j}$ es el odds ratio para un incremento de una unidad en $X_j$, manteniendo las demás variables constantes.
+-   Si $\beta_j > 0$, un incremento en $X_j$ aumenta la probabilidad de éxito.
+-   Si $\beta_j < 0$, un incremento en $X_j$ disminuye la probabilidad de éxito.
 
 #### Comparación de Funciones de Enlace
 
 Existen otras funciones de enlace para modelos con respuesta binaria. La siguiente tabla compara las más comunes:
 
-| Nombre | Función de Enlace $g(\mu)$ | Función de Respuesta Media $g^{-1}(\eta)$ |
-|--------|----------------------------|-------------------------------------------|
-| Logit  | $\log(\frac{\mu}{1-\mu})$  | $\frac{1}{1 + e^{-\eta}}$                 |
-| Probit | $\Phi^{-1}(\mu)$           | $\Phi(\eta)$                              |
-| Complementary log-log | $\log(-\log(1-\mu))$ | $1 - e^{-e^\eta}$                |
+| Nombre                | Función de Enlace $g(\mu)$ | Función de Respuesta Media $g^{-1}(\eta)$ |
+|---------------|----------------------|-----------------------------------|
+| Logit                 | $\log(\frac{\mu}{1-\mu})$  | $\frac{1}{1 + e^{-\eta}}$                 |
+| Probit                | $\Phi^{-1}(\mu)$           | $\Phi(\eta)$                              |
+| Complementary log-log | $\log(-\log(1-\mu))$       | $1 - e^{-e^\eta}$                         |
 
 donde $\Phi$ es la función de distribución acumulativa de la distribución normal estándar.
 
@@ -112,15 +112,15 @@ $$L(\beta) = \prod_{i=1}^n \pi_i^{y_i}(1-\pi_i)^{1-y_i}$$
 
 #### Evaluación del Modelo
 
-1. **Devianza**: Mide la bondad de ajuste del modelo. Se define como:
+1.  **Devianza**: Mide la bondad de ajuste del modelo. Se define como:
 
-   $$D = -2\log\left(\frac{L(\text{modelo actual})}{L(\text{modelo saturado})}\right)$$
+    $$D = -2\log\left(\frac{L(\text{modelo actual})}{L(\text{modelo saturado})}\right)$$
 
-2. **Test de Wald**: Evalúa la significancia de los coeficientes individuales.
+2.  **Test de Wald**: Evalúa la significancia de los coeficientes individuales.
 
-3. **Test de razón de verosimilitud**: Compara modelos anidados.
+3.  **Test de razón de verosimilitud**: Compara modelos anidados.
 
-4. **Curva ROC y AUC**: Evalúan la capacidad predictiva del modelo.
+4.  **Curva ROC y AUC**: Evalúan la capacidad predictiva del modelo.
 
 ## Aplicación: Vínculos de Confianza con Vecinos
 
@@ -132,11 +132,7 @@ Los vecindarios son contextos donde la actividad e interacción social están fu
 
 Las áreas locales, por tanto, son un campo de investigación óptimo para estudiar cómo los extraños se convierten en amigos [@volkerSixteenMillionNeighbors2007] y para el estudio general de las desigualdades persistentes [@tillyDurableInequality2009].
 
-Nuestras preguntas de investigación son:
-1. ¿Sobre qué bases los individuos establecen o no relaciones de cercanía con sus vecinos?
-2. ¿Por qué algunas personas incluyen a sus vecinos en sus redes de confianza y otras no?
-
-
+Nuestras preguntas de investigación son: 1. ¿Sobre qué bases los individuos establecen o no relaciones de cercanía con sus vecinos? 2. ¿Por qué algunas personas incluyen a sus vecinos en sus redes de confianza y otras no?
 
 ## Librerías y Datos
 
@@ -162,7 +158,6 @@ local_path <- "ELSOC_W01_v4.01_R.RData"
 writeBin(response$content, local_path)
 load("ELSOC_W01_v4.01_R.RData")
 ```
-
 
 ## Preparación de Datos
 
@@ -283,9 +278,6 @@ obs <- obs %>%
   )
 ```
 
-
-
-
 ## Análisis Descriptivo de la Variable Dependiente
 
 Nuestra variable dependiente es `barrio`, que indica si el alter (la persona nombrada por el ego en su red personal) es vecino del ego o no.
@@ -335,7 +327,6 @@ El ICC de `r round(icc_result$ICC_adjusted, 3)` indica que aproximadamente el `r
 
 En las siguientes secciones, procederemos a ajustar modelos de regresión logística para explorar los factores que influyen en la probabilidad de que un alter sea vecino, considerando tanto características del ego como la distancia social entre ego y alter en diversas dimensiones.
 
-
 ## Modelo de Regresión Logística
 
 Ajustaremos un modelo de regresión logística para explorar los factores que influyen en la probabilidad de que un alter sea vecino.
@@ -370,15 +361,15 @@ tidy(m3, exponentiate = TRUE, conf.int = TRUE) %>%
 
 Interpretación de algunos coeficientes clave:
 
-1. **ego_sexo2**: El odds de que un alter sea vecino es aproximadamente 0.93 veces para las mujeres en comparación con los hombres, aunque esta diferencia no es estadísticamente significativa.
+1.  **ego_sexo2**: El odds de que un alter sea vecino es aproximadamente 0.93 veces para las mujeres en comparación con los hombres, aunque esta diferencia no es estadísticamente significativa.
 
-2. **ego_edad**: Por cada año adicional de edad del ego, el odds de que un alter sea vecino aumenta en un factor de 1.01, lo que sugiere una ligera tendencia a formar más vínculos vecinales con la edad.
+2.  **ego_edad**: Por cada año adicional de edad del ego, el odds de que un alter sea vecino aumenta en un factor de 1.01, lo que sugiere una ligera tendencia a formar más vínculos vecinales con la edad.
 
-3. **t01**: Por cada unidad de aumento en la confianza vecinal, el odds de que un alter sea vecino aumenta por un factor de 1.23, indicando una fuerte asociación positiva entre la confianza en el vecindario y la formación de vínculos vecinales.
+3.  **t01**: Por cada unidad de aumento en la confianza vecinal, el odds de que un alter sea vecino aumenta por un factor de 1.23, indicando una fuerte asociación positiva entre la confianza en el vecindario y la formación de vínculos vecinales.
 
-4. **neigh_attach**: El compromiso con el barrio tiene un efecto positivo sustancial; por cada unidad de aumento, el odds de que un alter sea vecino aumenta por un factor de 1.61.
+4.  **neigh_attach**: El compromiso con el barrio tiene un efecto positivo sustancial; por cada unidad de aumento, el odds de que un alter sea vecino aumenta por un factor de 1.61.
 
-5. **educ_dist1**: La distancia educativa entre ego y alter está negativamente asociada con la probabilidad de que el alter sea vecino, pero este efecto varía según el nivel educativo del ego (ver interacciones).
+5.  **educ_dist1**: La distancia educativa entre ego y alter está negativamente asociada con la probabilidad de que el alter sea vecino, pero este efecto varía según el nivel educativo del ego (ver interacciones).
 
 ### Efectos Marginales
 
@@ -395,8 +386,8 @@ me %>%
 
 Interpretación de los efectos marginales:
 
-- Para `ego_educ`, los efectos marginales negativos indican que, en promedio, tener un nivel educativo más alto está asociado con una menor probabilidad de que los alters sean vecinos.
-- Para `educ_dist1`, el efecto marginal positivo sugiere que, en promedio, la distancia educativa entre ego y alter está asociada con una mayor probabilidad de que el alter sea vecino.
+-   Para `ego_educ`, los efectos marginales negativos indican que, en promedio, tener un nivel educativo más alto está asociado con una menor probabilidad de que los alters sean vecinos.
+-   Para `educ_dist1`, el efecto marginal positivo sugiere que, en promedio, la distancia educativa entre ego y alter está asociada con una mayor probabilidad de que el alter sea vecino.
 
 ### Visualización de Efectos Marginales
 
@@ -424,22 +415,10 @@ me2 %>%
 
 Interpretación del gráfico:
 
-1. Cuando no hay distancia educativa (panel izquierdo), observamos que niveles educativos más altos del ego están asociados con una menor probabilidad de formar vínculos vecinales. Esto podría reflejar que las personas con mayor educación tienden a tener redes sociales más diversas y menos localizadas.
+1.  Cuando no hay distancia educativa (panel izquierdo), observamos que niveles educativos más altos del ego están asociados con una menor probabilidad de formar vínculos vecinales. Esto podría reflejar que las personas con mayor educación tienden a tener redes sociales más diversas y menos localizadas.
 
-2. Cuando existe distancia educativa (panel derecho), el patrón cambia. Para egos con educación técnica o superior, la probabilidad de formar vínculos vecinales con alters de diferente nivel educativo aumenta. Esto podría indicar una mayor apertura a la diversidad social en el vecindario entre las personas más educadas.
+2.  Cuando existe distancia educativa (panel derecho), el patrón cambia. Para egos con educación técnica o superior, la probabilidad de formar vínculos vecinales con alters de diferente nivel educativo aumenta. Esto podría indicar una mayor apertura a la diversidad social en el vecindario entre las personas más educadas.
 
-3. Los intervalos de confianza más amplios para niveles educativos superiores sugieren mayor variabilidad en estos efectos, posiblemente debido a un menor número de observaciones en estas categorías.
+3.  Los intervalos de confianza más amplios para niveles educativos superiores sugieren mayor variabilidad en estos efectos, posiblemente debido a un menor número de observaciones en estas categorías.
 
 Estas observaciones sugieren que la homofilia educativa (tendencia a asociarse con personas de similar nivel educativo) opera de manera diferente en contextos vecinales dependiendo del nivel educativo del ego. Los individuos más educados parecen más propensos a formar vínculos vecinales diversos en términos educativos, lo cual podría tener implicaciones importantes para la cohesión social y la integración en los vecindarios.
-
-
-
-
-
-
-
-
-
-
-
-
