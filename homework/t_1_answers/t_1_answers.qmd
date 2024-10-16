@@ -1,0 +1,375 @@
+---
+title: "SOL3070 Análisis de Datos Categóricos"
+author: "Trabajo 1"
+format: html
+editor: visual
+---
+
+```{r, echo=FALSE,message=FALSE, warnings=FALSE}
+library("pacman")
+p_load("tinytex","tidyverse","modelr","httr","ggsci","png","grid","marginaleffects")
+options(scipen = 999)
+
+```
+
+## Información
+
+-   Ponderación: 25% de la nota final del curso.
+
+-   Bonus: Responder la pregunta *bonus* NO es un requisito necesario para obtener puntaje completo. Responder incorrectamente la pregunta *bonus* no afectará negativamente la nota obtenida, pero responderla correctamente mejorará la nota obtenida en un máximo de 0.5 puntos (o en la cantidad necesaria para obtener nota máxima si la nota original fuera superior a 6.5)
+
+## Introducción
+
+En este trabajo usarán datos extraidos de 9.303 biografías de chilenos disponibles en Wikipedia (en hasta 160 lenguas). La información de este fue recopilada en el proyecto de investigación "Social Memory about Chileans in Wikipedia", financiado por Wikimedia Research Fund. Si usas estos datos, por favor cita la siguiente publicación: Beytía, P., Rojas, C. & Cruz, C. (2024). Social memory about people from a country. The case of notable Chileans in Wikipedia. Wiki Workshop 2024.​
+
+Dado que contar con una biografía en Wikipedia es un indicador de prominencia social, utilizaremos esta subpoblación de individuos "notables" para modelar la probabilidad de que una persona destacada se dedique a la política, considerando como variables predictoras su género y año de nacimiento.
+
+Los datos están disponibles en el repositorio del curso para ser descargados.
+
+## Datos
+
+Visualización rápida de la base de datos:
+
+```{r, message=FALSE, warnings=FALSE}
+
+path <- "/Users/mauricio/Library/Mobile Documents/com~apple~CloudDocs/Teaching/ISUC/2024_2_categorical_data_analysis/hw_ans/t_1_answers"
+
+setwd(path)
+wiki_chileans <-  read_csv("wiki_chileans.csv") %>% as_tibble()
+
+wiki_chileans <- wiki_chileans %>% select(personLabel,genderLabel,occupationLabel,birthyear)
+
+wiki_chileans <- wiki_chileans %>% mutate(
+  person = personLabel,
+  genero = genderLabel,
+  politico = if_else(str_detect(occupationLabel, "(pol[ií]tic[oa])"), 1, 0),
+  agno_nacimiento = birthyear) %>%
+  select(person,genero,politico,agno_nacimiento)  %>%
+  filter(genero != "género fluido" & genero != "mujer transgénero")
+
+print(wiki_chileans)
+```
+
+## Ejercicios
+
+### I. LPM
+
+1.  Calcula las probabilidades de que un hombre con biografìa en wikipedia sea político $(p_h)$ y de que una mujer con biografìa en wikipedia sea política $(p_m)$. Calcula la diferencia entre ambas proporciones.
+
+```{r}
+p <- wiki_chileans %>% group_by(genero) %>% summarise(p=mean(politico)) %>% pull()
+
+p_m = p[1]
+p_h = p[2]
+
+cat("La probilidad de ser político para un hombre con bio en wikipedia es:", round(p_h, 2),"\n")
+cat("La probilidad de ser político para una mujer con bio en wikipedia es:", round(p_m, 2),"\n")
+
+
+diff_p = round(p_h - p_m, 2)
+
+cat("Diferencia entre probilidad de ser político entre hombres y mujeres (con bio en wikipedia):", diff_p)
+```
+
+2.  Usa un LPM para estimar la probabilidad de ser político en función del género. Escribe la ecuación de regresión correspondiente y presenta un `summary()` de los resultados. Explica el significado estadístico de cada coeficiente y su conexión con los resultados de la pregunta anterior.
+
+La ecuación de regresión es: $\mathbb{P}(\text{politico | genero)} = \beta_{0} + \beta_{1}\text{genero}$
+
+Implementación en `R`:
+
+```{r}
+lpm_1 <- lm(politico ~ factor(genero), data=wiki_chileans)
+summary(lpm_1)
+```
+
+Donde:
+
+-   $\beta_0$ es el intercepto, que representa la probabilidad promedio de que una persona sea político cuando el género es "femenino" (grupo de referencia). El resultado obtenido indica que la probabilidad de que una mujer sea política es aproximadamente 18.9%.
+
+-   $\beta_1$ mide el cambio en la probabilidad de ser político cuando el individuo es "masculino" en comparación con el grupo de referencia. El resultado obtenido indica que, en promedio, los hombres tienen una probabilidad 12.1 puntos porcentuales mayor de ser políticos en comparación con las mujeres.
+
+-   Por lo tanto, la probabilidad de que un hombre sea político se obtiene sumando los coeficientes del intercepto ($\beta_0$) y del género masculino ($\beta_1$): $\mathbb{P}(\text{político | hombre}) = \beta_0 + \beta_1 = 0.18925 + 0.12104 = 0.31029$. Es decir, la probabilidad de que un hombre sea político es aproximadamente 31.0%.
+
+3.  Usa un LPM para estimar la probabilidad de ser político en función del género, controlando por el año de nacimiento de los individuos. Escribe la ecuación de regresión correspondiente y presenta un `summary()` de los resultados. Explica el significado estadístico de cada coeficiente y provee una breve interpretación sustantiva.
+
+La ecuación de regresión es: $\mathbb{P}(\text{politico | genero, agno)} = \beta_{0} + \beta_{1}\text{genero} + \beta_{2}\text{agno}$
+
+Implementación en `R`:
+
+```{r}
+lpm_2 <- lm(politico ~ factor(genero) + agno_nacimiento , data=wiki_chileans)
+summary(lpm_2)
+```
+
+Donde: 
+
+- $\beta_0=6.372$ es el intercepto. Este valor es la probabilidad estimada de que una persona sea político en el caso hipotético de que el género sea femenino y el año de nacimiento sea cero (lo cual no es realista, pero representa un punto de referencia para el modelo).
+
+-   $\beta_1=0.06091$ mide el cambio en la probabilidad de ser político cuando el individuo es hombre, en comparación con el grupo de referencia (mujer). El coeficiente positivo indica que los hombres tienen, en promedio, una probabilidad 6.1 puntos porcentuales mayor de ser políticos en comparación con las mujeres, controlando por el año de nacimiento.
+
+-   $\beta_2=-0.003166$ mide el efecto del año de nacimiento sobre la probabilidad de ser político. Este coeficiente negativo sugiere que la probabilidad de ser político disminuye a medida que el año de nacimiento es más reciente. Cada aumento de un año en el año de nacimiento está asociado con una reducción la probabilidad de ser político en un 0.3166 puntos porcentuales.
+
+Los resultados sugieren que la probabilidad de que una persona notable se dedique a la política disminuye a medida que el año de nacimiento es más reciente. Aún así, el efecto parcial del género indica que en cada año dado los hombres notables tienen una mayor probabilidad de ser políticos en comparación con las mujeres notables.
+
+4.  De acuerdo al modelo estimado en la pregunta anterior, ¿cuál es el efecto marginal del "año de nacimiento" sobre la probabilidad esperada de ser político?
+
+El efecto marginal del "año de nacimiento" sobre la probabilidad esperada de ser político está dado por:
+
+$\frac{\partial\mathbb{P}(\text{politico | genero, agno)} }{\partial \text{agno}} = \beta_{2} =$ `r lpm_2$coefficients[3]`
+
+5.  En base al modelo usado en I.3., calcula las probabilidades esperadas de ser políticos para un hombre y una mujer que cuentan con una biografía en wikipedia y nacieron en 1973. Expresa formalmente las ecuaciones correspondiente a estas predicciones.
+
+Formalmente:
+
+-   $\mathbb{P}(\text{politico | genero='femenino', agno=1973)} = \beta_{0} + \beta_{2}*1973=$
+
+```{r}
+p_m1973_lpm = lpm_2$coefficients[1] + lpm_2$coefficients[3]*1973
+names(p_m1973_lpm) <- ""
+print(p_m1973_lpm)
+```
+
+-   $\mathbb{P}(\text{politico | genero='masculino', agno=1973)} = \beta_{0} + \beta_{1} + \beta_{2}*1973=$
+
+```{r}
+p_h1973_lpm = lpm_2$coefficients[1] + lpm_2$coefficients[2]  + lpm_2$coefficients[3]*1973
+names(p_h1973_lpm) <- ""
+print(p_h1973_lpm)
+```
+
+Implementación automática en `R`:
+
+```{r}
+newx <- wiki_chileans %>% data_grid(genero=c('femenino','masculino'),
+                                    agno_nacimiento=1973,.model=lpm_2)
+newy <- newx %>% mutate(pred_prob = predict(lpm_2, newdata = newx)) 
+print(newy)
+```
+
+6.  Agrega una interacción entre `genero` y `agno_nacimiento` al modelo estimado en I.3. Escribe la ecuación de regresión y presenta un `summary()` de los resultados. Interpreta el efecto del año de nacimiento estimado en términos estadísticos y sustantivos.
+
+La ecuación de regresión es: $\mathbb{P}(\text{politico | genero, agno)} = \beta_{0} + \beta_{1}\text{genero} + \beta_{2}\text{agno} + \beta_{3}\text{genero:agno}$
+
+Implementación en `R`:
+
+```{r}
+lpm_3 <- lm(politico ~ factor(genero)*agno_nacimiento , data=wiki_chileans)
+summary(lpm_3)
+```
+
+Al añadir una interacción entre `genero` y `agno_nacimiento` permitimos que el efecto del año de nacimiento dependa de si el individuo es hombre o mujer (y viceversa). Es decir, no hay un único efecto del año de nacimiento si no dos. Para las mujeres con biografía en wikipedia la probabilidad esperada ser político viene dada por:
+
+-   $\mathbb{P}(\text{politico | genero='femenino', agno)} = \beta_{0} +  \beta_{2}\text{agno}$
+
+Por tanto, el efecto de `agno_nacimiento` sobre la probabilidad de ser político es: $\frac{\partial \mathbb{P}(\text{politico} \mid \text{genero='femenino', agno})}{\partial \text{agno}} = \beta_{2}=$ `r lpm_3$coefficients[3]`
+
+Por su parte, para las mujeres con biografía en wikipedia la probabilidad esperada ser político viene dada por:
+
+-   $\mathbb{P}(\text{politico | genero='masculino', agno)} = (\beta_{0} + \beta_{1}) + (\beta_{2} + \beta_{3})\text{agno}$
+
+
+Por tanto: $\frac{\partial \mathbb{P}(\text{politico} \mid \text{genero='masculino', agno})}{\partial \text{agno}} = \beta_{2} + \beta_{3}=$ `r lpm_3$coefficients[3] + lpm_3$coefficients[4]`
+
+
+### II. Regresión Logística
+
+
+1.  Calcula la odds de que un hombre con biografìa en wikipedia sea político $(\text{odd}_h)$ y de que una mujer con biografìa en wikipedia sea política $(\text{odd}_m)$. Calcula el ratio entre ambas odds (hombre vs mujer) e interpreta el odds ratio resultante.
+
+Implementación en `R`:
+
+```{r}
+tabla <- wiki_chileans %>% with(table(genero,politico)) 
+
+odd_m = tabla[1,2]/tabla[1,1]
+odd_h = tabla[2,2]/tabla[2,1]
+
+cat("Las odds de ser político para un hombre con bio en wikipedia es:", round(odd_h, 2),"\n")
+cat("Las odds de ser político para una mujer con bio en wikipedia es:", round(odd_m, 2),"\n")
+
+
+theta = round(odd_h/odd_m, 2)
+
+cat("Odds ratio de ser político entre hombres y mujeres (con bio en wikipedia$) es:", theta)
+```
+
+El *odds ratio* de 1.93 indica que, entre personas con biografía en Wikipedia, los hombres tienen aproximadamente 1.93 veces las chances de ser políticos que las mujeres.
+
+2.  Usa una regresión logística para estimar la log-odds de ser político en función del género. Escribe la ecuación de regresión correspondiente y presenta un `summary()` de los resultados. Explica el significado estadístico de cada coeficiente y su conexión con los resultados de la pregunta anterior.
+
+La ecuación de regresión es: $\ln\frac{\mathbb{P}(\text{politico | genero)}}{1-\mathbb{P}(\text{politico | genero)}} =  \beta_{0} + \beta_{1}\text{genero}$
+
+Implementación en `R`:
+
+```{r}
+logit_1 <- glm(politico ~ factor(genero), family= binomial(link=logit), data=wiki_chileans)
+summary(logit_1)
+```
+
+Donde:
+
+-   $\beta_0=-1.45489$ es el intercepto, que representa las *log-odds* de ser político para las mujeres (grupo de referencia).
+
+-   $\beta_1=0.65611$ es el coeficiente asociado al género masculino. Este valor indica que las *log-odds* de ser político para un hombre aumentan en 0.65611 en comparación con las mujeres.
+
+También podemos interpretar estos resultados en términos de las *odds* de ser político
+
+-   Para las mujeres (grupo de referencia), las *odds* de ser político son: $\text{odd}_m = e^{\beta_0}$
+
+-   Para los hombres, las *odds* son: $\text{odd}_h = e^{\beta_0 + \beta_1}$
+
+Por tanto, el *odds ratio* entre hombres y mujeres se obtiene como:
+
+$$\theta = \frac{\text{odd}_h}{\text{odd}_m} = \frac{e^{\beta_0 + \beta_1}}{e^{\beta_0}} = e^{\beta_1} = e^{0.65611} \approx 1.93$$
+
+Por tanto, si el coeficiente $\beta_1$ captura el efecto del género masculino en las *log-odds* de ser político, exponenciando este coeficiente, obtenemos el *odds ratio*, que refleja la ventaja relativa de los hombres frente a las mujeres en cuanto a la probabilidad de ser político.
+
+3.  Usa una regresión para estimar las log-odds de ser político en función del género, controlando por el año de nacimiento de los individuos. Escribe la ecuación de regresión correspondiente y presenta un `summary()` de los resultados. Explica el significado estadístico de cada coeficiente y provee una breve interpretación sustantiva.
+
+La ecuación de regresión es: $\mathbb{P}(\text{politico | genero, agno)} = \beta_{0} + \beta_{1}\text{genero} + \beta_{2}\text{agno}$
+
+Implementación en `R`:
+
+```{r}
+logit_2 <- glm(politico ~ factor(genero) + agno_nacimiento, family=binomial(link=logit), data=wiki_chileans)
+summary(logit_2)
+```
+
+-   $\beta_0=28.9711$ es el intercepto, que representa las *log-odds* de ser político para las mujeres nacidas en el año 0 (aunque no es una situación realista, es el punto de referencia del modelo).
+
+-   $\beta_1=0.3660$ es el coeficiente que mide el efecto de ser hombre sobre las *log-odds* de ser político, controlando por el año de nacimiento. Este valor indica que, para cualquier año dado, las *log-odds* de ser político aumentan en 0.3660 si el individuo es hombre, en comparación con una mujer.
+
+-   $\beta_2=-0.01563$ es el coeficiente que mide el efecto del año de nacimiento sobre las *log-odds* de ser político. Este coeficiente negativo indica que a medida que el año de nacimiento aumenta (es decir, para individuos nacidos más recientemente), las *log-odds* de ser político disminuyen. Específicamente cada año adicional está asociado con una reducción las *log-odds* de ser político en aproximadamente 0.0156 -- tanto para hombres como para mujeres.
+
+El coeficiente negativo del año de nacimiento sugiere una tendencia histórica, donde las personas personas notables de generaciones más antiguas tenían una mayor probabilidad de ser políticos, mientras que en generaciones más recientes las ocupaciones de personas notables de habrías diversificado.
+
+4.  De acuerdo al modelo estimado en la pregunta anterior, ¿cuál es la fórmula para el efecto marginal del "año de nacimiento" sobre la probabilidad esperada de ser político?
+
+$\frac{\partial\mathbb{P}(\text{politico | genero, agno)} }{\partial \text{agno}} = \beta_{2} \cdot \mathbb{P}(\text{politico | genero, agno)} \cdot (1 - \mathbb{P}(\text{politico | genero, agno)})$
+
+5.  En base al modelo usado en II.3., calcula las probabilidades esperadas de ser políticos para un hombre y una mujer que cuentan con una biografía en wikipedia y nacieron en 1973. Expresa formalmente las ecuaciones correspondiente a estas predicciones.
+
+Formalmente:
+
+-   $\mathbb{P}(\text{politico | genero='femenino', agno=1973)} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{2}*1973)}}=$
+
+```{r}
+p_m1973_logit =  1/(1 + exp(-(logit_2$coefficients[1] + logit_2$coefficients[3]*1973 )))
+print(p_m1973_logit)
+```
+
+-   $\mathbb{P}(\text{politico | genero='masculino', agno=1973)} =  \frac{1}{1 + e^{-(\beta_{0} + \beta_{1} + \beta_{2}*1973)}}=$
+
+```{r}
+p_h1973_logit = 1/(1 + exp(-(logit_2$coefficients[1] + logit_2$coefficients[2] + logit_2$coefficients[3]*1973)))
+print(p_h1973_logit)
+```
+
+Implementación automática en `R`:
+
+```{r}
+newx <- wiki_chileans %>% data_grid(genero=c('femenino','masculino'),agno_nacimiento=1973,.model=logit_2)
+newy <- newx %>% mutate(pred_prob = predict(logit_2, newdata = newx, type="response")) 
+print(newy)
+```
+
+6.  De acuerdo al modelo estimado en II.3., ¿cual es el efecto marginal del año de nacimiento sobre la la probabilidades esperadas de ser políticos para un hombre y una mujer que cuentan con una biografía en wikipedia y nacieron en 1973. Expresa formalmente las ecuaciones correspondiente dichos efectos. Compara los resultados con la respuesta dada en I.4.
+
+Dado que $\frac{\partial\mathbb{P}(\text{politico | genero, agno)} }{\partial \text{agno}} = \beta_{2} \cdot \mathbb{P}(\text{politico | genero, agno)} \cdot (1 - \mathbb{P}(\text{politico | genero, agno)})$
+
+Entonces, reemplazando con las probabilidades predichas calculadas en la pregunta anterior obtenemos que:
+
+$\frac{\partial  \mathbb{P}(\text{politico | genero='femenino', agno=1973)} }{\partial \text{agno}}   = \beta_{2} \cdot \mathbb{P}(\text{politico | genero='femenino', agno=1973)}  \cdot (1 - \mathbb{P}(\text{politico | genero='femenino', agno=1973)})$
+
+```{r}
+dydx_m1973 = logit_2$coefficients[3]*p_m1973_logit*(1-p_m1973_logit)
+print(dydx_m1973)
+```
+
+y
+
+$\frac{\partial  \mathbb{P}(\text{politico | genero='masculino', agno=1973)} }{\partial \text{agno}}   = \beta_{2} \cdot \mathbb{P}(\text{politico | genero='masculino', agno=1973)}  \cdot (1 - \mathbb{P}(\text{politico | genero='masculino', agno=1973)})$
+
+```{r}
+dydx_h1973 = logit_2$coefficients[3]*p_h1973_logit*(1-p_h1973_logit)
+print(dydx_h1973)
+```
+
+Implementación automática en `R`:
+
+```{r, warning=FALSE, message=FALSE}
+newx <- wiki_chileans %>% data_grid(genero=c('femenino','masculino'),
+                            agno_nacimiento=1973,.model=logit_2)
+
+slopes(logit_2, variables = "agno_nacimiento", newdata = newx)
+```
+
+A diferencia del LPM, en el modelo de regresión logística el efecto del año de nacimiento depende del valor de la misma variable y del valor de otras covariables. Esta característica regula que los efectos sean muy limitados cuando las probabilidades se acercan a cero o uno, mientras que pueden ser mayores lejos de dichos valores.
+
+\pagebreak
+
+## Bonus:
+
+1.  Agrega una interacción entre `genero` y `agno_nacimiento` al modelo estimado en II.3 y presenta un `summary()` de los resultados.
+
+Implementación en `R`:
+
+```{r}
+logit_3 <- glm(politico ~ factor(genero)*agno_nacimiento, family=binomial(link=logit), data=wiki_chileans)
+summary(logit_3)
+```
+
+2.  Reproduce el siguiente gráfico que muestra -- en base a los LMP y logit más complejos (con interacción) -- las probabilidad predichas de ser polìtico para hombres y mujeres con biografìa en wikipedia nacidos entre los años 1810 y 2024. Compara principales resultados arrojados por ambos modelos.
+
+Implementación en `R`:
+
+```{r}
+# crea un nuevo set de datos sobre los cuales crear predicciones
+newx <- wiki_chileans %>% data_grid(genero=c('masculino','femenino'), agno_nacimiento=1810:2024,.model=logit_3)
+
+# crea valores predichos para el nuevo set de datos
+xb_lpm = predict(lpm_3 , newdata = newx)
+xb_logit = predict(logit_3, newdata = newx)
+prob_lpm = xb_lpm
+prob_logit = 1/(1 + exp(-xb_logit))
+
+newy <- newx %>% mutate(prob_lpm = prob_lpm, prob_logit = prob_logit) %>%
+          pivot_longer(c(prob_lpm,prob_logit), names_to = "model", names_prefix = "prob_")
+
+
+# Load the Chilean flag image (make sure to have the image in your working directory)
+flag <- readPNG("chilean_flag.png")
+
+# If the image doesn't already have an alpha channel (transparency), you can add one.
+# Assuming the image is RGB, create an RGBA version by adding an alpha channel.
+flag_with_alpha <- array(0, dim = c(dim(flag)[1], dim(flag)[2], 4))
+flag_with_alpha[,,1:3] <- flag[,,1:3]  # Copy RGB channels
+flag_with_alpha[,,4] <- 0.2  # Set alpha to 0.2 for transparency (adjust as needed)
+
+# Add the image as a background to the plot with transparency
+newy %>% ggplot(aes(x = agno_nacimiento, y = value, group=genero, colour = genero)) +
+  annotation_custom(rasterGrob(flag_with_alpha, 
+                               width = unit(1, "npc"), 
+                               height = unit(1, "npc")),
+                    -Inf, Inf, -Inf, Inf) + # Ensures the image covers the whole plot
+  geom_line(linewidth = 1.5) +
+  labs(y = "P(politico | genero='femenino', agno)", x = "Año de nacimiento", colour = "modelo") +
+  facet_grid( . ~ model ) +
+  scale_color_aaas() + 
+  theme_bw() +
+  theme(panel.background = element_blank()) # Ensures a blank background so the image shows
+```
+
+3.  ¿Cuál es el mayor efecto marginal posible de año de nacimiento para hombres y mujeres?
+
+El mayor efecto marginal siempre ocurre cuando $p_{i}=0.5$, por tanto el mayor efecto marginal del año de nacimiento para las mujeres es $\beta_{3}/4$ y para los hombres es $(\beta_{3} + \beta_{4})/4$.
+
+```{r}
+dydx_m_max = logit_3$coefficients[3]/4
+print(dydx_m_max)
+
+dydx_h_max = (logit_3$coefficients[3] + logit_3$coefficients[4])/4
+print(dydx_h_max)
+```
+
+Para las mujeres, el mayor efecto marginal del año de nacimiento es un aumento muy pequeño y positivo de 0.066 puntos porcentuales en la probabilidad de ser política. Para los hombres, el mayor efecto marginal es negativo, aproximadamente -0.45 puntos porcentuales, lo que sugiere que a medida que avanza el año de nacimiento, la probabilidad de ser político disminuye más rápidamente en el caso de los hombres.
