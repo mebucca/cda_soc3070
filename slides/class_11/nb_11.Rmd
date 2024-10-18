@@ -7,6 +7,7 @@ output:
 
 ## Problema
 
+Una regresión logística que modela las log-odds de ser liberado tras una detención por porte de pequeñas cantidades de marihuana indica que ni la raza, ni el género ni la edad tienen efectos significativos. Sin embargo, para asegurarnos, calculamos la diferencia en las probabilidades predichas de ser liberado entre un hombre blanco de 20 años y una mujer negra de 50 años, dos perfiles que, intuitivamente, podrían mostrar diferencias importantes en sus probabilidades predichas de liberación.
 
 ```{r, echo=TRUE, message=F, warning=F}
 # Cargar las librerías necesarias
@@ -22,9 +23,8 @@ model <- glm(released ~ factor(colour)*factor(sex) + age, family = "binomial", d
 summary(model)
 ```
 
-Una regresión logística que modela las log-odds de ser liberado tras una detención por porte de pequeñas cantidades de marihuana indica que ni la raza, ni el género ni la edad tienen efectos significativos. Sin embargo, para asegurarnos, calculamos la diferencia en las probabilidades predichas de ser liberado entre un hombre blanco de 20 años y una mujer negra de 50 años, dos perfiles que, intuitivamente, podrían mostrar diferencias importantes en sus probabilidades predichas de liberación.
-
 Dado que la distribución muestral de esta diferencia es compleja, utilizaremos el método de Bootstrap para hacer inferencia estadística y estimar un intervalo de confianza para la diferencia en las probabilidades predichas.
+
 
 ## Código
 

@@ -98,6 +98,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="problema" class="level2">
 <h2 class="anchored" data-anchor-id="problema">Problema</h2>
+<p>Una regresión logística que modela las log-odds de ser liberado tras una detención por porte de pequeñas cantidades de marihuana indica que ni la raza, ni el género ni la edad tienen efectos significativos. Sin embargo, para asegurarnos, calculamos la diferencia en las probabilidades predichas de ser liberado entre un hombre blanco de 20 años y una mujer negra de 50 años, dos perfiles que, intuitivamente, podrían mostrar diferencias importantes en sus probabilidades predichas de liberación.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargar las librerías necesarias</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
@@ -135,7 +136,6 @@ AIC: 4690.8
 Number of Fisher Scoring iterations: 4</code></pre>
 </div>
 </div>
-<p>Una regresión logística que modela las log-odds de ser liberado tras una detención por porte de pequeñas cantidades de marihuana indica que ni la raza, ni el género ni la edad tienen efectos significativos. Sin embargo, para asegurarnos, calculamos la diferencia en las probabilidades predichas de ser liberado entre un hombre blanco de 20 años y una mujer negra de 50 años, dos perfiles que, intuitivamente, podrían mostrar diferencias importantes en sus probabilidades predichas de liberación.</p>
 <p>Dado que la distribución muestral de esta diferencia es compleja, utilizaremos el método de Bootstrap para hacer inferencia estadística y estimar un intervalo de confianza para la diferencia en las probabilidades predichas.</p>
 </section>
 <section id="código" class="level2">
@@ -1186,8 +1186,8 @@ iter= 1000 </code></pre>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calcular el intervalo de confianza al 95% para la diferencia en probabilidades</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">quantile</span>(results, <span class="at">p=</span><span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.975</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>      2.5%      97.5% 
--0.0195039  0.2001588 </code></pre>
+<pre><code>       2.5%       97.5% 
+-0.02481977  0.20492533 </code></pre>
 </div>
 </div>
 <p>El resultados indica que, al 95% de confianza, no existe una diferencia significativa entre la probabilidad de ser liberada entre una mujer negra de 50 años y un hombre blanco de 20 años.</p>
