@@ -68,7 +68,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | Tarea corta 2   | 19 de Agosto     | 26 de Agosto    | [`[TC2 sols]`](https://mebucca.github.io/cda_soc3070/homework/tc_2_answers#1) [`[TC2.qmd sols]`](homework/tc_2_answers.qmd)  |
 | Trabajo 1       | 12 de Septiembre  | 07 de Octubre |  [`[T1 sols]`](https://mebucca.github.io/cda_soc3070/homework/t_1_answers/t_1_answers#1) [`[wikidata]`](homework/t_1/wiki_chileans.csv)                                                                                    |
 | Tarea corta 4   | 16 de Octubre    | 23 de Octubre   | [`[TC4]`](https://mebucca.github.io/cda_soc3070/homework/tc_4#1) [`[TC4.qmd]`](homework/tc_4.qmd)                                                                                          |
-| Trabajo 2       | 21 de Octubre    | 11 de Noviembre | [`[T2]`](https://mebucca.github.io/cda_soc3070/homework/t_2/t_2#1) [`[T2.qmd]`](homework/t_2/t_2.qmd) [`[wikidata]`](homework/t_2/wiki_chileans.csv)                                                                                          |
+| Trabajo 2       | 21 de Octubre    | 23 de Noviembre | [`[T2]`](https://mebucca.github.io/cda_soc3070/homework/t_2/t_2#1) [`[T2.qmd]`](homework/t_2/t_2.qmd) [`[wikidata]`](homework/t_2/wiki_chileans.csv)                                                                                          |
 | Trabajo final   | 18 de Noviembre  | 9 de Diciembre  |                                                                                           |
 
 
