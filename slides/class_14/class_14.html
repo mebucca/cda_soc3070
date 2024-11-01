@@ -4,7 +4,7 @@
     <title>Análisis de Datos Categóricos (SOC3070)</title>
     <meta charset="utf-8" />
     <meta name="author" content="  Mauricio Bucca  Profesor Asistente, Sociología UC" />
-    <script src="libs/header-attrs-2.23/header-attrs.js"></script>
+    <script src="libs/header-attrs-2.27/header-attrs.js"></script>
     <link rel="stylesheet" href="gentle-r.css" type="text/css" />
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
@@ -22,7 +22,7 @@ class: center, middle, inverse, title-slide
 ### <br> Mauricio Bucca<br> Profesor Asistente, Sociología UC
 ]
 .date[
-### 20 November, 2023
+### 29 October, 2024
 ]
 
 ---
@@ -182,7 +182,7 @@ Ajustando el siguiente modelo: `\(\text{logit(everaffair}_{i}) = \beta_{0} + \be
 ```
 
 
-```r
+``` r
 xb_1 = 0.83 - 0.5*1
 plogis(-xb_1,0,1)
 ```
@@ -191,7 +191,7 @@ plogis(-xb_1,0,1)
 ## [1] 0.4182406
 ```
 
-```r
+``` r
 inv_logit = 1/(1 + exp(xb_1)); inv_logit
 ```
 
@@ -428,14 +428,14 @@ Logit acumulado:
 ]
 
 
-```r
+``` r
 affairsdata$affairs &lt;- ordered(affairsdata$affairs, c("fiel","ocasional","compulsivo"))
 ologit_affairs_rate &lt;- polr(affairs ~ rate, data=affairsdata)
 ```
 
 .pull-left[
 
-```r
+``` r
 summary(ologit_affairs_rate)$coefficients[,c(1,2)]
 ```
 
@@ -470,14 +470,14 @@ Logit acumulado:
 ]
 
 
-```r
+``` r
 affairsdata$affairs &lt;- ordered(affairsdata$affairs, c("fiel","ocasional","compulsivo"))
 ologit_affairs_rate &lt;- polr(affairs ~ rate, data=affairsdata)
 ```
 
 .pull-left[
 
-```r
+``` r
 summary(ologit_affairs_rate)$coefficients[,c(1,2)]
 ```
 
@@ -551,7 +551,7 @@ Nuestro modelo: `\(y^{*} =  \beta_{1}\text{rate}_{i}\)`
 
 .pull-left[
 
-```r
+``` r
 y_latente_1 &lt;- -0.53; y_latente_1
 ```
 
@@ -594,7 +594,7 @@ Nuestro modelo: `\(\ln \frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} &gt; j)}
 
 .pull-left[
 
-```r
+``` r
 logit_fiel &lt;- -0.9 - (- 0.52*1)
 logit_ocasional &lt;- -0.07 - (-0.52*1)
 pcum_fiel &lt;- 1/(1 + exp(-logit_fiel))
@@ -608,7 +608,7 @@ pcum_ocasional &lt;- 1/(1 + exp(-logit_ocasional))
 
 Equivalente:
 
-```r
+``` r
 c(plogis(logit_fiel), plogis(logit_ocasional))
 ```
 
@@ -698,7 +698,7 @@ Usando `\(\mathbb{P}(y_{i} = j) = \text{logit}^{-1}(\alpha_{j} - (\beta_{1}x_{1i
 
 
 
-```r
+``` r
 logit_fiel &lt;- -0.9 - (- 0.52*1)
 logit_ocasional &lt;- -0.07 - (-0.52*1)
 pcum_fiel &lt;- 1/(1 + exp(-logit_fiel))
@@ -719,7 +719,7 @@ pcum_ocasional &lt;- 1/(1 + exp(-logit_ocasional))
 --
 
 
-```r
+``` r
 c(p_fiel= pcum_fiel, p_ocasional = pcum_ocasional - pcum_fiel, 
   p_compulsivo=1-pcum_ocasional)
 ```
@@ -737,7 +737,7 @@ c(p_fiel= pcum_fiel, p_ocasional = pcum_ocasional - pcum_fiel,
 .pull-left[
 
 
-```r
+``` r
 # probabilidades
 c(p_fiel= pcum_fiel, p_ocasional = pcum_ocasional - pcum_fiel, 
   p_compulsivo=1-pcum_ocasional)
@@ -748,7 +748,7 @@ c(p_fiel= pcum_fiel, p_ocasional = pcum_ocasional - pcum_fiel,
 ##    0.4061269    0.2045123    0.3893608
 ```
 
-```r
+``` r
 # versión automática
 predict(ologit_affairs_rate, 
         newdata = data_frame(rate=1), type="probs" )
@@ -759,7 +759,7 @@ predict(ologit_affairs_rate,
 ##  0.4091257  0.2024969  0.3883775
 ```
 
-```r
+``` r
 predict(ologit_affairs_rate, 
         newdata = data_frame(rate=1), type="class" )
 ```
@@ -830,7 +830,7 @@ donde:
 --
 .pull-right[
 
-```r
+``` r
 ologit_affairs_rate_sex &lt;- 
   polr(affairs ~ rate + sex, data=affairsdata)
 summary(ologit_affairs_rate_sex)
@@ -971,7 +971,7 @@ En nuestro ejemplo: `\(\ln \frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} &gt;
 .pull-right[
 Si `rate=1` y `male=1`, entonces `logit(p_fiel)` y `logit(p_ocasional)` son=
 
-```r
+``` r
 c(fiel= -0.8 - (-0.53*1 + 0.21*1),
   ocasional= 0.03 - (-0.53*1 + 0.21*1))
 ```
@@ -983,7 +983,7 @@ c(fiel= -0.8 - (-0.53*1 + 0.21*1),
 
 Si `rate=2` y `male=1`, entonces `logit(p_fiel)` y `logit(p_ocasional)` son=
 
-```r
+``` r
 c(fiel= -0.8 - (-0.53*2 + 0.21*1),
   ocasional= 0.03 - (-0.53*2 + 0.21*1))
 ```
@@ -1018,7 +1018,7 @@ Por tanto, el efecto sobre el logit ( `\(-\beta_{rate}\)` ) es:
 
 
 
-```r
+``` r
 c(
 coef_rate_fiel = (-0.8 - (-0.53*2 + 0.21*1))-(-0.8 - (-0.53*1 + 0.21*1)),
 coef_rate_ocasional = (0.03 - (-0.53*2 + 0.21*1))-(0.03 - (-0.53*1 + 0.21*1))
@@ -1035,7 +1035,7 @@ coef_rate_ocasional = (0.03 - (-0.53*2 + 0.21*1))-(0.03 - (-0.53*1 + 0.21*1))
 .pull-right[
 Si `rate=1` y `male=1`, entonces `logit(p_fiel)` y `logit(p_ocasional)` son=
 
-```r
+``` r
 c(fiel= -0.8 -( -0.53*1 + 0.21*1),
   ocasional= 0.03 -( -0.53*1 + 0.21*1))
 ```
@@ -1047,7 +1047,7 @@ c(fiel= -0.8 -( -0.53*1 + 0.21*1),
 
 Si `rate=2` y `male=1`, entonces `logit(p_fiel)` y `logit(p_ocasional)` son=
 
-```r
+``` r
 c(fiel= -0.8 -( -0.53*2 + 0.21*1),
   ocasional= 0.03 -( -0.53*2 + 0.21*1))
 ```
@@ -1152,7 +1152,7 @@ En nuestro ejemplo: `\(\ln \frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} &gt;
 
 .pull-left[
 
-```r
+``` r
 #coeffs
 coefs &lt;- summary(ologit_affairs_rate_sex)$coefficients[1:2,c(1,2)]; coefs
 ```
@@ -1163,7 +1163,7 @@ coefs &lt;- summary(ologit_affairs_rate_sex)$coefficients[1:2,c(1,2)]; coefs
 ## sexmale  0.2163457 0.19214186
 ```
 
-```r
+``` r
 #exp(-coeffs)
 exp(-coefs)[,c(1,NA)]
 ```
@@ -1197,7 +1197,7 @@ exp(-coefs)[,c(1,NA)]
 .pull-right[
 Si `rate=1` y `male=1`, entonces `odds(p_fiel)` y `odds(p_ocasional)` son=
 
-```r
+``` r
 c(fiel= exp(-0.8 - (-0.53*1 + 0.21*1)),
   ocasional= exp(0.03 - (-0.53*1 + 0.21*1)))
 ```
@@ -1211,7 +1211,7 @@ c(fiel= exp(-0.8 - (-0.53*1 + 0.21*1)),
 
 Si `rate=2` y `male=1`, entonces `odds(p_fiel)` y `odds(p_ocasional)` son=
 
-```r
+``` r
 c(fiel= exp(-0.8 - (-0.53*2 + 0.21*1)),
   ocasional= exp(0.03 - (-0.53*2 + 0.21*1)))
 ```
@@ -1240,7 +1240,7 @@ Por tanto, la odds ratio ( `\(e^{-\beta_{rate}}\)`)  es:
 
 
 
-```r
+``` r
 c(
 or_rate_fiel = exp(-0.8 - (-0.53*2 + 0.21*1))/exp(-0.8 - (-0.53*1 + 0.21*1)),
 or_rate_ocasional = exp(0.03 - (-0.53*2 + 0.21*1))/exp(0.03 - (-0.53*1 + 0.21*1))
@@ -1257,7 +1257,7 @@ or_rate_ocasional = exp(0.03 - (-0.53*2 + 0.21*1))/exp(0.03 - (-0.53*1 + 0.21*1)
 .pull-right[
 Si `rate=1` y `male=1`, entonces `odds(p_fiel)` y `odds(p_ocasional)` son=
 
-```r
+``` r
 c(fiel= exp(-0.8 - (-0.53*1 + 0.21*1)),
   ocasional= exp(0.03 - (-0.53*1 + 0.21*1)))
 ```
@@ -1270,7 +1270,7 @@ c(fiel= exp(-0.8 - (-0.53*1 + 0.21*1)),
 
 Si `rate=2` y `male=1`, entonces `odds(p_fiel)` y `odds(p_ocasional)` son=
 
-```r
+``` r
 c(fiel= exp(-0.8 - (-0.53*2 + 0.21*1)),
   ocasional= exp(0.03 - (-0.53*2 + 0.21*1)))
 ```
@@ -1383,7 +1383,7 @@ En nuestro ejemplo: `\(\ln \frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} &gt;
 
 .pull-left[
 
-```r
+``` r
 #coeffs
 coefs &lt;- summary(ologit_affairs_rate_sex)$coefficients[1:2,c(1,2)]; coefs
 ```
@@ -1474,7 +1474,7 @@ Cantidades de interes:
 
 AME de rate:
 
-```r
+``` r
 delta = 0.1
 p_hat &lt;- predict(ologit_affairs_rate_sex, type="probs") %&gt;% as_tibble()  %&gt;% mutate(id = row_number()) %&gt;% 
          pivot_longer(-id, names_to="affair", values_to="prob") 
@@ -1489,7 +1489,7 @@ p_hat_delta &lt;- p_hat_delta %&gt;% left_join(p_hat, by=c("id","affair")) %&gt;
 
 .pull-left[
 
-```r
+``` r
 p_hat_delta %&gt;% dplyr::summarise(across(fiel:compulsivo, ~ mean(.x)))
 ```
 
@@ -1502,7 +1502,7 @@ p_hat_delta %&gt;% dplyr::summarise(across(fiel:compulsivo, ~ mean(.x)))
 ]
 .pull-right[
 
-```r
+``` r
 summary(margins(ologit_affairs_rate_sex, variables = "rate"))
 ```
 
@@ -1513,7 +1513,7 @@ summary(margins(ologit_affairs_rate_sex, variables = "rate"))
 
 ```
 ##  factor    AME     SE       z      p  lower  upper
-##    rate 0.0918 0.0037 25.0320 0.0000 0.0847 0.0990
+##    rate 0.0918 0.0037 25.0321 0.0000 0.0847 0.0990
 ```
 ]
 
@@ -1526,7 +1526,7 @@ summary(margins(ologit_affairs_rate_sex, variables = "rate"))
 MEM de rate:
 
 
-```r
+``` r
 delta = 0.1
 grid &lt;- affairsdata %&gt;% data_grid(sex, .model=ologit_affairs_rate_sex)
 grid_delta &lt;- affairsdata %&gt;% data_grid(sex, .model=ologit_affairs_rate_sex) %&gt;% mutate(rate = rate + delta)
