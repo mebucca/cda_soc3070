@@ -4,7 +4,7 @@
     <title>Análisis de Datos Categóricos (SOC3070)</title>
     <meta charset="utf-8" />
     <meta name="author" content="  Mauricio Bucca  Profesor Asistente, Sociología UC" />
-    <script src="libs/header-attrs-2.23/header-attrs.js"></script>
+    <script src="libs/header-attrs-2.27/header-attrs.js"></script>
     <link rel="stylesheet" href="gentle-r.css" type="text/css" />
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
@@ -22,7 +22,7 @@ class: center, middle, inverse, title-slide
 ### <br> Mauricio Bucca<br> Profesor Asistente, Sociología UC
 ]
 .date[
-### 20 November, 2023
+### 03 November, 2024
 ]
 
 ---
@@ -428,7 +428,7 @@ Hasell, J., Mathieu, E., Beltekian, D. et al. A cross-country database of COVID-
 Ajustaremos el siguiente modelo: `\(\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i}\)`.
 
 
-```r
+``` r
 poisson_death_age &lt;- glm(total_deaths ~ median_age, family=poisson(link="log"), 
                          data=covid_subdata); summary(poisson_death_age)
 ```
@@ -438,10 +438,6 @@ poisson_death_age &lt;- glm(total_deaths ~ median_age, family=poisson(link="log"
 ## Call:
 ## glm(formula = total_deaths ~ median_age, family = poisson(link = "log"), 
 ##     data = covid_subdata)
-## 
-## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -155.63  -114.28   -84.81   -59.10  1059.99  
 ## 
 ## Coefficients:
 ##              Estimate Std. Error z value Pr(&gt;|z|)    
@@ -499,7 +495,7 @@ Nuestro modelo:
 Ajustaremos el siguiente modelo: `\(\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \ln(\text{population}_{i})\)`.
 
 
-```r
+``` r
 poisson_death_age_rate &lt;- glm(total_deaths ~ median_age, family=poisson(link="log"), 
                          offset=log(population), data=covid_subdata); summary(poisson_death_age_rate )
 ```
@@ -509,10 +505,6 @@ poisson_death_age_rate &lt;- glm(total_deaths ~ median_age, family=poisson(link=
 ## Call:
 ## glm(formula = total_deaths ~ median_age, family = poisson(link = "log"), 
 ##     data = covid_subdata, offset = log(population))
-## 
-## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -766.73   -41.87   -12.39     7.13   510.29  
 ## 
 ## Coefficients:
 ##               Estimate Std. Error z value Pr(&gt;|z|)    
@@ -618,7 +610,7 @@ donde: cantidad esperada de muertes por Covid-19 es función de edad mediana del
 --
 
 
-```r
+``` r
 poisson_death_agecont_mean &lt;- glm(total_deaths ~ median_age + factor(continent),
                                   family=poisson(link="log"), data=covid_subdata)
 ```
@@ -649,7 +641,7 @@ donde: tasa esperada de muertes por Covid-19 es función de edad mediana del pa�
 --
 
 
-```r
+``` r
 poisson_death_agecont_rate &lt;- glm(total_deaths ~ median_age + factor(continent),
                                   offset=log(population), family=poisson(link="log"), 
                                   data=covid_subdata)
@@ -812,7 +804,7 @@ Nuestro modelo: `\(\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \s
 .pull-left[
 Si `continent="South America"` y `median_age=20`, entonces `ln(mu)` es:
 
-```r
+``` r
 ln_mu_sa20= -9.98 +  3.16 - 0.0129*20; ln_mu_sa20
 ```
 
@@ -822,7 +814,7 @@ ln_mu_sa20= -9.98 +  3.16 - 0.0129*20; ln_mu_sa20
 
 Si `continent="South America"` y `median_age=21`, entonces `ln(mu)` es:
 
-```r
+``` r
 ln_mu_sa21= -9.98 +  3.16 - 0.0129*21; ln_mu_sa21
 ```
 
@@ -834,7 +826,7 @@ ln_mu_sa21= -9.98 +  3.16 - 0.0129*21; ln_mu_sa21
 .pull-right[
 Por tanto, el efecto de `median_age` es:
 
-```r
+``` r
 ln_mu_sa21-ln_mu_sa20
 ```
 
@@ -980,7 +972,7 @@ En otras palabras,
 .pull-left[
 Si `continent="South America"` y `median_age=20`, entonces `ln(mu)` es:
 
-```r
+``` r
 mu_sa20= exp(-9.98 +  3.16 - 0.0129*20); mu_sa20
 ```
 
@@ -990,7 +982,7 @@ mu_sa20= exp(-9.98 +  3.16 - 0.0129*20); mu_sa20
 
 Si `continent="South America"` y `median_age=21`, entonces `ln(mu)` es:
 
-```r
+``` r
 mu_sa21= exp(-9.98 +  3.16 - 0.0129*21); mu_sa21
 ```
 
@@ -1002,7 +994,7 @@ mu_sa21= exp(-9.98 +  3.16 - 0.0129*21); mu_sa21
 .pull-right[
 Por tanto, el efecto multiplicativo de `median_age` es:
 
-```r
+``` r
 mu_sa21/mu_sa20
 ```
 
@@ -1243,7 +1235,7 @@ Ejemplo AME de "median age" sobre "tasa de muertes por millón de habitantes". .
 --
 
 
-```r
+``` r
 delta = 0.1
 grid &lt;- covid_subdata %&gt;% dplyr::select(median_age,continent,population) %&gt;% mutate(population = 10^6)
 grid_delta &lt;- covid_subdata %&gt;% dplyr::select(median_age,continent,population) %&gt;% mutate(population = 10^6) %&gt;% mutate(median_age = median_age + delta) 
@@ -1259,7 +1251,7 @@ mes &lt;- tibble(mu_hat = predictions$mu_hat, mu_hat_delta = predictions_delta$m
 
 .pull-left[
 
-```r
+``` r
 ame = round(mean(mes$me, na.rm=T),2)
 ame
 ```
@@ -1270,7 +1262,7 @@ ame
 ]
 .pull-right[
 
-```r
+``` r
 summary(
   margins(poisson_death_agecont_rate, at = list(population = 10^6)))[6,3]
 ```
