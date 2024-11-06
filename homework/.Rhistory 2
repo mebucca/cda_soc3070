@@ -1,0 +1,5 @@
+library("tinytex")
+update.packages(ask = FALSE, checkBuilt = TRUE)
+tinytex::install_tinytex()
+xaringan:::inf_mr()
+xaringan:::inf_mr()

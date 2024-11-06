@@ -1,0 +1,72 @@
+---
+title: "Notebook clase #11: Método de Bootstrap"
+output:
+  html_document:
+    df_print: paged
+---
+
+## Problema
+
+Una regresión logística que modela las log-odds de ser liberado tras una detención por porte de pequeñas cantidades de marihuana indica que ni la raza, ni el género ni la edad tienen efectos significativos. Sin embargo, para asegurarnos, calculamos la diferencia en las probabilidades predichas de ser liberado entre un hombre blanco de 20 años y una mujer negra de 50 años, dos perfiles que, intuitivamente, podrían mostrar diferencias importantes en sus probabilidades predichas de liberación.
+
+```{r, echo=TRUE, message=F, warning=F}
+# Cargar las librerías necesarias
+library(tidyverse)
+library(carData)
+library(modelr)
+
+# Cargar el conjunto de datos
+data_arrest <- carData::Arrests
+
+# Ajustamos un modelo de regresión logística 
+model <- glm(released ~ factor(colour)*factor(sex) + age, family = "binomial", data = data_arrest)
+summary(model)
+```
+
+Dado que la distribución muestral de esta diferencia es compleja, utilizaremos el método de Bootstrap para hacer inferencia estadística y estimar un intervalo de confianza para la diferencia en las probabilidades predichas.
+
+
+## Código
+
+```{r, echo=TRUE, message=F, warning=F}
+
+# Inicializar el vector para almacenar resultados de Bootstrap
+results <- NULL
+
+# Iterar 1000 veces para realizar el Bootstrap
+for (i in 1:1000) {
+  
+  # Cargar el conjunto de datos
+  data_arrest <- carData::Arrests
+  
+  # Realizar una muestra aleatoria con reemplazo del mismo tamaño que el conjunto original
+  data_bs <- sample_n(data_arrest, size= nrow(data_arrest), replace = T)
+  
+  # Ajustar un modelo de regresión logística con las variables deseadas
+  model <- glm(released ~ factor(colour)*factor(sex) + age, family = "binomial", data = data_bs)
+  
+  # Crear nuevos puntos de datos para la predicción
+  newx_mnv <- data_grid(colour="Black", sex="Female", age=50, data=data_arrest)
+  pred_mnv <- predict(model, newdata = newx_mnv, type = "response" )
+  
+  newx_hbj <- data_grid(colour="White", sex="Male", age=20, data=data_arrest)
+  pred_hbj <- predict(model, newdata = newx_hbj, type = "response" )
+  
+  # Calcular la diferencia entre las probabilidades predichas
+  diff_p <- pred_hbj - pred_mnv
+  
+  # Imprimir la iteración actual para seguimiento
+  cat("iter=",i,"\n")
+  
+  # Almacenar el resultado
+  results[i] <- diff_p
+}
+
+# Visualizar la distribución de las diferencias en probabilidad
+hist(results, main="Distribución de la diferencia en probabilidades predichas", xlab="Diferencia en probabilidades")
+
+# Calcular el intervalo de confianza al 95% para la diferencia en probabilidades
+quantile(results, p=c(0.025, 0.975))
+```
+
+El resultados indica que, al 95% de confianza, no existe una diferencia significativa entre la probabilidad de ser liberada entre una mujer negra de 50 años y un hombre blanco de 20 años.

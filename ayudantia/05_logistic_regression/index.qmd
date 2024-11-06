@@ -1,0 +1,424 @@
+---
+title: "Análisis de Regresión Logística: Vínculos de Confianza con Vecinos"
+subtitle: "Teoría y Aplicación"
+author: "Cantillan, R. | Bucca, M."
+institute: "ISUC"
+page-layout: article
+date: today
+date-format: short
+number-sections: true
+format:
+  html:
+    theme:
+      - cosmo
+      - custom.scss
+    css: custom.scss
+    toc: true
+    toc-depth: 3
+    toc-title: "En este manual"
+    toc-location: left
+editor: visual
+title-block-banner: true
+title-block-style: default
+title-block-categories: true
+freeze: true
+execute: 
+  echo: fenced
+  eval: true
+  output: true
+  warning: false
+reference-location: margin
+citation-location: margin
+bibliography: catagorical_data.bib
+---
+
+## Fundamentos Teóricos: Modelos Lineales Generalizados y Regresión Logística
+
+### Introducción a los Modelos Lineales Generalizados (GLM)
+
+Los Modelos Lineales Generalizados (GLM) son una extensión flexible de los modelos lineales ordinarios que permiten trabajar con variables respuesta que tienen distribuciones no normales y que presentan varianzas no constantes. Los GLM unifican diversos modelos estadísticos, incluyendo la regresión lineal, la regresión logística y la regresión de Poisson, bajo un solo marco teórico.
+
+#### Componentes de un GLM
+
+Un GLM consta de tres componentes principales:
+
+1.  **Componente aleatorio**: Especifica la distribución condicional de la variable respuesta ($Y$) dado el vector de predictores ($X$). Esta distribución debe pertenecer a la familia exponencial.
+
+2.  **Componente sistemático**: Define el predictor lineal $\eta$ como una combinación lineal de las variables predictoras:
+
+    $$\eta = \beta_0 + \beta_1X_1 + \beta_2X_2 + ... + \beta_pX_p = X\beta$$
+
+3.  **Función de enlace**: Relaciona el valor esperado de la respuesta $\mu = E(Y|X)$ con el predictor lineal $\eta$:
+
+    $$g(\mu) = \eta$$
+
+    donde $g()$ es la función de enlace.
+
+#### Familia Exponencial
+
+La familia exponencial incluye muchas distribuciones comunes como la normal, binomial, Poisson, gamma, entre otras. Su forma general es:
+
+$$f(y;\theta,\phi) = \exp\left(\frac{y\theta - b(\theta)}{a(\phi)} + c(y,\phi)\right)$$
+
+donde $\theta$ es el parámetro canónico y $\phi$ es el parámetro de dispersión.
+
+### Regresión Logística
+
+La regresión logística es un tipo específico de GLM utilizado cuando la variable respuesta es binaria (0/1, éxito/fracaso). Es ampliamente utilizada en ciencias sociales, medicina y marketing, entre otros campos.
+
+#### Modelo de Regresión Logística
+
+En la regresión logística, modelamos la probabilidad de éxito $\pi = P(Y=1|X)$ como:
+
+$$\log\left(\frac{\pi}{1-\pi}\right) = \beta_0 + \beta_1X_1 + \beta_2X_2 + ... + \beta_pX_p$$
+
+donde $\log\left(\frac{\pi}{1-\pi}\right)$ es el logaritmo de las odds (logit).
+
+La función de enlace en este caso es la función logit:
+
+$$g(\mu) = \log\left(\frac{\mu}{1-\mu}\right)$$
+
+Y la inversa de la función de enlace (función de respuesta media) es:
+
+$$\mu = \frac{e^\eta}{1 + e^\eta} = \frac{1}{1 + e^{-\eta}}$$
+
+#### Interpretación de Coeficientes
+
+En la regresión logística, los coeficientes se interpretan en términos de odds ratios:
+
+-   $e^{\beta_j}$ es el odds ratio para un incremento de una unidad en $X_j$, manteniendo las demás variables constantes.
+-   Si $\beta_j > 0$, un incremento en $X_j$ aumenta la probabilidad de éxito.
+-   Si $\beta_j < 0$, un incremento en $X_j$ disminuye la probabilidad de éxito.
+
+#### Comparación de Funciones de Enlace
+
+Existen otras funciones de enlace para modelos con respuesta binaria. La siguiente tabla compara las más comunes:
+
+| Nombre                | Función de Enlace $g(\mu)$ | Función de Respuesta Media $g^{-1}(\eta)$ |
+|---------------|----------------------|-----------------------------------|
+| Logit                 | $\log(\frac{\mu}{1-\mu})$  | $\frac{1}{1 + e^{-\eta}}$                 |
+| Probit                | $\Phi^{-1}(\mu)$           | $\Phi(\eta)$                              |
+| Complementary log-log | $\log(-\log(1-\mu))$       | $1 - e^{-e^\eta}$                         |
+
+donde $\Phi$ es la función de distribución acumulativa de la distribución normal estándar.
+
+### Estimación y Evaluación del Modelo
+
+#### Estimación de Parámetros
+
+Los parámetros en GLM, incluyendo la regresión logística, se estiman generalmente por el método de máxima verosimilitud. La función de verosimilitud para la regresión logística es:
+
+$$L(\beta) = \prod_{i=1}^n \pi_i^{y_i}(1-\pi_i)^{1-y_i}$$
+
+#### Evaluación del Modelo
+
+1.  **Devianza**: Mide la bondad de ajuste del modelo. Se define como:
+
+    $$D = -2\log\left(\frac{L(\text{modelo actual})}{L(\text{modelo saturado})}\right)$$
+
+2.  **Test de Wald**: Evalúa la significancia de los coeficientes individuales.
+
+3.  **Test de razón de verosimilitud**: Compara modelos anidados.
+
+4.  **Curva ROC y AUC**: Evalúan la capacidad predictiva del modelo.
+
+## Aplicación: Vínculos de Confianza con Vecinos
+
+En este ejercicio, aplicaremos los conceptos de regresión logística para analizar los determinantes que influyen en la probabilidad de formar vínculos de confianza con vecinos. Esta pregunta es relevante porque los vínculos vecinales a menudo constituyen el contexto que da forma a la estructura de oportunidades de interacción en la vida cotidiana [@blauInequalityHeterogeneityPrimitive1977; @feldFocusedOrganizationSocial1981].
+
+Los vecindarios son contextos donde la actividad e interacción social están fuertemente condicionados por la proximidad física y social [@feldSocialStructuralDeterminants1982]. Además, suelen contener otros focos de interacción como escuelas o asociaciones voluntarias [@feldFocusedOrganizationSocial1981], lo que aumenta las oportunidades y probabilidades de encuentro y vinculación entre sus integrantes.
+
+@wellmanArePersonalCommunities1996 y @fernandezReviewAmericanApartheid1993 señalan que, aunque los lazos locales suelen ser débiles, son contactos frecuentes debido al tiempo que pasamos en nuestros vecindarios y hogares. Considerando que los barrios y lugares de trabajo tienden a ser socialmente homogéneos [@feldFocusedOrganizationSocial1981], el predominio de estos lazos puede indicar altos niveles de segregación y aislamiento social [@dipreteSegregationSocialNetworks2011; @masseyAmericanApartheidSegregation2003].
+
+Las áreas locales, por tanto, son un campo de investigación óptimo para estudiar cómo los extraños se convierten en amigos [@volkerSixteenMillionNeighbors2007] y para el estudio general de las desigualdades persistentes [@tillyDurableInequality2009].
+
+Nuestras preguntas de investigación son: 1. ¿Sobre qué bases los individuos establecen o no relaciones de cercanía con sus vecinos? 2. ¿Por qué algunas personas incluyen a sus vecinos en sus redes de confianza y otras no?
+
+## Librerías y Datos
+
+```{r, message=FALSE}
+library(tidyverse)
+library(tidymodels)
+library(kableExtra)
+library(httr)
+library(GLMMadaptive)
+library(performance)
+
+# Cargar datos ELSOC 2017
+url <- "https://github.com/rcantillan/ricantillan.rbind.io/raw/main/dat/ELSOC/ELSOC_W02_v3.00_R.RData"
+response <- GET(url)
+local_path <- "ELSOC_W02_v3.00_R.RData"
+writeBin(response$content, local_path)
+load("ELSOC_W02_v3.00_R.RData")
+
+# Cargar datos ELSOC 2016
+url <- "https://github.com/rcantillan/ricantillan.rbind.io/raw/main/dat/ELSOC/ELSOC_W01_v4.01_R.RData"
+response <- GET(url)
+local_path <- "ELSOC_W01_v4.01_R.RData"
+writeBin(response$content, local_path)
+load("ELSOC_W01_v4.01_R.RData")
+```
+
+## Preparación de Datos
+
+### Datos de Ego y Alter
+
+```{r}
+# Datos de ego
+egos <- elsoc_2017 %>%
+  select(idencuesta, ego_sexo = m0_sexo, ego_edad = m0_edad,
+         ego_ideol = c15, ego_educ = m01, ego_relig = m38,
+         t01, t02_01, t02_02, t02_03, t02_04, ponderador02)
+
+# Recodificación de variables para ego
+egos <- egos %>%
+  mutate(
+    ego_educ = factor(case_when(
+      ego_educ %in% 1:3 ~ 1,
+      ego_educ %in% 4:5 ~ 2,
+      ego_educ %in% 6:7 ~ 3,
+      ego_educ %in% 8:10 ~ 4,
+      ego_educ %in% c(-888, -999) ~ NA_real_,
+      TRUE ~ as.numeric(ego_educ)
+    )),
+    ego_relig = factor(case_when(
+      ego_relig == 1 ~ 1,
+      ego_relig == 2 ~ 2,
+      ego_relig == 9 ~ 3,
+      ego_relig %in% 7:8 ~ 4,
+      ego_relig %in% 3:6 ~ 5,
+      ego_relig %in% c(-888, -999) ~ NA_real_,
+      TRUE ~ as.numeric(ego_relig)
+    )),
+    ego_ideol = factor(case_when(
+      ego_ideol %in% 9:10 ~ 1,
+      ego_ideol %in% 6:8 ~ 2,
+      ego_ideol == 5 ~ 3,
+      ego_ideol %in% 2:4 ~ 4,
+      ego_ideol %in% 0:1 ~ 5,
+      ego_ideol %in% 11:12 ~ 6,
+      ego_ideol %in% c(-888, -999) ~ NA_real_,
+      TRUE ~ as.numeric(ego_ideol)
+    )),
+    ego_sexo = factor(case_when(
+      ego_sexo %in% 1:2 ~ ego_sexo,
+      ego_sexo %in% c(-888, -999) ~ NA_real_,
+      TRUE ~ as.numeric(ego_sexo)
+    ))
+  )
+
+# Datos de alter
+columnas <- c("sexo", "edad", "educ", "relig", "ideol", "barrio", "relacion")
+num_alters <- 5
+
+alteris <- map_dfr(1:num_alters, ~{
+  alter_cols <- paste0("r13_", columnas, "_", sprintf("%02d", .x))
+  elsoc_2017 %>%
+    select(idencuesta, all_of(alter_cols)) %>%
+    rename_with(~ columnas, alter_cols) %>%
+    mutate(n = .x)
+}) %>%
+  arrange(idencuesta)
+
+# Recodificación de variables para alteris
+alteris <- alteris %>%
+  mutate(
+    educ = factor(case_when(
+      educ == 1 ~ 1,
+      educ %in% 2:3 ~ 2,
+      educ == 4 ~ 3,
+      educ == 5 ~ 4,
+      educ %in% c(-888, -999) ~ NA_real_,
+      TRUE ~ as.numeric(educ)
+    )),
+    relig = factor(case_when(
+      relig %in% 1:5 ~ relig,
+      relig %in% c(-888, -999) ~ NA_real_,
+      TRUE ~ as.numeric(relig)
+    )),
+    ideol = factor(case_when(
+      ideol %in% 1:6 ~ ideol,
+      ideol %in% c(-888, -999) ~ NA_real_,
+      TRUE ~ as.numeric(ideol)
+    )),
+    edad = factor(case_when(
+      edad <= 18 ~ 1,
+      edad <= 29 ~ 2,
+      edad <= 40 ~ 3,
+      edad <= 51 ~ 4,
+      edad <= 62 ~ 5,
+      edad <= 100 ~ 6,
+      edad %in% c(-888, -999) ~ NA_real_,
+      TRUE ~ as.numeric(edad)
+    )),
+    sexo = factor(case_when(
+      sexo %in% 1:2 ~ sexo,
+      sexo %in% c(-888, -999) ~ NA_real_,
+      TRUE ~ as.numeric(sexo)
+    )),
+    barrio = factor(case_when(
+      barrio == 1 ~ 1,
+      barrio == 2 ~ 0,
+      barrio %in% c(-888, -999) ~ NA_real_,
+      TRUE ~ as.numeric(barrio)
+    ))
+  )
+
+# Unir datos de ego y alter
+obs <- left_join(egos, alteris, by = "idencuesta")
+
+# Creación de variables de distancia
+obs <- obs %>%
+  mutate(
+    sexo_dist1 = as.integer(as.numeric(as.character(sexo)) != as.numeric(as.character(ego_sexo))),
+    educ_dist1 = as.integer(as.numeric(as.character(educ)) != as.numeric(as.character(ego_educ))),
+    ideol_dist1 = as.integer(as.numeric(as.character(ideol)) != as.numeric(as.character(ego_ideol))),
+    relig_dist1 = as.integer(as.numeric(as.character(relig)) != as.numeric(as.character(ego_relig))),
+    neigh_attach = (t02_01 + t02_02 + t02_03 + t02_04) / 4
+  )
+```
+
+## Análisis Descriptivo de la Variable Dependiente
+
+Nuestra variable dependiente es `barrio`, que indica si el alter (la persona nombrada por el ego en su red personal) es vecino del ego o no.
+
+```{r, message=FALSE}
+x <- c("Es vecino", "No es vecino")
+
+obs %>%
+  filter(!is.na(barrio)) %>%
+  ggplot(aes(x = barrio, fill = barrio)) +
+  geom_bar(fill = "blue", alpha = 0.5) +
+  geom_text(aes(label = scales::percent(..count../sum(..count..))), 
+            stat = "count", 
+            position = position_stack(vjust = 0.5), 
+            color = "white",
+            size = 4) +
+  labs(title = "Distribución de Alters: Vecinos vs No Vecinos",
+       x = "",
+       y = "Frecuencia") +
+  scale_x_discrete(labels = x) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+Este gráfico muestra la distribución de alters que son vecinos y los que no lo son. Observamos que aproximadamente el 47% de los alters mencionados son vecinos, mientras que el 53% no lo son. Esto sugiere que, aunque los vínculos vecinales son una parte importante de las redes personales, no son la mayoría.
+
+### Coeficiente de Correlación Intraclase (ICC)
+
+Para evaluar la dependencia de las observaciones dentro de cada ego, calculamos el Coeficiente de Correlación Intraclase (ICC):
+
+```{r}
+obs$idencuesta <- as.factor(obs$idencuesta)
+obs <- obs %>% group_by(idencuesta) %>% mutate(grado = n()) %>% ungroup()
+
+m_nulo <- mixed_model(barrio ~ 1, 
+                      random = ~ 1 | idencuesta, 
+                      data = obs, 
+                      family = binomial, 
+                      nAGQ = 11, 
+                      iter_EM = 60)
+
+icc_result <- performance::icc(m_nulo)
+print(icc_result)
+```
+
+El ICC de `r round(icc_result$ICC_adjusted, 3)` indica que aproximadamente el `r round(icc_result$ICC_adjusted * 100, 1)`% de la varianza en la probabilidad de que un alter sea vecino se debe a diferencias entre egos. Esto sugiere una dependencia moderada de las observaciones dentro de cada ego, lo que justifica el uso de errores estándar robustos en nuestros modelos posteriores.
+
+En las siguientes secciones, procederemos a ajustar modelos de regresión logística para explorar los factores que influyen en la probabilidad de que un alter sea vecino, considerando tanto características del ego como la distancia social entre ego y alter en diversas dimensiones.
+
+## Modelo de Regresión Logística
+
+Ajustaremos un modelo de regresión logística para explorar los factores que influyen en la probabilidad de que un alter sea vecino.
+
+```{r}
+m3 <- glm(barrio ~
+            ego_sexo +
+            ego_educ +
+            ego_edad +
+            t01 + 
+            neigh_attach +
+            sexo_dist1 + 
+            educ_dist1 + 
+            ideol_dist1 +
+            relig_dist1 +
+            ego_educ * educ_dist1,
+          data = obs,
+          family = "binomial")
+
+summary(m3)
+```
+
+### Interpretación de los Coeficientes
+
+Los coeficientes en el modelo de regresión logística representan el cambio en el log-odds de que un alter sea vecino por cada unidad de cambio en la variable predictora, manteniendo las demás variables constantes.
+
+```{r}
+tidy(m3, exponentiate = TRUE, conf.int = TRUE) %>%
+  kable(caption = "Odds Ratios e Intervalos de Confianza") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+Interpretación de algunos coeficientes clave:
+
+1.  **ego_sexo2**: El odds de que un alter sea vecino es aproximadamente 0.93 veces para las mujeres en comparación con los hombres, aunque esta diferencia no es estadísticamente significativa.
+
+2.  **ego_edad**: Por cada año adicional de edad del ego, el odds de que un alter sea vecino aumenta en un factor de 1.01, lo que sugiere una ligera tendencia a formar más vínculos vecinales con la edad.
+
+3.  **t01**: Por cada unidad de aumento en la confianza vecinal, el odds de que un alter sea vecino aumenta por un factor de 1.23, indicando una fuerte asociación positiva entre la confianza en el vecindario y la formación de vínculos vecinales.
+
+4.  **neigh_attach**: El compromiso con el barrio tiene un efecto positivo sustancial; por cada unidad de aumento, el odds de que un alter sea vecino aumenta por un factor de 1.61.
+
+5.  **educ_dist1**: La distancia educativa entre ego y alter está negativamente asociada con la probabilidad de que el alter sea vecino, pero este efecto varía según el nivel educativo del ego (ver interacciones).
+
+### Efectos Marginales
+
+Los efectos marginales nos permiten interpretar cómo cambia la probabilidad predicha de que un alter sea vecino cuando cambia una variable independiente, manteniendo las demás constantes.
+
+```{r}
+library(margins)
+
+me <- summary(margins(m3, variables = c("ego_educ", "educ_dist1")))
+me %>% 
+  kbl(caption = "Efectos Marginales Promedio") %>% 
+  kable_classic("hover", full_width = FALSE)
+```
+
+Interpretación de los efectos marginales:
+
+-   Para `ego_educ`, los efectos marginales negativos indican que, en promedio, tener un nivel educativo más alto está asociado con una menor probabilidad de que los alters sean vecinos.
+-   Para `educ_dist1`, el efecto marginal positivo sugiere que, en promedio, la distancia educativa entre ego y alter está asociada con una mayor probabilidad de que el alter sea vecino.
+
+### Visualización de Efectos Marginales
+
+Visualizaremos cómo el efecto de la educación del ego en la probabilidad de que un alter sea vecino varía según la distancia educativa.
+
+```{r}
+me2 <- summary(margins(m3, at = list(educ_dist1 = c(0,1)), variables = "ego_educ"))
+
+me2 %>%
+  ggplot(aes(x = factor, y = AME)) + 
+  geom_point() + 
+  geom_line(aes(group = 1)) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  facet_wrap(~ educ_dist1, labeller = labeller(educ_dist1 = c("0" = "No distancia", "1" = "Distancia"))) +
+  scale_x_discrete(labels = c("ego_educ2" = "Media", 
+                              "ego_educ3" = "Técnica", 
+                              "ego_educ4" = "Superior")) +
+  labs(x = "Nivel Educativo del Ego", 
+       y = "Efecto Marginal Promedio",
+       title = "Efecto de la Educación del Ego en la Probabilidad de Vínculos Vecinales",
+       subtitle = "Por Distancia Educativa con el Alter") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Interpretación del gráfico:
+
+1.  Cuando no hay distancia educativa (panel izquierdo), observamos que niveles educativos más altos del ego están asociados con una menor probabilidad de formar vínculos vecinales. Esto podría reflejar que las personas con mayor educación tienden a tener redes sociales más diversas y menos localizadas.
+
+2.  Cuando existe distancia educativa (panel derecho), el patrón cambia. Para egos con educación técnica o superior, la probabilidad de formar vínculos vecinales con alters de diferente nivel educativo aumenta. Esto podría indicar una mayor apertura a la diversidad social en el vecindario entre las personas más educadas.
+
+3.  Los intervalos de confianza más amplios para niveles educativos superiores sugieren mayor variabilidad en estos efectos, posiblemente debido a un menor número de observaciones en estas categorías.
+
+Estas observaciones sugieren que la homofilia educativa (tendencia a asociarse con personas de similar nivel educativo) opera de manera diferente en contextos vecinales dependiendo del nivel educativo del ego. Los individuos más educados parecen más propensos a formar vínculos vecinales diversos en términos educativos, lo cual podría tener implicaciones importantes para la cohesión social y la integración en los vecindarios.

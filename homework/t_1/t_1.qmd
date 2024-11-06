@@ -1,0 +1,133 @@
+---
+title: "SOL3070 Análisis de Datos Categóricos"
+author: "Trabajo 1"
+format: html
+editor: visual
+---
+
+```{r, echo=FALSE,message=FALSE, warnings=FALSE}
+library("pacman")
+p_load("tinytex","tidyverse","modelr","httr","ggsci","png","grid","marginaleffects")
+options(scipen = 999)
+
+```
+
+## Información
+
+-   Ponderación: 25% de la nota final del curso.
+
+-   Bonus: Responder la pregunta *bonus* NO es un requisito necesario para obtener puntaje completo. Responder incorrectamente la pregunta *bonus* no afectará negativamente la nota obtenida, pero responderla correctamente mejorará la nota obtenida en un máximo de 0.5 puntos (o en la cantidad necesaria para obtener nota máxima si la nota original fuera superior a 6.5)
+
+## Introducción
+
+En este trabajo usarán datos extraidos de 9.303 biografías de chilenos disponibles en Wikipedia (en hasta 160 lenguas). La información de este fue recopilada en el proyecto de investigación "Social Memory about Chileans in Wikipedia", financiado por Wikimedia Research Fund. Si usas estos datos, por favor cita la siguiente publicación: Beytía, P., Rojas, C. & Cruz, C. (2024). Social memory about people from a country. The case of notable Chileans in Wikipedia. Wiki Workshop 2024.​
+
+Dado que contar con una biografía en Wikipedia es un indicador de prominencia social, utilizaremos esta subpoblación de individuos "notables" para modelar la probabilidad de que una persona destacada se dedique a la política, considerando como variables predictoras su género y año de nacimiento.
+
+Los datos están disponibles en el repositorio del curso para ser descargados.
+
+## Datos
+
+Visualización rápida de la base de datos:
+
+```{r, echo=FALSE, message=FALSE, warnings=FALSE}
+
+path <- "/Users/mauricio/Library/Mobile Documents/com~apple~CloudDocs/Teaching/ISUC/2024_2_categorical_data_analysis/repo/homework/t_1"
+
+setwd(path)
+wiki_chileans <-  read_csv("wiki_chileans.csv") %>% as_tibble()
+print(wiki_chileans)
+```
+
+## Ejercicios
+
+### I. LPM
+
+1.  Calcula las probabilidades de que un hombre con biografìa en wikipedia sea político $(p_h)$ y de que una mujer con biografìa en wikipedia sea política $(p_m)$. Calcula la diferencia entre ambas proporciones.
+
+
+2.  Usa un LPM para estimar la probabilidad de ser político en función del género. Escribe la ecuación de regresión correspondiente y presenta un `summary()` de los resultados. Explica el significado estadístico de cada coeficiente y su conexión con los resultados de la pregunta anterior.
+
+
+3.  Usa un LPM para estimar la probabilidad de ser político en función del género, controlando por el año de nacimiento de los individuos. Escribe la ecuación de regresión correspondiente y presenta un `summary()` de los resultados. Explica el significado estadístico de cada coeficiente y provee una breve interpretación sustantiva.
+
+
+4.  De acuerdo al modelo estimado en la pregunta anterior, ¿cuál es el efecto marginal del "año de nacimiento" sobre la probabilidad esperada de ser político?
+
+
+5.  En base al modelo usado en I.3., calcula las probabilidades esperadas de ser políticos para un hombre y una mujer que cuentan con una biografía en wikipedia y nacieron en 1973. Expresa formalmente las ecuaciones correspondiente a estas predicciones.
+
+
+6.  Agrega una interacción entre `genero` y `agno_nacimiento` al modelo estimado en I.3. Escribe la ecuación de regresión y presenta un `summary()` de los resultados. Interpreta el efecto del año de nacimiento estimado en términos estadísticos y sustantivos.
+
+\pagebreak
+
+### II. REGRESIÓN LOGISTICA
+
+1.  Calcula la odds de que un hombre con biografìa en wikipedia sea político $(\text{odd}_h)$ y de que una mujer con biografìa en wikipedia sea política $(\text{odd}_m)$. Calcula el ratio entre ambas odds (hombre vs mujer) e interpreta el odds ratio resultante.
+
+
+2.  Usa una regresión logística para estimar la log-odds de ser político en función del género. Escribe la ecuación de regresión correspondiente y presenta un `summary()` de los resultados. Explica el significado estadístico de cada coeficiente y su conexión con los resultados de la pregunta anterior.
+
+
+3.  Usa una regresión para estimar las log-odds de ser político en función del género, controlando por el año de nacimiento de los individuos. Escribe la ecuación de regresión correspondiente y presenta un `summary()` de los resultados. Explica el significado estadístico de cada coeficiente y provee una breve interpretación sustantiva.
+
+
+4.  De acuerdo al modelo estimado en la pregunta anterior, ¿cuál es la fórmula para el efecto marginal del "año de nacimiento" sobre la probabilidad esperada de ser político?
+
+
+5.  De acuerdo al modelo estimado en II.3., ¿cual es el efecto marginal del año de nacimiento sobre la la probabilidades esperadas de ser políticos para un hombre y una mujer que cuentan con una biografía en wikipedia y nacieron en 1973. Expresa formalmente las ecuaciones correspondiente dichos efectos. Compara los resultados con la respuesta dada en I.4.
+
+
+\pagebreak
+
+## III. BONUS:
+
+1.  Agrega una interacción entre `genero` y `agno_nacimiento` al modelo estimado en II.3 y presenta un `summary()` de los resultados.
+
+
+2.  Reproduce el siguiente gráfico que muestra -- en base a los LMP y logit más complejos (con interacción) -- las probabilidad predichas de ser polìtico para hombres y mujeres con biografìa en wikipedia nacidos entre los años 1810 y 2024. Compara principales resultados arrojados por ambos modelos.
+
+```{r, echo=FALSE}
+
+lpm_3 <- lm(politico ~ factor(genero)*agno_nacimiento, data=wiki_chileans)
+
+logit_3 <- glm(politico ~ factor(genero)*agno_nacimiento, family=binomial(link=logit), data=wiki_chileans)
+
+# crea un nuevo set de datos sobre los cuales crear predicciones
+newx <- wiki_chileans %>% data_grid(genero=c('masculino','femenino'), agno_nacimiento=1810:2024,.model=logit_3)
+
+# crea valores predichos para el nuevo set de datos
+xb_lpm = predict(lpm_3 , newdata = newx)
+xb_logit = predict(logit_3, newdata = newx)
+prob_lpm = xb_lpm
+prob_logit = 1/(1 + exp(-xb_logit))
+
+newy <- newx %>% mutate(prob_lpm = prob_lpm, prob_logit = prob_logit) %>%
+          pivot_longer(c(prob_lpm,prob_logit), names_to = "model", names_prefix = "prob_")
+
+
+# Load the Chilean flag image (make sure to have the image in your working directory)
+flag <- readPNG("chilean_flag.png")
+
+# If the image doesn't already have an alpha channel (transparency), you can add one.
+# Assuming the image is RGB, create an RGBA version by adding an alpha channel.
+flag_with_alpha <- array(0, dim = c(dim(flag)[1], dim(flag)[2], 4))
+flag_with_alpha[,,1:3] <- flag[,,1:3]  # Copy RGB channels
+flag_with_alpha[,,4] <- 0.2  # Set alpha to 0.2 for transparency (adjust as needed)
+
+# Add the image as a background to the plot with transparency
+newy %>% ggplot(aes(x = agno_nacimiento, y = value, group=genero, colour = genero)) +
+  annotation_custom(rasterGrob(flag_with_alpha, 
+                               width = unit(1, "npc"), 
+                               height = unit(1, "npc")),
+                    -Inf, Inf, -Inf, Inf) + # Ensures the image covers the whole plot
+  geom_line(linewidth = 1.5) +
+  labs(y = "P(politico | genero='femenino', agno)", x = "Año de nacimiento", colour = "modelo") +
+  facet_grid( . ~ model ) +
+  scale_color_aaas() + 
+  theme_bw() +
+  theme(panel.background = element_blank()) # Ensures a blank background so the image shows
+```
+
+3.  ¿En la regresión logística, cuál es el mayor efecto marginal posible de año de nacimiento sobre la probabilidad de ser político para hombres y mujeres? Compara con el respectivo efecto marginal en el LPM.

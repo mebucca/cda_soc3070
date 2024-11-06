@@ -1,0 +1,62 @@
+---
+title: "SOC3070 Análisis de Datos Categóricos"
+author: "Tarea corta 4"
+format: html
+editor: visual
+---
+
+```{r, echo=T, message=FALSE}
+# Escribir install.packages("tinytex") en la consola para instalar "tinytex"
+# Carga "tinytex" para compilar PDF
+library("tidyverse")
+library("carData") 
+library("modelr") 
+library("caret") 
+data("Chile") 
+datos_chile <- Chile
+```
+
+Ponderación: 6% de la nota final del curso.
+
+$$\newcommand{\vect}[1]{\boldsymbol{#1}}$$
+
+![NO](no.jpg)
+
+## Datos:
+
+Cargar datos con el siguiente código
+
+```{r, echo=T, message=FALSE}
+data("Chile") 
+datos_chile <- Chile
+datos_chile <- datos_chile %>% mutate(vote = case_when(vote=="Y" ~ 1, vote=="N" ~ 0)) 
+datos_chile %>% glimpse()
+```
+
+## Problema:
+
+En esta tarea usarás los datos de una encuesta realizada por FLACSO/Chile en Abril y Mayo de 1988 sobre intención de voto en el plebiscito de 1989, junto con otras variables socio-demográficas.
+
+En particular, trabajarás con el siguiente modelo de regresión logística que estima la probabilidad de votar SI en función de los ingresos, género (M=Hombre, F=Mujer) y el apoyo al status-quo (valores más altos indican mayor apoyo al régimen de Pinochet).
+
+```{r}
+modelo_1 <- glm(vote ~ income  + sex*statusquo, family=binomial, data = datos_chile )
+summary(modelo_1)
+```
+
+1.  Calcula la probabilidad de votar por el SI para hombres y mujeres cuyos ingresos y apoyo al status-quo se encuentran en el decil 10 (10% superior) de cada variable.
+
+
+
+2.  Usa el método de Bootstrap para crear un intervalo de confianza al 98% para la diferencia en la probabilidad de votar por el SI entre hombres y mujeres cuyos ingresos y apoyo al status-quo se encuentran en el decil 10 (10% superior) de cada variable. ¿Existe una diferencia estadísticamente significativa en la probabilidad de votar por el SI de ambos grupos?
+
+
+
+3.  Ademas del `modelo_1` usado anteriormente, crea un modelo más complejo usando la información disponible en la base de datos. Llama a este modelo, `modelo_2.`
+
+
+a.  Usando un umbral de $0.5$, crea un clasificación de la intención de voto de los individuos de la muestra de acuerdo a ambos modelos y compara la "confusion matrix" de ambos.
+
+
+b.  Usa 10-fold cross-validation (paquete `caret` en `R`) para evaluar qué modelo predice mejor la intención de voto de los individuos encuestados. (`caret` usa un umbral de $0.5$ para la clasificación).
+
