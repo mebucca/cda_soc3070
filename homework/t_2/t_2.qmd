@@ -29,8 +29,8 @@ Los datos están disponibles en el repositorio del curso para ser descargados.
 
 Visualización rápida de la base de datos:
 
-
 ```{r, echo=FALSE}
+wiki_chileans <-  read_csv("wiki_chileans.csv") %>% as_tibble()
 print(wiki_chileans)
 ```
 
@@ -40,25 +40,17 @@ print(wiki_chileans)
 
 1.  Utiliza regresión logística multinomial para modelar la probabilidad de que una persona con biografía en Wikipedia pertenezca a una de las siguientes cuatro categorías de la vida pública: "Cultura & Ciencia", "Política", "Deporte", u "Otro", en función del género y el año de nacimiento (sin interacción). Escribe la ecuación de regresión correspindiente a este modelo y presenta un `summary()` de los resultados y utiliza "Otro" como la categoría de referencia en la variable dependiente.
 
-
 1.1 Interpreta los coeficientes asociados a `hombre-Política` y `agno_nacimiento-Deporte` en términos de log-odds.
-
 
 1.2 Expresa las ecuaciones y calcula las odds de pertenecer a la categoría "Política" de un hombre y de una mujer nacidos en el año 1950. Explica cómo estas odds se relacionan con la cantidad obtenida al exponencia el coeficiente `hombre-Política`.
 
-
 1.3. Calcula la odds ratio de pertener a la categoría "Política" en vez de "Deporte" entre hombres y mujeres.
-
-
 
 1.4 Expresa las ecuaciones y calcula la probabilidad de pertenecer a cada categoría para una mujer nacida en 1950.
 
-
-
 1.5. ¿Cuál es *efecto marginal* de año de nacimiento la probabilidad de que una mujer nacida en 1950 se encuentre en la categoría "Política"?
 
-
-2.  Usando los datos de infidelidad, estima un modelo Poisson para la tasa de infidelidad a lo largo del matrimonio.
+2.  Usando los datos de infidelidad, estima un modelo Poisson para la tasa de infidelidad a lo largo del matrimonio. Específicamente:
 
 ```{r,  include=TRUE, echo=TRUE, warning=FALSE, message=FALSE}
 library("Ecdat")
@@ -68,14 +60,10 @@ affairsdata <- Fair %>% as_tibble()
 
 -   La variable `nbaffairs` mide la cantidad de relaciones extra-matrimoniales que ha tenido una persona. La variable `ym` mide los años que una persona ha estado casada.
 
-2.1   Modela la cantidad de relaciones extra-matrimoniales que ha tenido una persona como función de su genero (`age`), su felicidad en el matrimonio (`rate`) y la interacción entre ambas.
-
+2.1 Modela la tasa de relaciones extra-matrimoniales que ha tenido una persona como función de su genero (`age`), su felicidad en el matrimonio (`rate`) y la interacción entre ambas.
 
 2.2 Interpreta el efecto multiplicativo de la variable felicidad en el matrimonio sobre la tasa de infidelidad de los hombres.
-
 
 2.3 Estima la cantidad esperada de relaciones extra-matrimoniales para una mujer en un matrimonio infeliz (`rate`=2) de 20 años de duración.
 
 2.4 Genera un gráfico como el siguiente, que muestre la cantidad esperada de relaciones extra-matrimoniales para hombres y mujeres en matrimonios de distintos niveles de felicidad (rate = 1 ... 5), considerando una duración de 20 años.
-
-

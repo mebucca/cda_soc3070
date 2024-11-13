@@ -7,8 +7,6 @@ output:
 
 ## Problema
 
-Una regresión logística que modela las log-odds de ser liberado tras una detención por porte de pequeñas cantidades de marihuana indica que ni la raza, ni el género ni la edad tienen efectos significativos. Sin embargo, para asegurarnos, calculamos la diferencia en las probabilidades predichas de ser liberado entre un hombre blanco de 20 años y una mujer negra de 50 años, dos perfiles que, intuitivamente, podrían mostrar diferencias importantes en sus probabilidades predichas de liberación.
-
 ```{r, echo=TRUE, message=F, warning=F}
 # Cargar las librerías necesarias
 library(tidyverse)
@@ -18,9 +16,24 @@ library(modelr)
 # Cargar el conjunto de datos
 data_arrest <- carData::Arrests
 
-contingency_table <- data_arrest %>% with(ftable(released,colour,sex))
+contingency_table <- data_arrest %>% with(ftable(released,colour,sex,year))
 
-print(contingency_table)
+grouped_data <- contingency_table %>% as_tibble() %>% group_by(colour,sex,year) %>% mutate(n = sum(Freq))
+
+print(grouped_data)
+
+
+data_yes <- grouped_data %>% filter(released == "Yes")
+
+glm(Freq ~ colour + sex + year, family = "quasipoisson", offset = log(n) , data=data_yes) %>% summary()
+
+exp(-0.27631 )
+
+
+glm(factor(released=="Yes") ~ colour + sex, family = "binomial", weights = Freq/sum(Freq), data=grouped_data) %>% summary()
+
+exp(1.20533)/(1 + exp(1.20533))
+
 ```
 
 
