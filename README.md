@@ -35,8 +35,8 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | 28    | Octubre    | Regresión Logística Multinomial: interpretación e inferencia| [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_13/class_13_2p#1) [`[Code]`](slides/class_13/class_13_2p.Rmd)                                                                                                                             |
 | 4     | Noviembre  | Regresión Poisson: estructura teórica e interpretación                | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_15/class_15#1) [`[Code]`](slides/class_15/class_15.Rmd)                                                                                                                                |
 | 11    | Noviembre  | Regresión Poisson: inferencia            | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_16/class_16#1) [`[Code]`](slides/class_16/class_16.Rmd)                                                                                                                               |
-| 18    | Noviembre  | Modelos log-lineales para tablas de contingencia          |                                                                                                                              |
-| 25    | Noviembre  | Consideraciones Finales                                   |                                                                                                                              |
+| 18    | Noviembre  | Consideraciones Finales          | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_18/class_18#1) [`[Code]`](slides/class_18/class_18.Rmd)                                                                                                                               |
+| 25    | Noviembre  | "Elevator speach" trabajo final                                   | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_18/elevator_speech#1)                                                                                                                               |
 
 ## Ayudantías
 

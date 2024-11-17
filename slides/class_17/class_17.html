@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Análisis de Datos Categóricos (SOC3070)</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="  Mauricio Bucca  Profesor Asistente, Sociología UC" />
+    <script src="libs/header-attrs-2.27/header-attrs.js"></script>
+    <link rel="stylesheet" href="gentle-r.css" type="text/css" />
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Análisis de Datos Categóricos (SOC3070)
+]
+.subtitle[
+## Clase #17
+]
+.author[
+### <br> Mauricio Bucca<br> Profesor Asistente, Sociología UC
+]
+.date[
+### 17 November, 2024
+]
+
+---
+
+class: inverse, center, middle
+
+
+
+
+
+
+
+## Modelos log-lineales
+###  para tablas de contingencia
+
+---
+## Tablas de contingencia
+
+&lt;br&gt;
+
+Una definición formal: una tabla de contingencia es una matriz que muestra la .bold[distribución multivariada] de frecuencias de un número arbitrario de variables categóricas. 
+
+&lt;br&gt;
+Caso simple:
+
+- `\(X\)` y `\(Y\)` son dos variables categóricas.
+
+- `\(X\)` tiene `\(I\)` categorías `\(\{i, \dots, I \}\)` 
+
+- `\(Y\)` tiene `\(J\)` categorías `\(\{j, \dots, J \}\)`.
+
+&lt;br&gt;
+--
+
+Una tabla rectangular que clasifica todas las combinaciones posibles de `\(X\)` y `\(Y\)` tendrá `\(I\)` filas para las categorías de `\(X\)`, `\(J\)` columnas para las categorías de `\(Y\)`, y `\(I \cdot J\)` celdas.
+
+---
+## Tablas de contingencia
+
+Por ejemplo, la siguientes tablas de contingencia clasifican la educación de marido y mujer en 1990 y 2015 en Chile:
+
+
+
+
+.pull-left[
+.bold[1990]
+
+```
+##       Educ_W
+## Educ_H   1   2   3   4   5
+##      1 487 219  36   7   2
+##      2 331 661 186  25  10
+##      3  67 234 361  53  40
+##      4   6  32  82  85  20
+##      5   1  15  65  68  96
+```
+]
+
+.pull-right[
+.bold[2015]
+
+```
+##       Educ_W
+## Educ_H    1    2    3    4    5
+##      1   50   86   53    7    1
+##      2   93  386  344   37   12
+##      3   54  327 1283  254  125
+##      4    6   22  203  209  177
+##      5    2    9   90  138  539
+```
+]
+
+
+&lt;br&gt;
+--
+
+(1) "Menos que educación primaria",  
+(2) "Primaria completa o algo de educación secundaria",  
+(3) "Secundaria completa o título vocacional",  
+(4) "Algo de universidad o título técnico" (C-), y  
+(5) "Título universitario o superior".
+
+---
+## Frecuencias marginales
+
+Las frecuencias marginales describen la distribución de frecuencias de cada una de las variables por separado.    
+
+--
+
+.pull-left[
+
+- Las .bold[frecuencias marginales de las filas] están dadas por:
+
+`$$n_{i+} = \sum_{j} n_{ij} =  n_{i1} + n_{i2}$$`
+
+]
+
+.pull-right[
+
+```
+##       Educ_W
+## Educ_H    1    2    3    4    5
+##      1   50   86   53    7    1
+##      2   93  386  344   37   12
+##      3   54  327 1283  254  125
+##      4    6   22  203  209  177
+##      5    2    9   90  138  539
+```
+]
+
+el signo "+" en lugar de un índice denota la suma los valores de ese índice.
+
+--
+
+
+``` r
+# marginal distribution rows
+marginf_i &lt;- apply(ctable_2015,1,sum); marginf_i
+```
+
+```
+##    1    2    3    4    5 
+##  197  872 2043  617  778
+```
+
+
+---
+## Distribución conjunta y marginal de frecuencias
+
+En resumen,
+
+&lt;br&gt;
+
+|           	| `\(Y=y_{1}\)` 	| `\(Y=y_{2}\)` 	| `\(\dots\)` 	| `\(Y=y_{J}\)` 	|   Total  	|
+|:---------:	|:---------:	|:---------:	|:-------:	|:---------:	|:--------:	|
+| `\(X=x_{1}\)` 	|  `\(n_{11}\)` 	|  `\(n_{12}\)` 	| `\(\dots\)` 	|  `\(n_{1J}\)` 	| `\(n_{1+}\)` 	|
+| `\(X=x_{2}\)` 	|  `\(n_{21}\)` 	|  `\(n_{22}\)` 	| `\(\dots\)` 	|  `\(n_{2J}\)` 	| `\(n_{2+}\)` 	|
+|  `\(\dots\)`  	|  `\(\dots\)`  	|  `\(\dots\)`  	| `\(\dots\)` 	|  `\(\dots\)`  	|  `\(\dots\)` 	|
+| `\(X=x_{I}\)` 	|  `\(n_{I1}\)` 	|  `\(n_{I2}\)` 	| `\(\dots\)` 	|  `\(n_{IJ}\)` 	| `\(n_{I+}\)` 	|
+|   Total   	|  `\(n_{+1}\)` 	|  `\(n_{+2}\)` 	| `\(\dots\)` 	|  `\(n_{+J}\)` 	| `\(n_{++}\)` 	|
+
+
+&lt;br&gt;
+Estructura general de una tabla 2-way, `\(I \cdot J\)`
+
+---
+## Estructura de probabilidad en tablas de contingencia 
+
+Supongamos que elegimos al azar un individuo de nuestra población. ¿Cuáles son las probabilidades de que caiga en cada una de las celdas de la tabla de contingencia?
+
+--
+### Distribución conjunta
+
+Para cada frecuencia conjunta `\(n_{ij}\)` en la tabla existe una probabilidad conjunta asociada `\(p_{ij}\)`, tal que
+
+`$$p_{ij} = \mathbb{P}(X = i, Y = j)$$`
+
+
+- denota la probabilidad de que una observación muestreada al azar pertenezca a la celda `\((i,j)\)`.
+
+- la colección de probabilidades `\(p_{ij}\)` forma la *distribución conjunta* de `\(X\)` y `\(Y\)`.
+
+
+Cuando trabajamos con muestras, esta probabilidad se puede estimar (MLE) a partir de las frecuencias en la tabla:
+
+`$$\hat{p}_{ij} = \frac{n_{ij}}{n}$$`
+
+
+---
+## Distribución conjunta
+
+En nuestro ejemplo,
+
+
+```
+##       Educ_W
+## Educ_H            1            2            3            4            5
+##      1 0.0110938540 0.0190814289 0.0117594852 0.0015531396 0.0002218771
+##      2 0.0206345684 0.0856445529 0.0763257156 0.0082094520 0.0026625250
+##      3 0.0119813623 0.0725538052 0.2846682938 0.0563567783 0.0277346350
+##      4 0.0013312625 0.0048812958 0.0450410473 0.0463723097 0.0392722432
+##      5 0.0004437542 0.0019968937 0.0199689372 0.0306190371 0.1195917462
+```
+
+&lt;br&gt;
+--
+Como con cualquier distribución de probabilidad, sabemos que los `\(p_{ij}\)` suman a 1. 
+
+--
+
+Veamos en el caso de nuestro estimador:
+
+Si `\(\hat{p}_{ij} = \frac{n_{ij}}{n}\)`, entonces 
+
+`$$\sum_{i} \sum_{j} \frac{n_{ij}}{n} = \frac{n}{n} = 1$$`
+---
+## Distribuciones marginales
+
+Al igual que con las frecuencias, podemos obtener la distribución marginal de las variables `\(X\)` y `\(Y\)` a partir de su distribución conjunta. 
+
+&lt;br&gt;
+--
+
+- La distribución marginal de `\(X\)` (filas) está dada por:    
+
+`$$p_{i+} = \sum_{j} p_{ij}$$`
+&lt;br&gt;
+--
+
+- La distribución marginal de `\(Y\)` (columnas) está dada por:    
+
+`$$p_{+j} = \sum_{i} p_{ij}$$`
+
+
+---
+## Distribuciones marginales
+
+.pull-left[
+Cuando trabajamos con una muestra podemos estimar las distribuciones marginales a partir de las proporciones muestrales. 
+]
+.pull-right[
+
+
+```
+##       Educ_W
+## Educ_H            1            2            3            4            5
+##      1 0.0110938540 0.0190814289 0.0117594852 0.0015531396 0.0002218771
+##      2 0.0206345684 0.0856445529 0.0763257156 0.0082094520 0.0026625250
+##      3 0.0119813623 0.0725538052 0.2846682938 0.0563567783 0.0277346350
+##      4 0.0013312625 0.0048812958 0.0450410473 0.0463723097 0.0392722432
+##      5 0.0004437542 0.0019968937 0.0199689372 0.0306190371 0.1195917462
+```
+]
+
+--
+
+
+``` r
+# marginal distribution rows
+margin_i &lt;- apply(joint_dis,1,sum); margin_i
+```
+
+```
+##          1          2          3          4          5 
+## 0.04370978 0.19347681 0.45329487 0.13689816 0.17262037
+```
+
+
+``` r
+# marginal distribution columns
+margin_j &lt;- apply(joint_dis,2,sum); margin_j
+```
+
+```
+##         1         2         3         4         5 
+## 0.0454848 0.1841580 0.4377635 0.1431107 0.1894830
+```
+
+&lt;br&gt;
+--
+Como toda distribución de probabilidad, .bold[suma a 1].
+
+
+---
+## Distribución conjunta y marginal de probabilidades 
+
+En resumen,
+
+&lt;br&gt;
+
+|           	| `\(Y=y_{1}\)` 	| `\(Y=y_{2}\)` 	| `\(\dots\)` 	| `\(Y=y_{J}\)` 	|   Total  	|
+|:---------:	|:---------:	|:---------:	|:-------:	|:---------:	|:--------:	|
+| `\(X=x_{1}\)` 	|  `\(p_{11}\)` 	|  `\(p_{12}\)` 	| `\(\dots\)` 	|  `\(p_{1J}\)` 	| `\(p_{1+}\)` 	|
+| `\(X=x_{2}\)` 	|  `\(p_{21}\)` 	|  `\(p_{22}\)` 	| `\(\dots\)` 	|  `\(p_{2J}\)` 	| `\(p_{2+}\)` 	|
+|  `\(\dots\)`  	|  `\(\dots\)`  	|  `\(\dots\)`  	| `\(\dots\)` 	|  `\(\dots\)`  	|  `\(\dots\)` 	|
+| `\(X=x_{I}\)` 	|  `\(p_{I1}\)` 	|  `\(p_{I2}\)` 	| `\(\dots\)` 	|  `\(p_{IJ}\)` 	| `\(p_{I+}\)` 	|
+|   Total   	|  `\(p_{+1}\)` 	|  `\(p_{+2}\)` 	| `\(\dots\)` 	|  `\(p_{+J}\)` 	| 1	|
+
+
+&lt;br&gt;
+Estructura general de probabilidades en una  tabla 2-way, `\(I \cdot J\)`
+
+
+---
+class: middle
+
+## Distribución conjunta y marginal de probabilidades 
+
+![joint_marginal](joint_marginal.jpg)
+
+
+---
+## Distribuciones condicionales 
+
+- Recuerden `\(\mathbb{P}(Y=y \mid X=x)\)` es la probabilidad de que la variable `\(Y\)` tome valor `\(y\)` si `\(X\)` toma valor `\(x\)`.
+
+--
+
+- La distribución condicional `\(f_{Y,x}(Y \mid X=x)\)` es una función que expresa la probabilidad que `\(Y\)` tome cada uno de sus posibles valores `\(y\)`'s si `\(X\)` toma valor `\(x\)`.
+
+--
+
+- La distribución condicional `\(f_{Y,X}(Y \mid X)\)` es una función que expresa la probabilidad que `\(Y\)` tome cada uno de sus posibles valores `\(y\)`'s para `\(X\)` fijo en cada uno de sus valores posibles `\(x\)`'s.
+
+&lt;br&gt;
+--
+
+Por tanto,
+
+-  En una tabla de contingencia podemos construir las distribuciones condicionales de las variables `\(X\)` (o `\(Y\)`) fijando la otra variable en sus diferentes niveles.
+
+--
+
+- Normalmente nos referimos como la "variable independiente" a la variable que usamos para condicionar, mientras que la otra variable actúa como "variable dependiente". 
+
+---
+## Distribuciones condicionales 
+
+.pull-left[
+En nuestro ejemplo podemos construir la distribución condicional  de la variable `everaffair` dado `sex` usando la fórmula general para probabilidades condicionales:
+]
+
+.pull-right[
+
+```
+##       Educ_W
+## Educ_H    1    2    3    4    5
+##      1   50   86   53    7    1
+##      2   93  386  344   37   12
+##      3   54  327 1283  254  125
+##      4    6   22  203  209  177
+##      5    2    9   90  138  539
+```
+]
+
+&lt;br&gt;
+--
+`\begin{align}
+\mathbb{P}( \text{affair}=j | \text{ gender}=i  ) &amp;= \frac{\mathbb{P}(\text{affair}=j , \text{ gender}=i )}{\mathbb{P}(\text{ gender}=i)} \\ \\
+\mathbb{P}( \text{dependent }| \text{ independent} )  &amp;= \frac{\text{joint prob.}}{\text{marginal prob. of independent}}
+\end{align}`
+
+---
+## Distribuciones condicionales 
+
+.pull-left[
+Sustituyendo las probabilidades  de la ecuación por sus respectivos estimadores podemos estimar las distribuciones condicionales en la tabla:
+]
+.pull-right[
+
+```
+##       Educ_W
+## Educ_H    1    2    3    4    5
+##      1   50   86   53    7    1
+##      2   93  386  344   37   12
+##      3   54  327 1283  254  125
+##      4    6   22  203  209  177
+##      5    2    9   90  138  539
+```
+]
+
+&lt;br&gt;
+--
+
+`\begin{align}
+ \hat{p}_{j | i} &amp;= \frac{P(\text{affair}=j , \text{ gender}=i )}{P(\text{ gender}=i)} \\ \\
+  &amp;= \frac{\frac{n_{ij}}{n}}{\frac{\sum_{j} n_{ij}}{n}} = \frac{n_{ij}}{\sum_{j}n_{ij}} 
+\end{align}`
+
+---
+
+## Distribuciones condicionales 
+
+.pull-left[
+Sustituyendo las probabilidades  de la ecuación por sus respectivos estimadores podemos estimar las distribuciones condicionales en la tabla:
+]
+.pull-right[
+
+```
+##       Educ_W
+## Educ_H    1    2    3    4    5
+##      1   50   86   53    7    1
+##      2   93  386  344   37   12
+##      3   54  327 1283  254  125
+##      4    6   22  203  209  177
+##      5    2    9   90  138  539
+```
+]
+
+&lt;br&gt;
+
+Por ejemplo, la probabilidad condicional de haber tenido un "affair" dado que el genero es mujer se estima de la siguiente manera:
+
+`\begin{align}
+ \hat{p}_{ \text{had affair} | \text{women}} &amp; = \frac{n_{11}}{\sum_{j}n_{1j}} \\ \\
+ &amp;= \frac{72}{72 + 243} = 0.23
+\end{align}`
+
+---
+## Distribuciones condicionales 
+
+.pull-left[
+Sustituyendo las probabilidades  de la ecuación por sus respectivos estimadores podemos estimar las distribuciones condicionales en la tabla:
+]
+.pull-right[
+
+```
+##       Educ_W
+## Educ_H    1    2    3    4    5
+##      1   50   86   53    7    1
+##      2   93  386  344   37   12
+##      3   54  327 1283  254  125
+##      4    6   22  203  209  177
+##      5    2    9   90  138  539
+```
+]
+
+&lt;br&gt;
+
+En términos más generales, la _distribución condicional_ de la variable `everaffair`, dado `sex` se estima del siguiente modo:
+
+
+``` r
+joint_gender_affair &lt;- ctable_2015/sum(ctable_2015) # joint distribution
+margin_gender &lt;- apply(joint_gender_affair,1,sum) # marginal distribution gender 
+
+joint_gender_affair/margin_gender # conditional affair given gender 
+```
+
+```
+##       Educ_W
+## Educ_H           1           2           3           4           5
+##      1 0.253807107 0.436548223 0.269035533 0.035532995 0.005076142
+##      2 0.106651376 0.442660550 0.394495413 0.042431193 0.013761468
+##      3 0.026431718 0.160058737 0.627998042 0.124326970 0.061184533
+##      4 0.009724473 0.035656402 0.329011345 0.338735818 0.286871961
+##      5 0.002570694 0.011568123 0.115681234 0.177377892 0.692802057
+```
+
+``` r
+# can also be computed using prop.table(ctable_2015,1)
+```
+
+---
+## Frecuencias...
+--
+
+.pull-left[
+### De donde vienen?
+
+]
+.pull-right[
+![confusion](https://media.giphy.com/media/iHe7mA9M9SsyQ/giphy.gif)
+]
+
+--
+
+Pensemos en una tabla I-por-2: 
+
+
+- ¿Las frecuencias en cada fila son generadas por `\(I\)` variables Binomiales `\(X_{i}\)`?
+
+
+--
+
+- ¿Las frecuencias en cada celda son generadas por una variable Multinomial `\(X\)` con `\(I \cdot 2\)` posibles valores `\(ij\)`, cada uno con probabilidad de ocurrencia `\(p_{ij}\)`?
+
+--
+
+- ¿Las frecuencias en cada celda son generadas por `\(I \cdot 2\)` variables Poisson con parámetros `\(\lambda_{ij}\)` respectivamente? 
+
+
+---
+
+## Independencia estadística
+
+- Recuerden, dos variables `\(X\)` y `\(Y\)` son independientes si al saber algo sobre `\(X\)` no aprendemos nada sobre `\(Y\)`, y viceversa: `\(\mathbb{P}(Y|X) = \mathbb{P}(Y)\)`.
+
+- Check:  `\(X \bot Y \iff \mathbb{P}(X,Y) = \mathbb{P}(X)\mathbb{P}(Y)\)`
+
+--
+
+.bold[Ejercicio rápido]:
+Supongamos que el 60% de la población son mujeres, y el 50% ha tenido un "affair" al menos una vez. 
+
+.full-width[.content-box-red[
+.bold[Pregunta]:
+Si la probabilidad de tener un "affair" fuera independiente del género, ¿cuál sería la probabilidad de que, al seleccionar una persona al azar, encontremos una mujer que ha tenido un "affair"? 
+]
+]
+
+--
+
+.full-width[.content-box-blue[
+.bold[Respuesta]:
+  `$$\mathbb{P}(\text{affair},\text{mujer}) = \mathbb{P}(\text{affair})\mathbb{P}(\text{mujer}) = 0.6 \cdot 0.5 = 0.3$$`
+]
+]
+
+---
+## Independencia estadística
+
+Podemos usar esta propiedad para comprobar independencia en una tabla de contingencia.
+
+&lt;br&gt;
+--
+
+- Si `\(X \bot Y\)` las probabilidades conjuntas .bold[esperadas bajo el supuesto de independencia]  están dadas por:
+
+`$$\tilde{p}_{ij} = p_{i+} \cdot  p_{+j}$$`
+&lt;br&gt;
+--
+
+- Asimismo, las frecuencias esperadas bajo independencia están dadas por:
+
+`$$\tilde{n}_{ij} = n \cdot p_{i+} \cdot  p_{+j}$$`
+
+&lt;br&gt;
+--
+
+.bold[Importante]: noten que sólo necesitamos saber la distribución marginal de las variables para calcular las probabilidades y frecuencias esperadas bajo independencia. 
+
+---
+## Independencia estadística
+
+.pull-left[
+.bold[Distribución conjunta observada]
+
+
+```
+##       Educ_W
+## Educ_H            1            2            3            4            5
+##      1 0.0110938540 0.0190814289 0.0117594852 0.0015531396 0.0002218771
+##      2 0.0206345684 0.0856445529 0.0763257156 0.0082094520 0.0026625250
+##      3 0.0119813623 0.0725538052 0.2846682938 0.0563567783 0.0277346350
+##      4 0.0013312625 0.0048812958 0.0450410473 0.0463723097 0.0392722432
+##      5 0.0004437542 0.0019968937 0.0199689372 0.0306190371 0.1195917462
+```
+
+]
+.pull-right[
+.bold[Distribuciones marginales]
+
+```
+##          1          2          3          4          5 
+## 0.04370978 0.19347681 0.45329487 0.13689816 0.17262037
+```
+
+```
+##         1         2         3         4         5 
+## 0.0454848 0.1841580 0.4377635 0.1431107 0.1894830
+```
+]
+
+&lt;br&gt;
+--
+
+.bold[Distribución conjunta esperada bajo independencia]
+
+
+``` r
+# expected joint probs under independence 
+joint_gender_affair_indep &lt;- margin_gender %*% t(margin_affair)
+print(joint_gender_affair_indep)
+```
+
+```
+##                1           2          3           4           5
+## [1,] 0.001988131 0.008049506 0.01913455 0.006255339 0.008282262
+## [2,] 0.008800254 0.035630299 0.08469708 0.027688605 0.036660572
+## [3,] 0.020618027 0.083477867 0.19843594 0.064871354 0.085891685
+## [4,] 0.006226786 0.025210888 0.05992901 0.019591594 0.025939877
+## [5,] 0.007851603 0.031789418 0.07556689 0.024703825 0.032708630
+```
+
+---
+## Independencia estadística ... so what?
+
+
+
+
+.pull-left[
+.bold[Educational Assortative Mating Chile 1990]
+![](class_17_files/figure-html/unnamed-chunk-20-1.png)&lt;!-- --&gt;
+]
+
+.pull-right[
+.bold[Educational Assortative Mating Chile 2015]
+![](class_17_files/figure-html/unnamed-chunk-21-1.png)&lt;!-- --&gt;
+]
+
+.bold[1]:EB-, .bold[2]:EB, .bold[3]:EM, .bold[4]:ES-, .bold[5]:ES
+
+
+
+---
+class: inverse, center, middle
+
+.huge[
+**Hasta la próxima clase. Gracias!**
+]
+
+&lt;br&gt;
+Mauricio Bucca &lt;br&gt;
+https://mebucca.github.io/ &lt;br&gt;
+github.com/mebucca
+
+
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": true,
+"slideNumberFormat": "%current%"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

@@ -1,0 +1,154 @@
+---
+title: "El efecto de X sobre Y"
+subtitle: ""
+author: "<br> Violeta Parra <br> Nicanor Parra"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: ["gentle-r.css","xaringan-themer.css"]
+    df_print: default
+    nature:
+      ratio: 16:9
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: true
+      slideNumberFormat: "%current%"
+editor_options: 
+  chunz_output_type: console
+---
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(tidyverse)
+library(xaringanthemer)
+style_duo_accent(primary_color ="#214431", secondary_color = "#AFFF3E" ,
+                 background_color = "#f8f7f3",
+                 header_font_google = google_font("Archivo"),
+                 text_font_google   = google_font("Inconsolata"), 
+                 link_color= "#F3a1F4"
+
+)
+```
+
+
+## Pregunta de investigación
+
+--
+
+- X e Y son muy imporantes y están asociados estadísticamente
+
+--
+
+- Nos interesa saber si X tiene un efecto sobre Y, controlando por Z
+
+--
+
+- Dado que Z afecta X e Y, es posible que el efecto de X sobre Y sea espurio
+
+
+---
+## Datos y Métodos
+
+- Para testear esta hipótesis usaremos una base de datos muy grande.
+
+--
+
+- Dado que Y es una variable de tipo ..........., usaremos un modelo de regresión ........ Este tipo de regresión es ideal por muchas razones.
+
+--
+
+- Específicamente, estimaremos el siguiente modelo de regresión:
+
+$$g(\eta_{i}) = \alpha + \gamma \ln(x_{i}) + \delta z_{i}$$
+donde $\gamma$ es ....
+
+---
+## Resultados
+
+
+```{r, echo=F}
+library("knitr")
+library("sjPlot")
+z <- rnorm(1000)
+x <- 0.3*z + rnorm(1000)
+y <- 0.2*z + 0.4*x + rnorm(1000)
+```
+
+```{r, echo=F, message=FALSE}
+mimodelo <- lm(y ~ log(x) + z)
+tab_model(summary(mimodelo))
+```
+
+---
+## Resultados
+
+.center[
+```{r, echo=F, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(ggExtra)
+library(viridis)
+
+# Creating a data frame with your variables
+df <- data.frame(
+  z = z,
+  x = x,
+  y = y
+)
+
+# Generate the ggplot
+p <- ggplot(df, aes(x = x, y = y)) +
+  # Add scatter plot with alpha blending for visibility
+  geom_point(alpha = 0.05, color = viridis(1, option = "magma")) +
+  # Add density contours
+  geom_density2d(aes(color = ..level..), linewidth = 0.8) +
+  # Use viridis magma palette for contours
+  scale_color_viridis(option = "magma", name = "Density Level") +
+  # Add regression line
+  geom_smooth(
+    method = "lm", 
+    formula = y ~ log(x) + z, 
+    color = "gold", 
+    se = TRUE, 
+    linewidth = 1
+  ) +
+  # Minimal theme with clean background
+  theme_minimal(base_size = 14) +
+  # Add informative titles and labels
+  labs(
+    title = "Linear Model Fit: y ~ log(x) + z",
+    x = "x (predictor)",
+    y = "y (outcome)"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 14, face = "italic"),
+    legend.position = "right"
+  )
+
+# Adding marginal histograms with viridis color
+p <- ggMarginal(
+  p, 
+  type = "histogram", 
+  fill = viridis(1, option = "magma"), 
+  color = "white"
+)
+
+print(p)
+
+```
+]
+---
+class: inverse, center, middle
+
+.huge[
+**Fin. Gracias!**
+]
+
+<br>
+Violeta Parra <br> Nicanor Parra <br>
+https://vparra.github.io/ <br>
+github.com/vparra
+
+
+
+
