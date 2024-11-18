@@ -67,3 +67,5 @@ affairsdata <- Fair %>% as_tibble()
 2.3 Estima la cantidad esperada de relaciones extra-matrimoniales para una mujer en un matrimonio infeliz (`rate`=2) de 20 años de duración.
 
 2.4 Genera un gráfico como el siguiente, que muestre la cantidad esperada de relaciones extra-matrimoniales para hombres y mujeres en matrimonios de distintos niveles de felicidad (rate = 1 ... 5), considerando una duración de 20 años.
+
+![plot](plot.png)
