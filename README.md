@@ -21,7 +21,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | Día   | Mes       | Contenido                  | Material                                                                                                                     |
 |-------|-----------|----------------------------|------------------------------------------------------------------------------------------------------------------------------|
 | 4     | Agosto    | Presentación del curso     | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_0/class_0#1) [`[Code]`](slides/class_0/class_0.Rmd)            |
-| 11    | Agosto    | —                          |                                                                                                                              |
+| 11    | Agosto    | Probabilidad condicional   | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_1/class_1#1) [`[Code]`](slides/class_1/class_1.Rmd)            |
 | 18    | Agosto    | —                          |                                                                                                                              |
 | 1     | Septiembre| —                          |                                                                                                                              |
 | 8     | Septiembre| —                          |                                                                                                                              |
@@ -37,9 +37,12 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 
                                     |                                                                                                                                                            |
 
+**IMPORTANTE:** Este curso permite el uso ético y transparente de herramientas de inteligencia artificial generativa, únicamente como herramienta de estudio o apoyo en la escritura de código. El estudiantado deberá declarar explícitamente en los anexos de cada trabajo qué herramientas fueron utilizadas, con qué propósito y, si se solicita, compartir los comandos o prompts empleados. El uso de IA no exime a los y las estudiantes de dominar plenamente el contenido de sus trabajos. Para verificar esto, en la clase posterior a la entrega de cualquier tarea o trabajo, un estudiante serán seleccionado al azar para explicar oralmente frente a la clase el procedimiento seguido en alguna de sus respuestas. En base a esta exposición, su nota podrá ser reconsiderada. El uso no autorizado o no declarado será considerado una falta a la integridad académica.
+
+
 ## Horario de Consulta
 
-- Reuniones individuales de aproximadamente 15 minutos cada día Lunes entre 14:30 y 15:30pm. [`[Agendar]`](https://calendar.app.google/A9vxmbBz1LyDQPAK6)
+- Reuniones individuales de aproximadamente 15 minutos cada día Lunes entre 14:30 y 15:30pm. [`[Agendar]`](https://calendar.app.google/Cyu1NRh6Bn2vRHEx9)
 
 
 ## Evaluaciones
@@ -47,7 +50,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 
 | Tarea           | Asignación       | Entrega         | Material                                                                                  |
 |-----------------|------------------|-----------------|-------------------------------------------------------------------------------------------|
-| Tarea corta 1   | 5 de Agosto      | 12 de Agosto    | [`[TC1]`](https://mebucca.github.io/cda_soc3070/homework/tc_1#1) [`[TC1.qmd sols]`](homework/tc_1.qmd)  |
+| Tarea corta 1   | 4 de Agosto      | 11 de Agosto    | [`[TC1]`](https://mebucca.github.io/cda_soc3070/homework/tc_1#1) [`[TC1.qmd sols]`](homework/tc_1.qmd)  |
                                                                                    |
 
 

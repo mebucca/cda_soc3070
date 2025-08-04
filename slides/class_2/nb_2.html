@@ -1642,11 +1642,11 @@ cat(&quot;Número de simulaciones:&quot;, n_simulaciones, &quot;\n&quot;)</code>
 <pre class="r"><code># Realizamos el lanzamiento de la primera moneda (justa) 1000 veces
 coin1 &lt;- rbinom(n_simulaciones, 1, prob = 0.5)
 cat(&quot;Primeros 10 resultados de la primera moneda (0=Cruz, 1=Cara):&quot;, coin1[1:10], &quot;\n&quot;)</code></pre>
-<pre><code>## Primeros 10 resultados de la primera moneda (0=Cruz, 1=Cara): 0 0 0 0 1 1 1 0 0 1</code></pre>
+<pre><code>## Primeros 10 resultados de la primera moneda (0=Cruz, 1=Cara): 0 0 1 0 0 0 1 0 1 0</code></pre>
 <pre class="r"><code># Realizamos el lanzamiento de la segunda moneda (cargada) 1000 veces
 coin2 &lt;- rbinom(n_simulaciones, 1, prob = 0.9)
 cat(&quot;Primeros 10 resultados de la segunda moneda (0=Cruz, 1=Cara):&quot;, coin2[1:10], &quot;\n&quot;)</code></pre>
-<pre><code>## Primeros 10 resultados de la segunda moneda (0=Cruz, 1=Cara): 1 0 1 1 1 1 1 1 1 1</code></pre>
+<pre><code>## Primeros 10 resultados de la segunda moneda (0=Cruz, 1=Cara): 1 1 1 1 1 1 1 0 1 1</code></pre>
 <p><br></p>
 <p><strong>Importante:</strong> Es importante destacar que ambos eventos
 son independientes, ya que no hemos establecido ninguna relación entre
@@ -1661,15 +1661,15 @@ cat(&quot;Muestra de las primeras filas del dataframe:\n&quot;)</code></pre>
 ##    coin1 coin2
 ##    &lt;int&gt; &lt;int&gt;
 ##  1     0     1
-##  2     0     0
-##  3     0     1
+##  2     0     1
+##  3     1     1
 ##  4     0     1
-##  5     1     1
-##  6     1     1
+##  5     0     1
+##  6     0     1
 ##  7     1     1
-##  8     0     1
-##  9     0     1
-## 10     1     1
+##  8     0     0
+##  9     1     1
+## 10     0     1
 ## # ℹ 99,990 more rows</code></pre>
 <pre class="r"><code># Definimos el evento exitoso: obtener dos Caras (CC)
 data_coins &lt;- data_coins %&gt;%
@@ -1684,8 +1684,8 @@ cat(&quot;Probabilidades empíricas de los resultados:\n&quot;)</code></pre>
 ## 
 ## |Resultado | Probabilidad|
 ## |:---------|------------:|
-## |CC        |      0.45272|
-## |Otro      |      0.54728|</code></pre>
+## |CC        |      0.44756|
+## |Otro      |      0.55244|</code></pre>
 <pre class="r"><code>## Comparación con la probabilidad teórica
 # La probabilidad teórica de obtener dos Caras es 0.45
 probabilidad_teorica &lt;- 0.5 * 0.9
@@ -1695,7 +1695,7 @@ cat(&quot;La probabilidad teórica de obtener dos Caras es:&quot;, probabilidad_
 <h3>Comparación entre la probabilidad empírica y teórica de obtener
 ‘CC’</h3>
 <pre class="r"><code>cat(&quot;Probabilidad empírica de obtener &#39;CC&#39;:&quot;, probabilidad_empirica[&quot;CC&quot;], &quot;\n&quot;)</code></pre>
-<pre><code>## Probabilidad empírica de obtener &#39;CC&#39;: 0.45272</code></pre>
+<pre><code>## Probabilidad empírica de obtener &#39;CC&#39;: 0.44756</code></pre>
 <pre class="r"><code>cat(&quot;Probabilidad teórica de obtener &#39;CC&#39;:&quot;, probabilidad_teorica, &quot;\n&quot;)</code></pre>
 <pre><code>## Probabilidad teórica de obtener &#39;CC&#39;: 0.45</code></pre>
 </div>

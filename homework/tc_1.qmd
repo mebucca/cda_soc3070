@@ -51,14 +51,3 @@ b)  Dada la función: $y = 2x^2 - 6$
 
 3.  Determina el valor de la pendiente en ese punto.\
 
-<br>
-
-**4) Aproximación discreta de integrales**
-
-Aproxima la integral de $f(x) = x^2$ desde 0 hasta 2 usando 4 rectángulos. Divide el intervalo desde 0 hasta 2 en 4 subintervalos iguales y evalúa $f(x)$ en el borde izquierdo de cada subintervalo.
-
-<br>
-
-**5) Integral definida**
-
-Evalúa la integral: $\int_{0}^{2} x^2 \, dx$
