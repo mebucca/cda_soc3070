@@ -1,0 +1,64 @@
+---
+title: "Tarea corta #1"
+author: "SOC3070"
+format: html
+editor: visual
+---
+
+```{r, echo=FALSE}
+# Escribir install.packages("tinytex") en la consola para instalar "tinytex"
+# Carga "tinytex" para compilar PDF
+library("tinytex")
+```
+
+`Ponderación: 6% de la nota final del curso.`
+
+<br>
+
+**1) Exponenciales y Logaritmos**
+
+a)  Simplifica: $(3^2) \cdot (3^4)$\
+
+b)  Resuelve por $x$: $\ln(x) = 2$\
+
+c)  Simplifica: $\frac{e^{5x}}{e^{x}}$\
+
+d)  Simplifica: $\ln(a) - \ln(b)$\
+
+e)  Simplifica: $\ln(\sqrt{z})$\
+
+<br>
+
+**2) Sumatoria**
+
+Calcula la sumatoria de $(a \cdot i - b)$ desde $i = 1$ hasta $4$.
+
+<br>
+
+**3) Derivadas**
+
+a)  Calcula la derivada de la siguiente función: $f(x) = 5x^3 + 2x^2 - 7x + 4$\
+
+<br>
+
+b)  Dada la función: $y = 2x^2 - 6$
+
+<!-- -->
+
+1.  Grafica la función.
+
+2.  Identifica por inspección visual el valor de $x$ en que la función alcanza su mínimo.\
+
+3.  Determina el valor de la pendiente en ese punto.\
+
+<br>
+
+**4) Aproximación discreta de integrales**
+
+Aproxima la integral de $f(x) = x^2$ desde 0 hasta 2 usando 4 rectángulos. Divide el intervalo desde 0 hasta 2 en 4 subintervalos iguales y evalúa $f(x)$ en el borde izquierdo de cada subintervalo.
+
+<br>
+
+**5) Integral definida**
+
+Evalúa la integral: $\int_{0}^{2} x^2 \, dx$
