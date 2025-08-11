@@ -23,7 +23,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | 4     | Agosto    | Presentación del curso     | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_0/class_0#1) [`[Code]`](slides/class_0/class_0.Rmd)            |
 | 4     | Agosto    | Introdución a la probabilidad     | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_1/class_1#1) [`[Code]`](slides/class_1/class_1.Rmd)            |
 | 11    | Agosto    | Probabilidad condicional   | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_2/class_2#1) [`[Code]`](slides/class_2/class_2.Rmd)            |
-| 11    | Agosto    | Variables Aleatorias y \n Distribuciones Discretas   | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_3/class_3#1) [`[Code]`](slides/class_3/class_3.Rmd)            |
+| 11    | Agosto    | Variables Aleatorias y Distribuciones Discretas   | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_3/class_3#1) [`[Code]`](slides/class_3/class_3.Rmd)            |
 | 18    | Agosto    | —                          |                                                                                                                              |
 | 1     | Septiembre| —                          |                                                                                                                              |
 | 8     | Septiembre| —                          |                                                                                                                              |
