@@ -85,5 +85,3 @@ abline(h = 0, v = 0, col = "black")
     \> Derivada: $y' = \frac{d}{dx}(2x^2 - 6) = 4x$\
     \> Evaluando en $x = 0$: $y'(0) = 0$\
     \> **Respuesta:** $y' = 0$
-
-
