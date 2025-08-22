@@ -4,7 +4,7 @@
     <title>Análisis de Datos Categóricos (SOC3070)</title>
     <meta charset="utf-8" />
     <meta name="author" content="  Mauricio Bucca  Profesor Asistente, Sociología UC" />
-    <script src="libs/header-attrs-2.24/header-attrs.js"></script>
+    <script src="libs/header-attrs-2.29/header-attrs.js"></script>
     <link rel="stylesheet" href="gentle-r.css" type="text/css" />
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
@@ -16,7 +16,7 @@ class: center, middle, inverse, title-slide
 # Análisis de Datos Categóricos (SOC3070)
 ]
 .subtitle[
-## Clase #6: Modelo Lineal de Probabilidad
+## Regresión Lineal y el Modelo Lineal de Probabilidad
 ]
 .author[
 ### <br> Mauricio Bucca<br> Profesor Asistente, Sociología UC
@@ -84,7 +84,7 @@ Podemos repensar el LM de la siguiente forma:
 
 --
 
-- Para cada individuo observamos un valor en la variable dependiente `\(y_{i}\)`, tal que  `\(y_{i} \in \{-\infty,\infty+ \}\)`
+- Para cada individuo observamos un valor en la variable dependiente `\(y_{i}\)`, tal que  `\(y_{i} \in \mathbb{R}\)`
 
 
 --
@@ -154,7 +154,7 @@ Es común encontrar el modelo lineal escrito en forma matricial:
 
 - `\(\vect{\mu} = \vect{X}\vect{\beta} = \beta_{0} + \beta_{1}\vect{x}_{1} + \dots + \beta_{k}\vect{x}_{k}\)`
 
-- `\(\vect{\Sigma^{2}}\)` es la matriz de varianza-covarianza entre las observaciones
+- `\(\vect{\Sigma}\)` es la matriz de varianza-covarianza entre las observaciones
 ]
 
 &lt;br&gt;
@@ -166,7 +166,7 @@ y_{i} \\  \vdots \\ y_{n}
 \end{bmatrix}_{(n,1)} \sim \text{Normal}_{n}\Bigg(  \vect{\mu} = \begin{bmatrix}
 \beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki} \\ 
  \vdots \\ \beta_{0} + \beta_{1}x_{1n} + \dots \beta_{k}x_{kn}
-\end{bmatrix}_{(n,1)} , \vect{\Sigma^{2}} = \begin{bmatrix}
+\end{bmatrix}_{(n,1)} , \vect{\Sigma} = \begin{bmatrix}
     \sigma^{2}    &amp; 0      &amp; \ldots         &amp; 0      \\
     0      &amp; \sigma^{2}     &amp; \ldots         &amp; 0      \\
     \vdots &amp; \vdots &amp; \sigma^{2}   &amp; \vdots \\
@@ -181,8 +181,8 @@ y_{i} \\  \vdots \\ y_{n}
 
 
 
-```r
-set.seed("87742") # seed
+``` r
+set.seed(87742) # seed
 n &lt;- 5000 # observaciones
 x &lt;- sample(1:100,n,replace=TRUE) # 1 predictor o var independiente
 ```
@@ -193,7 +193,7 @@ x &lt;- sample(1:100,n,replace=TRUE) # 1 predictor o var independiente
 ```
 
 
-```r
+``` r
 # parámetros
 sigma &lt;- 7 # sd
 b_0 &lt;- 10 # intercepto
@@ -207,7 +207,7 @@ mu &lt;- b_0 + b_1*x # valor predicho
 ```
 
 
-```r
+``` r
 # variable dependiente
 y &lt;- rnorm(n,mu,sigma) # variable dependiente. Equivalente: y &lt;- mu + rnorm(n,0,sigma)
 ```
@@ -242,8 +242,7 @@ y &lt;- rnorm(n,mu,sigma) # variable dependiente. Equivalente: y &lt;- mu + rnor
 ]
 
 .pull-right[
-* `\(\frac{1}{\sqrt{2\pi\sigma^{2}}} e^{- \frac{(x - \mu)^{2}}{2\sigma^{2}}}\)` es la función de probabilidad de una variable `\(X\)` que distribuye .bold[normal]
-]
+* `\(\frac{1}{\sqrt{2\pi\sigma^{2}}} e^{- \frac{(x - \mu)^{2}}{2\sigma^{2}}}\)` es la densidad de probabilidad de una variable aleatoria `\(X \sim \mathcal{N}(\mu,\sigma^2)\)`]
 
 &lt;style type="text/css"&gt;
 .pull-right ~ * { clear: unset; }
@@ -259,7 +258,7 @@ Ambos métodos producen mismos resultados en el caso de LM.
 Ahora estimemos los parámetros de nuestro modelo via OLS 
 
 
-```r
+``` r
 our_data &lt;- tibble(y=y, x=x)
 our_lm_ols &lt;- lm(y ~ x, data=our_data) # "fit" el modelo usando función lm()
 print(summary(our_lm_ols)) # analicemos nuestros resultados
@@ -292,7 +291,7 @@ print(summary(our_lm_ols)) # analicemos nuestros resultados
 Ahora estimemos los parámetros via MLE
 
 
-```r
+``` r
 our_lm_mle &lt;- glm(y ~ x, family="gaussian", data=our_data) # "fit" modelo usando función glm()
 print(summary(our_lm_mle)) # analicemos nuestros resultados
 ```
@@ -379,33 +378,30 @@ donde:
 ---
 ## Interpretación coeficientes en LM
 
-`$$\text{Si } \quad \quad y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}}^{\mathbb{E}(y_{i} \mid x_{1}, \dots, x_{k})} + \underbrace{e_{i}}_{\text{Normal}(0,\sigma)}$$`
+&lt;br&gt;
+
+`$$\text{Si } \quad \quad y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}}^{\mathbb{E}(y_{i} \mid x_{1}, \dots, x_{k})} + \underbrace{e_i}_{\sim \text{Normal}(0,\sigma)}$$`
 
 ---
 ## Interpretación coeficientes en LM
 
+&lt;br&gt;
+
 `$$\text{Si } \quad \quad y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}}^{\mathbb{E}(y_{i} \mid x_{1}, \dots, x_{k})} + \underbrace{e_{i}}_{\text{Normal}}(0,\sigma)$$`
+
+&lt;br&gt;
+
 
 Entonces decimos que el efecto de `\(x_{k}\)` sobre `\(y\)` es `\(\beta_{k}\)`. ¿Qué significa?
 
 .pull-left[
 `$$\frac{\partial \mathbb{E}(y_{i} \mid x_{1}, \dots, x_{k})}{\partial x_{k}} = \beta_{k}$$`
 ]
+
 .pull-right[
 "Un cambio en `\(\Delta\)` unidades de `\(x_{k}\)` se traduce en un cambio en `\(\Delta\)` `\(\beta_{k}\)` unidades en el valor esperado de `\(y_{i}\)`"
 ]
 
---
-
-¿Por qué?
---
- Asumamos que sólo la variable `\(x_{1}\)` cambia en una unidad, de `\(x_{1}=c\)` a `\(x_{1}=c+1\)`. Entonces:
-
-`\begin{align}
-  \frac{\Delta \mathbb{E}(y_{i})  }{\Delta x_{1}} &amp;= \frac{ \mathbb{E}(y_{i} \mid x_{1}=c+1, \dots, x_{k})  - \mathbb{E}(y_{i} \mid x_{1}=c, \dots, x_{k})}{(c+1) - c} \\ \\
-  &amp;=(\beta_{0} + \beta_{1}(c+1) +  \dots + \beta_{l}x_{k}) - (\beta_{0} + \beta_{1}c  \dots + \beta_{l}x_{k}) = \beta_{1}(c+1) - \beta_{1}c \\ \\
-  &amp;= \beta_{1}c + \beta_{1} - \beta_{1}c = \beta_{1}
-\end{align}`
 
 ---
 ## Interpretación coeficientes en LM
@@ -414,7 +410,7 @@ En nuestro ejemplo:
 
 .pull-left[
 
-```r
+``` r
 print(our_lm_ols)
 ```
 
@@ -431,7 +427,7 @@ print(our_lm_ols)
 .pull-right[
 Si `x=50`, entonces `y`=
 
-```r
+``` r
 10.2 + 1.1*50
 ```
 
@@ -441,7 +437,7 @@ Si `x=50`, entonces `y`=
 
 Si `x=51`, entonces `y`=
 
-```r
+``` r
 10.2 + 1.1*51
 ```
 
@@ -451,7 +447,7 @@ Si `x=51`, entonces `y`=
 
 Por tanto, `\(\beta\)`=
 
-```r
+``` r
 ((10.2 + 1.1*51)-(10.2 + 1.1*50))/(51 - 50)
 ```
 
@@ -467,7 +463,7 @@ Por tanto, `\(\beta\)`=
 Un ejemplo más complejo: podemos incluir interacciones y efectos no lineales
 
 
-```r
+``` r
 set.seed("87742") # seed
 n &lt;- 10000 # observaciones
 x &lt;- sample(1:100,n,replace=TRUE) # variable independiente continua
@@ -475,7 +471,7 @@ d &lt;- sample(0:1,n,replace = TRUE) # dicotómica
 ```
 
 
-```r
+``` r
 # parámetros
 sigma &lt;- 50 # sd
 b_0 &lt;- 10  # intercepto
@@ -487,7 +483,7 @@ mu &lt;- b_0 + b_1*I(x^2) + b_2*d + b_3*I(x^2)*d   # valor predicho
 ```
 
 
-```r
+``` r
 # variable dependiente
 y &lt;- mu + rnorm(n,0,sigma)
 ```
@@ -504,7 +500,7 @@ Estimamos los parámetros  via OLS
 
 
 
-```r
+``` r
 our_data2 &lt;- tibble(y=y, x=x, d=d) 
 our_lm_ols2 &lt;- lm(y ~ I(x^2)*factor(d), data=our_data2) # "fit" el modelo usando función lm()
 print(summary(our_lm_ols2)) # analicemos nuestros resultados
@@ -636,7 +632,7 @@ Para ejemplificar el uso del LPM continuaremos trabajando con los datos de infid
 Ajustaremos el siguiente modelo: `\(\text{everaffair}_{i} = \beta_{0} + \beta_{1}*\text{rate}_{i}\)`, que modela la probabilidad de tener un affair como función de la evaluación de los entrevistados de su matrimonio, desde 1 (muy infeliz) a 5 (muy feliz).
 
 
-```r
+``` r
 lpm_affairs_rate &lt;- lm(everaffair_d ~ rate, data=affairsdata); summary(lpm_affairs_rate)
 ```
 
@@ -865,7 +861,7 @@ Para ejemplificar estas limitaciones del LPM estimemos un modelo ligeramente má
 `\(\text{everaffair}_{i} = \beta_{0} + \beta_{1}*\text{rate}_{i} + \beta_{2}*\text{rate}^{2}_{i} + \sum_{j}\vect{1} \{\text{rel}=j\}\Big( \beta_{0j} + \beta_{1j} \cdot \text{rate}_{i} + \beta_{2j} \cdot \text{rate}^{2}_{i}\Big)\)`
 
 
-```r
+``` r
 lpm_affairs_raterel &lt;- 
   lm(everaffair_d ~ rate*factor(religious) + I(rate^2)*factor(religious), 
      data=affairsdata)
@@ -969,7 +965,7 @@ Por lo mismo, hay .bold[mucho] interés en "rescatar" el LPM
 
 
 
-```r
+``` r
 # Paquetes necesarios
 library(lmtest)
 library(sandwich)
@@ -1048,7 +1044,7 @@ coeftest(lpm_affairs_raterel, vcov = vcovHC(lpm_affairs_raterel, type="HC1"))
 
 
 
-```r
+``` r
 # Estimación del modelo
 lpm_affairs_raterel &lt;- 
   lm(everaffair_d ~ rate*factor(religious) + I(rate^2)*factor(religious), 
@@ -1183,11 +1179,11 @@ github.com/mebucca
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
-"ratio": "16:9",
-"highlightStyle": "github",
-"highlightLines": true,
-"countIncrementalSlides": true,
-"slideNumberFormat": "%current%"
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": true,
+  "slideNumberFormat": "%current%"
 });
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));

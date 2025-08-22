@@ -1,0 +1,244 @@
+---
+title: "Práctica: Modelo Lineal de Probabilidad con mtcars"
+author: "SOC3070 · Mauricio Bucca"
+date: today
+format:
+  html:
+    theme: united
+    highlight: tango
+    code-copy: true
+    code-fold: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  comment = "#>",      # Python-style output prompt
+  prompt = TRUE,       # Show > in front of code
+  class.source = "python-code",
+  class.output = "python-output"
+)
+
+# Packages
+library(tidyverse)
+library(broom)
+library(ggplot2)
+library(margins)
+
+# Define julia-inspired palette
+julia <- list(
+  navy   = "#003f5c",
+  teal   = "#2f4b7c",
+  coral  = "#ff6361",
+  orange = "#ffa600",
+  sand   = "#f4e1a4"
+)
+
+theme_julia <- function() {
+  theme_minimal(base_family = "Inconsolata") +
+    theme(
+      plot.background = element_rect(fill = "white", color = NA),
+      panel.border = element_rect(fill=NA, color=julia$navy, size=0.6),
+      axis.text = element_text(color=julia$navy, size=13),
+      axis.title = element_text(color=julia$teal, size=15, face="bold"),
+      plot.title = element_text(color=julia$coral, size=18, face="bold"),
+      plot.subtitle = element_text(color=julia$orange, size=14),
+      legend.position = "right"
+    )
+}
+```
+
+```{css, echo=FALSE}
+pre.python-code, code.python-code {
+  background-color: #f7f7f7;
+  color: #222;
+  font-family: "Inconsolata", monospace;
+  font-size: 15px;
+  border-left: 4px solid #ff6361;
+  padding: 6px;
+}
+pre.python-output, code.python-output {
+  background-color: #ffffff;
+  color: #003f5c;
+  font-family: "Inconsolata", monospace;
+  font-size: 15px;
+  padding: 6px;
+}
+```
+
+------------------------------------------------------------------------
+
+# 1. Explorar la base de datos `mtcars`
+
+```{r}
+data(mtcars)
+mtcars <- as_tibble(mtcars)
+
+table(mtcars$am)
+glimpse(mtcars)
+```
+
+------------------------------------------------------------------------
+
+## Variables usadas en el análisis
+
+La base de datos `mtcars` contiene información sobre 32 modelos de automóviles. Para este ejercicio seleccionamos las siguientes variables:
+
+-   **am**: tipo de transmisión del vehículo
+
+    -   0 = transmisión automática\
+    -   1 = transmisión manual\
+        Es nuestra **variable dependiente binaria** en el Modelo Lineal de Probabilidad (LPM).
+
+-   **wt**: peso del vehículo en miles de libras (lb/1000).\
+    Un mayor peso suele asociarse con menor rendimiento de combustible y puede incidir en la elección de transmisión.
+
+-   **mpg**: rendimiento del vehículo medido en millas por galón de gasolina.\
+    Es una variable continua que usamos en la regresión lineal clásica.
+
+-   **hp**: caballos de fuerza bruta del motor.\
+    Captura la potencia del automóvil; la usamos en interacción con el peso para evaluar si el efecto del peso sobre la probabilidad de transmisión manual cambia según la potencia.
+
+------------------------------------------------------------------------
+
+# 2. Descripción inicial
+
+```{r}
+mtcars %>%
+  group_by(am) %>%
+  summarise(
+    mean_mpg = mean(mpg),
+    mean_hp  = mean(hp),
+    n = n(),
+    .groups="drop"
+  )
+```
+
+------------------------------------------------------------------------
+
+# 3. Modelo lineal clásico
+
+Relación entre peso (`wt`) y rendimiento (`mpg`).
+
+```{r}
+lm_cont <- lm(mpg ~ wt, data=mtcars)
+summary(lm_cont)
+```
+
+```{r}
+ggplot(mtcars, aes(x=wt, y=mpg)) +
+  geom_point(color=julia$navy, size=2, alpha=0.7) +
+  geom_smooth(method="lm", se=FALSE, color=julia$coral, size=1.2) +
+  labs(title="Regresión lineal: mpg ~ wt") +
+  theme_julia()
+```
+
+------------------------------------------------------------------------
+
+# 4. Modelo Lineal de Probabilidad (LPM)
+
+Probabilidad de transmisión manual según peso (`wt`).
+
+```{r}
+lpm <- lm(am ~ wt, data=mtcars)
+summary(lpm)
+margins(lpm)
+```
+
+```{r}
+newdata <- tibble(wt = seq(min(mtcars$wt), max(mtcars$wt), length.out=100)) %>%
+  mutate(pred = predict(lpm, newdata = .))
+
+ggplot(mtcars, aes(x=wt, y=am)) +
+  geom_jitter(width=0.05, height=0.05, alpha=0.6, color=julia$teal) +
+  geom_line(data=newdata, aes(x=wt, y=pred), color=julia$coral, size=1.3) +
+  ylim(-0.2, 1.2) +
+  labs(title="Modelo Lineal de Probabilidad (LPM)",
+       y="Probabilidad transmisión manual") +
+  theme_julia()
+```
+
+------------------------------------------------------------------------
+
+# 5. Problema: predicciones fuera de rango
+
+```{r}
+range(predict(lpm))
+```
+
+------------------------------------------------------------------------
+
+# 6. Residuos vs predicciones (heterocedasticidad)
+
+```{r}
+mtcars %>%
+  mutate(fitted = predict(lpm),
+         residuals = resid(lpm)) %>%
+  ggplot(aes(x=fitted, y=residuals)) +
+  geom_point(size=2, alpha=0.7, color=julia$orange) +
+  geom_hline(yintercept=0, linetype="dashed", color=julia$navy) +
+  labs(title="Residuos vs valores predichos (LPM)") +
+  theme_julia()
+```
+
+------------------------------------------------------------------------
+
+# 7. LPM con interacción y polinomio
+
+```{r}
+lpm_complex <- lm(am ~ wt + I(wt^2) + hp + wt:hp, data=mtcars)
+summary(lpm_complex)
+margins(lpm_complex)
+```
+
+```{r}
+newdata2 <- expand.grid(
+  wt = seq(min(mtcars$wt), max(mtcars$wt), length.out=40),
+  hp = c(100, 200)
+) %>%
+  as_tibble() %>%
+  mutate(pred = predict(lpm_complex, newdata=.))
+
+ggplot(mtcars, aes(x=wt, y=am)) +
+  geom_jitter(width=0.05, height=0.05, alpha=0.6, color=julia$teal) +
+  geom_line(data=newdata2, aes(x=wt, y=pred, color=factor(hp)), size=1.2) +
+  scale_color_manual(values=c("100"=julia$navy, "200"=julia$orange)) +
+  ylim(-0.2, 1.2) +
+  labs(title="LPM con interacción y polinomio",
+       subtitle="Curvas para hp = 100 (navy) y 200 (orange)",
+       y="Probabilidad transmisión manual",
+       color="Caballos de fuerza") +
+  theme_julia()
+```
+
+------------------------------------------------------------------------
+
+# 8. Un adelanto de lo que viene: comparación con Logit
+
+```{r}
+logit <- glm(am ~ wt, data=mtcars, family=binomial)
+summary(logit)
+```
+
+```{r}
+newdata <- newdata %>%
+  mutate(logit_pred = predict(logit, newdata=., type="response")) %>%
+  mutate(model="LPM")
+
+newdata_logit <- newdata %>%
+  mutate(model="Logit", logit_pred = predict(logit, newdata=., type="response"))
+
+ggplot(mtcars, aes(x=wt, y=am)) +
+  geom_jitter(width=0.05, height=0.05, alpha=0.6, color=julia$teal) +
+  geom_line(data=newdata, aes(x=wt, y=pred, color="LPM"), size=1.2, linetype="dashed") +
+  geom_line(data=newdata_logit, aes(x=wt, y=logit_pred, color="Logit"), size=1.2) +
+  scale_color_manual(values=c("LPM"=julia$coral, "Logit"=julia$orange)) +
+  ylim(-0.2, 1.2) +
+  labs(title="LPM vs Logit",
+       subtitle="Coral: LPM | Orange: Logit",
+       y="Probabilidad transmisión manual",
+       color="Modelo") +
+  theme_julia()
+```
