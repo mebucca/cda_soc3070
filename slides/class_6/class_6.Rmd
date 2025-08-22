@@ -1,6 +1,6 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Clase #6: Modelo Lineal de Probabilidad"
+subtitle: "Regresión Lineal y el Modelo Lineal de Probabilidad"
 author: "<br> Mauricio Bucca<br> Profesor Asistente, Sociología UC"
 date: "[github.com/mebucca](https://github.com/mebucca)"
 output:
@@ -92,7 +92,7 @@ Podemos repensar el LM de la siguiente forma:
 
 --
 
-- Para cada individuo observamos un valor en la variable dependiente $y_{i}$, tal que  $y_{i} \in \{-\infty,\infty+ \}$
+- Para cada individuo observamos un valor en la variable dependiente $y_{i}$, tal que  $y_{i} \in \mathbb{R}$
 
 
 --
@@ -162,7 +162,7 @@ $$\vect{y} \sim \text{Normal}_{n}(\vect{X}\vect{\beta},\vect{\Sigma}) \quad \tex
 
 - $\vect{\mu} = \vect{X}\vect{\beta} = \beta_{0} + \beta_{1}\vect{x}_{1} + \dots + \beta_{k}\vect{x}_{k}$
 
-- $\vect{\Sigma^{2}}$ es la matriz de varianza-covarianza entre las observaciones
+- $\vect{\Sigma}$ es la matriz de varianza-covarianza entre las observaciones
 ]
 
 <br>
@@ -174,7 +174,7 @@ y_{i} \\  \vdots \\ y_{n}
 \end{bmatrix}_{(n,1)} \sim \text{Normal}_{n}\Bigg(  \vect{\mu} = \begin{bmatrix}
 \beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki} \\ 
  \vdots \\ \beta_{0} + \beta_{1}x_{1n} + \dots \beta_{k}x_{kn}
-\end{bmatrix}_{(n,1)} , \vect{\Sigma^{2}} = \begin{bmatrix}
+\end{bmatrix}_{(n,1)} , \vect{\Sigma} = \begin{bmatrix}
     \sigma^{2}    & 0      & \ldots         & 0      \\
     0      & \sigma^{2}     & \ldots         & 0      \\
     \vdots & \vdots & \sigma^{2}   & \vdots \\
@@ -203,7 +203,7 @@ font_add_google("Inconsolata", "text_font")
 ```
 
 ```{r}
-set.seed("87742") # seed
+set.seed(87742) # seed
 n <- 5000 # observaciones
 x <- sample(1:100,n,replace=TRUE) # 1 predictor o var independiente
 ```
@@ -258,8 +258,7 @@ $$\color{white}{\hat{\boldsymbol{\beta}}_{MLE} = \underset{\beta}{\arg\max\ } \p
 ]
 
 .pull-right[
-* $\frac{1}{\sqrt{2\pi\sigma^{2}}} e^{- \frac{(x - \mu)^{2}}{2\sigma^{2}}}$ es la función de probabilidad de una variable $X$ que distribuye .bold[normal]
-]
+* $\frac{1}{\sqrt{2\pi\sigma^{2}}} e^{- \frac{(x - \mu)^{2}}{2\sigma^{2}}}$ es la densidad de probabilidad de una variable aleatoria $X \sim \mathcal{N}(\mu,\sigma^2)$]
 
 ```{css, echo=FALSE}
 .pull-right ~ * { clear: unset; }
@@ -423,33 +422,30 @@ ggplot(aes(x=y, y=density, fill=factor(x))) +
 ---
 ## Interpretación coeficientes en LM
 
-$$\text{Si } \quad \quad y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}}^{\mathbb{E}(y_{i} \mid x_{1}, \dots, x_{k})} + \underbrace{e_{i}}_{\text{Normal}(0,\sigma)}$$
+<br>
+
+$$\text{Si } \quad \quad y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}}^{\mathbb{E}(y_{i} \mid x_{1}, \dots, x_{k})} + \underbrace{e_i}_{\sim \text{Normal}(0,\sigma)}$$
 
 ---
 ## Interpretación coeficientes en LM
 
+<br>
+
 $$\text{Si } \quad \quad y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}}^{\mathbb{E}(y_{i} \mid x_{1}, \dots, x_{k})} + \underbrace{e_{i}}_{\text{Normal}}(0,\sigma)$$
+
+<br>
+
 
 Entonces decimos que el efecto de $x_{k}$ sobre $y$ es $\beta_{k}$. ¿Qué significa?
 
 .pull-left[
 $$\frac{\partial \mathbb{E}(y_{i} \mid x_{1}, \dots, x_{k})}{\partial x_{k}} = \beta_{k}$$
 ]
+
 .pull-right[
 "Un cambio en $\Delta$ unidades de $x_{k}$ se traduce en un cambio en $\Delta$ $\beta_{k}$ unidades en el valor esperado de $y_{i}$"
 ]
 
---
-
-¿Por qué?
---
- Asumamos que sólo la variable $x_{1}$ cambia en una unidad, de $x_{1}=c$ a $x_{1}=c+1$. Entonces:
-
-\begin{align}
-  \frac{\Delta \mathbb{E}(y_{i})  }{\Delta x_{1}} &= \frac{ \mathbb{E}(y_{i} \mid x_{1}=c+1, \dots, x_{k})  - \mathbb{E}(y_{i} \mid x_{1}=c, \dots, x_{k})}{(c+1) - c} \\ \\
-  &=(\beta_{0} + \beta_{1}(c+1) +  \dots + \beta_{l}x_{k}) - (\beta_{0} + \beta_{1}c  \dots + \beta_{l}x_{k}) = \beta_{1}(c+1) - \beta_{1}c \\ \\
-  &= \beta_{1}c + \beta_{1} - \beta_{1}c = \beta_{1}
-\end{align}
 
 ---
 ## Interpretación coeficientes en LM
