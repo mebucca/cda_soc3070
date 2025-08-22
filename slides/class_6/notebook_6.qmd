@@ -22,10 +22,8 @@ knitr::opts_chunk$set(
 )
 
 # Packages
-library(tidyverse)
-library(broom)
-library(ggplot2)
-library(margins)
+library(pacman)
+p_load("tidyverse", "broom", "ggplot2", "marginaleffects")
 
 # Define julia-inspired palette
 julia <- list(
@@ -86,20 +84,19 @@ glimpse(mtcars)
 
 La base de datos `mtcars` contiene información sobre 32 modelos de automóviles. Para este ejercicio seleccionamos las siguientes variables:
 
--   **am**: tipo de transmisión del vehículo
+- **am**: tipo de transmisión del vehículo  
+  - 0 = transmisión automática  
+  - 1 = transmisión manual  
+  Es nuestra **variable dependiente binaria** en el Modelo Lineal de Probabilidad (LPM).
 
-    -   0 = transmisión automática\
-    -   1 = transmisión manual\
-        Es nuestra **variable dependiente binaria** en el Modelo Lineal de Probabilidad (LPM).
+- **wt**: peso del vehículo en miles de libras (lb/1000).  
+  Un mayor peso suele asociarse con menor rendimiento de combustible y puede incidir en la elección de transmisión.
 
--   **wt**: peso del vehículo en miles de libras (lb/1000).\
-    Un mayor peso suele asociarse con menor rendimiento de combustible y puede incidir en la elección de transmisión.
+- **mpg**: rendimiento del vehículo medido en millas por galón de gasolina.  
+  Es una variable continua que usamos en la regresión lineal clásica.
 
--   **mpg**: rendimiento del vehículo medido en millas por galón de gasolina.\
-    Es una variable continua que usamos en la regresión lineal clásica.
-
--   **hp**: caballos de fuerza bruta del motor.\
-    Captura la potencia del automóvil; la usamos en interacción con el peso para evaluar si el efecto del peso sobre la probabilidad de transmisión manual cambia según la potencia.
+- **hp**: caballos de fuerza bruta del motor.  
+  Captura la potencia del automóvil; la usamos en interacción con el peso para evaluar si el efecto del peso sobre la probabilidad de transmisión manual cambia según la potencia.
 
 ------------------------------------------------------------------------
 
@@ -144,7 +141,7 @@ Probabilidad de transmisión manual según peso (`wt`).
 ```{r}
 lpm <- lm(am ~ wt, data=mtcars)
 summary(lpm)
-margins(lpm)
+marginaleffects::avg_slopes(lpm)
 ```
 
 ```{r}
@@ -190,7 +187,7 @@ mtcars %>%
 ```{r}
 lpm_complex <- lm(am ~ wt + I(wt^2) + hp + wt:hp, data=mtcars)
 summary(lpm_complex)
-margins(lpm_complex)
+marginaleffects::avg_slopes(lpm_complex)
 ```
 
 ```{r}

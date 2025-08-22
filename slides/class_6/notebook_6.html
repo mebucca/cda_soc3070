@@ -293,11 +293,16 @@ Captura la potencia del automóvil; la usamos en interacción con el peso para e
 </div>
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">margins</span>(lpm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> marginaleffects<span class="sc">::</span><span class="fu">avg_slopes</span>(lpm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre class="python-output"><code>#&gt;       wt
-#&gt;  -0.3532</code></pre>
+<pre class="python-output"><code>#&gt; 
+#&gt;  Estimate Std. Error     z Pr(&gt;|z|)    S  2.5 % 97.5 %
+#&gt;    -0.353     0.0672 -5.26   &lt;0.001 22.7 -0.485 -0.222
+#&gt; 
+#&gt; Term: wt
+#&gt; Type: response
+#&gt; Comparison: dY/dX</code></pre>
 </div>
 </div>
 <div class="cell">
@@ -394,11 +399,16 @@ Captura la potencia del automóvil; la usamos en interacción con el peso para e
 </div>
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">margins</span>(lpm_complex)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> marginaleffects<span class="sc">::</span><span class="fu">avg_slopes</span>(lpm_complex)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre class="python-output"><code>#&gt;       wt      hp
-#&gt;  -0.5498 0.00323</code></pre>
+<pre class="python-output"><code>#&gt; 
+#&gt;  Term Estimate Std. Error     z Pr(&gt;|z|)    S    2.5 %   97.5 %
+#&gt;    hp  0.00323    0.00113  2.85  0.00442  7.8  0.00101  0.00545
+#&gt;    wt -0.54980    0.08713 -6.31  &lt; 0.001 31.7 -0.72056 -0.37904
+#&gt; 
+#&gt; Type: response
+#&gt; Comparison: dY/dX</code></pre>
 </div>
 </div>
 <div class="cell">
