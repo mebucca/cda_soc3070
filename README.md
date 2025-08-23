@@ -26,6 +26,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | 11    | Agosto    | Variables Aleatorias y Distribuciones Discretas   | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_3/class_3#1) [`[Code]`](slides/class_3/class_3.Rmd)            |
 | 18    | Agosto    | Momentos \& MLE            | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_4/class_4#1) [`[Code]`](slides/class_4/class_4.Rmd)            |
 | 25    | Agosto    | Modelo Lineal \& LPM       | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_6/class_6#1) [`[Code]`](slides/class_4/class_4.Rmd) [`[Notebook]`](https://mebucca.github.io/cda_soc3070/slides/class_6/notebook_6#1)                                                                                                                               |
+| 1     | Septiembre| NO HAY CLASES              |                                                                                                                              |
 | 8     | Septiembre| —                          |                                                                                                                              |
 | 29    | Septiembre| —                          |                                                                                                                              |
 | 6     | Octubre   | —                          |                                                                                                                              |
