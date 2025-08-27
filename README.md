@@ -46,6 +46,13 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 
 - Reuniones individuales de aproximadamente 15 minutos cada día Lunes entre 14:30 y 15:30pm. [`[Agendar]`](https://calendar.app.google/Cyu1NRh6Bn2vRHEx9)
 
+## Ayudantía 
+
+|Día              | Mes              | Contenido       | Material                                                                                       |
+|-----------------|------------------|-----------------|------------------------------------------------------------------------------------------------|
+| 27              | Agosto           | Introducción a funciones de Tidyverse | [`[Pres]`](https://mebucca.github.io/cda_soc3070/ayudantia/ayudantia_01.html) [`[Code]`]([slides/class_0/class_0.Rmd](https://mebucca.github.io/cda_soc3070/ayudantia/ayudantia_01.qmd))  |
+
+
 
 ## Evaluaciones
 
