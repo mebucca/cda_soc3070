@@ -50,7 +50,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 
 |Día              | Mes              | Contenido       | Material                                                                                       |
 |-----------------|------------------|-----------------|------------------------------------------------------------------------------------------------|
-| 27              | Agosto           | Introducción a funciones de Tidyverse | [`[Pres]`](https://mebucca.github.io/cda_soc3070/ayudantia/ayudantia_01.html) [`[Code]`](https://mebucca.github.io/cda_soc3070/ayudantia/ayudantia_01.qmd)  |
+| 27              | Agosto           | Introducción a funciones de Tidyverse | [`[Pres]`](https://mebucca.github.io/cda_soc3070/ayudantia/ayudantia_01.html) [`[Code]`](ayudantia/ayudantia_01.qmd)  |
 
 
 
