@@ -1,0 +1,585 @@
+---
+title: "Práctica 01: Introducción a R, tidyverse y Datos Categóricos"
+author: "SOC3070 · Roberto Cantillan"
+date: today
+format:
+  html:
+    theme: cosmo
+    highlight: tango
+    code-copy: true
+    code-fold: show
+    toc: true
+    toc-location: right
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  comment = "#>",
+  fig.width = 10,
+  fig.height = 6,
+  fig.align = "center"
+)
+
+# Cargar paquetes
+library(tidyverse)
+library(forcats)
+
+# Configurar opciones
+options(
+  tibble.print_max = 10,
+  tibble.print_min = 6,
+  tibble.width = 80,
+  pillar.sigfig = 3
+)
+```
+
+```{css, echo=FALSE}
+.ejercicio {
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 4px;
+}
+
+.solucion {
+  background-color: #d1ecf1;
+  border-left: 4px solid #17a2b8;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 4px;
+}
+```
+
+------------------------------------------------------------------------
+
+# 1. Introducción al tidyverse
+
+## ¿Qué es tidyverse?
+
+**tidyverse** es una colección de paquetes de R para ciencia de datos que comparten una filosofía común y gramática consistente.
+
+### Principios fundamentales:
+
+1. **Tidy Data**: Cada variable = columna, cada observación = fila
+2. **Gramática consistente**: Funciones siguen patrones predecibles  
+3. **Pipe operator** (`%>%`): Encadena operaciones de manera legible
+
+```{r intro_tidyverse}
+# Paquetes principales del tidyverse
+paquetes_core <- tibble(
+  paquete = c("ggplot2", "dplyr", "tidyr", "readr", "purrr", "tibble", "stringr", "forcats"),
+  funcion = c("Visualización", "Manipulación", "Reorganización", "Importar", 
+              "Iteración", "Data frames", "Texto", "Factores")
+)
+
+print(paquetes_core)
+```
+
+## El Operador Pipe (`%>%`)
+
+```{r pipes_intro}
+# Datos de ejemplo
+datos <- tibble(
+  nombre = c("Ana", "Luis", "Carmen", "Pedro"),
+  edad = c(25, 32, 19, 45),
+  salario = c(45000, 52000, 38000, 67000)
+)
+
+# Sin pipes (difícil de leer)
+resultado_sin_pipes <- select(
+  filter(
+    mutate(datos, salario_miles = salario/1000), 
+    edad > 20
+  ), 
+  nombre, edad, salario_miles
+)
+
+# Con pipes (fácil de leer)
+resultado_con_pipes <- datos %>%
+  mutate(salario_miles = salario/1000) %>%
+  filter(edad > 20) %>%
+  select(nombre, edad, salario_miles)
+
+print(resultado_con_pipes)
+```
+
+------------------------------------------------------------------------
+
+# 2. Funciones Fundamentales de dplyr
+
+```{r datos_practica}
+# Crear dataset de práctica
+set.seed(123)
+estudiantes <- tibble(
+  id = 1:50,
+  nombre = paste("Estudiante", 1:50),
+  edad = sample(18:25, 50, replace = TRUE),
+  carrera = sample(c("Sociología", "Psicología", "Economía", "Historia"), 50, replace = TRUE),
+  promedio = round(rnorm(50, mean = 5.5, sd = 0.8), 1),
+  creditos = sample(120:180, 50, replace = TRUE),
+  beca = sample(c(TRUE, FALSE), 50, replace = TRUE, prob = c(0.3, 0.7))
+)
+
+glimpse(estudiantes)
+```
+
+## 1. `select()` - Seleccionar Columnas
+
+```{r select_ejemplos}
+# Selección básica
+estudiantes %>% select(nombre, edad, carrera)
+
+# Selección con funciones auxiliares
+estudiantes %>% select(starts_with("c"))  # Columnas que inician con 'c'
+estudiantes %>% select(where(is.numeric)) # Solo columnas numéricas
+```
+
+## 2. `filter()` - Filtrar Filas
+
+```{r filter_ejemplos}
+# Filtros básicos
+estudiantes %>% filter(carrera == "Sociología")
+estudiantes %>% filter(promedio > 6.0)
+
+# Filtros múltiples
+estudiantes %>% filter(carrera == "Economía" & beca == TRUE)
+estudiantes %>% filter(edad <= 19 | promedio >= 6.5)
+
+# Filtros avanzados
+estudiantes %>% filter(carrera %in% c("Sociología", "Historia"))
+estudiantes %>% filter(between(promedio, 5.0, 6.0))
+```
+
+## 3. `mutate()` - Crear/Modificar Columnas
+
+```{r mutate_ejemplos}
+# Crear nuevas variables
+estudiantes %>%
+  mutate(
+    promedio_centesimal = promedio * 10,
+    edad_meses = edad * 12,
+    beca_texto = if_else(beca, "Sí", "No")
+  ) %>%
+  select(nombre, promedio, promedio_centesimal, beca_texto)
+
+# Variables con lógica condicional
+estudiantes %>%
+  mutate(
+    categoria = case_when(
+      promedio >= 6.5 ~ "Excelente",
+      promedio >= 6.0 ~ "Muy Bueno", 
+      promedio >= 5.5 ~ "Bueno",
+      promedio >= 5.0 ~ "Suficiente",
+      TRUE ~ "Insuficiente"
+    )
+  ) %>%
+  count(categoria)
+```
+
+## 4. `arrange()` - Ordenar Filas
+
+```{r arrange_ejemplos}
+# Ordenamiento básico
+estudiantes %>% arrange(edad) %>% select(nombre, edad)
+
+# Ordenamiento múltiple
+estudiantes %>% 
+  arrange(carrera, desc(promedio)) %>% 
+  select(nombre, carrera, promedio)
+```
+
+## 5. `summarise()` - Resumir Datos
+
+```{r summarise_ejemplos}
+# Estadísticas básicas
+estudiantes %>%
+  summarise(
+    n = n(),
+    edad_promedio = mean(edad),
+    promedio_general = mean(promedio),
+    con_beca = sum(beca)
+  )
+
+# Resúmenes por grupos
+estudiantes %>%
+  group_by(carrera) %>%
+  summarise(
+    n = n(),
+    promedio_medio = round(mean(promedio), 2),
+    pct_con_beca = round(mean(beca) * 100, 1),
+    .groups = "drop"
+  )
+```
+
+------------------------------------------------------------------------
+
+# 3. Manipulación de Texto con stringr
+
+```{r stringr_datos}
+# Datos con problemas típicos de texto
+datos_texto <- tibble(
+  id = 1:6,
+  nombre = c("  MARÍA josé  ", "juan carlos", "Ana Sofía    ", 
+             "Pedro-Antonio", "carmen rosa", "LUIS ALBERTO"),
+  email = c("maria@GMAIL.COM", "j.ruiz@hotmail.es  ", "ana@yahoo.com", 
+            "pedro@uni.cl", "carmen@empresa.co", "luis@CORP.CL")
+)
+
+print(datos_texto)
+```
+
+## Funciones Básicas de Limpieza
+
+```{r stringr_limpieza}
+datos_limpios <- datos_texto %>%
+  mutate(
+    # Limpiar espacios y capitalización
+    nombre_limpio = str_trim(nombre) %>% str_to_title(),
+    email_limpio = str_trim(email) %>% str_to_lower(),
+    
+    # Detectar patrones
+    tiene_guion = str_detect(nombre, "-"),
+    es_gmail = str_detect(email_limpio, "gmail"),
+    
+    # Extraer información
+    primer_nombre = str_extract(nombre_limpio, "\\w+"),
+    dominio = str_extract(email_limpio, "(?<=@)[^.]+")
+  )
+
+datos_limpios %>% select(nombre_limpio, email_limpio, primer_nombre, dominio)
+```
+
+------------------------------------------------------------------------
+
+# 4. Trabajando con Factores usando forcats
+
+```{r forcats_datos}
+# Datos categóricos de ejemplo
+set.seed(456)
+encuesta <- tibble(
+  id = 1:20,
+  educacion = sample(c("Básica", "Media", "Técnica", "Universitaria", "Postgrado"), 20, replace = TRUE),
+  satisfaccion = sample(c("Muy Insatisfecho", "Insatisfecho", "Neutral", "Satisfecho", "Muy Satisfecho"), 20, replace = TRUE),
+  region = sample(c("Metropolitana", "Valparaíso", "Biobío", "Araucanía"), 20, replace = TRUE)
+)
+
+# Problema: orden alfabético no tiene sentido
+encuesta %>% count(educacion, sort = TRUE)
+```
+
+## Creación y Manipulación de Factores
+
+```{r forcats_basico}
+encuesta_factores <- encuesta %>%
+  mutate(
+    # Factor con orden lógico
+    educacion_factor = factor(
+      educacion,
+      levels = c("Básica", "Media", "Técnica", "Universitaria", "Postgrado")
+    ),
+    
+    # Factor ordenado
+    satisfaccion_factor = factor(
+      satisfaccion,
+      levels = c("Muy Insatisfecho", "Insatisfecho", "Neutral", "Satisfecho", "Muy Satisfecho"),
+      ordered = TRUE
+    )
+  )
+
+# Ahora el orden es correcto
+encuesta_factores %>% 
+  count(educacion_factor) %>%
+  arrange(educacion_factor)
+```
+
+## Reordenar y Agrupar Factores
+
+```{r forcats_avanzado}
+# Datos con muchas categorías
+ventas <- tibble(
+  producto = sample(c("Laptop", "Mouse", "Teclado", "Monitor", "Tablet", 
+                     "Smartphone", "Auriculares", "Cámara", "USB"), 100, replace = TRUE)
+)
+
+ventas_agrupadas <- ventas %>%
+  mutate(
+    # Ordenar por frecuencia
+    producto_freq = fct_infreq(factor(producto)),
+    
+    # Mantener solo top 5, agrupar resto
+    producto_top5 = fct_lump_n(factor(producto), n = 5, other_level = "Otros"),
+    
+    # Colapsar categorías específicas
+    categoria = fct_collapse(
+      factor(producto),
+      "Computación" = c("Laptop", "Mouse", "Teclado", "Monitor"),
+      "Móviles" = c("Smartphone", "Tablet"),
+      other_level = "Otros"
+    )
+  )
+
+ventas_agrupadas %>% count(categoria, sort = TRUE)
+```
+
+------------------------------------------------------------------------
+
+# 5. Análisis con Datos Reales: GSS
+
+```{r gss_carga}
+# Cargar datos GSS
+data("gss_cat", package = "forcats")
+
+# Exploración básica
+glimpse(gss_cat)
+```
+
+## Análisis de Variables Categóricas
+
+```{r gss_analisis}
+# Función para análisis de frecuencias
+analizar_variable <- function(data, var) {
+  data %>%
+    filter(!is.na({{var}})) %>%
+    count({{var}}, sort = TRUE) %>%
+    mutate(
+      porcentaje = round(n / sum(n) * 100, 1),
+      porcentaje_acum = cumsum(porcentaje)
+    )
+}
+
+# Análisis de identificación partidaria
+analisis_partido <- analizar_variable(gss_cat, partyid)
+print(analisis_partido)
+
+# Análisis de religión (top 8)
+analisis_religion <- analizar_variable(gss_cat, relig)
+print(head(analisis_religion, 8))
+
+# Análisis temporal simple
+evolucion_simple <- gss_cat %>%
+  filter(!is.na(partyid)) %>%
+  mutate(
+    partido_simple = case_when(
+      str_detect(partyid, "republican") ~ "Republicano",
+      str_detect(partyid, "democrat") ~ "Demócrata", 
+      str_detect(partyid, "Independent") ~ "Independiente",
+      TRUE ~ "Otros"
+    )
+  ) %>%
+  count(year, partido_simple) %>%
+  group_by(year) %>%
+  mutate(porcentaje = round(n / sum(n) * 100, 1)) %>%
+  ungroup()
+
+# Mostrar tendencia para Independientes
+evolucion_simple %>%
+  filter(partido_simple == "Independiente") %>%
+  select(year, porcentaje) %>%
+  arrange(year)
+```
+
+------------------------------------------------------------------------
+
+# 6. Ejercicios Prácticos
+
+<div class="ejercicio">
+**EJERCICIO 1: Análisis Básico**
+
+Usando el dataset `estudiantes`, realiza las siguientes tareas:
+
+1. Filtra estudiantes de "Sociología" con promedio mayor a 5.5
+2. Crea una nueva variable `categoria_edad` que clasifique:
+   - "Joven": edad <= 20
+   - "Adulto": edad > 20
+3. Calcula el promedio de créditos por carrera
+4. Ordena las carreras por promedio de notas (descendente)
+
+Escribe el código para cada tarea.
+</div>
+
+<div class="solucion">
+**SOLUCIÓN EJERCICIO 1:**
+
+```{r ejercicio1}
+# Tarea 1: Filtrar estudiantes
+estudiantes %>%
+  filter(carrera == "Sociología", promedio > 5.5) %>%
+  select(nombre, carrera, promedio)
+
+# Tarea 2: Crear categoría de edad
+estudiantes %>%
+  mutate(
+    categoria_edad = if_else(edad <= 20, "Joven", "Adulto")
+  ) %>%
+  count(categoria_edad)
+
+# Tarea 3: Promedio de créditos por carrera
+estudiantes %>%
+  group_by(carrera) %>%
+  summarise(promedio_creditos = round(mean(creditos), 1), .groups = "drop")
+
+# Tarea 4: Carreras ordenadas por promedio de notas
+estudiantes %>%
+  group_by(carrera) %>%
+  summarise(promedio_notas = round(mean(promedio), 2), .groups = "drop") %>%
+  arrange(desc(promedio_notas))
+```
+</div>
+
+<div class="ejercicio">
+**EJERCICIO 2: Manipulación de Texto y Factores**
+
+Con los datos de `encuesta`:
+
+1. Convierte `educacion` a factor con orden correcto
+2. Agrupa las regiones en dos categorías: "Centro" (Metropolitana, Valparaíso) y "Sur" (Biobío, Araucanía)
+3. Calcula el porcentaje de personas "Satisfechas" o "Muy Satisfechas" por región agrupada
+4. Identifica la combinación educación-satisfacción más común
+
+Escribe el código paso a paso.
+</div>
+
+<div class="solucion">
+**SOLUCIÓN EJERCICIO 2:**
+
+```{r ejercicio2}
+# Tarea 1: Factor ordenado de educación
+encuesta_factor <- encuesta %>%
+  mutate(
+    educacion_ordenada = factor(
+      educacion,
+      levels = c("Básica", "Media", "Técnica", "Universitaria", "Postgrado")
+    )
+  )
+
+levels(encuesta_factor$educacion_ordenada)
+
+# Tarea 2: Agrupar regiones
+encuesta_agrupada <- encuesta_factor %>%
+  mutate(
+    region_agrupada = case_when(
+      region %in% c("Metropolitana", "Valparaíso") ~ "Centro",
+      region %in% c("Biobío", "Araucanía") ~ "Sur",
+      TRUE ~ "Otros"
+    )
+  )
+
+encuesta_agrupada %>% count(region_agrupada)
+
+# Tarea 3: Porcentaje satisfechos por región
+satisfaccion_region <- encuesta_agrupada %>%
+  mutate(
+    satisfecho = satisfaccion %in% c("Satisfecho", "Muy Satisfecho")
+  ) %>%
+  group_by(region_agrupada) %>%
+  summarise(
+    pct_satisfecho = round(mean(satisfecho) * 100, 1),
+    .groups = "drop"
+  )
+
+print(satisfaccion_region)
+
+# Tarea 4: Combinación más común
+combinacion_comun <- encuesta %>%
+  count(educacion, satisfaccion, sort = TRUE) %>%
+  slice_head(n = 1)
+
+print(combinacion_comun)
+```
+</div>
+
+<div class="ejercicio">
+**EJERCICIO 3: Análisis GSS**
+
+Con el dataset `gss_cat`:
+
+1. Encuentra las 5 denominaciones religiosas más comunes
+2. Calcula el porcentaje de personas por raza en cada década (años terminados en 0)
+3. Crea una tabla que muestre religión vs identificación partidaria (solo las 3 religiones y 3 partidos más comunes)
+4. Identifica si hay cambios en el estado civil a lo largo del tiempo
+
+</div>
+
+<div class="solucion">
+**SOLUCIÓN EJERCICIO 3:**
+
+```{r ejercicio3}
+# Tarea 1: Top 5 religiones
+top_religiones <- gss_cat %>%
+  count(relig, sort = TRUE) %>%
+  slice_head(n = 5)
+
+print(top_religiones)
+
+# Tarea 2: Raza por década
+raza_decada <- gss_cat %>%
+  filter(year %% 10 == 0) %>%  # Años terminados en 0
+  count(year, race) %>%
+  group_by(year) %>%
+  mutate(porcentaje = round(n / sum(n) * 100, 1)) %>%
+  ungroup() %>%
+  arrange(year, desc(porcentaje))
+
+print(raza_decada)
+
+# Tarea 3: Tabla religión vs partido (top 3 cada uno)
+top3_religion <- gss_cat %>% count(relig, sort = TRUE) %>% slice_head(n = 3) %>% pull(relig)
+top3_partido <- gss_cat %>% count(partyid, sort = TRUE) %>% slice_head(n = 3) %>% pull(partyid)
+
+tabla_religion_partido <- gss_cat %>%
+  filter(relig %in% top3_religion, partyid %in% top3_partido) %>%
+  count(relig, partyid) %>%
+  group_by(relig) %>%
+  mutate(porcentaje = round(n / sum(n) * 100, 1)) %>%
+  ungroup()
+
+print(tabla_religion_partido)
+
+# Tarea 4: Estado civil por tiempo
+marital_tiempo <- gss_cat %>%
+  count(year, marital) %>%
+  group_by(year) %>%
+  mutate(porcentaje = round(n / sum(n) * 100, 1)) %>%
+  ungroup() %>%
+  filter(marital %in% c("Married", "Never married", "Divorced"))
+
+# Mostrar tendencia para "Never married"
+marital_tiempo %>%
+  filter(marital == "Never married") %>%
+  select(year, porcentaje) %>%
+  arrange(year) %>%
+  slice(c(1:3, (n()-2):n()))  # Primeros 3 y últimos 3
+```
+</div>
+
+------------------------------------------------------------------------
+
+# 7. Resumen 
+
+## Funciones Clave por Paquete
+
+```{r resumen_funciones}
+# Resumen de funciones principales
+resumen_funciones <- tribble(
+  ~paquete, ~funcion, ~proposito,
+  "dplyr", "select()", "Seleccionar columnas",
+  "dplyr", "filter()", "Filtrar filas", 
+  "dplyr", "mutate()", "Crear/modificar variables",
+  "dplyr", "arrange()", "Ordenar datos",
+  "dplyr", "summarise()", "Resumir datos",
+  "dplyr", "group_by()", "Agrupar para operaciones",
+  "stringr", "str_detect()", "Detectar patrones",
+  "stringr", "str_replace()", "Reemplazar texto",
+  "stringr", "str_trim()", "Eliminar espacios",
+  "forcats", "factor()", "Crear factores",
+  "forcats", "fct_relevel()", "Reordenar niveles",
+  "forcats", "fct_lump()", "Agrupar categorías raras"
+)
+
+print(resumen_funciones)
+```
+
