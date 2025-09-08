@@ -27,7 +27,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | 18    | Agosto    | Momentos \& MLE            | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_4/class_4#1) [`[Code]`](slides/class_4/class_4.Rmd)            |
 | 25    | Agosto    | Modelo Lineal \& LPM       | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_6/class_6#1) [`[Code]`](slides/class_6/class_6.Rmd) [`[Notebook]`](https://mebucca.github.io/cda_soc3070/slides/class_6/notebook_6#1)                                                                                                                               |
 | 1     | Septiembre| NO HAY CLASES              |                                                                                                                              |
-| 8     | Septiembre| —                          |                                                                                                                              |
+| 8     | Septiembre| GLM & Regresión logística  | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_8/class_8#1) [`[Code]`](slides/class_8/class_8.Rmd)                                                                                                                             |
 | 29    | Septiembre| —                          |                                                                                                                              |
 | 6     | Octubre   | —                          |                                                                                                                              |
 | 13    | Octubre   | —                          |                                                                                                                              |
@@ -45,6 +45,13 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 ## Horario de Consulta
 
 - Reuniones individuales de aproximadamente 15 minutos cada día Lunes entre 14:30 y 15:30pm. [`[Agendar]`](https://calendar.app.google/Cyu1NRh6Bn2vRHEx9)
+
+## Ayudantía 
+
+|Día              | Mes              | Contenido       | Material                                                                                       |
+|-----------------|------------------|-----------------|------------------------------------------------------------------------------------------------|
+| 27              | Agosto           | Introducción a funciones de Tidyverse | [`[Pres]`](https://mebucca.github.io/cda_soc3070/ayudantia/ayudantia_01.html) [`[Code]`](ayudantia/ayudantia_01.qmd)  |
+
 
 
 ## Evaluaciones

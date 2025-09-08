@@ -4,7 +4,7 @@
     <title>Análisis de Datos Categóricos (SOC3070)</title>
     <meta charset="utf-8" />
     <meta name="author" content="  Mauricio Bucca  Profesor Asistente, Sociología UC" />
-    <script src="libs/header-attrs-2.23/header-attrs.js"></script>
+    <script src="libs/header-attrs-2.29/header-attrs.js"></script>
     <link rel="stylesheet" href="gentle-r.css" type="text/css" />
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
@@ -16,7 +16,7 @@ class: center, middle, inverse, title-slide
 # Análisis de Datos Categóricos (SOC3070)
 ]
 .subtitle[
-## Clase #7: Modelos Lineales Generalizados
+## Modelos Lineales Generalizados
 ]
 .author[
 ### <br> Mauricio Bucca<br> Profesor Asistente, Sociología UC
@@ -418,7 +418,7 @@ Datos de la Canadian Survey of Labour and Income Dynamics 1994, para la provinci
 ## LM con log en variable dependiente
 
 
-```r
+``` r
 our_lm &lt;- lm(log(wages) ~ factor(sex), data=ourdata)
 summary(our_lm)
 ```
@@ -449,7 +449,7 @@ summary(our_lm)
 ## Gaussian GLM con log-link
 
 
-```r
+``` r
 our_glm &lt;- glm(wages ~ factor(sex), family = gaussian(link="log"), data=ourdata)
 summary(our_glm)
 ```
@@ -459,10 +459,6 @@ summary(our_glm)
 ## Call:
 ## glm(formula = wages ~ factor(sex), family = gaussian(link = "log"), 
 ##     data = ourdata)
-## 
-## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -14.222   -5.972   -1.380    4.163   36.030  
 ## 
 ## Coefficients:
 ##                 Estimate Std. Error t value Pr(&gt;|t|)    
@@ -564,11 +560,11 @@ github.com/mebucca
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
-"ratio": "16:9",
-"highlightStyle": "github",
-"highlightLines": true,
-"countIncrementalSlides": true,
-"slideNumberFormat": "%current%"
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": true,
+  "slideNumberFormat": "%current%"
 });
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));

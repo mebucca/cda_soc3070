@@ -1,0 +1,1640 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="SOC3070 · Roberto Cantillan">
+<meta name="dcterms.date" content="2025-08-27">
+
+<title>Práctica 01: Introducción a R, tidyverse y Datos Categóricos</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="ayudantia_01_files/libs/clipboard/clipboard.min.js"></script>
+<script src="ayudantia_01_files/libs/quarto-html/quarto.js"></script>
+<script src="ayudantia_01_files/libs/quarto-html/popper.min.js"></script>
+<script src="ayudantia_01_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="ayudantia_01_files/libs/quarto-html/anchor.min.js"></script>
+<link href="ayudantia_01_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="ayudantia_01_files/libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="ayudantia_01_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="ayudantia_01_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="ayudantia_01_files/libs/bootstrap/bootstrap-48d078b43f8372132f50074d7c21a68c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introducción-al-tidyverse" id="toc-introducción-al-tidyverse" class="nav-link active" data-scroll-target="#introducción-al-tidyverse">1. Introducción al tidyverse</a>
+  <ul class="collapse">
+  <li><a href="#qué-es-tidyverse" id="toc-qué-es-tidyverse" class="nav-link" data-scroll-target="#qué-es-tidyverse">¿Qué es tidyverse?</a>
+  <ul class="collapse">
+  <li><a href="#principios-fundamentales" id="toc-principios-fundamentales" class="nav-link" data-scroll-target="#principios-fundamentales">Principios fundamentales:</a></li>
+  </ul></li>
+  <li><a href="#el-operador-pipe" id="toc-el-operador-pipe" class="nav-link" data-scroll-target="#el-operador-pipe">El Operador Pipe (<code>%&gt;%</code>)</a></li>
+  </ul></li>
+  <li><a href="#funciones-fundamentales-de-dplyr" id="toc-funciones-fundamentales-de-dplyr" class="nav-link" data-scroll-target="#funciones-fundamentales-de-dplyr">2. Funciones Fundamentales de dplyr</a>
+  <ul class="collapse">
+  <li><a href="#select---seleccionar-columnas" id="toc-select---seleccionar-columnas" class="nav-link" data-scroll-target="#select---seleccionar-columnas">1. <code>select()</code> - Seleccionar Columnas</a></li>
+  <li><a href="#filter---filtrar-filas" id="toc-filter---filtrar-filas" class="nav-link" data-scroll-target="#filter---filtrar-filas">2. <code>filter()</code> - Filtrar Filas</a></li>
+  <li><a href="#mutate---crearmodificar-columnas" id="toc-mutate---crearmodificar-columnas" class="nav-link" data-scroll-target="#mutate---crearmodificar-columnas">3. <code>mutate()</code> - Crear/Modificar Columnas</a></li>
+  <li><a href="#arrange---ordenar-filas" id="toc-arrange---ordenar-filas" class="nav-link" data-scroll-target="#arrange---ordenar-filas">4. <code>arrange()</code> - Ordenar Filas</a></li>
+  <li><a href="#summarise---resumir-datos" id="toc-summarise---resumir-datos" class="nav-link" data-scroll-target="#summarise---resumir-datos">5. <code>summarise()</code> - Resumir Datos</a></li>
+  </ul></li>
+  <li><a href="#manipulación-de-texto-con-stringr" id="toc-manipulación-de-texto-con-stringr" class="nav-link" data-scroll-target="#manipulación-de-texto-con-stringr">3. Manipulación de Texto con stringr</a>
+  <ul class="collapse">
+  <li><a href="#funciones-básicas-de-limpieza" id="toc-funciones-básicas-de-limpieza" class="nav-link" data-scroll-target="#funciones-básicas-de-limpieza">Funciones Básicas de Limpieza</a></li>
+  </ul></li>
+  <li><a href="#trabajando-con-factores-usando-forcats" id="toc-trabajando-con-factores-usando-forcats" class="nav-link" data-scroll-target="#trabajando-con-factores-usando-forcats">4. Trabajando con Factores usando forcats</a>
+  <ul class="collapse">
+  <li><a href="#creación-y-manipulación-de-factores" id="toc-creación-y-manipulación-de-factores" class="nav-link" data-scroll-target="#creación-y-manipulación-de-factores">Creación y Manipulación de Factores</a></li>
+  <li><a href="#reordenar-y-agrupar-factores" id="toc-reordenar-y-agrupar-factores" class="nav-link" data-scroll-target="#reordenar-y-agrupar-factores">Reordenar y Agrupar Factores</a></li>
+  </ul></li>
+  <li><a href="#análisis-con-datos-reales-gss" id="toc-análisis-con-datos-reales-gss" class="nav-link" data-scroll-target="#análisis-con-datos-reales-gss">5. Análisis con Datos Reales: GSS</a>
+  <ul class="collapse">
+  <li><a href="#análisis-de-variables-categóricas" id="toc-análisis-de-variables-categóricas" class="nav-link" data-scroll-target="#análisis-de-variables-categóricas">Análisis de Variables Categóricas</a></li>
+  </ul></li>
+  <li><a href="#ejercicios-prácticos" id="toc-ejercicios-prácticos" class="nav-link" data-scroll-target="#ejercicios-prácticos">6. Ejercicios Prácticos</a></li>
+  <li><a href="#resumen" id="toc-resumen" class="nav-link" data-scroll-target="#resumen">7. Resumen</a>
+  <ul class="collapse">
+  <li><a href="#funciones-clave-por-paquete" id="toc-funciones-clave-por-paquete" class="nav-link" data-scroll-target="#funciones-clave-por-paquete">Funciones Clave por Paquete</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Práctica 01: Introducción a R, tidyverse y Datos Categóricos</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>SOC3070 · Roberto Cantillan </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">August 27, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cell" data-layout-align="center">
+<style type="text/css">
+.ejercicio {
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 4px;
+}
+
+.solucion {
+  background-color: #d1ecf1;
+  border-left: 4px solid #17a2b8;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 4px;
+}
+</style>
+</div>
+<hr>
+<section id="introducción-al-tidyverse" class="level1">
+<h1>1. Introducción al tidyverse</h1>
+<section id="qué-es-tidyverse" class="level2">
+<h2 class="anchored" data-anchor-id="qué-es-tidyverse">¿Qué es tidyverse?</h2>
+<p><strong>tidyverse</strong> es una colección de paquetes de R para ciencia de datos que comparten una filosofía común y gramática consistente.</p>
+<section id="principios-fundamentales" class="level3">
+<h3 class="anchored" data-anchor-id="principios-fundamentales">Principios fundamentales:</h3>
+<ol type="1">
+<li><strong>Tidy Data</strong>: Cada variable = columna, cada observación = fila</li>
+<li><strong>Gramática consistente</strong>: Funciones siguen patrones predecibles<br>
+</li>
+<li><strong>Pipe operator</strong> (<code>%&gt;%</code>): Encadena operaciones de manera legible</li>
+</ol>
+<div class="cell" data-layout-align="center">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Paquetes principales del tidyverse</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>paquetes_core <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">paquete =</span> <span class="fu">c</span>(<span class="st">"ggplot2"</span>, <span class="st">"dplyr"</span>, <span class="st">"tidyr"</span>, <span class="st">"readr"</span>, <span class="st">"purrr"</span>, <span class="st">"tibble"</span>, <span class="st">"stringr"</span>, <span class="st">"forcats"</span>),</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">funcion =</span> <span class="fu">c</span>(<span class="st">"Visualización"</span>, <span class="st">"Manipulación"</span>, <span class="st">"Reorganización"</span>, <span class="st">"Importar"</span>, </span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>              <span class="st">"Iteración"</span>, <span class="st">"Data frames"</span>, <span class="st">"Texto"</span>, <span class="st">"Factores"</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(paquetes_core)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 8 × 2
+#&gt;   paquete funcion       
+#&gt;   &lt;chr&gt;   &lt;chr&gt;         
+#&gt; 1 ggplot2 Visualización 
+#&gt; 2 dplyr   Manipulación  
+#&gt; 3 tidyr   Reorganización
+#&gt; 4 readr   Importar      
+#&gt; 5 purrr   Iteración     
+#&gt; 6 tibble  Data frames   
+#&gt; 7 stringr Texto         
+#&gt; 8 forcats Factores</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="el-operador-pipe" class="level2">
+<h2 class="anchored" data-anchor-id="el-operador-pipe">El Operador Pipe (<code>%&gt;%</code>)</h2>
+<div class="cell" data-layout-align="center">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Datos de ejemplo</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>datos <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">nombre =</span> <span class="fu">c</span>(<span class="st">"Ana"</span>, <span class="st">"Luis"</span>, <span class="st">"Carmen"</span>, <span class="st">"Pedro"</span>),</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">edad =</span> <span class="fu">c</span>(<span class="dv">25</span>, <span class="dv">32</span>, <span class="dv">19</span>, <span class="dv">45</span>),</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">salario =</span> <span class="fu">c</span>(<span class="dv">45000</span>, <span class="dv">52000</span>, <span class="dv">38000</span>, <span class="dv">67000</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Sin pipes (difícil de leer)</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>resultado_sin_pipes <span class="ot">&lt;-</span> <span class="fu">select</span>(</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(datos, <span class="at">salario_miles =</span> salario<span class="sc">/</span><span class="dv">1000</span>), </span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    edad <span class="sc">&gt;</span> <span class="dv">20</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  ), </span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  nombre, edad, salario_miles</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Con pipes (fácil de leer)</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>resultado_con_pipes <span class="ot">&lt;-</span> datos <span class="sc">%&gt;%</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">salario_miles =</span> salario<span class="sc">/</span><span class="dv">1000</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(edad <span class="sc">&gt;</span> <span class="dv">20</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(nombre, edad, salario_miles)</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(resultado_con_pipes)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 3 × 3
+#&gt;   nombre  edad salario_miles
+#&gt;   &lt;chr&gt;  &lt;dbl&gt;         &lt;dbl&gt;
+#&gt; 1 Ana       25            45
+#&gt; 2 Luis      32            52
+#&gt; 3 Pedro     45            67</code></pre>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="funciones-fundamentales-de-dplyr" class="level1">
+<h1>2. Funciones Fundamentales de dplyr</h1>
+<div class="cell" data-layout-align="center">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear dataset de práctica</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">id =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">50</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">nombre =</span> <span class="fu">paste</span>(<span class="st">"Estudiante"</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">50</span>),</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">edad =</span> <span class="fu">sample</span>(<span class="dv">18</span><span class="sc">:</span><span class="dv">25</span>, <span class="dv">50</span>, <span class="at">replace =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">carrera =</span> <span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">"Sociología"</span>, <span class="st">"Psicología"</span>, <span class="st">"Economía"</span>, <span class="st">"Historia"</span>), <span class="dv">50</span>, <span class="at">replace =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">promedio =</span> <span class="fu">round</span>(<span class="fu">rnorm</span>(<span class="dv">50</span>, <span class="at">mean =</span> <span class="fl">5.5</span>, <span class="at">sd =</span> <span class="fl">0.8</span>), <span class="dv">1</span>),</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">creditos =</span> <span class="fu">sample</span>(<span class="dv">120</span><span class="sc">:</span><span class="dv">180</span>, <span class="dv">50</span>, <span class="at">replace =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">beca =</span> <span class="fu">sample</span>(<span class="fu">c</span>(<span class="cn">TRUE</span>, <span class="cn">FALSE</span>), <span class="dv">50</span>, <span class="at">replace =</span> <span class="cn">TRUE</span>, <span class="at">prob =</span> <span class="fu">c</span>(<span class="fl">0.3</span>, <span class="fl">0.7</span>))</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(estudiantes)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; Rows: 50
+#&gt; Columns: 7
+#&gt; $ id       &lt;int&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18…
+#&gt; $ nombre   &lt;chr&gt; "Estudiante 1", "Estudiante 2", "Estudiante 3", "Estudiante 4…
+#&gt; $ edad     &lt;int&gt; 24, 24, 20, 23, 20, 19, 19, 23, 20, 22, 21, 23, 23, 18, 19, 2…
+#&gt; $ carrera  &lt;chr&gt; "Historia", "Sociología", "Economía", "Sociología", "Economía…
+#&gt; $ promedio &lt;dbl&gt; 5.7, 5.5, 5.5, 6.6, 5.3, 6.7, 4.3, 6.0, 5.6, 5.7, 5.8, 5.1, 5…
+#&gt; $ creditos &lt;int&gt; 149, 149, 171, 144, 135, 143, 173, 130, 167, 139, 159, 122, 1…
+#&gt; $ beca     &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE,…</code></pre>
+</div>
+</div>
+<section id="select---seleccionar-columnas" class="level2">
+<h2 class="anchored" data-anchor-id="select---seleccionar-columnas">1. <code>select()</code> - Seleccionar Columnas</h2>
+<div class="cell" data-layout-align="center">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Selección básica</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="sc">%&gt;%</span> <span class="fu">select</span>(nombre, edad, carrera)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 50 × 3
+#&gt;   nombre        edad carrera   
+#&gt;   &lt;chr&gt;        &lt;int&gt; &lt;chr&gt;     
+#&gt; 1 Estudiante 1    24 Historia  
+#&gt; 2 Estudiante 2    24 Sociología
+#&gt; 3 Estudiante 3    20 Economía  
+#&gt; 4 Estudiante 4    23 Sociología
+#&gt; 5 Estudiante 5    20 Economía  
+#&gt; 6 Estudiante 6    19 Historia  
+#&gt; # ℹ 44 more rows</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Selección con funciones auxiliares</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="fu">starts_with</span>(<span class="st">"c"</span>))  <span class="co"># Columnas que inician con 'c'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 50 × 2
+#&gt;   carrera    creditos
+#&gt;   &lt;chr&gt;         &lt;int&gt;
+#&gt; 1 Historia        149
+#&gt; 2 Sociología      149
+#&gt; 3 Economía        171
+#&gt; 4 Sociología      144
+#&gt; 5 Economía        135
+#&gt; 6 Historia        143
+#&gt; # ℹ 44 more rows</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="fu">where</span>(is.numeric)) <span class="co"># Solo columnas numéricas</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 50 × 4
+#&gt;      id  edad promedio creditos
+#&gt;   &lt;int&gt; &lt;int&gt;    &lt;dbl&gt;    &lt;int&gt;
+#&gt; 1     1    24      5.7      149
+#&gt; 2     2    24      5.5      149
+#&gt; 3     3    20      5.5      171
+#&gt; 4     4    23      6.6      144
+#&gt; 5     5    20      5.3      135
+#&gt; 6     6    19      6.7      143
+#&gt; # ℹ 44 more rows</code></pre>
+</div>
+</div>
+</section>
+<section id="filter---filtrar-filas" class="level2">
+<h2 class="anchored" data-anchor-id="filter---filtrar-filas">2. <code>filter()</code> - Filtrar Filas</h2>
+<div class="cell" data-layout-align="center">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filtros básicos</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="sc">%&gt;%</span> <span class="fu">filter</span>(carrera <span class="sc">==</span> <span class="st">"Sociología"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 15 × 7
+#&gt;      id nombre         edad carrera    promedio creditos beca 
+#&gt;   &lt;int&gt; &lt;chr&gt;         &lt;int&gt; &lt;chr&gt;         &lt;dbl&gt;    &lt;int&gt; &lt;lgl&gt;
+#&gt; 1     2 Estudiante 2     24 Sociología      5.5      149 FALSE
+#&gt; 2     4 Estudiante 4     23 Sociología      6.6      144 FALSE
+#&gt; 3     8 Estudiante 8     23 Sociología      6        130 FALSE
+#&gt; 4    10 Estudiante 10    22 Sociología      5.7      139 TRUE 
+#&gt; 5    11 Estudiante 11    21 Sociología      5.8      159 TRUE 
+#&gt; 6    15 Estudiante 15    19 Sociología      4.6      171 FALSE
+#&gt; # ℹ 9 more rows</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="sc">%&gt;%</span> <span class="fu">filter</span>(promedio <span class="sc">&gt;</span> <span class="fl">6.0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 12 × 7
+#&gt;      id nombre         edad carrera    promedio creditos beca 
+#&gt;   &lt;int&gt; &lt;chr&gt;         &lt;int&gt; &lt;chr&gt;         &lt;dbl&gt;    &lt;int&gt; &lt;lgl&gt;
+#&gt; 1     4 Estudiante 4     23 Sociología      6.6      144 FALSE
+#&gt; 2     6 Estudiante 6     19 Historia        6.7      143 TRUE 
+#&gt; 3    19 Estudiante 19    20 Economía        6.2      161 FALSE
+#&gt; 4    20 Estudiante 20    20 Sociología      7.1      178 FALSE
+#&gt; 5    23 Estudiante 23    18 Economía        6.3      176 FALSE
+#&gt; 6    26 Estudiante 26    20 Psicología      6.3      165 TRUE 
+#&gt; # ℹ 6 more rows</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filtros múltiples</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="sc">%&gt;%</span> <span class="fu">filter</span>(carrera <span class="sc">==</span> <span class="st">"Economía"</span> <span class="sc">&amp;</span> beca <span class="sc">==</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 3 × 7
+#&gt;      id nombre         edad carrera  promedio creditos beca 
+#&gt;   &lt;int&gt; &lt;chr&gt;         &lt;int&gt; &lt;chr&gt;       &lt;dbl&gt;    &lt;int&gt; &lt;lgl&gt;
+#&gt; 1    14 Estudiante 14    18 Economía      4.7      155 TRUE 
+#&gt; 2    25 Estudiante 25    22 Economía      4.9      127 TRUE 
+#&gt; 3    50 Estudiante 50    20 Economía      4.7      129 TRUE</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="sc">%&gt;%</span> <span class="fu">filter</span>(edad <span class="sc">&lt;=</span> <span class="dv">19</span> <span class="sc">|</span> promedio <span class="sc">&gt;=</span> <span class="fl">6.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 18 × 7
+#&gt;      id nombre         edad carrera    promedio creditos beca 
+#&gt;   &lt;int&gt; &lt;chr&gt;         &lt;int&gt; &lt;chr&gt;         &lt;dbl&gt;    &lt;int&gt; &lt;lgl&gt;
+#&gt; 1     4 Estudiante 4     23 Sociología      6.6      144 FALSE
+#&gt; 2     6 Estudiante 6     19 Historia        6.7      143 TRUE 
+#&gt; 3     7 Estudiante 7     19 Psicología      4.3      173 FALSE
+#&gt; 4    14 Estudiante 14    18 Economía        4.7      155 TRUE 
+#&gt; 5    15 Estudiante 15    19 Sociología      4.6      171 FALSE
+#&gt; 6    20 Estudiante 20    20 Sociología      7.1      178 FALSE
+#&gt; # ℹ 12 more rows</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filtros avanzados</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="sc">%&gt;%</span> <span class="fu">filter</span>(carrera <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Sociología"</span>, <span class="st">"Historia"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 25 × 7
+#&gt;      id nombre         edad carrera    promedio creditos beca 
+#&gt;   &lt;int&gt; &lt;chr&gt;         &lt;int&gt; &lt;chr&gt;         &lt;dbl&gt;    &lt;int&gt; &lt;lgl&gt;
+#&gt; 1     1 Estudiante 1     24 Historia        5.7      149 FALSE
+#&gt; 2     2 Estudiante 2     24 Sociología      5.5      149 FALSE
+#&gt; 3     4 Estudiante 4     23 Sociología      6.6      144 FALSE
+#&gt; 4     6 Estudiante 6     19 Historia        6.7      143 TRUE 
+#&gt; 5     8 Estudiante 8     23 Sociología      6        130 FALSE
+#&gt; 6    10 Estudiante 10    22 Sociología      5.7      139 TRUE 
+#&gt; # ℹ 19 more rows</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="fu">between</span>(promedio, <span class="fl">5.0</span>, <span class="fl">6.0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 30 × 7
+#&gt;      id nombre        edad carrera    promedio creditos beca 
+#&gt;   &lt;int&gt; &lt;chr&gt;        &lt;int&gt; &lt;chr&gt;         &lt;dbl&gt;    &lt;int&gt; &lt;lgl&gt;
+#&gt; 1     1 Estudiante 1    24 Historia        5.7      149 FALSE
+#&gt; 2     2 Estudiante 2    24 Sociología      5.5      149 FALSE
+#&gt; 3     3 Estudiante 3    20 Economía        5.5      171 FALSE
+#&gt; 4     5 Estudiante 5    20 Economía        5.3      135 FALSE
+#&gt; 5     8 Estudiante 8    23 Sociología      6        130 FALSE
+#&gt; 6     9 Estudiante 9    20 Psicología      5.6      167 FALSE
+#&gt; # ℹ 24 more rows</code></pre>
+</div>
+</div>
+</section>
+<section id="mutate---crearmodificar-columnas" class="level2">
+<h2 class="anchored" data-anchor-id="mutate---crearmodificar-columnas">3. <code>mutate()</code> - Crear/Modificar Columnas</h2>
+<div class="cell" data-layout-align="center">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear nuevas variables</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="sc">%&gt;%</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">promedio_centesimal =</span> promedio <span class="sc">*</span> <span class="dv">10</span>,</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">edad_meses =</span> edad <span class="sc">*</span> <span class="dv">12</span>,</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">beca_texto =</span> <span class="fu">if_else</span>(beca, <span class="st">"Sí"</span>, <span class="st">"No"</span>)</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(nombre, promedio, promedio_centesimal, beca_texto)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 50 × 4
+#&gt;   nombre       promedio promedio_centesimal beca_texto
+#&gt;   &lt;chr&gt;           &lt;dbl&gt;               &lt;dbl&gt; &lt;chr&gt;     
+#&gt; 1 Estudiante 1      5.7                  57 No        
+#&gt; 2 Estudiante 2      5.5                  55 No        
+#&gt; 3 Estudiante 3      5.5                  55 No        
+#&gt; 4 Estudiante 4      6.6                  66 No        
+#&gt; 5 Estudiante 5      5.3                  53 No        
+#&gt; 6 Estudiante 6      6.7                  67 Sí        
+#&gt; # ℹ 44 more rows</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Variables con lógica condicional</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="sc">%&gt;%</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">categoria =</span> <span class="fu">case_when</span>(</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>      promedio <span class="sc">&gt;=</span> <span class="fl">6.5</span> <span class="sc">~</span> <span class="st">"Excelente"</span>,</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>      promedio <span class="sc">&gt;=</span> <span class="fl">6.0</span> <span class="sc">~</span> <span class="st">"Muy Bueno"</span>, </span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>      promedio <span class="sc">&gt;=</span> <span class="fl">5.5</span> <span class="sc">~</span> <span class="st">"Bueno"</span>,</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>      promedio <span class="sc">&gt;=</span> <span class="fl">5.0</span> <span class="sc">~</span> <span class="st">"Suficiente"</span>,</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"Insuficiente"</span></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(categoria)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 5 × 2
+#&gt;   categoria        n
+#&gt;   &lt;chr&gt;        &lt;int&gt;
+#&gt; 1 Bueno           16
+#&gt; 2 Excelente        6
+#&gt; 3 Insuficiente     8
+#&gt; 4 Muy Bueno        8
+#&gt; 5 Suficiente      12</code></pre>
+</div>
+</div>
+</section>
+<section id="arrange---ordenar-filas" class="level2">
+<h2 class="anchored" data-anchor-id="arrange---ordenar-filas">4. <code>arrange()</code> - Ordenar Filas</h2>
+<div class="cell" data-layout-align="center">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ordenamiento básico</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="sc">%&gt;%</span> <span class="fu">arrange</span>(edad) <span class="sc">%&gt;%</span> <span class="fu">select</span>(nombre, edad)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 50 × 2
+#&gt;   nombre         edad
+#&gt;   &lt;chr&gt;         &lt;int&gt;
+#&gt; 1 Estudiante 14    18
+#&gt; 2 Estudiante 21    18
+#&gt; 3 Estudiante 23    18
+#&gt; 4 Estudiante 24    18
+#&gt; 5 Estudiante 31    18
+#&gt; 6 Estudiante 36    18
+#&gt; # ℹ 44 more rows</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ordenamiento múltiple</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="sc">%&gt;%</span> </span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(carrera, <span class="fu">desc</span>(promedio)) <span class="sc">%&gt;%</span> </span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(nombre, carrera, promedio)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 50 × 3
+#&gt;   nombre        carrera  promedio
+#&gt;   &lt;chr&gt;         &lt;chr&gt;       &lt;dbl&gt;
+#&gt; 1 Estudiante 37 Economía      6.4
+#&gt; 2 Estudiante 23 Economía      6.3
+#&gt; 3 Estudiante 19 Economía      6.2
+#&gt; 4 Estudiante 38 Economía      5.8
+#&gt; 5 Estudiante 3  Economía      5.5
+#&gt; 6 Estudiante 5  Economía      5.3
+#&gt; # ℹ 44 more rows</code></pre>
+</div>
+</div>
+</section>
+<section id="summarise---resumir-datos" class="level2">
+<h2 class="anchored" data-anchor-id="summarise---resumir-datos">5. <code>summarise()</code> - Resumir Datos</h2>
+<div class="cell" data-layout-align="center">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Estadísticas básicas</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="sc">%&gt;%</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> <span class="fu">n</span>(),</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">edad_promedio =</span> <span class="fu">mean</span>(edad),</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">promedio_general =</span> <span class="fu">mean</span>(promedio),</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">con_beca =</span> <span class="fu">sum</span>(beca)</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 1 × 4
+#&gt;       n edad_promedio promedio_general con_beca
+#&gt;   &lt;int&gt;         &lt;dbl&gt;            &lt;dbl&gt;    &lt;int&gt;
+#&gt; 1    50          21.0             5.61       15</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Resúmenes por grupos</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="sc">%&gt;%</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(carrera) <span class="sc">%&gt;%</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> <span class="fu">n</span>(),</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">promedio_medio =</span> <span class="fu">round</span>(<span class="fu">mean</span>(promedio), <span class="dv">2</span>),</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">pct_con_beca =</span> <span class="fu">round</span>(<span class="fu">mean</span>(beca) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>),</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 4 × 4
+#&gt;   carrera        n promedio_medio pct_con_beca
+#&gt;   &lt;chr&gt;      &lt;int&gt;          &lt;dbl&gt;        &lt;dbl&gt;
+#&gt; 1 Economía      12           5.4          25  
+#&gt; 2 Historia      10           5.68         40  
+#&gt; 3 Psicología    13           5.64         30.8
+#&gt; 4 Sociología    15           5.71         26.7</code></pre>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="manipulación-de-texto-con-stringr" class="level1">
+<h1>3. Manipulación de Texto con stringr</h1>
+<div class="cell" data-layout-align="center">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Datos con problemas típicos de texto</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>datos_texto <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">id =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>,</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">nombre =</span> <span class="fu">c</span>(<span class="st">"  MARÍA josé  "</span>, <span class="st">"juan carlos"</span>, <span class="st">"Ana Sofía    "</span>, </span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>             <span class="st">"Pedro-Antonio"</span>, <span class="st">"carmen rosa"</span>, <span class="st">"LUIS ALBERTO"</span>),</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">email =</span> <span class="fu">c</span>(<span class="st">"maria@GMAIL.COM"</span>, <span class="st">"j.ruiz@hotmail.es  "</span>, <span class="st">"ana@yahoo.com"</span>, </span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>            <span class="st">"pedro@uni.cl"</span>, <span class="st">"carmen@empresa.co"</span>, <span class="st">"luis@CORP.CL"</span>)</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(datos_texto)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 6 × 3
+#&gt;      id nombre           email                
+#&gt;   &lt;int&gt; &lt;chr&gt;            &lt;chr&gt;                
+#&gt; 1     1 "  MARÍA josé  " "maria@GMAIL.COM"    
+#&gt; 2     2 "juan carlos"    "j.ruiz@hotmail.es  "
+#&gt; 3     3 "Ana Sofía    "  "ana@yahoo.com"      
+#&gt; 4     4 "Pedro-Antonio"  "pedro@uni.cl"       
+#&gt; 5     5 "carmen rosa"    "carmen@empresa.co"  
+#&gt; 6     6 "LUIS ALBERTO"   "luis@CORP.CL"</code></pre>
+</div>
+</div>
+<section id="funciones-básicas-de-limpieza" class="level2">
+<h2 class="anchored" data-anchor-id="funciones-básicas-de-limpieza">Funciones Básicas de Limpieza</h2>
+<div class="cell" data-layout-align="center">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>datos_limpios <span class="ot">&lt;-</span> datos_texto <span class="sc">%&gt;%</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Limpiar espacios y capitalización</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">nombre_limpio =</span> <span class="fu">str_trim</span>(nombre) <span class="sc">%&gt;%</span> <span class="fu">str_to_title</span>(),</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">email_limpio =</span> <span class="fu">str_trim</span>(email) <span class="sc">%&gt;%</span> <span class="fu">str_to_lower</span>(),</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Detectar patrones</span></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">tiene_guion =</span> <span class="fu">str_detect</span>(nombre, <span class="st">"-"</span>),</span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">es_gmail =</span> <span class="fu">str_detect</span>(email_limpio, <span class="st">"gmail"</span>),</span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Extraer información</span></span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">primer_nombre =</span> <span class="fu">str_extract</span>(nombre_limpio, <span class="st">"</span><span class="sc">\\</span><span class="st">w+"</span>),</span>
+<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">dominio =</span> <span class="fu">str_extract</span>(email_limpio, <span class="st">"(?&lt;=@)[^.]+"</span>)</span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a>datos_limpios <span class="sc">%&gt;%</span> <span class="fu">select</span>(nombre_limpio, email_limpio, primer_nombre, dominio)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 6 × 4
+#&gt;   nombre_limpio email_limpio      primer_nombre dominio
+#&gt;   &lt;chr&gt;         &lt;chr&gt;             &lt;chr&gt;         &lt;chr&gt;  
+#&gt; 1 María José    maria@gmail.com   María         gmail  
+#&gt; 2 Juan Carlos   j.ruiz@hotmail.es Juan          hotmail
+#&gt; 3 Ana Sofía     ana@yahoo.com     Ana           yahoo  
+#&gt; 4 Pedro-Antonio pedro@uni.cl      Pedro         uni    
+#&gt; 5 Carmen Rosa   carmen@empresa.co Carmen        empresa
+#&gt; 6 Luis Alberto  luis@corp.cl      Luis          corp</code></pre>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="trabajando-con-factores-usando-forcats" class="level1">
+<h1>4. Trabajando con Factores usando forcats</h1>
+<div class="cell" data-layout-align="center">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Datos categóricos de ejemplo</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">456</span>)</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>encuesta <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">id =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>,</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">educacion =</span> <span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">"Básica"</span>, <span class="st">"Media"</span>, <span class="st">"Técnica"</span>, <span class="st">"Universitaria"</span>, <span class="st">"Postgrado"</span>), <span class="dv">20</span>, <span class="at">replace =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">satisfaccion =</span> <span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">"Muy Insatisfecho"</span>, <span class="st">"Insatisfecho"</span>, <span class="st">"Neutral"</span>, <span class="st">"Satisfecho"</span>, <span class="st">"Muy Satisfecho"</span>), <span class="dv">20</span>, <span class="at">replace =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">region =</span> <span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">"Metropolitana"</span>, <span class="st">"Valparaíso"</span>, <span class="st">"Biobío"</span>, <span class="st">"Araucanía"</span>), <span class="dv">20</span>, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Problema: orden alfabético no tiene sentido</span></span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a>encuesta <span class="sc">%&gt;%</span> <span class="fu">count</span>(educacion, <span class="at">sort =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 5 × 2
+#&gt;   educacion         n
+#&gt;   &lt;chr&gt;         &lt;int&gt;
+#&gt; 1 Postgrado         6
+#&gt; 2 Básica            5
+#&gt; 3 Técnica           4
+#&gt; 4 Media             3
+#&gt; 5 Universitaria     2</code></pre>
+</div>
+</div>
+<section id="creación-y-manipulación-de-factores" class="level2">
+<h2 class="anchored" data-anchor-id="creación-y-manipulación-de-factores">Creación y Manipulación de Factores</h2>
+<div class="cell" data-layout-align="center">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>encuesta_factores <span class="ot">&lt;-</span> encuesta <span class="sc">%&gt;%</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Factor con orden lógico</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">educacion_factor =</span> <span class="fu">factor</span>(</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>      educacion,</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Básica"</span>, <span class="st">"Media"</span>, <span class="st">"Técnica"</span>, <span class="st">"Universitaria"</span>, <span class="st">"Postgrado"</span>)</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Factor ordenado</span></span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">satisfaccion_factor =</span> <span class="fu">factor</span>(</span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>      satisfaccion,</span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Muy Insatisfecho"</span>, <span class="st">"Insatisfecho"</span>, <span class="st">"Neutral"</span>, <span class="st">"Satisfecho"</span>, <span class="st">"Muy Satisfecho"</span>),</span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">ordered =</span> <span class="cn">TRUE</span></span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Ahora el orden es correcto</span></span>
+<span id="cb43-18"><a href="#cb43-18" aria-hidden="true" tabindex="-1"></a>encuesta_factores <span class="sc">%&gt;%</span> </span>
+<span id="cb43-19"><a href="#cb43-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(educacion_factor) <span class="sc">%&gt;%</span></span>
+<span id="cb43-20"><a href="#cb43-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(educacion_factor)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 5 × 2
+#&gt;   educacion_factor     n
+#&gt;   &lt;fct&gt;            &lt;int&gt;
+#&gt; 1 Básica               5
+#&gt; 2 Media                3
+#&gt; 3 Técnica              4
+#&gt; 4 Universitaria        2
+#&gt; 5 Postgrado            6</code></pre>
+</div>
+</div>
+</section>
+<section id="reordenar-y-agrupar-factores" class="level2">
+<h2 class="anchored" data-anchor-id="reordenar-y-agrupar-factores">Reordenar y Agrupar Factores</h2>
+<div class="cell" data-layout-align="center">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Datos con muchas categorías</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>ventas <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">producto =</span> <span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">"Laptop"</span>, <span class="st">"Mouse"</span>, <span class="st">"Teclado"</span>, <span class="st">"Monitor"</span>, <span class="st">"Tablet"</span>, </span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>                     <span class="st">"Smartphone"</span>, <span class="st">"Auriculares"</span>, <span class="st">"Cámara"</span>, <span class="st">"USB"</span>), <span class="dv">100</span>, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>ventas_agrupadas <span class="ot">&lt;-</span> ventas <span class="sc">%&gt;%</span></span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Ordenar por frecuencia</span></span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">producto_freq =</span> <span class="fu">fct_infreq</span>(<span class="fu">factor</span>(producto)),</span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Mantener solo top 5, agrupar resto</span></span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">producto_top5 =</span> <span class="fu">fct_lump_n</span>(<span class="fu">factor</span>(producto), <span class="at">n =</span> <span class="dv">5</span>, <span class="at">other_level =</span> <span class="st">"Otros"</span>),</span>
+<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb45-15"><a href="#cb45-15" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Colapsar categorías específicas</span></span>
+<span id="cb45-16"><a href="#cb45-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">categoria =</span> <span class="fu">fct_collapse</span>(</span>
+<span id="cb45-17"><a href="#cb45-17" aria-hidden="true" tabindex="-1"></a>      <span class="fu">factor</span>(producto),</span>
+<span id="cb45-18"><a href="#cb45-18" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Computación"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"Laptop"</span>, <span class="st">"Mouse"</span>, <span class="st">"Teclado"</span>, <span class="st">"Monitor"</span>),</span>
+<span id="cb45-19"><a href="#cb45-19" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Móviles"</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"Smartphone"</span>, <span class="st">"Tablet"</span>),</span>
+<span id="cb45-20"><a href="#cb45-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">other_level =</span> <span class="st">"Otros"</span></span>
+<span id="cb45-21"><a href="#cb45-21" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb45-22"><a href="#cb45-22" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb45-23"><a href="#cb45-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-24"><a href="#cb45-24" aria-hidden="true" tabindex="-1"></a>ventas_agrupadas <span class="sc">%&gt;%</span> <span class="fu">count</span>(categoria, <span class="at">sort =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 3 × 2
+#&gt;   categoria       n
+#&gt;   &lt;fct&gt;       &lt;int&gt;
+#&gt; 1 Computación    38
+#&gt; 2 Otros          33
+#&gt; 3 Móviles        29</code></pre>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="análisis-con-datos-reales-gss" class="level1">
+<h1>5. Análisis con Datos Reales: GSS</h1>
+<div class="cell" data-layout-align="center">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargar datos GSS</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">"gss_cat"</span>, <span class="at">package =</span> <span class="st">"forcats"</span>)</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Exploración básica</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(gss_cat)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; Rows: 21,483
+#&gt; Columns: 9
+#&gt; $ year    &lt;int&gt; 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 20…
+#&gt; $ marital &lt;fct&gt; Never married, Divorced, Widowed, Never married, Divorced, Mar…
+#&gt; $ age     &lt;int&gt; 26, 48, 67, 39, 25, 25, 36, 44, 44, 47, 53, 52, 52, 51, 52, 40…
+#&gt; $ race    &lt;fct&gt; White, White, White, White, White, White, White, White, White,…
+#&gt; $ rincome &lt;fct&gt; $8000 to 9999, $8000 to 9999, Not applicable, Not applicable, …
+#&gt; $ partyid &lt;fct&gt; "Ind,near rep", "Not str republican", "Independent", "Ind,near…
+#&gt; $ relig   &lt;fct&gt; Protestant, Protestant, Protestant, Orthodox-christian, None, …
+#&gt; $ denom   &lt;fct&gt; "Southern baptist", "Baptist-dk which", "No denomination", "No…
+#&gt; $ tvhours &lt;int&gt; 12, NA, 2, 4, 1, NA, 3, NA, 0, 3, 2, NA, 1, NA, 1, 7, NA, 3, 3…</code></pre>
+</div>
+</div>
+<section id="análisis-de-variables-categóricas" class="level2">
+<h2 class="anchored" data-anchor-id="análisis-de-variables-categóricas">Análisis de Variables Categóricas</h2>
+<div class="cell" data-layout-align="center">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Función para análisis de frecuencias</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>analizar_variable <span class="ot">&lt;-</span> <span class="cf">function</span>(data, var) {</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>  data <span class="sc">%&gt;%</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>({{var}})) <span class="sc">%&gt;%</span></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">count</span>({{var}}, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">porcentaje =</span> <span class="fu">round</span>(n <span class="sc">/</span> <span class="fu">sum</span>(n) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>),</span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">porcentaje_acum =</span> <span class="fu">cumsum</span>(porcentaje)</span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Análisis de identificación partidaria</span></span>
+<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a>analisis_partido <span class="ot">&lt;-</span> <span class="fu">analizar_variable</span>(gss_cat, partyid)</span>
+<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(analisis_partido)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 10 × 4
+#&gt;    partyid                n porcentaje porcentaje_acum
+#&gt;    &lt;fct&gt;              &lt;int&gt;      &lt;dbl&gt;           &lt;dbl&gt;
+#&gt;  1 Independent         4119       19.2            19.2
+#&gt;  2 Not str democrat    3690       17.2            36.4
+#&gt;  3 Strong democrat     3490       16.2            52.6
+#&gt;  4 Not str republican  3032       14.1            66.7
+#&gt;  5 Ind,near dem        2499       11.6            78.3
+#&gt;  6 Strong republican   2314       10.8            89.1
+#&gt;  7 Ind,near rep        1791        8.3            97.4
+#&gt;  8 Other party          393        1.8            99.2
+#&gt;  9 No answer            154        0.7            99.9
+#&gt; 10 Don't know             1        0              99.9</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Análisis de religión (top 8)</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>analisis_religion <span class="ot">&lt;-</span> <span class="fu">analizar_variable</span>(gss_cat, relig)</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">head</span>(analisis_religion, <span class="dv">8</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 8 × 4
+#&gt;   relig                       n porcentaje porcentaje_acum
+#&gt;   &lt;fct&gt;                   &lt;int&gt;      &lt;dbl&gt;           &lt;dbl&gt;
+#&gt; 1 Protestant              10846       50.5            50.5
+#&gt; 2 Catholic                 5124       23.9            74.4
+#&gt; 3 None                     3523       16.4            90.8
+#&gt; 4 Christian                 689        3.2            94  
+#&gt; 5 Jewish                    388        1.8            95.8
+#&gt; 6 Other                     224        1              96.8
+#&gt; 7 Buddhism                  147        0.7            97.5
+#&gt; 8 Inter-nondenominational   109        0.5            98</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Análisis temporal simple</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>evolucion_simple <span class="ot">&lt;-</span> gss_cat <span class="sc">%&gt;%</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(partyid)) <span class="sc">%&gt;%</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">partido_simple =</span> <span class="fu">case_when</span>(</span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_detect</span>(partyid, <span class="st">"republican"</span>) <span class="sc">~</span> <span class="st">"Republicano"</span>,</span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_detect</span>(partyid, <span class="st">"democrat"</span>) <span class="sc">~</span> <span class="st">"Demócrata"</span>, </span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_detect</span>(partyid, <span class="st">"Independent"</span>) <span class="sc">~</span> <span class="st">"Independiente"</span>,</span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"Otros"</span></span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(year, partido_simple) <span class="sc">%&gt;%</span></span>
+<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(year) <span class="sc">%&gt;%</span></span>
+<span id="cb53-14"><a href="#cb53-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">porcentaje =</span> <span class="fu">round</span>(n <span class="sc">/</span> <span class="fu">sum</span>(n) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb53-15"><a href="#cb53-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span>
+<span id="cb53-16"><a href="#cb53-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-17"><a href="#cb53-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Mostrar tendencia para Independientes</span></span>
+<span id="cb53-18"><a href="#cb53-18" aria-hidden="true" tabindex="-1"></a>evolucion_simple <span class="sc">%&gt;%</span></span>
+<span id="cb53-19"><a href="#cb53-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(partido_simple <span class="sc">==</span> <span class="st">"Independiente"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb53-20"><a href="#cb53-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(year, porcentaje) <span class="sc">%&gt;%</span></span>
+<span id="cb53-21"><a href="#cb53-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(year)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 8 × 2
+#&gt;    year porcentaje
+#&gt;   &lt;int&gt;      &lt;dbl&gt;
+#&gt; 1  2000       20.1
+#&gt; 2  2002       19.1
+#&gt; 3  2004       16.7
+#&gt; 4  2006       22.1
+#&gt; 5  2008       15.9
+#&gt; 6  2010       17.6
+#&gt; 7  2012       18.9
+#&gt; 8  2014       19.8</code></pre>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="ejercicios-prácticos" class="level1">
+<h1>6. Ejercicios Prácticos</h1>
+<div class="ejercicio">
+<p><strong>EJERCICIO 1: Análisis Básico</strong></p>
+<p>Usando el dataset <code>estudiantes</code>, realiza las siguientes tareas:</p>
+<ol type="1">
+<li>Filtra estudiantes de “Sociología” con promedio mayor a 5.5</li>
+<li>Crea una nueva variable <code>categoria_edad</code> que clasifique:
+<ul>
+<li>“Joven”: edad &lt;= 20</li>
+<li>“Adulto”: edad &gt; 20</li>
+</ul></li>
+<li>Calcula el promedio de créditos por carrera</li>
+<li>Ordena las carreras por promedio de notas (descendente)</li>
+</ol>
+<p>Escribe el código para cada tarea.</p>
+</div>
+<div class="solucion">
+<p><strong>SOLUCIÓN EJERCICIO 1:</strong></p>
+<div class="cell" data-layout-align="center">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tarea 1: Filtrar estudiantes</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="sc">%&gt;%</span></span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(carrera <span class="sc">==</span> <span class="st">"Sociología"</span>, promedio <span class="sc">&gt;</span> <span class="fl">5.5</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(nombre, carrera, promedio)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 9 × 3
+#&gt;   nombre        carrera    promedio
+#&gt;   &lt;chr&gt;         &lt;chr&gt;         &lt;dbl&gt;
+#&gt; 1 Estudiante 4  Sociología      6.6
+#&gt; 2 Estudiante 8  Sociología      6  
+#&gt; 3 Estudiante 10 Sociología      5.7
+#&gt; 4 Estudiante 11 Sociología      5.8
+#&gt; 5 Estudiante 17 Sociología      5.9
+#&gt; 6 Estudiante 20 Sociología      7.1
+#&gt; 7 Estudiante 40 Sociología      6.4
+#&gt; 8 Estudiante 43 Sociología      5.7
+#&gt; 9 Estudiante 47 Sociología      7.2</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tarea 2: Crear categoría de edad</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="sc">%&gt;%</span></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">categoria_edad =</span> <span class="fu">if_else</span>(edad <span class="sc">&lt;=</span> <span class="dv">20</span>, <span class="st">"Joven"</span>, <span class="st">"Adulto"</span>)</span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(categoria_edad)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 2 × 2
+#&gt;   categoria_edad     n
+#&gt;   &lt;chr&gt;          &lt;int&gt;
+#&gt; 1 Adulto            25
+#&gt; 2 Joven             25</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tarea 3: Promedio de créditos por carrera</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="sc">%&gt;%</span></span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(carrera) <span class="sc">%&gt;%</span></span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">promedio_creditos =</span> <span class="fu">round</span>(<span class="fu">mean</span>(creditos), <span class="dv">1</span>), <span class="at">.groups =</span> <span class="st">"drop"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 4 × 2
+#&gt;   carrera    promedio_creditos
+#&gt;   &lt;chr&gt;                  &lt;dbl&gt;
+#&gt; 1 Economía                152.
+#&gt; 2 Historia                146.
+#&gt; 3 Psicología              154.
+#&gt; 4 Sociología              157.</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tarea 4: Carreras ordenadas por promedio de notas</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>estudiantes <span class="sc">%&gt;%</span></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(carrera) <span class="sc">%&gt;%</span></span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">promedio_notas =</span> <span class="fu">round</span>(<span class="fu">mean</span>(promedio), <span class="dv">2</span>), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(promedio_notas))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 4 × 2
+#&gt;   carrera    promedio_notas
+#&gt;   &lt;chr&gt;               &lt;dbl&gt;
+#&gt; 1 Sociología           5.71
+#&gt; 2 Historia             5.68
+#&gt; 3 Psicología           5.64
+#&gt; 4 Economía             5.4</code></pre>
+</div>
+</div>
+</div>
+<div class="ejercicio">
+<p><strong>EJERCICIO 2: Manipulación de Texto y Factores</strong></p>
+<p>Con los datos de <code>encuesta</code>:</p>
+<ol type="1">
+<li>Convierte <code>educacion</code> a factor con orden correcto</li>
+<li>Agrupa las regiones en dos categorías: “Centro” (Metropolitana, Valparaíso) y “Sur” (Biobío, Araucanía)</li>
+<li>Calcula el porcentaje de personas “Satisfechas” o “Muy Satisfechas” por región agrupada</li>
+<li>Identifica la combinación educación-satisfacción más común</li>
+</ol>
+<p>Escribe el código paso a paso.</p>
+</div>
+<div class="solucion">
+<p><strong>SOLUCIÓN EJERCICIO 2:</strong></p>
+<div class="cell" data-layout-align="center">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tarea 1: Factor ordenado de educación</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>encuesta_factor <span class="ot">&lt;-</span> encuesta <span class="sc">%&gt;%</span></span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">educacion_ordenada =</span> <span class="fu">factor</span>(</span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a>      educacion,</span>
+<span id="cb63-6"><a href="#cb63-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Básica"</span>, <span class="st">"Media"</span>, <span class="st">"Técnica"</span>, <span class="st">"Universitaria"</span>, <span class="st">"Postgrado"</span>)</span>
+<span id="cb63-7"><a href="#cb63-7" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb63-8"><a href="#cb63-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb63-9"><a href="#cb63-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb63-10"><a href="#cb63-10" aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(encuesta_factor<span class="sc">$</span>educacion_ordenada)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; [1] "Básica"        "Media"         "Técnica"       "Universitaria"
+#&gt; [5] "Postgrado"</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tarea 2: Agrupar regiones</span></span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>encuesta_agrupada <span class="ot">&lt;-</span> encuesta_factor <span class="sc">%&gt;%</span></span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">region_agrupada =</span> <span class="fu">case_when</span>(</span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>      region <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Metropolitana"</span>, <span class="st">"Valparaíso"</span>) <span class="sc">~</span> <span class="st">"Centro"</span>,</span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a>      region <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Biobío"</span>, <span class="st">"Araucanía"</span>) <span class="sc">~</span> <span class="st">"Sur"</span>,</span>
+<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"Otros"</span></span>
+<span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb65-9"><a href="#cb65-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb65-10"><a href="#cb65-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-11"><a href="#cb65-11" aria-hidden="true" tabindex="-1"></a>encuesta_agrupada <span class="sc">%&gt;%</span> <span class="fu">count</span>(region_agrupada)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 2 × 2
+#&gt;   region_agrupada     n
+#&gt;   &lt;chr&gt;           &lt;int&gt;
+#&gt; 1 Centro              8
+#&gt; 2 Sur                12</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tarea 3: Porcentaje satisfechos por región</span></span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>satisfaccion_region <span class="ot">&lt;-</span> encuesta_agrupada <span class="sc">%&gt;%</span></span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">satisfecho =</span> satisfaccion <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Satisfecho"</span>, <span class="st">"Muy Satisfecho"</span>)</span>
+<span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb67-6"><a href="#cb67-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(region_agrupada) <span class="sc">%&gt;%</span></span>
+<span id="cb67-7"><a href="#cb67-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb67-8"><a href="#cb67-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">pct_satisfecho =</span> <span class="fu">round</span>(<span class="fu">mean</span>(satisfecho) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>),</span>
+<span id="cb67-9"><a href="#cb67-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb67-10"><a href="#cb67-10" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb67-11"><a href="#cb67-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-12"><a href="#cb67-12" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(satisfaccion_region)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 2 × 2
+#&gt;   region_agrupada pct_satisfecho
+#&gt;   &lt;chr&gt;                    &lt;dbl&gt;
+#&gt; 1 Centro                    12.5
+#&gt; 2 Sur                       41.7</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tarea 4: Combinación más común</span></span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>combinacion_comun <span class="ot">&lt;-</span> encuesta <span class="sc">%&gt;%</span></span>
+<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(educacion, satisfaccion, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">1</span>)</span>
+<span id="cb69-5"><a href="#cb69-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb69-6"><a href="#cb69-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(combinacion_comun)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 1 × 3
+#&gt;   educacion satisfaccion         n
+#&gt;   &lt;chr&gt;     &lt;chr&gt;            &lt;int&gt;
+#&gt; 1 Básica    Muy Insatisfecho     4</code></pre>
+</div>
+</div>
+</div>
+<div class="ejercicio">
+<p><strong>EJERCICIO 3: Análisis GSS</strong></p>
+<p>Con el dataset <code>gss_cat</code>:</p>
+<ol type="1">
+<li>Encuentra las 5 denominaciones religiosas más comunes</li>
+<li>Calcula el porcentaje de personas por raza en cada década (años terminados en 0)</li>
+<li>Crea una tabla que muestre religión vs identificación partidaria (solo las 3 religiones y 3 partidos más comunes)</li>
+<li>Identifica si hay cambios en el estado civil a lo largo del tiempo</li>
+</ol>
+</div>
+<div class="solucion">
+<p><strong>SOLUCIÓN EJERCICIO 3:</strong></p>
+<div class="cell" data-layout-align="center">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tarea 1: Top 5 religiones</span></span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>top_religiones <span class="ot">&lt;-</span> gss_cat <span class="sc">%&gt;%</span></span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(relig, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">5</span>)</span>
+<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb71-6"><a href="#cb71-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(top_religiones)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 5 × 2
+#&gt;   relig          n
+#&gt;   &lt;fct&gt;      &lt;int&gt;
+#&gt; 1 Protestant 10846
+#&gt; 2 Catholic    5124
+#&gt; 3 None        3523
+#&gt; 4 Christian    689
+#&gt; 5 Jewish       388</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tarea 2: Raza por década</span></span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>raza_decada <span class="ot">&lt;-</span> gss_cat <span class="sc">%&gt;%</span></span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year <span class="sc">%%</span> <span class="dv">10</span> <span class="sc">==</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span>  <span class="co"># Años terminados en 0</span></span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(year, race) <span class="sc">%&gt;%</span></span>
+<span id="cb73-5"><a href="#cb73-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(year) <span class="sc">%&gt;%</span></span>
+<span id="cb73-6"><a href="#cb73-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">porcentaje =</span> <span class="fu">round</span>(n <span class="sc">/</span> <span class="fu">sum</span>(n) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb73-7"><a href="#cb73-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb73-8"><a href="#cb73-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(year, <span class="fu">desc</span>(porcentaje))</span>
+<span id="cb73-9"><a href="#cb73-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb73-10"><a href="#cb73-10" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(raza_decada)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 6 × 4
+#&gt;    year race      n porcentaje
+#&gt;   &lt;int&gt; &lt;fct&gt; &lt;int&gt;      &lt;dbl&gt;
+#&gt; 1  2000 White  2213       78.6
+#&gt; 2  2000 Black   429       15.2
+#&gt; 3  2000 Other   175        6.2
+#&gt; 4  2010 White  1550       75.8
+#&gt; 5  2010 Black   311       15.2
+#&gt; 6  2010 Other   183        9</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tarea 3: Tabla religión vs partido (top 3 cada uno)</span></span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>top3_religion <span class="ot">&lt;-</span> gss_cat <span class="sc">%&gt;%</span> <span class="fu">count</span>(relig, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">3</span>) <span class="sc">%&gt;%</span> <span class="fu">pull</span>(relig)</span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>top3_partido <span class="ot">&lt;-</span> gss_cat <span class="sc">%&gt;%</span> <span class="fu">count</span>(partyid, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">3</span>) <span class="sc">%&gt;%</span> <span class="fu">pull</span>(partyid)</span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-5"><a href="#cb75-5" aria-hidden="true" tabindex="-1"></a>tabla_religion_partido <span class="ot">&lt;-</span> gss_cat <span class="sc">%&gt;%</span></span>
+<span id="cb75-6"><a href="#cb75-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(relig <span class="sc">%in%</span> top3_religion, partyid <span class="sc">%in%</span> top3_partido) <span class="sc">%&gt;%</span></span>
+<span id="cb75-7"><a href="#cb75-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(relig, partyid) <span class="sc">%&gt;%</span></span>
+<span id="cb75-8"><a href="#cb75-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(relig) <span class="sc">%&gt;%</span></span>
+<span id="cb75-9"><a href="#cb75-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">porcentaje =</span> <span class="fu">round</span>(n <span class="sc">/</span> <span class="fu">sum</span>(n) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb75-10"><a href="#cb75-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span>
+<span id="cb75-11"><a href="#cb75-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-12"><a href="#cb75-12" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(tabla_religion_partido)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 9 × 4
+#&gt;   relig      partyid              n porcentaje
+#&gt;   &lt;fct&gt;      &lt;fct&gt;            &lt;int&gt;      &lt;dbl&gt;
+#&gt; 1 None       Independent        984       46.7
+#&gt; 2 None       Not str democrat   567       26.9
+#&gt; 3 None       Strong democrat    554       26.3
+#&gt; 4 Catholic   Independent       1045       37.2
+#&gt; 5 Catholic   Not str democrat  1044       37.2
+#&gt; 6 Catholic   Strong democrat    720       25.6
+#&gt; 7 Protestant Independent       1683       32  
+#&gt; 8 Protestant Not str democrat  1718       32.6
+#&gt; 9 Protestant Strong democrat   1866       35.4</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tarea 4: Estado civil por tiempo</span></span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>marital_tiempo <span class="ot">&lt;-</span> gss_cat <span class="sc">%&gt;%</span></span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(year, marital) <span class="sc">%&gt;%</span></span>
+<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(year) <span class="sc">%&gt;%</span></span>
+<span id="cb77-5"><a href="#cb77-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">porcentaje =</span> <span class="fu">round</span>(n <span class="sc">/</span> <span class="fu">sum</span>(n) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb77-6"><a href="#cb77-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb77-7"><a href="#cb77-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(marital <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Married"</span>, <span class="st">"Never married"</span>, <span class="st">"Divorced"</span>))</span>
+<span id="cb77-8"><a href="#cb77-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb77-9"><a href="#cb77-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Mostrar tendencia para "Never married"</span></span>
+<span id="cb77-10"><a href="#cb77-10" aria-hidden="true" tabindex="-1"></a>marital_tiempo <span class="sc">%&gt;%</span></span>
+<span id="cb77-11"><a href="#cb77-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(marital <span class="sc">==</span> <span class="st">"Never married"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb77-12"><a href="#cb77-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(year, porcentaje) <span class="sc">%&gt;%</span></span>
+<span id="cb77-13"><a href="#cb77-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(year) <span class="sc">%&gt;%</span></span>
+<span id="cb77-14"><a href="#cb77-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, (<span class="fu">n</span>()<span class="sc">-</span><span class="dv">2</span>)<span class="sc">:</span><span class="fu">n</span>()))  <span class="co"># Primeros 3 y últimos 3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 6 × 2
+#&gt;    year porcentaje
+#&gt;   &lt;int&gt;      &lt;dbl&gt;
+#&gt; 1  2000       25.3
+#&gt; 2  2002       25.6
+#&gt; 3  2004       22  
+#&gt; 4  2010       27.6
+#&gt; 5  2012       26.6
+#&gt; 6  2014       26.6</code></pre>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="resumen" class="level1">
+<h1>7. Resumen</h1>
+<section id="funciones-clave-por-paquete" class="level2">
+<h2 class="anchored" data-anchor-id="funciones-clave-por-paquete">Funciones Clave por Paquete</h2>
+<div class="cell" data-layout-align="center">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Resumen de funciones principales</span></span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>resumen_funciones <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>paquete, <span class="sc">~</span>funcion, <span class="sc">~</span>proposito,</span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"dplyr"</span>, <span class="st">"select()"</span>, <span class="st">"Seleccionar columnas"</span>,</span>
+<span id="cb79-5"><a href="#cb79-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"dplyr"</span>, <span class="st">"filter()"</span>, <span class="st">"Filtrar filas"</span>, </span>
+<span id="cb79-6"><a href="#cb79-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"dplyr"</span>, <span class="st">"mutate()"</span>, <span class="st">"Crear/modificar variables"</span>,</span>
+<span id="cb79-7"><a href="#cb79-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"dplyr"</span>, <span class="st">"arrange()"</span>, <span class="st">"Ordenar datos"</span>,</span>
+<span id="cb79-8"><a href="#cb79-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"dplyr"</span>, <span class="st">"summarise()"</span>, <span class="st">"Resumir datos"</span>,</span>
+<span id="cb79-9"><a href="#cb79-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"dplyr"</span>, <span class="st">"group_by()"</span>, <span class="st">"Agrupar para operaciones"</span>,</span>
+<span id="cb79-10"><a href="#cb79-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"stringr"</span>, <span class="st">"str_detect()"</span>, <span class="st">"Detectar patrones"</span>,</span>
+<span id="cb79-11"><a href="#cb79-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"stringr"</span>, <span class="st">"str_replace()"</span>, <span class="st">"Reemplazar texto"</span>,</span>
+<span id="cb79-12"><a href="#cb79-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">"stringr"</span>, <span class="st">"str_trim()"</span>, <span class="st">"Eliminar espacios"</span>,</span>
+<span id="cb79-13"><a href="#cb79-13" aria-hidden="true" tabindex="-1"></a>  <span class="st">"forcats"</span>, <span class="st">"factor()"</span>, <span class="st">"Crear factores"</span>,</span>
+<span id="cb79-14"><a href="#cb79-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">"forcats"</span>, <span class="st">"fct_relevel()"</span>, <span class="st">"Reordenar niveles"</span>,</span>
+<span id="cb79-15"><a href="#cb79-15" aria-hidden="true" tabindex="-1"></a>  <span class="st">"forcats"</span>, <span class="st">"fct_lump()"</span>, <span class="st">"Agrupar categorías raras"</span></span>
+<span id="cb79-16"><a href="#cb79-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb79-17"><a href="#cb79-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb79-18"><a href="#cb79-18" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(resumen_funciones)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 12 × 3
+#&gt;   paquete funcion     proposito                
+#&gt;   &lt;chr&gt;   &lt;chr&gt;       &lt;chr&gt;                    
+#&gt; 1 dplyr   select()    Seleccionar columnas     
+#&gt; 2 dplyr   filter()    Filtrar filas            
+#&gt; 3 dplyr   mutate()    Crear/modificar variables
+#&gt; 4 dplyr   arrange()   Ordenar datos            
+#&gt; 5 dplyr   summarise() Resumir datos            
+#&gt; 6 dplyr   group_by()  Agrupar para operaciones 
+#&gt; # ℹ 6 more rows</code></pre>
+</div>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
