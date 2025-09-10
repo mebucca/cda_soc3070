@@ -15,20 +15,21 @@ output:
       countIncrementalSlides: true
       slideNumberFormat: "%current%"
 editor_options: 
-  chunz_output_type: console
   
+  chunk_output_type: console
 ---  
 class: inverse, center, middle
 
 ```{r xaringan-themer, include=FALSE, warning=FALSE}
 library(tidyverse)
 library(xaringanthemer)
-style_duo_accent(primary_color ="#001F3F", secondary_color = "#225522",
-                 background_color = "#f8f7f3",
-                 header_font_google = google_font("Archivo"),
-                 text_font_google   = google_font("Inconsolata"), 
-                 link_color= "#800000"
-
+style_duo_accent(
+  primary_color    = "#E85C0D",  # strong retro orange (slightly deeper than pure)
+  secondary_color  = "#1A1A1A",  # near-black, like the trim on the jersey
+  background_color = "#FFFDF7",  # subtle cream white, softer than pure white
+  header_font_google = google_font("Archivo"),
+  text_font_google   = google_font("Inconsolata"),
+  link_color = "#0047AB"        # Dutch royal blue, historical national accent
 )
 ```
 
@@ -113,7 +114,7 @@ theme_set(theme_cowplot())
 data(Fair)
 affairsdata <- Fair %>% as_tibble()
 
-# create a binary variable indicating wether persons has ever had an affair
+# create a binary variable indicating whether persons has ever had an affair
 affairsdata <- affairsdata %>% 
   mutate(everaffair = case_when(nbaffairs == 0 ~ "Never", nbaffairs > 0 ~ "At least once") ) %>%
   # map into 0/1 code
@@ -218,7 +219,7 @@ $$\frac{\partial\text{logit}(p_{i})}{\partial x_{k}} = \beta_{k}$$
 ---
 ## Efectos marginales sobre el logit 
 
-En nuestro ejemplo: $\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{male}_{i} + \beta_{2}*\text{ym}_{i}$
+En nuestro ejemplo: $\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{male}_{i} + \beta_{2}\text{ym}_{i}$
 
 <br>
 
@@ -356,11 +357,11 @@ En otras palabras, manteniendo otros factores constantes, $e^{\beta_{k}}$ repres
 ---
 ## Efectos multiplicativos sobre las odds 
 
-En nuestro ejemplo: $\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{male}_{i} + \beta_{2}*\text{ym}_{i}$, por tanto:
+En nuestro ejemplo: $\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{male}_{i} + \beta_{2}\text{ym}_{i}$, por tanto:
   
   
 .pull-left[
-  $\frac{p_{i}}{1 -p_{i}} = e^{\beta_{0}} \cdot  e^{\beta_{1}*\text{male}_{i}} \cdot e^{\beta_{2}*\text{ym}_{i}}$
+  $\frac{p_{i}}{1 -p_{i}} = e^{\beta_{0}} \cdot  e^{\beta_{1}*\text{male}_{i}} \cdot e^{\beta_{2}\text{ym}_{i}}$
       
 ```{r}
 # coeffs
@@ -545,8 +546,8 @@ Corolario,
 ---
 ## Efectos marginales sobre la probabilidad de éxito
 
-En nuestro ejemplo: $\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{male}_{i} + \beta_{2}*\text{ym}_{i}$, por tanto:
-$$p_{i} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}*\text{male}_{i} + \beta_{2}*\text{ym}_{i})} }$$
+En nuestro ejemplo: $\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{male}_{i} + \beta_{2}\text{ym}_{i}$, por tanto:
+$$p_{i} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}*\text{male}_{i} + \beta_{2}\text{ym}_{i})} }$$
 
 .pull-left[
 ```{r, echo=FALSE}
@@ -578,7 +579,7 @@ guides(fill="none", color="none") +
 ## Efectos marginales sobre la probabilidad de éxito
 
 .pull-left[
-$$p_{i} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}*\text{male}_{i} + \beta_{2}*\text{ym}_{i})}}$$
+$$p_{i} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}*\text{male}_{i} + \beta_{2}\text{ym}_{i})}}$$
 
 ```{r, echo=FALSE, fig.width=6, fig.height=5}
 
@@ -675,9 +676,7 @@ avg_slopes(logit_affairs_sex_ym)
 
 ]
 
-.img-right[
-![boric](boric.png)
-]
+
 
 ---
 ## Efectos marginales sobre la probabilidad de éxito: AME
@@ -689,9 +688,12 @@ $$\frac{\partial p_{i}}{\partial \text{ym} }= \beta_{\text{ym}} \cdot p_{i}(1 - 
 En `R`:
 
 ```{r}
-beta_ym = logit_affairs_sex_ym$coefficients[3] # coeficiente ym 
-p_hat <- predict(logit_affairs_sex_ym, type="response") # prob predichas cada obs.
-me_ym = tibble(me_ym=beta_ym*p_hat*(1-p_hat)) # efector marginal para cada obs.
+beta_ym <- logit_affairs_sex_ym$coefficients[3] # coeficiente ym 
+p_hat   <- predict(logit_affairs_sex_ym, type = "response") # probabilidades predichas
+
+me_ym <- tibble(p  = p_hat, beta_ym = beta_ym, me = beta_ym * p_hat * (1 - p_hat)   
+)
+
 ```
 
 --
@@ -703,8 +705,8 @@ me_ym
 ]
 
 .pull-right[
-```{r}
-ame = round(mean(me_ym$me_ym),4)
+```{r, message=FALSE, warning==FALSE}
+ame = round(mean(me_ym$me),4)
 print(paste0("AME Years of Marriage: ", ame))
 ```
 ]
@@ -784,45 +786,9 @@ c("Promedio ym"=mean_ym, "Promedio male"=mean_male)
 --
 
 ```{r, warning=FALSE, message=FALSE}
-marginaleffects(logit_affairs_sex_ym2, newdata =   expand.grid(male=mean_male, ym=mean_ym))
+slopes(logit_affairs_sex_ym2, newdata =   expand.grid(male=mean_male, ym=mean_ym))
 ```
 
----
-## Efectos marginales sobre la probabilidad de éxito: MEM
-
-.bold[Solución analística], usando 
-$$\frac{\partial p_{i}}{\partial \text{ym} }= \beta_{\text{ym}} \cdot p_{i}(1 - p_{i})$$
-
---
-
-```{r}
-beta_ym = logit_affairs_sex_ym$coefficients[3] # coeficiente ym 
-grid <- affairsdata %>% data_grid(male=mean_male, ym=mean_ym, .model=logit_affairs_sex_ym2); grid
-p_hat <- predict(logit_affairs_sex_ym2, newdata=grid, type="response") # prob predichas 
-
-mem_ym = beta_ym*p_hat*(1-p_hat); round(mem_ym,4) # efecto marginal 
-
-```
-
----
-## Efectos marginales sobre la probabilidad de éxito: MEM
-
-.bold[Aproximación numérica], usando: 
-
-$$\frac{\partial p_{i}}{\partial \text{ym}} \approx  \frac{p_{i}(x_{1}, \dots ,\text{ym} = c + \delta) - p_{i}(x_{1}, \dots ,\text{ym} = c )}{\delta}$$
-
-<br>
---
-
-```{r}
-delta = 0.01 # cantidad cambio
-
-grid <- affairsdata %>% data_grid(male=mean_male, ym=c(mean_ym, mean_ym+ delta), .model=logit_affairs_sex_ym2)
-p_hat <- predict(logit_affairs_sex_ym2, newdata=grid, type="response") # prob predichas 
-
-mem_ym_approx = (p_hat[2] - p_hat[1])/delta
-round(mem_ym_approx,4) # efecto marginal 
-```
 
 ---
 ## Efectos marginales sobre la probabilidad de éxito: MER
@@ -837,7 +803,7 @@ En `R`
 
 
 ```{r, warning=FALSE, message=FALSE}
-marginaleffects(logit_affairs_sex_ym, 
+slopes(logit_affairs_sex_ym, 
                         newdata =  expand.grid(sex = c("male", "female"),
                                   ym=c(4,7,15)
                                   )) %>% filter(term=="ym")
@@ -845,6 +811,18 @@ marginaleffects(logit_affairs_sex_ym,
 
 
 
+---
+## Efectos marginales sobre la probabilidad de éxito: MER
+
+
+<br>
+<br>
+
+| Método | Definición | Ventaja | Limitación |
+|--------|------------|---------|------------|
+| **AME** | Promedio del efecto marginal sobre todos los casos | Resume heterogeneidad en 1 número | Puede ocultar variación |
+| **MEM** | Efecto en covariables fijadas en su promedio | Fácil de interpretar | “Promedio” puede no ser realista |
+| **MER** | Efectos en valores representativos | Ilustra heterogeneidad | Depende de la elección de escenarios |
 
 ---
 class: inverse, center, middle
