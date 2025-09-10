@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.33">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="SOC3070 · Mauricio Bucca">
+<meta name="dcterms.date" content="2025-09-10">
+
+<title>Práctica: Interpretación de la Regresión Logística</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="notebook_10_files/libs/clipboard/clipboard.min.js"></script>
+<script src="notebook_10_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="notebook_10_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="notebook_10_files/libs/quarto-html/popper.min.js"></script>
+<script src="notebook_10_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="notebook_10_files/libs/quarto-html/anchor.min.js"></script>
+<link href="notebook_10_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="notebook_10_files/libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="notebook_10_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="notebook_10_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="notebook_10_files/libs/bootstrap/bootstrap-16bbabe37efa2ecafad14e96199f1a13.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Práctica: Interpretación de la Regresión Logística</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>SOC3070 · Mauricio Bucca </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 10, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cell">
+<style type="text/css">
+pre.python-code, code.python-code {
+  background-color: #f7f7f7;
+  color: #222;
+  font-family: "Inconsolata", monospace;
+  font-size: 15px;
+  border-left: 4px solid #ff6361;
+  padding: 6px;
+}
+pre.python-output, code.python-output {
+  background-color: #ffffff;
+  color: #003f5c;
+  font-family: "Inconsolata", monospace;
+  font-size: 15px;
+  padding: 6px;
+}
+</style>
+</div>
+<hr>
+<section id="el-modelo-logístico" class="level2">
+<h2 class="anchored" data-anchor-id="el-modelo-logístico">1. El Modelo Logístico</h2>
+<p>En esta práctica trabajamos con la base <code>mtcars</code> para predecir si un automóvil tiene transmisión manual (<code>am = 1</code>). Consideramos dos predictores:</p>
+<ul>
+<li><strong>wt</strong>: peso del auto en miles de libras.</li>
+<li><strong>hp</strong>: caballos de fuerza del motor.</li>
+</ul>
+<p>La regresión logística modela la probabilidad de un evento binario en función de covariables. Con el link logit transformamos la probabilidad:</p>
+<p><span class="math display">\[
+\text{logit}(p_i) = \ln \frac{p_i}{1-p_i} = \beta_0 + \beta_1 wt_i + \beta_2 hp_i
+\]</span></p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="co"># Cargar y preparar los datos</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> <span class="fu">data</span>(mtcars)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> mtcars <span class="ot">&lt;-</span> <span class="fu">as_tibble</span>(mtcars)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> <span class="co"># Ajustar modelo logístico</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> logit_model <span class="ot">&lt;-</span> <span class="fu">glm</span>(am <span class="sc">~</span> wt <span class="sc">+</span> hp, <span class="at">data =</span> mtcars, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>))</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">summary</span>(logit_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre class="python-output"><code>#&gt; 
+#&gt; Call:
+#&gt; glm(formula = am ~ wt + hp, family = binomial(link = "logit"), 
+#&gt;     data = mtcars)
+#&gt; 
+#&gt; Coefficients:
+#&gt;             Estimate Std. Error z value Pr(&gt;|z|)   
+#&gt; (Intercept) 18.86630    7.44356   2.535  0.01126 * 
+#&gt; wt          -8.08348    3.06868  -2.634  0.00843 **
+#&gt; hp           0.03626    0.01773   2.044  0.04091 * 
+#&gt; ---
+#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#&gt; 
+#&gt; (Dispersion parameter for binomial family taken to be 1)
+#&gt; 
+#&gt;     Null deviance: 43.230  on 31  degrees of freedom
+#&gt; Residual deviance: 10.059  on 29  degrees of freedom
+#&gt; AIC: 16.059
+#&gt; 
+#&gt; Number of Fisher Scoring iterations: 8</code></pre>
+</div>
+</div>
+<hr>
+</section>
+<section id="efecto-lineal-sobre-el-logit" class="level2">
+<h2 class="anchored" data-anchor-id="efecto-lineal-sobre-el-logit">2. Efecto Lineal sobre el Logit</h2>
+<p>En la escala del logit, la relación es <strong>lineal y constante</strong>:</p>
+<ul>
+<li><code>wt = -8.08</code>: cada 1000 lbs adicionales reducen el logit en <strong>8.08 unidades</strong>, manteniendo fija la potencia.</li>
+<li><code>hp = 0.036</code>: cada caballo de fuerza aumenta el logit en <strong>0.036 unidades</strong>, manteniendo fijo el peso.</li>
+</ul>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="co"># Grilla para predicciones con hp promedio</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> newdata <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">wt =</span> <span class="fu">seq</span>(<span class="fu">min</span>(mtcars<span class="sc">$</span>wt), <span class="fu">max</span>(mtcars<span class="sc">$</span>wt), <span class="at">length.out =</span> <span class="dv">100</span>),</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">hp =</span> <span class="fu">mean</span>(mtcars<span class="sc">$</span>hp)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> )</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> newdata<span class="sc">$</span>logit_pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(logit_model, <span class="at">newdata =</span> newdata, <span class="at">type =</span> <span class="st">"link"</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> <span class="fu">ggplot</span>(newdata, <span class="fu">aes</span>(<span class="at">x =</span> wt, <span class="at">y =</span> logit_pred)) <span class="sc">+</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="fu">geom_line</span>(<span class="at">color =</span> julia<span class="sc">$</span>coral, <span class="at">linewidth =</span> <span class="fl">1.3</span>) <span class="sc">+</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="fu">labs</span>(</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>     <span class="at">title =</span> <span class="st">"Efecto de 'wt' sobre el Logit"</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>     <span class="at">subtitle =</span> <span class="st">"Manteniendo la potencia constante en su media"</span>,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>     <span class="at">x =</span> <span class="st">"Peso del vehículo (wt, en 1000 lbs)"</span>,</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>     <span class="at">y =</span> <span class="st">"Logit(P(am=1))"</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   ) <span class="sc">+</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="fu">theme_julia</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="notebook_10_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="efecto-multiplicativo-sobre-las-odds" class="level2">
+<h2 class="anchored" data-anchor-id="efecto-multiplicativo-sobre-las-odds">3. Efecto Multiplicativo sobre las Odds</h2>
+<p>Exponenciando los coeficientes obtenemos las <strong>odds ratios</strong>:</p>
+<ul>
+<li>Para <code>wt</code>: <span class="math inline">\(e^{-8.08} \approx 0.0003\)</span> → odds se reducen más de 99.9%.</li>
+<li>Para <code>hp</code>: <span class="math inline">\(e^{0.036} \approx 1.037\)</span> → odds aumentan 3.7% por caballo de fuerza.</li>
+</ul>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">modelsummary</span>(logit_model, <span class="at">exponentiate =</span> <span class="cn">TRUE</span>, <span class="at">gof_map =</span> <span class="st">"nobs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<!-- preamble start -->
+
+    <script>
+
+      function styleCell_gaowv0elindn9g0gprjg(i, j, css_id) {
+          var table = document.getElementById("tinytable_gaowv0elindn9g0gprjg");
+          var cell = table.querySelector(`[data-row="${i}"][data-col="${j}"]`);
+          if (cell) {
+              console.log(`Styling cell at (${i}, ${j}) with class ${css_id}`);
+              cell.classList.add(css_id);
+          } else {
+              console.warn(`Cell at (${i}, ${j}) not found.`);
+          }
+      }
+      function insertSpanRow(i, colspan, content) {
+        var table = document.getElementById('tinytable_gaowv0elindn9g0gprjg');
+        // Find the row with data-row attribute matching i
+        var targetRow = table.querySelector(`tr [data-row="${i}"]`).closest('tr');
+        var newRow = table.insertRow(targetRow.rowIndex);
+        var newCell = newRow.insertCell(0);
+        newCell.setAttribute("colspan", colspan);
+        newCell.setAttribute("data-col", "0");
+        newCell.setAttribute("data-row", i - 1);
+        // newCell.innerText = content;
+        // this may be unsafe, but innerText does not interpret <br>
+        newCell.innerHTML = content;
+      }
+      function spanCell_gaowv0elindn9g0gprjg(i, j, rowspan, colspan) {
+        var table = document.getElementById("tinytable_gaowv0elindn9g0gprjg");
+        const targetCell = table.querySelector(`[data-row="${i}"][data-col="${j}"]`);
+        if (!targetCell) {
+          console.warn(`Cell at (${i}, ${j}) not found.`);
+        }
+
+        // Get all cells that need to be removed
+        const cellsToRemove = [];
+        for (let r = 0; r < rowspan; r++) {
+          for (let c = 0; c < colspan; c++) {
+            if (r === 0 && c === 0) continue; // Skip the target cell
+            const cell = table.querySelector(`[data-row="${i + r}"][data-col="${j + c}"]`);
+            if (cell) {
+              cellsToRemove.push(cell);
+            }
+          }
+        }
+
+        // Remove all cells
+        cellsToRemove.forEach(cell => cell.remove());
+
+        // Set rowspan and colspan of the target cell if it exists
+        if (targetCell) {
+          targetCell.rowSpan = rowspan;
+          targetCell.colSpan = colspan;
+        }
+      }
+      // tinytable span after
+      window.addEventListener('load', function () {
+          var cellsToStyle = [
+            // tinytable style arrays after
+          { positions: [ { i: '7', j: 1 },  ], css_id: 'tinytable_css_0c5bw6b0sisx6fs9id1g',}, 
+          { positions: [ { i: '6', j: 1 },  ], css_id: 'tinytable_css_geo3hiv497h6s50bqjpk',}, 
+          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '4', j: 1 }, { i: '5', j: 1 },  ], css_id: 'tinytable_css_0rrasl5yly8ysyv8ughj',}, 
+          { positions: [ { i: '0', j: 1 },  ], css_id: 'tinytable_css_01gmgrpr2djja9jiqwo5',}, 
+          { positions: [ { i: '7', j: 0 },  ], css_id: 'tinytable_css_5wlj7yaykd3dov4ncset',}, 
+          { positions: [ { i: '6', j: 0 },  ], css_id: 'tinytable_css_bv64tslfmmjpiid127wj',}, 
+          { positions: [ { i: '1', j: 0 }, { i: '2', j: 0 }, { i: '3', j: 0 }, { i: '4', j: 0 }, { i: '5', j: 0 },  ], css_id: 'tinytable_css_uh9m6rm5yn9hjlvql3c0',}, 
+          { positions: [ { i: '0', j: 0 },  ], css_id: 'tinytable_css_9u3sq0n6smqr0di0awzy',}, 
+          ];
+
+          // Loop over the arrays to style the cells
+          cellsToStyle.forEach(function (group) {
+              group.positions.forEach(function (cell) {
+                  styleCell_gaowv0elindn9g0gprjg(cell.i, cell.j, group.css_id);
+              });
+          });
+      });
+    </script>
+
+    <style>
+      /* tinytable css entries after */
+      .table td.tinytable_css_0c5bw6b0sisx6fs9id1g, .table th.tinytable_css_0c5bw6b0sisx6fs9id1g { text-align: center; border-bottom: solid #d3d8dc 0.1em; }
+      .table td.tinytable_css_geo3hiv497h6s50bqjpk, .table th.tinytable_css_geo3hiv497h6s50bqjpk { text-align: center; border-bottom: solid black 0.05em; }
+      .table td.tinytable_css_0rrasl5yly8ysyv8ughj, .table th.tinytable_css_0rrasl5yly8ysyv8ughj { text-align: center; }
+      .table td.tinytable_css_01gmgrpr2djja9jiqwo5, .table th.tinytable_css_01gmgrpr2djja9jiqwo5 { text-align: center; border-top: solid #d3d8dc 0.1em; border-bottom: solid #d3d8dc 0.05em; }
+      .table td.tinytable_css_5wlj7yaykd3dov4ncset, .table th.tinytable_css_5wlj7yaykd3dov4ncset { text-align: left; border-bottom: solid #d3d8dc 0.1em; }
+      .table td.tinytable_css_bv64tslfmmjpiid127wj, .table th.tinytable_css_bv64tslfmmjpiid127wj { text-align: left; border-bottom: solid black 0.05em; }
+      .table td.tinytable_css_uh9m6rm5yn9hjlvql3c0, .table th.tinytable_css_uh9m6rm5yn9hjlvql3c0 { text-align: left; }
+      .table td.tinytable_css_9u3sq0n6smqr0di0awzy, .table th.tinytable_css_9u3sq0n6smqr0di0awzy { text-align: left; border-top: solid #d3d8dc 0.1em; border-bottom: solid #d3d8dc 0.05em; }
+    </style>
+    <div class="container">
+      <table class="table table-borderless" id="tinytable_gaowv0elindn9g0gprjg" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+        <thead>
+        
+              <tr>
+                <th scope="col" data-row="0" data-col="0"> </th>
+                <th scope="col" data-row="0" data-col="1">(1)</th>
+              </tr>
+        </thead>
+        
+        <tbody>
+                <tr>
+                  <td data-row="1" data-col="0">(Intercept)</td>
+                  <td data-row="1" data-col="1">1.561455e+08</td>
+                </tr>
+                <tr>
+                  <td data-row="2" data-col="0"></td>
+                  <td data-row="2" data-col="1">(1.162278e+09)</td>
+                </tr>
+                <tr>
+                  <td data-row="3" data-col="0">wt</td>
+                  <td data-row="3" data-col="1">0.000000e+00</td>
+                </tr>
+                <tr>
+                  <td data-row="4" data-col="0"></td>
+                  <td data-row="4" data-col="1">(1.000000e-03)</td>
+                </tr>
+                <tr>
+                  <td data-row="5" data-col="0">hp</td>
+                  <td data-row="5" data-col="1">1.037000e+00</td>
+                </tr>
+                <tr>
+                  <td data-row="6" data-col="0"></td>
+                  <td data-row="6" data-col="1">(1.800000e-02)</td>
+                </tr>
+                <tr>
+                  <td data-row="7" data-col="0">Num.Obs.</td>
+                  <td data-row="7" data-col="1">32</td>
+                </tr>
+        </tbody>
+      </table>
+    </div>
+<!-- hack to avoid NA insertion in last line -->
+</div>
+</div>
+<hr>
+</section>
+<section id="efecto-sobre-la-probabilidad" class="level2">
+<h2 class="anchored" data-anchor-id="efecto-sobre-la-probabilidad">4. Efecto sobre la Probabilidad</h2>
+<p>En la escala de probabilidad, los efectos no son constantes:</p>
+<ul>
+<li>Más fuertes cerca de <span class="math inline">\(p=0.5\)</span>.</li>
+<li>Más débiles en los extremos (cerca de 0 o 1).</li>
+</ul>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="co"># Curvas sigmoides para distintos niveles de hp</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> data_plot <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">wt =</span> <span class="fu">seq</span>(<span class="fu">min</span>(mtcars<span class="sc">$</span>wt), <span class="fu">max</span>(mtcars<span class="sc">$</span>wt), <span class="at">length.out =</span> <span class="dv">100</span>),</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">hp =</span> <span class="fu">c</span>(<span class="dv">90</span>, <span class="fu">mean</span>(mtcars<span class="sc">$</span>hp), <span class="dv">180</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> )</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> data_plot<span class="sc">$</span>prob_pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(logit_model, <span class="at">newdata =</span> data_plot, <span class="at">type =</span> <span class="st">"response"</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> <span class="fu">ggplot</span>(data_plot, <span class="fu">aes</span>(<span class="at">x =</span> wt, <span class="at">y =</span> prob_pred, <span class="at">color =</span> <span class="fu">factor</span>(hp))) <span class="sc">+</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">1.2</span>) <span class="sc">+</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="fu">labs</span>(</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>     <span class="at">title =</span> <span class="st">"Efecto sobre la Probabilidad"</span>,</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>     <span class="at">subtitle =</span> <span class="st">"Curvas sigmoides para distintos niveles de potencia"</span>,</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>     <span class="at">x =</span> <span class="st">"Peso del vehículo (wt, en 1000 lbs)"</span>,</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>     <span class="at">y =</span> <span class="st">"Probabilidad de transmisión manual"</span>,</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>     <span class="at">color =</span> <span class="st">"Potencia (hp)"</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   ) <span class="sc">+</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="fu">theme_julia</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="notebook_10_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="efectos-marginales" class="level2">
+<h2 class="anchored" data-anchor-id="efectos-marginales">5. Efectos Marginales</h2>
+<p>En los modelos logísticos, los coeficientes (<code>β</code>) no se interpretan directamente en términos de probabilidades, sino en la escala del <strong>logit</strong>. Para facilitar la interpretación, usamos <strong>efectos marginales</strong>, que traducen esos coeficientes en cambios en la <strong>probabilidad</strong> de ocurrencia del evento (aquí, tener transmisión manual).</p>
+<p>Los efectos marginales muestran <strong>cómo varía la probabilidad de éxito (am = 1) frente a un cambio pequeño en una variable explicativa, manteniendo las demás constantes</strong>.</p>
+<p>Existen tres maneras habituales de calcularlos:</p>
+<ul>
+<li><strong>AME (Average Marginal Effects)</strong>: promedio de los efectos marginales individuales en toda la muestra. Responde a: <em>“en promedio, ¿cómo cambia la probabilidad si todos aumentaran en una unidad su predictor?”</em></li>
+<li><strong>MEM (Marginal Effects at the Mean)</strong>: evalúa los efectos marginales en el <strong>individuo promedio</strong>, es decir, tomando los valores medios de los predictores.</li>
+<li><strong>MER (Marginal Effects at Representative Values)</strong>: muestra los efectos en <strong>casos concretos</strong>, definidos por combinaciones específicas de las variables.</li>
+</ul>
+<hr>
+<section id="ame" class="level3">
+<h3 class="anchored" data-anchor-id="ame">AME</h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">avg_slopes</span>(logit_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre class="python-output"><code>#&gt; 
+#&gt;  Term Estimate Std. Error     z Pr(&gt;|z|)    S     2.5 %   97.5 %
+#&gt;    hp  0.00161   0.000572  2.82  0.00483  7.7  0.000491  0.00273
+#&gt;    wt -0.35960   0.057144 -6.29  &lt; 0.001 31.6 -0.471597 -0.24760
+#&gt; 
+#&gt; Type: response
+#&gt; Comparison: dY/dX</code></pre>
+</div>
+</div>
+<p><strong>Interpretación:</strong></p>
+<ul>
+<li><code>wt</code>: en promedio, <strong>cada 1000 lbs adicionales de peso reducen la probabilidad de tener transmisión manual en 0.36 puntos porcentuales</strong>. Esto significa que, en toda la muestra, un auto más pesado tiende a ser menos probable que tenga transmisión manual, aunque el efecto no es enorme.</li>
+<li><code>hp</code>: en promedio, <strong>cada caballo de fuerza adicional aumenta la probabilidad en 0.0016 puntos porcentuales</strong>. El efecto es muy pequeño, pero indica que la mayor potencia se asocia (ligeramente) a transmisiones manuales.</li>
+</ul>
+<p>👉 El AME ofrece una <strong>visión global</strong>, útil cuando queremos un resumen simple del efecto promedio.</p>
+<hr>
+</section>
+<section id="mem" class="level3">
+<h3 class="anchored" data-anchor-id="mem">MEM</h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> vm <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">wt =</span> <span class="fu">mean</span>(mtcars<span class="sc">$</span>wt,<span class="at">na.rm=</span>T), <span class="at">hp =</span> <span class="fu">mean</span>(mtcars<span class="sc">$</span>hp,<span class="at">na.rm=</span>T))</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> mem <span class="ot">&lt;-</span> <span class="fu">slopes</span>(logit_model, <span class="at">newdata =</span> vm) <span class="sc">%&gt;%</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="fu">select</span>(term, estimate, std.error, conf.low, conf.high, p.value) </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> <span class="fu">bind_cols</span>(vm, mem)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre class="python-output"><code>#&gt;        wt       hp term     estimate std.error     conf.low   conf.high
+#&gt; 1 3.21725 146.6875   hp  0.004344052 0.0028710 -0.001283004 0.009971108
+#&gt; 2 3.21725 146.6875   wt -0.968541309 0.6017158 -2.147882603 0.210799986
+#&gt;     p.value
+#&gt; 1 0.1302593
+#&gt; 2 0.1074781</code></pre>
+</div>
+</div>
+<p><strong>Interpretación:</strong></p>
+<ul>
+<li>Para el <strong>auto promedio</strong> (con el peso y la potencia media del dataset), el efecto de <code>wt</code> es de <strong>-0.97</strong>. Es decir, en ese punto específico, aumentar el peso en 1000 lbs reduce la probabilidad de transmisión manual en casi 1 punto porcentual.</li>
+<li>Para <code>hp</code>, el efecto sigue siendo positivo, pero es más pequeño en magnitud que el del peso.</li>
+</ul>
+<p>👉 El MEM es intuitivo porque se interpreta en un caso concreto (el promedio). Sin embargo, puede ser engañoso si el “auto promedio” no es representativo de autos reales (por ejemplo, un promedio de valores que rara vez coexisten en la realidad).</p>
+<hr>
+</section>
+<section id="mer" class="level3">
+<h3 class="anchored" data-anchor-id="mer">MER</h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> vr <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">wt =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">4</span>), <span class="at">hp =</span> <span class="fu">c</span>(<span class="dv">90</span>, <span class="dv">150</span>))</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> mer <span class="ot">&lt;-</span> <span class="fu">slopes</span>(logit_model, <span class="at">newdata =</span> vr) <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="fu">select</span>(term, estimate, std.error, conf.low, conf.high, p.value) </span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> <span class="fu">bind_cols</span>(<span class="fu">bind_rows</span>(vr,vr), mer)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre class="python-output"><code>#&gt;   wt  hp term      estimate    std.error      conf.low    conf.high   p.value
+#&gt; 1  2  90   hp  9.283799e-05 2.150457e-04 -3.286439e-04 5.143199e-04 0.6659502
+#&gt; 2  4  90   hp  1.341350e-06 4.850124e-06 -8.164718e-06 1.084742e-05 0.7821180
+#&gt; 3  2 150   hp  1.059176e-05 3.023311e-05 -4.866404e-05 6.984757e-05 0.7260861
+#&gt; 4  4 150   hp  1.180396e-05 3.316358e-05 -5.319547e-05 7.680338e-05 0.7218920
+#&gt; 5  2  90   wt -2.069898e-02 4.527249e-02 -1.094314e-01 6.803348e-02 0.6475210
+#&gt; 6  4  90   wt -2.990649e-04 1.095575e-03 -2.446353e-03 1.848223e-03 0.7848723
+#&gt; 7  2 150   wt -2.361520e-03 6.699968e-03 -1.549321e-02 1.077018e-02 0.7244878
+#&gt; 8  4 150   wt -2.631788e-03 7.359182e-03 -1.705552e-02 1.179194e-02 0.7206280</code></pre>
+</div>
+</div>
+<p><strong>Interpretación:</strong></p>
+<ul>
+<li>Para autos <strong>livianos (2000 lbs) con baja potencia (90 hp)</strong>, el peso tiene un efecto negativo más reducido: cada incremento en el peso disminuye un poco la probabilidad de tener transmisión manual, pero no de forma dramática.</li>
+<li>Para autos <strong>pesados (4000 lbs)</strong>, el efecto del peso sigue siendo negativo, aunque algo menor en magnitud que en el promedio.</li>
+<li>La <strong>potencia</strong> (hp) siempre tiene efectos pequeños y positivos, indicando que autos más potentes tienen una probabilidad ligeramente mayor de tener transmisión manual, tanto en livianos como pesados.</li>
+</ul>
+<p>👉 El MER es útil porque permite explorar cómo cambian los efectos <strong>en situaciones representativas o extremas</strong>, mostrando la heterogeneidad de los efectos.</p>
+<hr>
+</section>
+</section>
+<section id="conclusión" class="level2">
+<h2 class="anchored" data-anchor-id="conclusión">6. Conclusión</h2>
+<ul>
+<li><p>En la escala <strong>logit</strong>, los efectos son lineales y fáciles de calcular, pero difíciles de interpretar.</p></li>
+<li><p>En la escala de <strong>odds</strong>, se interpretan como multiplicadores, lo cual es más informativo que el logit, pero aún abstracto.</p></li>
+<li><p>En la escala de <strong>probabilidad</strong>, los efectos <strong>no son constantes</strong>: dependen del nivel de las covariables. Por eso es necesario mirar AME, MEM y MER para obtener una imagen completa.</p></li>
+<li><p>Cada medida responde a una pregunta distinta:</p>
+<ul>
+<li><strong>AME</strong>: visión promedio global.</li>
+<li><strong>MEM</strong>: visión puntual en el “individuo promedio”.</li>
+<li><strong>MER</strong>: visión contextualizada en escenarios concretos.</li>
+</ul></li>
+</ul>
+<p>En resumen, no existe <strong>una única interpretación de los efectos marginales</strong>. La escala (logit, odds, probabilidad) y el escenario (promedio, promedio de covariables, o casos representativos) condicionan la lectura. Entender estas diferencias es clave para comunicar correctamente los resultados.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

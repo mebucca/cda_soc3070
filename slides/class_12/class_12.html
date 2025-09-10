@@ -4,7 +4,7 @@
     <title>Análisis de Datos Categóricos (SOC3070)</title>
     <meta charset="utf-8" />
     <meta name="author" content="  Mauricio Bucca  Profesor Asistente, Sociología UC" />
-    <script src="libs/header-attrs-2.27/header-attrs.js"></script>
+    <script src="libs/header-attrs-2.29/header-attrs.js"></script>
     <link rel="stylesheet" href="gentle-r.css" type="text/css" />
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
@@ -16,13 +16,13 @@ class: center, middle, inverse, title-slide
 # Análisis de Datos Categóricos (SOC3070)
 ]
 .subtitle[
-## Clase #12: Regresión Logística - Ajuste y Predicción
+## Regresión Logística - Ajuste y Predicción
 ]
 .author[
 ### <br> Mauricio Bucca<br> Profesor Asistente, Sociología UC
 ]
 .date[
-### 13 October, 2024
+### 09 September, 2025
 ]
 
 ---
@@ -943,10 +943,10 @@ confusionMatrix(cv_logit_affairs0)
 ##  
 ##           Reference
 ## Prediction    0    1
-##          0 73.2 23.8
-##          1  1.8  1.2
+##          0 73.5 24.0
+##          1  1.5  1.0
 ##                             
-##  Accuracy (average) : 0.7438
+##  Accuracy (average) : 0.7454
 ```
 ]
 
@@ -964,10 +964,10 @@ confusionMatrix(cv_logit_affairs1)
 ##  
 ##           Reference
 ## Prediction    0    1
-##          0 72.2 23.3
-##          1  2.8  1.7
+##          0 71.5 22.8
+##          1  3.5  2.2
 ##                             
-##  Accuracy (average) : 0.7388
+##  Accuracy (average) : 0.7371
 ```
 ]
 
@@ -995,11 +995,11 @@ github.com/mebucca
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
-"ratio": "16:9",
-"highlightStyle": "github",
-"highlightLines": true,
-"countIncrementalSlides": true,
-"slideNumberFormat": "%current%"
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": true,
+  "slideNumberFormat": "%current%"
 });
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));

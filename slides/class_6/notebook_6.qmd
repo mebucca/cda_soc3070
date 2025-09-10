@@ -4,68 +4,78 @@ author: "SOC3070 · Mauricio Bucca"
 date: today
 format:
   html:
-    theme: united
+    theme: default
     highlight: tango
     code-copy: true
     code-fold: show
 ---
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-  echo = TRUE,
-  warning = FALSE,
-  message = FALSE,
-  comment = "#>",      # Python-style output prompt
-  prompt = TRUE,       # Show > in front of code
-  class.source = "python-code",
-  class.output = "python-output"
+echo = TRUE,
+warning = FALSE,
+message = FALSE,
+comment = "#>", # Python-style output prompt
+prompt = TRUE, # Show > in front of code
+class.source = "python-code",
+class.output = "python-output"
 )
 
+
 # Packages
-library(pacman)
-p_load("tidyverse", "broom", "ggplot2", "marginaleffects")
+library(tidyverse)
+library(broom)
+library(ggplot2)
+library(marginaleffects)
+
 
 # Define julia-inspired palette
 julia <- list(
-  navy   = "#003f5c",
-  teal   = "#2f4b7c",
-  coral  = "#ff6361",
-  orange = "#ffa600",
-  sand   = "#f4e1a4"
+navy = "#003f5c",
+teal = "#2f4b7c",
+coral = "#ff6361",
+orange = "#ffa600",
+sand = "#f4e1a4"
 )
 
+
 theme_julia <- function() {
-  theme_minimal(base_family = "Inconsolata") +
-    theme(
-      plot.background = element_rect(fill = "white", color = NA),
-      panel.border = element_rect(fill=NA, color=julia$navy, size=0.6),
-      axis.text = element_text(color=julia$navy, size=13),
-      axis.title = element_text(color=julia$teal, size=15, face="bold"),
-      plot.title = element_text(color=julia$coral, size=18, face="bold"),
-      plot.subtitle = element_text(color=julia$orange, size=14),
-      legend.position = "right"
-    )
+theme_minimal(base_family = "Inconsolata") +
+theme(
+plot.background = element_rect(fill = "white", color = NA),
+panel.border = element_rect(fill=NA, color=julia$navy, size=0.6),
+axis.text = element_text(color=julia$navy, size=13),
+axis.title = element_text(color=julia$teal, size=15, face="bold"),
+plot.title = element_text(color=julia$coral, size=18, face="bold"),
+plot.subtitle = element_text(color=julia$orange, size=14),
+legend.title = element_text(color=julia$navy, size=13, face="bold"),
+legend.text = element_text(color=julia$teal, size=12),
+axis.line = element_line(color=julia$navy),
+axis.ticks = element_line(color=julia$navy),
+legend.position = "right"
+)
 }
 ```
+
 
 ```{css, echo=FALSE}
 pre.python-code, code.python-code {
-  background-color: #f7f7f7;
-  color: #222;
-  font-family: "Inconsolata", monospace;
-  font-size: 15px;
-  border-left: 4px solid #ff6361;
-  padding: 6px;
+background-color: #f7f7f7;
+color: #222;
+font-family: "Inconsolata", monospace;
+font-size: 15px;
+border-left: 4px solid #ff6361;
+padding: 6px;
 }
 pre.python-output, code.python-output {
-  background-color: #ffffff;
-  color: #003f5c;
-  font-family: "Inconsolata", monospace;
-  font-size: 15px;
-  padding: 6px;
+background-color: #ffffff;
+color: #003f5c;
+font-family: "Inconsolata", monospace;
+font-size: 15px;
+padding: 6px;
 }
 ```
-
 ------------------------------------------------------------------------
 
 # 1. Explorar la base de datos `mtcars`

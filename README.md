@@ -28,7 +28,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | 25    | Agosto    | Modelo Lineal \& LPM       | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_6/class_6#1) [`[Code]`](slides/class_6/class_6.Rmd) [`[Notebook]`](https://mebucca.github.io/cda_soc3070/slides/class_6/notebook_6#1)                                                                                                                               |
 | 1     | Septiembre| NO HAY CLASES              |                                                                                                                              |
 | 8     | Septiembre| GLM & Regresión logística  | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_8/class_8#1) [`[Code]`](slides/class_8/class_8.Rmd)                                                                                                                             |
-| 29    | Septiembre| —                          |                                                                                                                              |
+| 29    | Septiembre| Efectos en Regresión logística | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_10/class_10#1) [`[Code]`](slides/class_10/class_10.Rmd) [`[Notebook]`](https://mebucca.github.io/cda_soc3070/slides/class_10/notebook_10#1)                                                                                                                             |
 | 6     | Octubre   | —                          |                                                                                                                              |
 | 13    | Octubre   | —                          |                                                                                                                              |
 | 20    | Octubre   | —                          |                                                                                                                              |
@@ -46,7 +46,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 
 - Reuniones individuales de aproximadamente 15 minutos cada día Lunes entre 14:30 y 15:30pm. [`[Agendar]`](https://calendar.app.google/Cyu1NRh6Bn2vRHEx9)
 
-## Ayudantía 
+## Ayudantía
 
 |Día              | Mes              | Contenido       | Material                                                                                       |
 |-----------------|------------------|-----------------|------------------------------------------------------------------------------------------------|

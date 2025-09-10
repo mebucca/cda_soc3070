@@ -1,0 +1,252 @@
+---
+title: "Práctica: Interpretación de la Regresión Logística"
+author: "SOC3070 · Mauricio Bucca"
+date: today
+format:
+  html:
+    theme: default
+    highlight: tango
+    code-copy: true
+    code-fold: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  comment = "#>",      # Python-style output prompt
+  prompt = TRUE,       # Show > in front of code
+  class.source = "python-code",
+  class.output = "python-output"
+)
+
+# Packages
+library(pacman)
+p_load("tidyverse", "broom", "ggplot2", "marginaleffects", "modelsummary")
+
+# Define julia-inspired palette
+julia <- list(
+  navy   = "#003f5c",
+  teal   = "#2f4b7c",
+  coral  = "#ff6361",
+  orange = "#ffa600",
+  sand   = "#f4e1a4"
+)
+
+theme_julia <- function() {
+  theme_minimal(base_family = "Inconsolata") +
+    theme(
+      plot.background = element_rect(fill = "white", color = NA),
+      panel.border = element_rect(fill=NA, color=julia$navy, size=0.6),
+      axis.text = element_text(color=julia$navy, size=13),
+      axis.title = element_text(color=julia$teal, size=15, face="bold"),
+      plot.title = element_text(color=julia$coral, size=18, face="bold"),
+      plot.subtitle = element_text(color=julia$orange, size=14),
+      legend.position = "right"
+    )
+}
+```
+
+```{css, echo=FALSE}
+pre.python-code, code.python-code {
+  background-color: #f7f7f7;
+  color: #222;
+  font-family: "Inconsolata", monospace;
+  font-size: 15px;
+  border-left: 4px solid #ff6361;
+  padding: 6px;
+}
+pre.python-output, code.python-output {
+  background-color: #ffffff;
+  color: #003f5c;
+  font-family: "Inconsolata", monospace;
+  font-size: 15px;
+  padding: 6px;
+}
+```
+
+
+---
+
+## 1. El Modelo Logístico
+
+En esta práctica trabajamos con la base `mtcars` para predecir si un automóvil tiene transmisión manual (`am = 1`). Consideramos dos predictores:
+
+* **wt**: peso del auto en miles de libras.
+* **hp**: caballos de fuerza del motor.
+
+La regresión logística modela la probabilidad de un evento binario en función de covariables. Con el link logit transformamos la probabilidad:
+
+$$
+\text{logit}(p_i) = \ln \frac{p_i}{1-p_i} = \beta_0 + \beta_1 wt_i + \beta_2 hp_i
+$$
+
+```{r}
+# Cargar y preparar los datos
+data(mtcars)
+mtcars <- as_tibble(mtcars)
+
+# Ajustar modelo logístico
+logit_model <- glm(am ~ wt + hp, data = mtcars, family = binomial(link = "logit"))
+summary(logit_model)
+```
+
+---
+
+## 2. Efecto Lineal sobre el Logit
+
+En la escala del logit, la relación es **lineal y constante**:
+
+* `wt = -8.08`: cada 1000 lbs adicionales reducen el logit en **8.08 unidades**, manteniendo fija la potencia.
+* `hp = 0.036`: cada caballo de fuerza aumenta el logit en **0.036 unidades**, manteniendo fijo el peso.
+
+```{r}
+# Grilla para predicciones con hp promedio
+newdata <- tibble(
+  wt = seq(min(mtcars$wt), max(mtcars$wt), length.out = 100),
+  hp = mean(mtcars$hp)
+)
+
+newdata$logit_pred <- predict(logit_model, newdata = newdata, type = "link")
+
+ggplot(newdata, aes(x = wt, y = logit_pred)) +
+  geom_line(color = julia$coral, linewidth = 1.3) +
+  labs(
+    title = "Efecto de 'wt' sobre el Logit",
+    subtitle = "Manteniendo la potencia constante en su media",
+    x = "Peso del vehículo (wt, en 1000 lbs)",
+    y = "Logit(P(am=1))"
+  ) +
+  theme_julia()
+```
+
+---
+
+## 3. Efecto Multiplicativo sobre las Odds
+
+Exponenciando los coeficientes obtenemos las **odds ratios**:
+
+* Para `wt`: $e^{-8.08} \approx 0.0003$ → odds se reducen más de 99.9%.
+* Para `hp`: $e^{0.036} \approx 1.037$ → odds aumentan 3.7% por caballo de fuerza.
+
+```{r}
+modelsummary(logit_model, exponentiate = TRUE, gof_map = "nobs")
+```
+
+---
+
+## 4. Efecto sobre la Probabilidad
+
+En la escala de probabilidad, los efectos no son constantes:
+
+* Más fuertes cerca de $p=0.5$.
+* Más débiles en los extremos (cerca de 0 o 1).
+
+```{r}
+# Curvas sigmoides para distintos niveles de hp
+data_plot <- expand.grid(
+  wt = seq(min(mtcars$wt), max(mtcars$wt), length.out = 100),
+  hp = c(90, mean(mtcars$hp), 180)
+)
+
+data_plot$prob_pred <- predict(logit_model, newdata = data_plot, type = "response")
+
+ggplot(data_plot, aes(x = wt, y = prob_pred, color = factor(hp))) +
+  geom_line(linewidth = 1.2) +
+  labs(
+    title = "Efecto sobre la Probabilidad",
+    subtitle = "Curvas sigmoides para distintos niveles de potencia",
+    x = "Peso del vehículo (wt, en 1000 lbs)",
+    y = "Probabilidad de transmisión manual",
+    color = "Potencia (hp)"
+  ) +
+  theme_julia()
+```
+
+---
+
+## 5. Efectos Marginales
+
+En los modelos logísticos, los coeficientes (`β`) no se interpretan directamente en términos de probabilidades, sino en la escala del **logit**. Para facilitar la interpretación, usamos **efectos marginales**, que traducen esos coeficientes en cambios en la **probabilidad** de ocurrencia del evento (aquí, tener transmisión manual).
+
+Los efectos marginales muestran **cómo varía la probabilidad de éxito (am = 1) frente a un cambio pequeño en una variable explicativa, manteniendo las demás constantes**.
+
+Existen tres maneras habituales de calcularlos:
+
+* **AME (Average Marginal Effects)**: promedio de los efectos marginales individuales en toda la muestra. Responde a: *“en promedio, ¿cómo cambia la probabilidad si todos aumentaran en una unidad su predictor?”*
+* **MEM (Marginal Effects at the Mean)**: evalúa los efectos marginales en el **individuo promedio**, es decir, tomando los valores medios de los predictores.
+* **MER (Marginal Effects at Representative Values)**: muestra los efectos en **casos concretos**, definidos por combinaciones específicas de las variables.
+
+---
+
+### AME
+
+```{r}
+avg_slopes(logit_model)
+```
+
+**Interpretación:**
+
+* `wt`: en promedio, **cada 1000 lbs adicionales de peso reducen la probabilidad de tener transmisión manual en 0.36 puntos porcentuales**.
+  Esto significa que, en toda la muestra, un auto más pesado tiende a ser menos probable que tenga transmisión manual, aunque el efecto no es enorme.
+* `hp`: en promedio, **cada caballo de fuerza adicional aumenta la probabilidad en 0.0016 puntos porcentuales**.
+  El efecto es muy pequeño, pero indica que la mayor potencia se asocia (ligeramente) a transmisiones manuales.
+
+👉 El AME ofrece una **visión global**, útil cuando queremos un resumen simple del efecto promedio.
+
+---
+
+### MEM
+
+```{r}
+vm <- expand.grid(wt = mean(mtcars$wt,na.rm=T), hp = mean(mtcars$hp,na.rm=T))
+mem <- slopes(logit_model, newdata = vm) %>%
+  select(term, estimate, std.error, conf.low, conf.high, p.value) 
+
+bind_cols(vm, mem)
+
+```
+
+**Interpretación:**
+
+* Para el **auto promedio** (con el peso y la potencia media del dataset), el efecto de `wt` es de **-0.97**. Es decir, en ese punto específico, aumentar el peso en 1000 lbs reduce la probabilidad de transmisión manual en casi 1 punto porcentual.
+* Para `hp`, el efecto sigue siendo positivo, pero es más pequeño en magnitud que el del peso.
+
+👉 El MEM es intuitivo porque se interpreta en un caso concreto (el promedio). Sin embargo, puede ser engañoso si el "auto promedio" no es representativo de autos reales (por ejemplo, un promedio de valores que rara vez coexisten en la realidad).
+
+---
+
+### MER
+
+```{r}
+vr <- expand.grid(wt = c(2, 4), hp = c(90, 150))
+mer <- slopes(logit_model, newdata = vr) %>%
+  select(term, estimate, std.error, conf.low, conf.high, p.value) 
+
+bind_cols(bind_rows(vr,vr), mer)
+
+```
+
+**Interpretación:**
+
+* Para autos **livianos (2000 lbs) con baja potencia (90 hp)**, el peso tiene un efecto negativo más reducido: cada incremento en el peso disminuye un poco la probabilidad de tener transmisión manual, pero no de forma dramática.
+* Para autos **pesados (4000 lbs)**, el efecto del peso sigue siendo negativo, aunque algo menor en magnitud que en el promedio.
+* La **potencia** (hp) siempre tiene efectos pequeños y positivos, indicando que autos más potentes tienen una probabilidad ligeramente mayor de tener transmisión manual, tanto en livianos como pesados.
+
+👉 El MER es útil porque permite explorar cómo cambian los efectos **en situaciones representativas o extremas**, mostrando la heterogeneidad de los efectos.
+
+---
+
+## 6. Conclusión
+
+* En la escala **logit**, los efectos son lineales y fáciles de calcular, pero difíciles de interpretar.
+* En la escala de **odds**, se interpretan como multiplicadores, lo cual es más informativo que el logit, pero aún abstracto.
+* En la escala de **probabilidad**, los efectos **no son constantes**: dependen del nivel de las covariables. Por eso es necesario mirar AME, MEM y MER para obtener una imagen completa.
+* Cada medida responde a una pregunta distinta:
+
+  * **AME**: visión promedio global.
+  * **MEM**: visión puntual en el “individuo promedio”.
+  * **MER**: visión contextualizada en escenarios concretos.
+
+En resumen, no existe **una única interpretación de los efectos marginales**. La escala (logit, odds, probabilidad) y el escenario (promedio, promedio de covariables, o casos representativos) condicionan la lectura. Entender estas diferencias es clave para comunicar correctamente los resultados.
