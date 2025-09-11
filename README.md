@@ -61,6 +61,8 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 |-----------------|------------------|-----------------|-------------------------------------------------------------------------------------------|
 | Tarea corta 1   | 4 de Agosto      | 11 de Agosto    | [`[TC1]`](https://mebucca.github.io/cda_soc3070/homework/tc_1#1) [`[TC1.qmd]`](homework/tc_1.qmd)  |
 | Tarea corta 2   | 21 de Agosto     | 27 de Agosto    | [`[TC2]`](https://mebucca.github.io/cda_soc3070/homework/tc_2#1) [`[TC2.qmd]`](homework/tc_2.qmd)  |
+| Trabajo 1       | 11 de Septiembre | 6 de Octubre    | [`[T1]`](https://mebucca.github.io/cda_soc3070/homework/t_1/t_1#1) [`[T1.qmd]`](homework/t_1/t_1.qmd)  |
+| Tarea corta 3   | 6 de Octubre     | 13 de Octubre   | [`[TC3]`](https://mebucca.github.io/cda_soc3070/homework/tc_3#1) [`[TC3.qmd]`](homework/tc_3.qmd)  |
 
 
 ## Recursos computacionales
