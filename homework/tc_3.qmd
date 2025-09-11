@@ -1,0 +1,139 @@
+---
+title: "SOC3070 Análisis de Datos Categóricos"
+author: "Tarea corta 3"
+format: html
+editor: visual
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  comment = "#>",      # Python-style output prompt
+  prompt = TRUE,       # Show > in front of code
+  class.source = "python-code",
+  class.output = "python-output"
+)
+
+# Packages
+library(pacman)
+p_load("tidyverse", "broom", "ggplot2", "marginaleffects", "modelsummary")
+
+# Paleta julia definida como vector de colores
+julia <- list(
+  navy   = "#1f2041",
+  teal   = "#4b8e8d",
+  coral  = "#f87060",
+  orange = "#f9a03f",
+  sand   = "#ffd275"
+)
+
+# Paleta manual para usar en scales
+julia_palette <- c(julia$coral, julia$teal, julia$orange, julia$navy, julia$sand)
+
+# Theme con tipografía y estilo
+theme_julia <- function() {
+  theme_minimal(base_family = "Inconsolata") +
+    theme(
+      plot.background = element_rect(fill = "white", color = NA),
+      panel.border = element_rect(fill=NA, color=julia$navy, size=0.6),
+      axis.text = element_text(color=julia$navy, size=13),
+      axis.title = element_text(color=julia$teal, size=15, face="bold"),
+      plot.title = element_text(color=julia$coral, size=18, face="bold"),
+      plot.subtitle = element_text(color=julia$orange, size=14),
+      legend.position = "right"
+    )
+}
+
+# Scales para color y fill
+scale_color_julia <- function(...) {
+  scale_color_manual(values = julia_palette, ...)
+}
+
+scale_fill_julia <- function(...) {
+  scale_fill_manual(values = julia_palette, ...)
+}
+```
+
+```{css, echo=FALSE}
+pre.python-code, code.python-code {
+  background-color: #f7f7f7;
+  color: #222;
+  font-family: "Inconsolata", monospace;
+  font-size: 15px;
+  border-left: 4px solid #ff6361;
+  padding: 6px;
+}
+pre.python-output, code.python-output {
+  background-color: #ffffff;
+  color: #003f5c;
+  font-family: "Inconsolata", monospace;
+  font-size: 15px;
+  padding: 6px;
+}
+```
+
+```{r, echo=T, message=FALSE}
+# Instalar y cargar paquetes necesarios
+# install.packages("titanic")
+library(tidyverse)
+library(titanic)
+
+# cargar datos
+data("titanic_train")
+df <- titanic_train %>%
+  filter(Pclass == 3, !is.na(Age)) %>%
+  mutate(Sex = factor(Sex),
+         Survived = as.numeric(Survived))
+```
+
+Ponderación: 6% de la nota final del curso.
+
+$\newcommand{\vect}[1]{\boldsymbol{#1}}$
+
+![Titanic (1997)](https://e01-elmundo.uecdn.es/assets/multimedia/imagenes/2017/11/20/15111928435925.jpg)
+
+## Datos:
+
+En esta tarea usaremos el dataset `titanic_train` incluido en el paquete **titanic**. El conjunto contiene información sobre pasajeros del Titanic: clase económica, edad, sexo y si sobrevivieron (`Survived = 1`) o no (`Survived = 0`).
+
+Nos restringiremos a los pasajeros de **clase 3** (`Pclass==3`).
+
+```{r, echo=T, message=FALSE}
+df %>% glimpse()
+```
+
+## Problema:
+
+En particular, estimaremos un modelo de regresión logística para predecir la probabilidad de sobrevivir en función de la edad y el sexo, permitiendo un efecto no lineal de la edad:
+
+$$
+\text{logit}(P(\text{Survived}=1)) = \beta_0 + \beta_1 \cdot \text{Age} + \beta_2 \cdot \text{Age}^2 + \beta_3 \cdot \text{Sex} + \beta_4 \cdot (\text{Age} \times \text{Sex})
+$$
+
+En R:
+
+```{r}
+modelo_titanic <- glm(Survived ~ Age + I(Age^2) + Sex + Age:Sex,
+                      data=df, family=binomial)
+summary(modelo_titanic)
+```
+
+------------------------------------------------------------------------
+
+### 1. Probabilidades estimadas
+
+Calcula y grafica la probabilidad de sobrevivencia estimada por el modelo para hombres y mujeres en todo el rango de edad. El resultado debe verse así:
+
+------------------------------------------------------------------------
+
+### 2. Diferencia hombres − mujeres
+
+Calcula la diferencia en probabilidades predichas de sobrevivencia entre hombres y mujeres (hombres − mujeres) para cada edad.
+
+------------------------------------------------------------------------
+
+### 3. Bootstrap para intervalos de confianza
+
+Usa bootstrap (500 réplicas) para estimar un intervalo de confianza al 95% para la diferencia en probabilidades entre hombres y mujeres en cada edad. Grafica la curva estimada junto con su intervalo. El resultado debe verse similar a esto:
