@@ -1,0 +1,112 @@
+---
+title: "SOL3070 Análisis de Datos Categóricos"
+author: "Trabajo 1"
+format: html
+editor: visual
+---
+
+```{r, echo=FALSE,message=FALSE, warnings=FALSE}
+library("pacman")
+p_load("tinytex","tidyverse","modelr","httr","ggsci","png","grid","marginaleffects","titanic","knitr")
+options(scipen = 999)
+
+```
+
+## Información
+
+-   Ponderación: 25% de la nota final del curso.
+
+-   Bonus: Responder la pregunta *bonus* NO es un requisito necesario para obtener puntaje completo. Responder incorrectamente la pregunta *bonus* no afectará negativamente la nota obtenida, pero responderla correctamente mejorará la nota obtenida en un máximo de 0.5 puntos (o en la cantidad necesaria para obtener nota máxima si la nota original fuera superior a 6.5)
+
+## Introducción
+
+El hundimiento del *Titanic* en abril de 1912, durante su viaje inaugural de Southampton a Nueva York, ha sido uno de los desastres marítimos más recordados de la historia. La tragedia provocó la muerte de más de 1.500 personas y dio lugar a numerosas investigaciones sobre seguridad marítima y desigualdades sociales en el acceso a los botes salvavidas.
+
+![Titanic (1997)](https://e01-elmundo.uecdn.es/assets/multimedia/imagenes/2017/11/20/15111928435925.jpg)
+
+## Datos
+
+Para este ejercicio utilizaremos el paquete **`titanic`** de `R`, que contiene distintos conjuntos de datos derivados de los registros de pasajeros del Titanic. Entre ellos, el más comúnmente usado es `titanic_train`, que proviene del famoso desafío de *Kaggle* y resume información clave de cada pasajero, incluyendo:
+
+-   **PassengerId**: Identificador único del pasajero.\
+-   **Pclass**: Clase económica (1ª, 2ª o 3ª).\
+-   **Name**: Nombre completo.\
+-   **Sex**: Sexo.\
+-   **Age**: Edad en años.\
+-   **SibSp**: Número de hermanos/as o cónyuge a bordo.\
+-   **Parch**: Número de padres o hijos a bordo.\
+-   **Ticket**: Número de boleto.\
+-   **Fare**: Tarifa pagada por el pasaje.\
+-   **Cabin**: Cabina asignada (si corresponde).\
+-   **Embarked**: Puerto de embarque (C = Cherbourg, Q = Queenstown, S = Southampton).\
+-   **Survived**: Variable binaria que indica si el pasajero sobrevivió (1) o no (0).
+
+Visualización rápida de las primeras filas del conjunto de datos:
+
+```{r, message=FALSE, warning=FALSE}
+# Mostrar primeras observaciones
+kable(head(titanic_train))
+```
+
+## Ejercicios
+
+### I. LPM
+
+1.  Calcula las probabilidades de que un **hombre** haya sobrevivido en el Titanic $(p_h)$ y de que una **mujer** haya sobrevivido $(p_m)$. Calcula la diferencia entre ambas proporciones.
+
+------------------------------------------------------------------------
+
+2.  Usa un **LPM** para estimar la probabilidad de **sobrevivir** en función del **sexo**. Escribe la ecuación de regresión correspondiente y presenta un `summary()` de los resultados. Explica el significado estadístico de cada coeficiente y su conexión con los resultados de la pregunta anterior.
+
+------------------------------------------------------------------------
+
+3.  Usa un LPM para estimar la probabilidad de **sobrevivir** en función del **sexo**, controlando por la **edad** de los pasajeros. Escribe la ecuación de regresión correspondiente y presenta un `summary()` de los resultados. Explica el significado estadístico de cada coeficiente y provee una breve interpretación sustantiva.
+
+------------------------------------------------------------------------
+
+4.  De acuerdo al modelo estimado en la pregunta anterior, ¿cuál es el efecto marginal de la **edad** sobre la probabilidad esperada de sobrevivir?
+
+------------------------------------------------------------------------
+
+5.  En base al modelo usado en II.3., calcula las probabilidades esperadas de sobrevivir para un **hombre** y una **mujer** de 30 años. Expresa formalmente las ecuaciones correspondientes a estas predicciones.
+
+------------------------------------------------------------------------
+
+6.  Agrega una **interacción** entre `Sex` y `Age` al modelo estimado en II.3. Escribe la ecuación de regresión y presenta un `summary()` de los resultados. Interpreta el efecto de la edad estimado en términos estadísticos y sustantivos.
+
+### II. Regresión Logística
+
+1.  Calcula las *odds* de que un **hombre** haya sobrevivido en el Titanic $(\text{odd}_h)$ y de que una **mujer** haya sobrevivido $(\text{odd}_m)$. Calcula el *odds ratio* entre ambas *odds* (hombres vs mujeres) e interpreta el resultado.
+
+------------------------------------------------------------------------
+
+2.  Usa una **regresión logística** para estimar la log-odds de sobrevivir en función del sexo. Escribe la ecuación de regresión correspondiente y presenta un `summary()` de los resultados. Explica el significado estadístico de cada coeficiente y su conexión con los resultados de la pregunta anterior.
+
+------------------------------------------------------------------------
+
+3.  Estima una regresión logística para las *log-odds* de sobrevivir en función del sexo, **controlando por la edad** de los pasajeros. Escribe la ecuación de regresión correspondiente y presenta un `summary()` de los resultados. Explica cada coeficiente.
+
+------------------------------------------------------------------------
+
+4.  ¿Cuál es la fórmula para el **efecto marginal de la edad** sobre la probabilidad esperada de sobrevivir?
+
+------------------------------------------------------------------------
+
+5.  Calcula las **probabilidades esperadas de sobrevivir** para un hombre y una mujer de **30 años** según el modelo estimado en II.3.
+
+------------------------------------------------------------------------
+
+6.  De acuerdo al modelo estimado en II.3., ¿cuál es el efecto marginal de la edad sobre la probabilidad de sobrevivir para un hombre y una mujer de 30 años?
+
+------------------------------------------------------------------------
+
+### III. Bonus:
+
+A continuación se muestra un gráfico que representa las **probabilidades predichas de sobrevivir en el Titanic** en función de la **edad**, **sexo** y **clase del pasaje (Pclass)**.
+
+1.  A partir del gráfico, deduzcan cuál puede ser el modelo que generó estas superficies de probabilidad.
+
+2.  Estimen dicho modelo en `R`.
+
+3.  Reproduzcan un gráfico lo más parecido posible.
+

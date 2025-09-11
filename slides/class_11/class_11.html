@@ -4,7 +4,7 @@
     <title>Análisis de Datos Categóricos (SOC3070)</title>
     <meta charset="utf-8" />
     <meta name="author" content="  Mauricio Bucca  Profesor Asistente, Sociología UC" />
-    <script src="libs/header-attrs-2.27/header-attrs.js"></script>
+    <script src="libs/header-attrs-2.29/header-attrs.js"></script>
     <link rel="stylesheet" href="gentle-r.css" type="text/css" />
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
@@ -22,7 +22,7 @@ class: center, middle, inverse, title-slide
 ### <br> Mauricio Bucca<br> Profesor Asistente, Sociología UC
 ]
 .date[
-### 07 October, 2024
+### 10 September, 2025
 ]
 
 ---
@@ -452,9 +452,9 @@ betas2_mc &lt;- replicate(nreps,mc_beta2()); head(betas2_mc)
 
 ```
 ## affairsdata$ym affairsdata$ym affairsdata$ym affairsdata$ym affairsdata$ym 
-##     0.09087138     0.07304262     0.02730421     0.07032617     0.06581289 
+##     0.08453288     0.04452772     0.05384010     0.07070722     0.04984874 
 ## affairsdata$ym 
-##     0.06386119
+##     0.08867192
 ```
 
 ---
@@ -471,10 +471,10 @@ betasall_mc %&gt;% head(4)
 
 ```
 ##      (Intercept) factor(sex)male         ym
-## [1,]   -1.686012      -0.1180453 0.06461125
-## [2,]   -1.708559       0.2383098 0.05787842
-## [3,]   -1.963841       0.2445484 0.06912406
-## [4,]   -1.887371       0.5150242 0.07103016
+## [1,]   -1.693095      0.60197489 0.04093877
+## [2,]   -1.768155      0.34663442 0.04803133
+## [3,]   -1.209181      0.04497595 0.03800159
+## [4,]   -1.762199      0.12586321 0.07950661
 ```
 
 ``` r
@@ -482,7 +482,7 @@ se_beta2_mc &lt;- sd(betasall_mc[,"ym"]); se_beta2_mc
 ```
 
 ```
-## [1] 0.01761518
+## [1] 0.01662112
 ```
 
 ``` r
@@ -493,7 +493,7 @@ ci_beta2_mc &lt;-
 
 ```
 ##         6%      97.5% 
-## 0.03105430 0.09183556
+## 0.03346246 0.09174033
 ```
 ]
 
@@ -528,12 +528,12 @@ expbetasall_mc %&gt;% head()
 
 ```
 ##      (Intercept) factor(sex)male       ym
-## [1,]   0.1418026        1.354819 1.081355
-## [2,]   0.1443566        1.486687 1.076918
-## [3,]   0.1479306        1.183595 1.077943
-## [4,]   0.2111782        1.341189 1.059357
-## [5,]   0.1518279        1.021064 1.077740
-## [6,]   0.1784247        1.455114 1.056227
+## [1,]   0.2725395       0.9869749 1.027783
+## [2,]   0.1990006       1.1002659 1.054867
+## [3,]   0.1662447       1.3129678 1.056433
+## [4,]   0.1239080       1.1594907 1.107625
+## [5,]   0.1888695       1.2588678 1.069845
+## [6,]   0.1150266       1.6015678 1.075786
 ```
 
 
@@ -549,7 +549,7 @@ se_exbeta2_mc &lt;- sd(expbetasall_mc[,"ym"]); se_exbeta2_mc
 ```
 
 ```
-## [1] 0.01860613
+## [1] 0.01871054
 ```
 
 ``` r
@@ -560,7 +560,7 @@ ci_expbeta2_mc &lt;-
 
 ```
 ##     2.5%    97.5% 
-## 1.025699 1.097896
+## 1.024936 1.097537
 ```
 ]
 
@@ -620,7 +620,7 @@ ame_ym_mc &lt;- replicate(nreps,mc_ame_beta2()); head(ame_ym_mc,4)
 ```
 
 ```
-## [1] 0.013108847 0.010047768 0.006705262 0.016470641
+## [1] 0.009593253 0.011505532 0.013924786 0.021288038
 ```
 
 ---
@@ -644,7 +644,7 @@ se_ame_ym_bs &lt;- sd(ame_ym_mc); se_ame_ym_bs
 ```
 
 ```
-## [1] 0.003076211
+## [1] 0.003152089
 ```
 
 ``` r
@@ -655,7 +655,7 @@ ci_ame_ym_mc &lt;-
 
 ```
 ##        2.5%       97.5% 
-## 0.004389195 0.016570634
+## 0.004644811 0.016739303
 ```
 ]
 
@@ -820,7 +820,7 @@ betas2_bs &lt;- replicate(nreps,bs_beta2()); head(betas2_bs)
 
 ```
 ##         ym         ym         ym         ym         ym         ym 
-## 0.04670347 0.06872105 0.05126156 0.06176617 0.06029531 0.06977116
+## 0.09513987 0.05335525 0.06572329 0.05447187 0.04960957 0.07514645
 ```
 
 ---
@@ -834,7 +834,7 @@ se_beta2_bs
 ```
 
 ```
-## [1] 0.01625864
+## [1] 0.01686602
 ```
 
 ``` r
@@ -845,7 +845,7 @@ ci_beta2_bs &lt;-
 
 ```
 ##       2.5%      97.5% 
-## 0.02745074 0.09025337
+## 0.02684921 0.09246164
 ```
 ]
 
@@ -900,7 +900,7 @@ expbetas2_bs &lt;- replicate(nreps,bs_expbeta2()); head(expbetas2_bs)
 
 ```
 ##       ym       ym       ym       ym       ym       ym 
-## 1.052029 1.068133 1.052111 1.082566 1.036200 1.050303
+## 1.050900 1.101924 1.074302 1.100354 1.067932 1.063713
 ```
 
 ---
@@ -914,7 +914,7 @@ se_expbeta2_bs
 ```
 
 ```
-## [1] 0.01789252
+## [1] 0.01760925
 ```
 
 ``` r
@@ -925,7 +925,7 @@ ci_expbeta2_bs &lt;-
 
 ```
 ##     2.5%    97.5% 
-## 1.025829 1.096832
+## 1.027223 1.095203
 ```
 ]
 
@@ -979,7 +979,7 @@ ame_ym_bs &lt;- replicate(nreps,bs_ame_ym()); head(ame_ym_bs)
 ```
 
 ```
-## [1] 0.012671879 0.015056605 0.012993359 0.014819770 0.009671341 0.012022913
+## [1] 0.010387269 0.007251280 0.008998665 0.005862445 0.010744038 0.012924977
 ```
 
 
@@ -1004,7 +1004,7 @@ se_ame_ym_bs
 ```
 
 ```
-## [1] 0.002910774
+## [1] 0.003033788
 ```
 
 ``` r
@@ -1015,7 +1015,7 @@ ci_ame_ym_bs &lt;-
 
 ```
 ##        2.5%       97.5% 
-## 0.004640685 0.016080838
+## 0.004691448 0.016513843
 ```
 ]
 
@@ -1058,11 +1058,11 @@ github.com/mebucca
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
-"ratio": "16:9",
-"highlightStyle": "github",
-"highlightLines": true,
-"countIncrementalSlides": true,
-"slideNumberFormat": "%current%"
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": true,
+  "slideNumberFormat": "%current%"
 });
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));
