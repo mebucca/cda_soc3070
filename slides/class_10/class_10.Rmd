@@ -1,8 +1,8 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
 subtitle: "Regresión Logística"
-author: "<br> Mauricio Bucca <br> [github.com/mebucca](https://github.com/mebucca) <br> mebucca@uc.cl"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
+author: "<br> Mauricio Bucca<br> Profesor Asistente, Sociología UC"
+date: "[github.com/mebucca](https://github.com/mebucca)"
 output:
   xaringan::moon_reader:
     lib_dir: libs

@@ -3,8 +3,8 @@
   <head>
     <title>Análisis de Datos Categóricos (SOC3070)</title>
     <meta charset="utf-8" />
-    <meta name="author" content="  Mauricio Bucca   github.com/mebucca   mebucca@uc.cl" />
-    <script src="libs/header-attrs-2.29/header-attrs.js"></script>
+    <meta name="author" content="  Mauricio Bucca  Profesor Asistente, Sociología UC" />
+    <script src="libs/header-attrs-2.27/header-attrs.js"></script>
     <link rel="stylesheet" href="gentle-r.css" type="text/css" />
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
@@ -19,10 +19,10 @@ class: center, middle, inverse, title-slide
 ## Regresión Logística
 ]
 .author[
-### <br> Mauricio Bucca <br> <a href="https://github.com/mebucca">github.com/mebucca</a> <br> <a href="mailto:mebucca@uc.cl" class="email">mebucca@uc.cl</a>
+### <br> Mauricio Bucca<br> Profesor Asistente, Sociología UC
 ]
 .date[
-### 09 September, 2025
+### <a href="https://github.com/mebucca">github.com/mebucca</a>
 ]
 
 ---
@@ -590,11 +590,15 @@ avg_slopes(logit_affairs_sex_ym)
 
 ```
 ## 
-##  Term      Contrast Estimate Std. Error    z Pr(&gt;|z|)    S    2.5 % 97.5 %
-##   sex male - female   0.0407    0.03505 1.16    0.245  2.0 -0.02799 0.1094
-##   ym  dY/dX           0.0107    0.00308 3.47   &lt;0.001 10.9  0.00466 0.0167
+##  Term                  Contrast Estimate Std. Error    z Pr(&gt;|z|)    S    2.5 %
+##   sex mean(male) - mean(female)   0.0407    0.03505 1.16    0.245  2.0 -0.02799
+##   ym  mean(dY/dX)                 0.0107    0.00308 3.47   &lt;0.001 10.9  0.00466
+##  97.5 %
+##  0.1094
+##  0.0167
 ## 
-## Type: response
+## Type:  response 
+## Columns: term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted
 ```
 
 --
@@ -630,18 +634,18 @@ me_ym &lt;- tibble(p  = p_hat, beta_ym = beta_ym, me = beta_ym * p_hat * (1 - p_
 
 ```
 ## # A tibble: 601 × 3
-##        p beta_ym      me
-##    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
-##  1 0.287  0.0584 0.0120 
-##  2 0.185  0.0584 0.00882
-##  3 0.302  0.0584 0.0123 
-##  4 0.351  0.0584 0.0133 
-##  5 0.190  0.0584 0.00900
-##  6 0.164  0.0584 0.00802
-##  7 0.158  0.0584 0.00779
-##  8 0.351  0.0584 0.0133 
-##  9 0.302  0.0584 0.0123 
-## 10 0.197  0.0584 0.00925
+##         p beta_ym       me
+##     &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;
+##  1 0.2874 0.05843 0.01197 
+##  2 0.1854 0.05843 0.008824
+##  3 0.3021 0.05843 0.01232 
+##  4 0.3507 0.05843 0.01331 
+##  5 0.1902 0.05843 0.009000
+##  6 0.1643 0.05843 0.008024
+##  7 0.1584 0.05843 0.007789
+##  8 0.3507 0.05843 0.01331 
+##  9 0.3021 0.05843 0.01232 
+## 10 0.1971 0.05843 0.009245
 ## # ℹ 591 more rows
 ```
 ]
@@ -754,7 +758,8 @@ slopes(logit_affairs_sex_ym2, newdata =   expand.grid(male=mean_male, ym=mean_ym
 ##  male    1 - 0   0.0410    0.03528 1.16    0.245  2.0 -0.02818 0.1101
 ##  ym      dY/dX   0.0108    0.00315 3.43   &lt;0.001 10.7  0.00461 0.0169
 ## 
-## Type: response
+## Type:  response 
+## Columns: rowid, term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted, male, ym, everaffair_d
 ```
 
 
@@ -781,16 +786,17 @@ slopes(logit_affairs_sex_ym,
 ```
 ## 
 ##  Estimate Std. Error    z Pr(&gt;|z|)    S   2.5 % 97.5 %
-##   0.00882    0.00226 3.91  &lt; 0.001 13.4 0.00440 0.0132
 ##   0.01007    0.00259 3.89  &lt; 0.001 13.3 0.00499 0.0151
-##   0.00981    0.00281 3.49  &lt; 0.001 11.0 0.00430 0.0153
+##   0.00882    0.00226 3.91  &lt; 0.001 13.4 0.00440 0.0132
 ##   0.01104    0.00315 3.51  &lt; 0.001 11.1 0.00487 0.0172
-##   0.01232    0.00420 2.93  0.00335  8.2 0.00409 0.0205
+##   0.00981    0.00281 3.49  &lt; 0.001 11.0 0.00430 0.0153
 ##   0.01331    0.00437 3.05  0.00232  8.8 0.00474 0.0219
+##   0.01232    0.00420 2.93  0.00335  8.2 0.00409 0.0205
 ## 
 ## Term: ym
-## Type: response
+## Type:  response 
 ## Comparison: dY/dX
+## Columns: rowid, term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted, sex, ym, everaffair_d
 ```
 
 
@@ -827,11 +833,11 @@ github.com/mebucca
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
-  "ratio": "16:9",
-  "highlightStyle": "github",
-  "highlightLines": true,
-  "countIncrementalSlides": true,
-  "slideNumberFormat": "%current%"
+"ratio": "16:9",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": true,
+"slideNumberFormat": "%current%"
 });
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));
