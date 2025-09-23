@@ -1,6 +1,6 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Clase #11: Regresión Logística -  Inferencia"
+subtitle: "Regresión Logística -  Inferencia"
 author: "<br> Mauricio Bucca<br> Profesor Asistente, Sociología UC"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
@@ -23,12 +23,13 @@ class: inverse, center, middle
 ```{r xaringan-themer, include=FALSE, warning=FALSE}
 library(tidyverse)
 library(xaringanthemer)
-style_duo_accent(primary_color ="#8B0000", secondary_color = "#B0C4DE",
-                 background_color = "#f8f7f3",
-                 header_font_google = google_font("Archivo"),
-                 text_font_google   = google_font("Inconsolata"), 
-                 link_color= "#4682B4"
-
+style_duo_accent(
+  primary_color = "#C41E3A",       # Valentino deep red
+  secondary_color = "#000000",     # Black for contrast
+  background_color = "#FAF9F6",    # Cream/soft white
+  header_font_google = google_font("Archivo"),  
+  text_font_google = google_font("Inconsolata"),         # Monospaced for clarity (or "Lora" for elegance)
+  link_color = "#DAA520"           # Gold accent for links
 )
 ```
 
@@ -274,24 +275,29 @@ $$\mathbb{P}( \beta_{2} > | \hat{\beta}_{2} |  \mid H_{0}) :=   \mathbb{P}\big(\
 summary(logit_affairs_sex_ym)$coefficients
 ```
 
-```{r, echo=F}
-beta2_hat = (summary(logit_affairs_sex_ym)$coefficients)[3,1]
-beta2_se = (summary(logit_affairs_sex_ym)$coefficients)[3,2]
-beta2_samplingdistr = rnorm(n=1200, mean=0, sd=beta2_se)  
-```
-
 ```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
+# Extract coefficient estimate and standard error
+beta2_hat <- (summary(logit_affairs_sex_ym)$coefficients)[3,1]
+beta2_se  <- (summary(logit_affairs_sex_ym)$coefficients)[3,2]
 
-beta2_samplingdistr %>% as_tibble() %>% ggplot(aes(x=value)) + 
-      geom_density(colour="black", fill="blue", alpha=0.1, size=1.5) +
-      scale_color_viridis_d() + 
-      geom_vline(aes(xintercept = beta2_hat), size=1.5) +
-      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
-      legend.text = element_text(size = 18), legend.position="bottom") +
-      guides(color=guide_legend(nrow=3,byrow=TRUE))
+# Create a sequence of values around the estimate
+x_vals <- seq(-4*beta2_se, 4*beta2_se, length.out = 500)
+
+# Compute normal density
+dens_vals <- dnorm(x_vals, mean = 0, sd = beta2_se)
+
+# Plot
+tibble(x = x_vals, y = dens_vals) %>%
+  ggplot(aes(x = x, y = y)) +
+    geom_line(size = 1.2, colour = "blue") +
+    geom_vline(aes(xintercept = beta2_hat), size = 1.2, colour = "red") +
+    labs(x = expression(hat(beta)[2]), y = "Density") +
+    theme_minimal() +
+    theme(
+      axis.text = element_text(size = 14),
+      axis.title = element_text(size = 16)
+    )
 ```
-
 ---
 ## Inferencia acerca de parámetros del modelo: ejemplo empírico
 
@@ -313,329 +319,10 @@ beta2_samplingdistr %>% as_tibble() %>% ggplot(aes(x=value)) +
 ---
 class: inverse, center, middle
 
-## Simulation and Resampling Methods
+## Bootstrap Method 
 
 
 ---
-## Métodos de simulación y re-muestreo para inferencia estadística
-
-<br>
---
-
-- Incluso para estimadores muy simples es difícil (o imposible) determinar la distribución de la muestra.
-
---
-
-- Cuando es posible, los resultados se basan en supuestos sobre distribución, comportamientos asintóticos y aproximaciones que no siempre se cumplen.  
-
-
---
-
-- Los métodos de simulación y re-muestreo ofrecen una alternativa cuando no se dispone de soluciones analíticas (una formula conocida).
-
---
-
-- Estos métodos son computacionalmente intensivos, lo que los hacía inviables en el pasado pero no actualmente.
-
---
-
-- Dos métodos especialmente útiles:
-
- - Monte Carlo Simulation
- 
- - Boostrapping
-
----
-class: inverse, center, middle
-
-## Monte Carlo Simulation
-
----
-## Monte Carlo Simulation
-
-
-![casino](mc_casino.jpg)
----
-## Monte Carlo Simulation
-
-
-.bold[Intuición:]
-
---
-
-- Estimamos un modelo y tenemos una cierta "cantidad de interés" (estimate)
-
---
-
-
-- No conocemos la distribución de nuestro estimate a través de infinitas muestras porque sólo tenemos una muestra. 
-
-
---
-
-- Tampoco tenemos conocimiento teórico sobre la distribución de nuestro estimate.
-
---
-
-- Sin embargo, "conocemos" la distribución de nuestros datos y sus parámetros, por tanto, podemos generar muestras aleatorias.
-
---
-
-- Podemos observar y estudiar el comportamiento de nuestro estimate en estas muestras generadas aleatoriamente.
-
----
-## Monte Carlo Simulation
-
-.bold[Esquema del algoritmo]:
-
---
-
-1. Asume una la distribución los datos.
-
-
---
-
-2. Usando la distribución asumida y los parámetros estimados (en nuestro caso, $y \sim \text{Binomial}(\hat{p} = \text{logit}^{-1}(X\hat{\theta}))$ ), genera una muestra aleatoriad de datos $y_{m}$
-
---
-
-3. Regresiona $y_{m}$ y $X$ para obtener el estimate $\hat{\theta}_{m}$ 
-
---
-
-4. Repite los pasos 2 y 3  M veces (número grande).
-
---
-
-5. El conjunto de M resultados obtenidos corresponde a la "Monte Carlo distribution" del estimate.
-
---
-
-6. Evalúa la distribución del estimate (SE,CI, etc) o de cualquier cantidad derivada de éste.
-
-
----
-## Monte Carlo Simulation: ejemplo empírico
-
-Siguiendo con $\ln \frac{p_{i}}{ 1 - p_{i}}    = \beta_{0} + \beta_{1}\text{male}_{i} + \beta_{2}\text{ym}_{i}$, 
---
-
-.content-box-blue[
-.bold[Calculemos un IC al 95% para efecto el de "years of marriage" sobre el logit de ser infiel:] $\beta_{2}$
-]
-
---
-
-```{r}
-# Escribir una función que ejecute re-sampling y la estimación
-mc_beta2  <- function(x) {
-  p_hat   <- predict(logit_affairs_sex_ym, type="response")
-  y_m     <- rbinom(n=length(p_hat),size=1,prob=p_hat)
-  logit_m <- glm(y_m ~ factor(affairsdata$sex) + affairsdata$ym, family=binomial(link="logit"))
-  beta2_m <- logit_m$coefficients[3]
-  return(ym=beta2_m)
-}
-# Iterar función y almacenar resultados 
-nreps =1200
-betas2_mc <- replicate(nreps,mc_beta2()); head(betas2_mc)
-```
-
----
-## Monte Carlo Simulation: ejemplo empírico
-
---
-
-.pull-left[
-```{r}
-betasall_mc <- sim(logit_affairs_sex_ym, n.sims=1200)@coef
-betasall_mc %>% head(4)
-
-se_beta2_mc <- sd(betasall_mc[,"ym"]); se_beta2_mc
-
-ci_beta2_mc <- 
-  quantile(betasall_mc[,"ym"], p=c(0.06,0.975))
-  ci_beta2_mc
-```
-]
-
---
-
-.pull-right[
-```{r, echo=FALSE, fig.width=7, fig.height=6,message=FALSE, warning=FALSE}
-ci95 = round(ci_beta2_mc,2)
-
-betasall_mc %>% as_tibble() %>% ggplot(aes(x=ym)) + 
-      geom_density(colour="black", fill="blue", alpha=0.1, size=1.5) +
-      scale_color_viridis_d() + 
-      geom_vline(aes(xintercept = beta2, colour=paste0("beta2=",round(beta2,2)) ), size=1.5) +
-      geom_vline(aes(xintercept = ci_beta2_mc[1],
-                     colour=paste0("95% CI: (",ci95[1],",",ci95[2],")")), linetype="dashed", size=1.5) +
-      geom_vline(aes(xintercept = ci_beta2_mc[2], 
-                     colour=paste0("95% CI: (",ci95[1],",",ci95[2],")")), linetype="dashed", size=1.5) +
-      guides(fill=FALSE) + labs(colour="", x="beta2") +
-      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
-      legend.text = element_text(size = 18), legend.position="bottom") +
-      guides(color=guide_legend(nrow=3,byrow=TRUE))
-```
-]
-
----
-## Monte Carlo Simulation: ejemplo empírico
-
-.content-box-blue[
-¿Un IC al 95% para efecto el de "years of marriage" como .bold["odds ratio"]: $e^{\beta_{2}}$? 
-]
-
-Simulando ...
---
-
-.img-right-bottom2[
-![easy](easy.gif)
-]
-
---
-
-```{r}
-betasall_mc <- sim(logit_affairs_sex_ym, n.sims=1200)@coef
-expbetasall_mc <- exp(betasall_mc)
-expbetasall_mc %>% head()
-```
-
-
----
-## Monte Carlo Simulation: ejemplo empírico
-
---
-
-.pull-left[
-```{r}
-
-se_exbeta2_mc <- sd(expbetasall_mc[,"ym"]); se_exbeta2_mc
-
-ci_expbeta2_mc <- 
-  quantile(expbetasall_mc[,"ym"], p=c(0.025,0.975))
-  ci_expbeta2_mc
-```
-]
-
---
-
-.pull-right[
-```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
-ci95 = round(ci_expbeta2_mc,2)
-
-expbetasall_mc %>% as_tibble() %>% ggplot(aes(x=ym)) + 
-      geom_density(colour="black", fill="blue", alpha=0.1, size=1.5) +
-      scale_color_viridis_d() + 
-      geom_vline(aes(xintercept = expbeta2, colour=paste0("exp(beta2)=",round(expbeta2,2)) ), size=1.5) +
-      geom_vline(aes(xintercept = ci_expbeta2_mc[1],
-                     colour=paste0("95% CI: (",ci95[1],",",ci95[2],")")), linetype="dashed", size=1.5) +
-      geom_vline(aes(xintercept = ci_expbeta2_mc[2], 
-                     colour=paste0("95% CI: (",ci95[1],",",ci95[2],")")), linetype="dashed", size=1.5) +
-      guides(fill=FALSE) + labs(colour="", x="beta2") +
-      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
-      legend.text = element_text(size = 18), legend.position="bottom") +
-      guides(color=guide_legend(nrow=3,byrow=TRUE))
-```
-]
-
----
-## Monte Carlo Simulation: ejemplo empírico
-
-
-.content-box-blue[
-.bold[Calculemos ahora IC al 95% para el Average Marginal Effect de"years of marriage" sobre la probabilidad de ser infiel]
-]
-
-
---
-
-Simulando ...
-
-.img-bottom-right[
-![easy](easy.gif)
-]
-
-
----
-## Monte Carlo Simulation: ejemplo empírico
-
-
-.content-box-blue[
-.bold[Calculemos ahora IC al 95% para el Average Marginal Effect de"years of marriage" sobre la probabilidad de ser infiel]
-]
-
---
-
-
-Simulando ...
-
-
-```{r}
-mc_ame_beta2  <- function(x) {
-  p_hat   <- predict(logit_affairs_sex_ym, type="response")
-  y_m     <- rbinom(n=length(p_hat),size=1,prob=p_hat)
-  logit_m <- glm(y_m ~ factor(affairsdata$sex) + affairsdata$ym, family=binomial(link="logit"))
-  p_hat_m <- predict(logit_m, type="response")
-  beta2_m <- logit_m$coefficients[3]
-  me_m    <-  beta2_m*p_hat_m*(1-p_hat_m) 
-  ame_m   <- mean(me_m)
-  return(ame_m)
-}
-# Iterar función y almacenar resultados 
-nreps =1200
-ame_ym_mc <- replicate(nreps,mc_ame_beta2()); head(ame_ym_mc,4)
-```
-
----
-## Monte Carlo Simulation: ejemplo empírico
-
-
-.pull-left[
-```{r}
-p_hat   <- predict(logit_affairs_sex_ym, type = "response")
-me_ym   <- beta2*p_hat*(1-p_hat)
-ame_ym  <- mean(me_ym); ame_ym
-
-se_ame_ym_bs <- sd(ame_ym_mc); se_ame_ym_bs 
-
-ci_ame_ym_mc <- 
-  quantile(ame_ym_mc, p=c(0.025,0.975))
-  ci_ame_ym_mc
-```
-]
-
---
-
-.pull-right[
-```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
-ci95 = round(ci_ame_ym_mc,3)
-
-ame_ym_mc %>% as_tibble() %>% ggplot(aes(x=value)) + 
-      geom_density(colour="black", fill="blue", alpha=0.1, size=1.5) +
-      scale_color_viridis_d() + 
-      geom_vline(aes(xintercept = ame_ym, colour=paste0("AME(ym)=",round(ame_ym,2)) ), size=1.5) +
-      geom_vline(aes(xintercept = ci_ame_ym_mc[1],
-                     colour=paste0("95% CI: (",ci95[1],",",ci95[2],")")), linetype="dashed", size=1.5) +
-      geom_vline(aes(xintercept = ci_ame_ym_mc[2], 
-                     colour=paste0("95% CI: (",ci95[1],",",ci95[2],")")), linetype="dashed", size=1.5) +
-      guides(fill=FALSE) + labs(colour="", x="AME(ym) MC") +
-      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
-      legend.text = element_text(size = 18), legend.position="bottom") +
-      guides(color=guide_legend(nrow=3,byrow=TRUE))
-```
-]
-
----
-
-<br>
-
-.bold[¿Y si ni siquiera conocemos la distribución de nuestros datos?]
---
-.bold[¿Y si nuestro modelo no es paramétrico?]
 
 .pull-left[
 ![boots](rambo.jpg)
@@ -647,11 +334,6 @@ ame_ym_mc %>% as_tibble() %>% ggplot(aes(x=value)) +
 .pull-right[
 ![boots](boots.jpg)
 ]
-
----
-class: inverse, center, middle
-
-## Bootstrap Method 
 
 ---
 ## Bootstrap Method 
