@@ -1,0 +1,74 @@
+---
+title: "SOC3070 Análisis de Datos Categóricos"
+format: html
+editor: visual
+---
+
+# Trabajo Final del Curso
+
+El trabajo final del curso **SOC3070: Análisis de Datos Categóricos** consiste en la elaboración de un **póster científico**. Este deberá presentar un análisis original basado en **datos y un tema a elección** del grupo, utilizando uno o más de los modelos revisados durante el curso.
+
+## Organización
+
+- **Formato:** póster científico académico.  
+- **Grupos:** de **a dos estudiantes**.  
+- **Entrega:** sesión colectiva durante la última semana de clases (fecha exacta será confirmada en aula y en el repositorio).  
+- **Presentación:** defensa del póster durante la sesión final.
+
+## Contenido del Póster
+
+El póster debe incluir al menos las siguientes secciones:
+
+1. **Título y autores**  
+   Nombre del proyecto y de los/as integrantes del grupo.
+
+2. **Pregunta de investigación**  
+   Presentación clara de la motivación y del objetivo.
+
+3. **Datos**  
+   - Fuente de los datos (propios, públicos, simulados, etc.).  
+   - Descripción breve de las variables.
+
+4. **Métodos**  
+   - Modelos utilizados (ej. regresión logística, modelos multinomiales, Poisson, etc.).  
+   - Justificación de su elección.
+
+5. **Resultados**  
+   - Tablas y/o gráficos que resuman los hallazgos.  
+   - Interpretación sustantiva.  
+   - Inferencia y/o desempeño predictivo.
+
+6. **Discusión y conclusiones**  
+   - Implicancias teóricas y/o empíricas.  
+   - Limitaciones y posibles extensiones.
+
+7. **Referencias**  
+   Bibliografía utilizada.
+
+## Aspectos Formales
+
+- **Tamaño del póster:** formato estándar (A0 vertical o A1 horizontal).  
+- **Lenguaje:** claro, conciso y orientado a una audiencia académica.  
+- **Visualización:** privilegiar el uso de gráficos y esquemas por sobre texto excesivo.  
+- **Código reproducible:** todo análisis debe ser reproducible en R.
+
+## Evaluación
+
+La evaluación del póster considerará los siguientes criterios:
+
+1. Claridad de la pregunta de investigación.  
+2. Rigor en el uso de los métodos vistos en el curso.  
+3. Calidad de las visualizaciones y tablas.  
+4. Interpretación sustantiva de los resultados.  
+5. Presentación y diseño del póster.
+
+## Notas Importantes
+
+- El uso de IA generativa debe ser **ético y transparente**, siempre declarado.  
+- Se recomienda fuertemente comenzar el trabajo con anticipación y consultar dudas en el **horario de consulta** del curso.
+- Se recomienda imprimir el poster con al menos dos días de anticipación
+
+## Recursos Útiles
+
+- Cómo crear un buen póster: [tutorial](https://guides.nyu.edu/posters)
+- Sesión de poster en una conferencia real: [video](https://www.youtube.com/watch?v=ntsbatDE2Os)
