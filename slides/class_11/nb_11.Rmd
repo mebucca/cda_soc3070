@@ -1,72 +1,203 @@
 ---
-title: "Notebook clase #11: Método de Bootstrap"
-output:
-  html_document:
-    df_print: paged
+title: "Práctica: Inferencia con Bootstrap en la Regresión Logística"
+author: "SOC3070 · Mauricio Bucca"
+date: today
+format:
+  html:
+    theme: default
+    highlight: tango
+    code-copy: true
+    code-fold: show
 ---
 
-## Problema
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  comment = "#>",
+  prompt = TRUE,
+  class.source = "python-code",
+  class.output = "python-output"
+)
 
-Una regresión logística que modela las log-odds de ser liberado tras una detención por porte de pequeñas cantidades de marihuana indica que ni la raza, ni el género ni la edad tienen efectos significativos. Sin embargo, para asegurarnos, calculamos la diferencia en las probabilidades predichas de ser liberado entre un hombre blanco de 20 años y una mujer negra de 50 años, dos perfiles que, intuitivamente, podrían mostrar diferencias importantes en sus probabilidades predichas de liberación.
+# Packages
+library(pacman)
+p_load("tidyverse", "broom", "ggplot2", "marginaleffects", "rsample", "purrr")
 
-```{r, echo=TRUE, message=F, warning=F}
-# Cargar las librerías necesarias
-library(tidyverse)
-library(carData)
-library(modelr)
+# Define julia-inspired palette
+julia <- list(
+  navy   = "#003f5c",
+  teal   = "#2f4b7c",
+  coral  = "#ff6361",
+  orange = "#ffa600",
+  sand   = "#f4e1a4"
+)
 
-# Cargar el conjunto de datos
-data_arrest <- carData::Arrests
-
-# Ajustamos un modelo de regresión logística 
-model <- glm(released ~ factor(colour)*factor(sex) + age, family = "binomial", data = data_arrest)
-summary(model)
+theme_julia <- function() {
+  theme_minimal(base_family = "Inconsolata") +
+    theme(
+      plot.background = element_rect(fill = "white", color = NA),
+      panel.border = element_rect(fill=NA, color=julia$navy, size=0.6),
+      axis.text = element_text(color=julia$navy, size=13),
+      axis.title = element_text(color=julia$teal, size=15, face="bold"),
+      plot.title = element_text(color=julia$coral, size=18, face="bold"),
+      plot.subtitle = element_text(color=julia$orange, size=14),
+      legend.position = "right"
+    )
+}
 ```
 
-Dado que la distribución muestral de esta diferencia es compleja, utilizaremos el método de Bootstrap para hacer inferencia estadística y estimar un intervalo de confianza para la diferencia en las probabilidades predichas.
+```{css, echo=FALSE}
+pre.python-code, code.python-code {
+  background-color: #f7f7f7;
+  color: #222;
+  font-family: "Inconsolata", monospace;
+  font-size: 15px;
+  border-left: 4px solid #ff6361;
+  padding: 6px;
+}
+pre.python-output, code.python-output {
+  background-color: #ffffff;
+  color: #003f5c;
+  font-family: "Inconsolata", monospace;
+  font-size: 15px;
+  padding: 6px;
+}
+```
 
+---
 
-## Código
+## 1. El Modelo Logístico
 
-```{r, echo=TRUE, message=F, warning=F}
+Usaremos la base `mtcars` para predecir si un automóvil tiene transmisión manual (`am = 1`). Consideramos dos predictores:
 
-# Inicializar el vector para almacenar resultados de Bootstrap
-results <- NULL
+* **wt**: peso del auto (miles de libras).  
+* **hp**: caballos de fuerza.
 
-# Iterar 1000 veces para realizar el Bootstrap
-for (i in 1:1000) {
-  
-  # Cargar el conjunto de datos
-  data_arrest <- carData::Arrests
-  
-  # Realizar una muestra aleatoria con reemplazo del mismo tamaño que el conjunto original
-  data_bs <- sample_n(data_arrest, size= nrow(data_arrest), replace = T)
-  
-  # Ajustar un modelo de regresión logística con las variables deseadas
-  model <- glm(released ~ factor(colour)*factor(sex) + age, family = "binomial", data = data_bs)
-  
-  # Crear nuevos puntos de datos para la predicción
-  newx_mnv <- data_grid(colour="Black", sex="Female", age=50, data=data_arrest)
-  pred_mnv <- predict(model, newdata = newx_mnv, type = "response" )
-  
-  newx_hbj <- data_grid(colour="White", sex="Male", age=20, data=data_arrest)
-  pred_hbj <- predict(model, newdata = newx_hbj, type = "response" )
-  
-  # Calcular la diferencia entre las probabilidades predichas
-  diff_p <- pred_hbj - pred_mnv
-  
-  # Imprimir la iteración actual para seguimiento
-  cat("iter=",i,"\n")
-  
-  # Almacenar el resultado
-  results[i] <- diff_p
+```{r}
+data(mtcars)
+mtcars <- as_tibble(mtcars)
+
+logit_model <- glm(am ~ wt + hp, data = mtcars, family = binomial(link = "logit"))
+summary(logit_model)
+```
+
+---
+
+## 2. Bootstrap: Intuición
+
+El bootstrap es un procedimiento que nos permite **aproximar la distribución muestral de un estimador** sin depender de fórmulas analíticas complicadas. La idea central es simple:
+
+1. Partimos de la muestra original, que consideramos una aproximación de la población.
+2. Generamos nuevas muestras del mismo tamaño seleccionando casos al azar **con reemplazo**. Estas son nuestras *muestras bootstrap*.
+3. Ajustamos el modelo en cada muestra bootstrap y calculamos la cantidad de interés (ej. un coeficiente, un odds ratio, una predicción, etc.).
+4. La distribución de esas cantidades calculadas a lo largo de muchas muestras bootstrap nos da una estimación de la distribución muestral real. De ahí podemos obtener **errores estándar, intervalos de confianza o distribuciones completas**.
+
+Este procedimiento es especialmente útil cuando la cantidad de interés es una función complicada de los parámetros del modelo (por ejemplo, predicciones transformadas o promedios en subgrupos) y la inferencia analítica es intractable.
+
+---
+
+## 3. Bootstrap para Predicciones Variadas
+
+Queremos estudiar la **distribución bootstrap de las predicciones de probabilidad** de transmisión manual para varios valores de `wt` (peso), manteniendo fija la potencia en su media. Esto nos permitirá construir intervalos de confianza para toda una curva de predicción.
+
+```{r}
+set.seed(123)
+
+# Valores de wt de interés
+wt_vals <- seq(min(mtcars$wt), max(mtcars$wt), length.out = 20)
+
+# Función que ajusta el modelo y devuelve predicciones en la grilla
+bs_preds <- function(split){
+  d <- analysis(split)  # extrae la muestra bootstrap
+  m <- glm(am ~ wt + hp, data = d, family = binomial(link = "logit"))
+  newdata <- tibble(wt = wt_vals, hp = mean(mtcars$hp))
+  tibble(wt = wt_vals, pred = predict(m, newdata = newdata, type = "response"))
 }
 
-# Visualizar la distribución de las diferencias en probabilidad
-hist(results, main="Distribución de la diferencia en probabilidades predichas", xlab="Diferencia en probabilidades")
+# Generar 200 muestras bootstrap
+boots <- bootstraps(mtcars, times = 200, apparent = TRUE)
 
-# Calcular el intervalo de confianza al 95% para la diferencia en probabilidades
-quantile(results, p=c(0.025, 0.975))
+# Aplicar la función a cada muestra bootstrap y recolectar resultados
+boot_preds <- boots %>%
+  mutate(res = map(splits, bs_preds)) %>%
+  unnest(res)
+
+# Calcular intervalos de confianza punto a punto
+ci_preds <- boot_preds %>%
+  group_by(wt) %>%
+  summarise(
+    ci_low = quantile(pred, 0.025),
+    ci_high = quantile(pred, 0.975),
+    mean_pred = mean(pred)
+  )
 ```
 
-El resultados indica que, al 95% de confianza, no existe una diferencia significativa entre la probabilidad de ser liberada entre una mujer negra de 50 años y un hombre blanco de 20 años.
+**Explicación del código:**
+- `bootstraps(mtcars, times = 200, apparent = TRUE)` genera 200 muestras bootstrap y una réplica "aparente" con los datos originales.  
+- En cada muestra, la función `bs_preds` ajusta el modelo logístico y calcula predicciones en una grilla de valores de `wt`.  
+- Con `map()` y `unnest()` recolectamos todas las predicciones bootstrap en un solo data frame.  
+- Finalmente, usamos `quantile()` para obtener intervalos al 95% en cada punto de la curva.
+
+---
+
+## 4. Visualización de Intervalos de Confianza Bootstrap
+
+```{r}
+ggplot(ci_preds, aes(x = wt, y = mean_pred)) +
+  geom_line(color = julia$coral, linewidth = 1.2) +
+  geom_ribbon(aes(ymin = ci_low, ymax = ci_high), alpha = 0.2, fill = julia$teal) +
+  labs(
+    title = "Predicción bootstrap de P(am=1)",
+    subtitle = "Curva con intervalos de confianza bootstrap",
+    x = "Peso del vehículo (wt)",
+    y = "Probabilidad de transmisión manual"
+  ) +
+  theme_julia()
+```
+
+En este gráfico:
+- La **línea coral** muestra la media de las predicciones bootstrap en cada punto.  
+- La **banda verde** corresponde al intervalo de confianza bootstrap al 95%.  
+- Vemos cómo la incertidumbre es mayor en los extremos de la distribución de `wt`, donde hay menos datos disponibles.
+
+---
+
+## 5. Variante: Curvas de Predicción Múltiples
+
+Otra manera de visualizar el procedimiento es graficar varias curvas bootstrap individuales. Esto ilustra la **variabilidad entre replicados** y nos da una idea intuitiva de cuán estable es la relación estimada.
+
+```{r}
+# Seleccionar hasta 30 IDs únicos de bootstrap
+ids <- unique(boot_preds$id)
+ids_sample <- sample(ids, min(30, length(ids)))
+
+# Filtrar solo esas curvas
+sample_curves <- boot_preds %>%
+  filter(id %in% ids_sample)
+
+ggplot(sample_curves, aes(x = wt, y = pred, group = id)) +
+  geom_line(alpha = 0.2, color = julia$navy) +
+  labs(
+    title = "Curvas de predicción bootstrap de P(am=1)",
+    subtitle = "Hasta 30 replicados bootstrap",
+    x = "Peso del vehículo (wt)",
+    y = "Probabilidad de transmisión manual"
+  ) +
+  theme_julia()
+```
+
+Aquí:
+- Cada línea azul corresponde a una curva de predicción de una muestra bootstrap distinta.  
+- La dispersión entre curvas refleja la variabilidad de las estimaciones.  
+- Cuando las curvas están más juntas, hay más certeza; cuando divergen, la incertidumbre es mayor.
+
+---
+
+## 6. Conclusión
+
+* El bootstrap se puede aplicar a **predicciones transformadas** para las cuales la inferencia analítica es complicada.  
+* Usando `rsample::bootstraps` y predicciones sobre una grilla de valores, obtenemos intervalos de confianza para **curvas completas**.  
+* La visualización de intervalos promedio y de curvas individuales son complementarias: la primera es más sintética, la segunda más ilustrativa.  
+* Este enfoque es clave para comunicar la **incertidumbre en modelos no lineales**, especialmente en aplicaciones empíricas donde la forma funcional de la relación es compleja.
