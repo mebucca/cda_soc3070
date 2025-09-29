@@ -1,6 +1,6 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Regresión Logística"
+subtitle: "Efectos en Regresión Logística"
 author: "<br> Mauricio Bucca<br> Profesor Asistente, Sociología UC"
 date: "[github.com/mebucca](https://github.com/mebucca)"
 output:
@@ -34,7 +34,7 @@ style_duo_accent(
 ```
 
 #Regresión Logística
-##Interpretación
+##Interpretación de Efectos
 
 ---
 ##Configuración
