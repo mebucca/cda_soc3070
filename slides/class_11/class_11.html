@@ -4,7 +4,7 @@
     <title>Análisis de Datos Categóricos (SOC3070)</title>
     <meta charset="utf-8" />
     <meta name="author" content="  Mauricio Bucca  Profesor Asistente, Sociología UC" />
-    <script src="libs/header-attrs-2.27/header-attrs.js"></script>
+    <script src="libs/header-attrs-2.29/header-attrs.js"></script>
     <link rel="stylesheet" href="gentle-r.css" type="text/css" />
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
@@ -22,7 +22,7 @@ class: center, middle, inverse, title-slide
 ### <br> Mauricio Bucca<br> Profesor Asistente, Sociología UC
 ]
 .date[
-### 23 September, 2025
+### 29 September, 2025
 ]
 
 ---
@@ -467,7 +467,7 @@ betas2_bs &lt;- replicate(nreps,bs_beta2()); head(betas2_bs)
 
 ```
 ##         ym         ym         ym         ym         ym         ym 
-## 0.04216375 0.05360927 0.08004631 0.06621770 0.06025722 0.03681628
+## 0.05347036 0.07840635 0.05628455 0.05106772 0.05973257 0.05625482
 ```
 
 ---
@@ -481,26 +481,18 @@ se_beta2_bs
 ```
 
 ```
-## [1] 0.01675226
+## [1] 0.01701065
 ```
 
 ``` r
 ci_beta2_bs &lt;- 
   quantile(betas2_bs, p=c(0.025,0.975))
-```
-
-```
-## Warning in quantile.default(betas2_bs, p = c(0.025, 0.975)): partial argument
-## match of 'p' to 'probs'
-```
-
-``` r
   ci_beta2_bs
 ```
 
 ```
 ##       2.5%      97.5% 
-## 0.02425909 0.09075907
+## 0.02483905 0.09366330
 ```
 ]
 
@@ -555,7 +547,7 @@ expbetas2_bs &lt;- replicate(nreps,bs_expbeta2()); head(expbetas2_bs)
 
 ```
 ##       ym       ym       ym       ym       ym       ym 
-## 1.054183 1.049665 1.028624 1.054782 1.031205 1.067321
+## 1.048272 1.042646 1.062791 1.068905 1.058887 1.056007
 ```
 
 ---
@@ -569,26 +561,18 @@ se_expbeta2_bs
 ```
 
 ```
-## [1] 0.01813325
+## [1] 0.01769795
 ```
 
 ``` r
 ci_expbeta2_bs &lt;- 
   quantile(expbetas2_bs, p=c(0.025,0.975))
-```
-
-```
-## Warning in quantile.default(expbetas2_bs, p = c(0.025, 0.975)): partial
-## argument match of 'p' to 'probs'
-```
-
-``` r
   ci_expbeta2_bs
 ```
 
 ```
 ##     2.5%    97.5% 
-## 1.026891 1.097748
+## 1.027592 1.095258
 ```
 ]
 
@@ -642,7 +626,7 @@ ame_ym_bs &lt;- replicate(nreps,bs_ame_ym()); head(ame_ym_bs)
 ```
 
 ```
-## [1] 0.005673526 0.010520225 0.004514006 0.012408059 0.010131090 0.011059827
+## [1] 0.010290899 0.014071549 0.007509348 0.007126371 0.012977138 0.010265007
 ```
 
 
@@ -667,26 +651,18 @@ se_ame_ym_bs
 ```
 
 ```
-## [1] 0.00293477
+## [1] 0.002998718
 ```
 
 ``` r
 ci_ame_ym_bs &lt;- 
   quantile(ame_ym_bs, p=c(0.025,0.975))
-```
-
-```
-## Warning in quantile.default(ame_ym_bs, p = c(0.025, 0.975)): partial argument
-## match of 'p' to 'probs'
-```
-
-``` r
   ci_ame_ym_bs
 ```
 
 ```
 ##        2.5%       97.5% 
-## 0.004989137 0.016655746
+## 0.004794026 0.016362624
 ```
 ]
 
@@ -729,11 +705,11 @@ github.com/mebucca
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
-"ratio": "16:9",
-"highlightStyle": "github",
-"highlightLines": true,
-"countIncrementalSlides": true,
-"slideNumberFormat": "%current%"
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": true,
+  "slideNumberFormat": "%current%"
 });
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));
