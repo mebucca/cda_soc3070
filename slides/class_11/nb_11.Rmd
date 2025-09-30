@@ -119,6 +119,8 @@ bs_preds <- function(split){
 # Generar 200 muestras bootstrap
 boots <- bootstraps(mtcars, times = 200, apparent = TRUE)
 
+predict(logit_model)
+
 # Aplicar la función a cada muestra bootstrap y recolectar resultados
 boot_preds <- boots %>%
   mutate(res = map(splits, bs_preds)) %>%
