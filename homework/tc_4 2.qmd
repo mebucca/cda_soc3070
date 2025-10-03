@@ -74,6 +74,7 @@ pre.python-output, code.python-output {
 }
 ```
 
+
 Ponderación: 6% de la nota final del curso.
 
 ![Spam)](https://www.pandasecurity.com/en/mediacenter/src/uploads/2021/07/block-spam-yahoo-01-1.gif)
@@ -141,15 +142,18 @@ glimpse(spam)
 
     -   Modelo 2 (completo): incluye todas las variables disponibles en el dataset.
 
+
+
 2.  Para cada modelo, calcula las probabilidades predichas de ser spam para cada correo electrónico.
+
 
 3.  Calcula manualmente el log-loss promedio de cada modelo.
 
+
 4.  Grafica la curva ROC y calcula el AUC para ambos modelos.
+
 
 5.  Con base en los resultados de (3) y (4), elige un modelo y define un umbral τ para clasificar correos como spam o no-spam.
 
 6.  Usando el modelo y umbral seleccionados en (5), construye una matriz de confusión. Elige una métrica relevante (accuracy, recall, precisión o F1), justifica tu elección e interpreta los resultados.
-
-7. Repite la comparación entre ambos modelos utilizando validación cruzada k-fold. Evalúa si el modelo que considerabas mejor se mantiene como preferido o si cambia la conclusión. En caso de que cambie, explica por qué ocurrió este cambio. Finalmente, reporta los resultados de la matriz de confusión promediada a partir de la validación cruzada.
 
