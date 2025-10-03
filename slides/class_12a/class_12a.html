@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Análisis de Datos Categóricos (SOC3070)</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="  Mauricio Bucca  Profesor Asistente, Sociología UC" />
+    <script src="libs/header-attrs-2.29/header-attrs.js"></script>
+    <link rel="stylesheet" href="gentle-r.css" type="text/css" />
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Análisis de Datos Categóricos (SOC3070)
+]
+.subtitle[
+## Regresión Logística para Predicción
+]
+.author[
+### <br> Mauricio Bucca<br> Profesor Asistente, Sociología UC
+]
+.date[
+### 02 October, 2025
+]
+
+---
+
+class: inverse, center, middle
+
+
+
+
+# Evaluación de Modelos Predictivos
+
+---
+
+## `\(\hat{\beta}\)`-problems `\(\quad\)` vs  `\(\quad \hat{y}\)`-problems
+
+(Mullainathan &amp; Spiess, 2017) 
+
+
+--
+
+.pull-left[
+### `\(\hat{\beta}\)`-problems
+
+- Foco en **parámetros** y su interpretación.  
+
+- Preguntas:  
+  - ¿Cuál es el efecto de `\(X\)` sobre `\(Y\)`?  
+  - ¿Es significativo / causal?  
+  
+- Objetivo: **explicación e inferencia**.  
+
+- Modelos suelen ser **transparentes** (fácil interpretar).  
+]
+
+.pull-right[
+### `\(\hat{y}\)`-problems  
+
+- Foco en **predicciones** para nuevos casos.  
+
+- Preguntas:  
+  - ¿Qué tan bien predice el modelo en datos futuros?  
+  - ¿Qué modelo predice mejor?  
+  
+- Objetivo: **desempeño y utilidad práctica**.  
+
+- Modelos pueden ser tratados como **black-box** (no importa cómo, mientras prediga bien).  
+]
+
+---
+class: inverse, center, middle
+
+## Regresión Logística como Machine Learning
+
+---
+## Regresión Logística como Machine Learning
+
+&lt;br&gt;&lt;br&gt;
+&lt;br&gt;
+
+.middle[
+.center[
+![](https://www.researchgate.net/publication/376856079/figure/fig1/AS:11431281226110814@1709092685557/Famous-internet-meme-displaying-the-relation-between-statistics-Machine-Learning-and.png)
+]
+]
+---
+# Regresión Logística: el **“hello world”** de ML
+
+&lt;br&gt;
+
+- **Qué resuelve:**  
+
+  - Estima la probabilidad de un evento binario (`\(Y=0/1\)`).  
+  - Ejemplos: ¿un mail es spam? ¿alguien tendrá una aventura?  
+
+&lt;br&gt;
+
+- **Cómo funciona:**  
+
+  - Ajusta una combinación lineal de predictores `\(X\beta\)`.  
+  - Pasa ese valor por la **curva sigmoide** → convierte log-odds en probabilidades (0–1).  
+  - Aprende de los datos para **generalizar** a casos no observados (nuevos datos, futuro, etc.).  
+
+&lt;br&gt;
+
+- **Por qué es importante:**  
+
+  - Interpretable: cada predictor tiene un rol claro en la probabilidad.  
+  - Eficiente: funciona bien incluso con muestras pequeñas.  
+  - Fundacional: es la base sobre la cual se construyen modelos más complejos en ML.  
+
+
+---
+
+## Ejemplo empírico
+
+`$$\newcommand{\vect}[1]{\boldsymbol{#1}}$$`
+
+
+
+Continuando con el ejemplo de clases anteriores, ajustamos el siguiente modelo:
+
+`$$\ln \frac{p_{i}}{1-p_{i}} = \beta_{0} + \beta_{1}\text{ym}_{i} + \beta_{2}\text{male}_{i} + \beta_{3}\text{rate}_{i} + \beta_{4}\text{rate}^{2}_{i}$$`
+
+Llamemos a este modelo, modelo `\(M\)`:
+
+&lt;br&gt;
+
+
+```
+##                     Estimate Std. Error    z value   Pr(&gt;|z|)
+## (Intercept)      0.149861306 0.82300610  0.1820902 0.85551198
+## ym               0.037699456 0.01813912  2.0783503 0.03767711
+## factor(sex)male  0.249972343 0.19690565  1.2695032 0.20426166
+## rate            -0.411820264 0.50252200 -0.8195069 0.41249725
+## I(rate^2)       -0.008931688 0.07364745 -0.1212763 0.90347221
+```
+
+```
+## [1] "log-likelihood: -316.105 Deviance: 632.21"
+```
+
+```
+## [1] "AIC: 642.21 BIC: 664.202"
+```
+
+---
+## Likelihood como función de pérdida
+
+- En ML, entrenar un modelo = encontrar parámetros que **maximicen la verosimilitud**  
+  (o equivalentemente **minimicen la pérdida**).  
+
+--
+
+- En regresión logística, cada `\(y_i\)` es Bernoulli con probabilidad `\(p_i\)`:  
+
+$$
+P(y_i \mid p_i) = p_i^{y_i}(1-p_i)^{1-y_i}
+$$  
+
+--
+
+- La probabilidad conjunta de todos los datos:  
+
+$$
+\mathcal{L}(\beta) = \prod_{i=1}^{n} p_i^{y_i}(1-p_i)^{1-y_i}
+$$  
+
+--
+
+- Tomando logaritmos:  
+
+$$
+\ell(\beta) = \sum_{i=1}^{n} \big[ y_i \ln p_i + (1-y_i) \ln(1-p_i) \big]
+$$  
+
+--
+
+- En ML a esto le llamamos **log-loss** o **cross-entropy loss**:  
+
+$$
+\text{LogLoss} = -\ell(\beta)
+$$  
+
+---
+## Likelihood como función de pérdida
+
+- Si las predicciones del modelo son correctas (`\(y=1\)` y `\(p\)` cercano a 1) → log-loss bajo.
+- Si se equivocan (`\(y=1\)` pero `\(p\)` cercano a 0) → log-loss alto.
+- Entrenar = **ajustar `\(\beta\)` para minimizar log-loss** (= maximizar likelihood).
+
+
+Likelihood maximizada en nuestro ejemplo:
+
+
+``` r
+ll_m &lt;- logLik(logit_affairs); print(c(Likelihood = exp(ll_m[1]), log_likelihood = ll_m[1]))
+```
+
+```
+##     Likelihood log_likelihood 
+##  5.217357e-138  -3.161048e+02
+```
+
+
+--
+
+.bold[Versión ML: Log-loss promedio ]
+
+En machine learning se suele trabajar con la **log-loss promedio** para obtener una pérdida por observación (comparable entre datasets de distinto tamaño).
+
+
+$$
+\text{LogLoss} = -\frac{1}{n}\,\ell(\beta)
+$$
+
+``` r
+n &lt;- length(affairsdata$everaffair_d); log_loss &lt;- -1/n * as.numeric(ll_m[1]); log_loss
+```
+
+```
+## [1] 0.5259646
+```
+
+
+---
+
+## Modelos de referencia (baselines)
+
+En ML y estadística es común usar **modelos de referencia** para poner en contexto el desempeño de un modelo más complejo.  Dos extremos:
+
+--
+&lt;br&gt;&lt;br&gt;
+
+- **Modelo nulo (`\(M_N\)`)**  
+  - El más simple posible: siempre predice la probabilidad promedio global.  
+  - Ventaja: parsimonioso y fácil de interpretar.  
+  - Desventaja: genera las peores predicciones posibleså, ignora covariables.  
+
+
+
+``` r
+# modelo nulo
+logit_affairs_sex_sat &lt;- glm(everaffair_d ~ 1,family=binomial(link="logit"), data=affairsdata)
+```
+--
+&lt;br&gt;
+
+- **Modelo saturado (`\(M_S\)`)**  
+  - El más complejo posible: ajusta un parámetro distinto para cada observación.  
+  - Ventaja: fit perfecto (cero perdida).  
+  - Desventaja: no generaliza → memoriza los datos.  
+
+
+``` r
+# modelo saturado
+logit_affairs_sex_sat &lt;- glm(everaffair_d ~ factor(1:nrow(affairsdata)) ,family=binomial(link="logit"), data=affairsdata)
+```
+
+
+
+---
+
+## Baselines vs Modelo de Interés
+
+.center[
+![dev](models.png)
+]
+
+
+
+---
+## Residual Deviance y Null Deviance
+
+En modelos logísticos, el **log-likelihood ratio** puede re-expresarse como **Deviance**, que es esencialmente una medida de **pérdida (loss)**. Dos tipos de deviance:
+
+&lt;br&gt;
+
+
+- **Residual Deviance:**  `\(D = -2 \cdot (\log\mathcal{L}_{M} - \log \mathcal{L}_{S})\)`  
+  - Evalúa el ajuste de `\(M\)` respecto al modelo saturado (fit perfecto).  
+
+&lt;br&gt;
+
+- **Null Deviance:** `\(D_N = -2 \cdot (\log\mathcal{L}_{0} - \log \mathcal{L}_{S})\)`  
+  - Equivale al "total explicable", similar a la varianza total en OLS.  
+
+&lt;br&gt;
+--
+
+- **Distribución muestral:** `\(D \sim \chi^{2}(df = n-k), \quad  \text{donde k es el número de parámetros en M}\)`  
+
+
+&lt;br&gt;
+
+Interpretación:
+
+- `\(D\)` alto (p-value bajo) → "mal ajuste" (alto error, modelo se queda corto).  
+- `\(D\)` bajo (p-value alto) → "buen ajuste" (más parámetros no agregan valor.  
+
+---
+
+## Residual Deviance y Null Deviance
+
+.center[
+![dev](deviances.png)
+]
+
+---
+## Residual Deviance y Log-loss promedio
+
+&lt;br&gt;
+
+
+```
+##                     Estimate Std. Error    z value   Pr(&gt;|z|)
+## (Intercept)      0.149861306 0.82300610  0.1820902 0.85551198
+## ym               0.037699456 0.01813912  2.0783503 0.03767711
+## factor(sex)male  0.249972343 0.19690565  1.2695032 0.20426166
+## rate            -0.411820264 0.50252200 -0.8195069 0.41249725
+## I(rate^2)       -0.008931688 0.07364745 -0.1212763 0.90347221
+```
+
+```
+## [1] "Null Deviance: 675.377 | Residual Deviance: 632.21"
+```
+
+
+
+``` r
+# Cálculo manual de la Residual Deviance
+D &lt;- -2 * (logLik(logit_affairs)[1] - logLik(logit_affairs_sex_sat)[1])
+
+
+# Relación con log-loss promedio
+log_likelihood &lt;- as.numeric(logLik(logit_affairs))
+log_loss &lt;- -1/length(affairsdata$everaffair_d) * log_likelihood
+print(paste0("Log-loss promedio: ", round(log_loss,4)))
+```
+
+```
+## [1] "Log-loss promedio: 0.526"
+```
+
+---
+## Pseudo - `\(R^2\)`
+
+&lt;br&gt;
+--
+
+- En modelos OLS es común medir ajuste usando el coeficiente `\(R^2\)`, es decir, % de varianza explicada por el modelo.
+
+--
+
+- En GLM's la varianza no es separable de la media, por tanto no se puede descomponer.
+
+--
+
+- Existe una variedad de alternativas al `\(R^2\)`, llamadas genéricamente pseudo - `\(R^2\)`. Uno de los más comunes es:
+
+&lt;br&gt;
+--
+
+`$$\text{McFadden’s } R^{2} = 1 - \frac{D}{D_{0}} = 1 - \frac{(\log\mathcal{L}_{S} - \log \mathcal{L}_{M})}{ (\log\mathcal{L}_{S} - \log \mathcal{L}_{N})}$$`
+&lt;br&gt;
+--
+
+.bold[Intuición:]  fracción del total del "explicable" del likelihood que es explicado por el modelo `\(M\)`.
+
+  - `\(R^{2} \in [0,1]\)`, donde 0 indica el peor fit posible y 1 indica el mejor fit posible. 
+
+---
+## Pseudo - `\(R^2\)`: ejemplo empírico
+
+
+```
+##                     Estimate Std. Error    z value   Pr(&gt;|z|)
+## (Intercept)      0.149861306 0.82300610  0.1820902 0.85551198
+## ym               0.037699456 0.01813912  2.0783503 0.03767711
+## factor(sex)male  0.249972343 0.19690565  1.2695032 0.20426166
+## rate            -0.411820264 0.50252200 -0.8195069 0.41249725
+## I(rate^2)       -0.008931688 0.07364745 -0.1212763 0.90347221
+```
+
+&lt;br&gt;
+--
+
+.bold[Residual deviance]:
+
+``` r
+R2 &lt;- 1 - logit_affairs$deviance/logit_affairs$null.deviance; R2
+```
+
+```
+## [1] 0.06391612
+```
+
+``` r
+# versión automática
+PseudoR2(logit_affairs, which="McFadden")
+```
+
+```
+##   McFadden 
+## 0.06391612
+```
+
+
+---
+class: inverse, center, middle
+
+# Regresión Logística como clasificador
+---
+
+## De Probabilidades a clases
+
+
+- La regresión logística entrega **scores probabilísticos**:   `\(\hat{p}_i = \Pr(Y_i=1\mid X_i,\hat\beta)\)`
+
+&lt;br&gt;
+--
+
+- Para convertir un score en decisión usamos un **umbral de corte** `\(\tau\)`:
+
+$$
+\hat{y}_i =
+`\begin{cases}
+1 &amp; \text{si } \hat{p}_i &gt; \tau \\
+0 &amp; \text{si } \hat{p}_i \leq \tau
+\end{cases}`
+$$
+
+&lt;br&gt;
+--
+
+- Por defecto: `\(\tau=0.5\)`  
+
+- En ML, el umbral se ajusta al problema:  
+  - Spam: es peor que se cuele spam → corte bajo.  
+  - Subsidio: es peor dejar fuera a quien lo necesita → corte bajo.  
+  - Examen de enfermedad peligrosa:
+    - Detección temprana: es peor no encontrar la enfermedad → corte bajo.  
+    - Confirmación: es peor asustar a alguien sano → corte alto.
+
+.bold[👉 Un clasificador es un modelo + una regla de decisión.]
+
+
+---
+
+## Matriz de Confusión (Confusion Matrix)
+
+.pull-left[
+![](conf_mat.png)
+]
+
+.pull-right[
+- **Accuracy**: `\((TP+TN)/N\)`  
+  % de clasificaciones correctas  
+
+- **Misclassification Rate**: `\((FP+FN)/N\)`  
+  % de clasificaciones incorrectas  
+
+- **True Positive Rate (Recall / Sensitivity)**:  
+  `\(TP/(TP+FN)\)`  
+
+- **True Negative Rate (Specificity)**:  
+  `\(TN/(TN+FP)\)`  
+
+- **Precision (PPV)**:  
+  `\(TP/(TP+FP)\)`  
+
+- **Prevalence**:  
+  `\((TP+FN)/N\)`  
+]
+
+&lt;br&gt;
+--
+
+📌 Estas métricas capturan distintos aspectos del desempeño de un clasificador.  
+En ML es clave elegir métricas alineadas con el problema (ej: medicina ≠ marketing).  
+
+---
+## Ejemplo empírico: infidelidad
+
+
+``` r
+p_hat &lt;- predict(logit_affairs, type = "response")
+y_hat &lt;- if_else(p_hat&gt;0.5,1,0)
+
+conf_mat &lt;- confusionMatrix(
+  factor(y_hat),
+  factor(logit_affairs$model$everaffair_d),
+  positive = "1",   # fuerza a que la clase 1 sea tratada como "positiva"
+  dnn = c("Predicho","Real")
+)
+
+
+conf_mat$table
+```
+
+```
+##         Real
+## Predicho   0   1
+##        0 438 137
+##        1  13  13
+```
+
+---
+## Ejemplo empírico: infidelidad
+
+.pull-left[
+![](class_12a_files/figure-html/unnamed-chunk-12-1.png)&lt;!-- --&gt;
+
+]
+
+.pull-right[
+
+Table: Métricas principales del clasificador logístico
+
+|                  |     x|
+|:-----------------|-----:|
+|Sensitivity       | 0.087|
+|Specificity       | 0.971|
+|Precision         | 0.500|
+|F1                | 0.148|
+|Balanced Accuracy | 0.529|
+]
+
+
+---
+## Curva ROC y AUC
+
+Recordemos:
+
+- **Sensibilidad (TPR):**  
+  $$
+  \text{TPR} = \frac{TP}{TP+FN}
+  $$
+
+- **Especificidad (TNR):**  
+  $$
+  \text{TNR} = \frac{TN}{TN+FP}
+  $$
+
+- **FPR (tasa de falsos positivos):**  
+  $$
+  \text{FPR} = 1 - \text{TNR} = \frac{FP}{FP+TN}
+  $$
+
+
+
+---
+
+## Paso 1: Probabilidades → Clasificación
+
+- El modelo entrega **scores probabilísticos** `\(\hat{p}_i\)`.  
+- Con un umbral `\(\tau\)` decidimos la clase:  
+
+$$
+\hat{y}_i =
+`\begin{cases}
+1 &amp; \text{si } \hat{p}_i &gt; \tau \\
+0 &amp; \text{si } \hat{p}_i \leq \tau
+\end{cases}`
+$$
+
+---
+
+## Paso 2: Medir desempeño en cada τ
+
+Para cada `\(\tau\)` calculamos:
+
+$$
+x(\tau) = FPR(\tau) = \frac{FP(\tau)}{FP(\tau)+TN(\tau)}
+$$
+
+$$
+y(\tau) = TPR(\tau) = \frac{TP(\tau)}{TP(\tau)+FN(\tau)}
+$$
+
+---
+
+## Paso 3: Trazar la curva
+
+- Cada `\(\tau\)` produce un punto `\((FPR(\tau), TPR(\tau))\)`.  
+- Moviendo `\(\tau\)` de 1 → 0 se generan todos los puntos.  
+- Conectando esos puntos obtenemos la **curva ROC**.  
+
+.center[
+.bold[👉 La curva ROC es una representación paramétrica en función de `\(\tau\)`.]  
+]
+---
+
+## ROC: idea clave
+
+- Cada **umbral** `\(\tau\)` genera un punto (FPR, TPR).  
+- La **curva ROC** conecta todos los puntos para `\(\tau \in [0,1]\)`.  
+- La diagonal (línea gris) corresponde a un clasificador aleatorio.  
+- Mejor desempeño = curva más arriba a la izquierda.  
+
+
+
+.pull-left[
+![](class_12a_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
+]
+.pull-right[
+![](class_12a_files/figure-html/unnamed-chunk-16-1.png)&lt;!-- --&gt;
+]
+
+
+---
+## AUC: Área bajo la curva
+
+
+- El **AUC (Area Under the Curve)** resume el desempeño en un número: `\(AUC = \int_{0}^{1} TPR(FPR)\, dFPR\)`
+
+- Interpretación: probabilidad de que el clasificador asigne un score mayor a un positivo que a un negativo elegido al azar.  
+
+
+.pull-left[
+![](class_12a_files/figure-html/unnamed-chunk-17-1.png)&lt;!-- --&gt;
+]
+
+.pull-right[
+
+- AUC ≈ 0.5 → clasificador no mejor que azar.
+
+- AUC ≈ 1 → clasificador perfecto.
+
+- El modelo logístico (rojo) queda arriba de la diagonal → tiene poder de discriminación.
+
+- 👉 Entre más arriba a la izquierda, mejor el clasificador.
+]
+
+---
+
+## Ejemplo empírico: infidelidad
+
+![](class_12a_files/figure-html/unnamed-chunk-18-1.png)&lt;!-- --&gt;
+
+---
+class: inverse, center, middle
+
+
+##Hasta la próxima clase. Gracias!
+
+&lt;br&gt;
+Mauricio Bucca &lt;br&gt;
+https://mebucca.github.io/ &lt;br&gt;
+github.com/mebucca
+
+
+
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": true,
+  "slideNumberFormat": "%current%"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

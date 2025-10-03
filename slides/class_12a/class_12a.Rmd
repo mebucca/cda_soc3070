@@ -1,0 +1,813 @@
+---
+title: "Análisis de Datos Categóricos (SOC3070)"
+subtitle: "Regresión Logística para Predicción"
+author: "<br> Mauricio Bucca<br> Profesor Asistente, Sociología UC"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: ["gentle-r.css","xaringan-themer.css"]
+    df_print: default
+    nature:
+      ratio: 16:9
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: true
+      slideNumberFormat: "%current%"
+editor_options: 
+  chunz_output_type: console
+  
+---  
+class: inverse, center, middle
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(tidyverse)
+library(xaringanthemer)
+style_duo_accent(
+  primary_color   = "#FF4D6D",  # Magenta neón
+  secondary_color = "#00F5D4",  # Turquesa brillante 
+  background_color = "#f8f7f3", # Azul oscuro profundo
+  header_font_google = google_font("Archivo"),
+  text_font_google   = google_font("Inconsolata"), 
+  link_color = "#FFD60A"        # Amarillo eléctrico para resaltar enlaces
+)
+```
+
+
+# Evaluación de Modelos Predictivos
+
+---
+
+## $\hat{\beta}$-problems $\quad$ vs  $\quad \hat{y}$-problems
+
+(Mullainathan & Spiess, 2017) 
+
+
+--
+
+.pull-left[
+### $\hat{\beta}$-problems
+
+- Foco en **parámetros** y su interpretación.  
+
+- Preguntas:  
+  - ¿Cuál es el efecto de $X$ sobre $Y$?  
+  - ¿Es significativo / causal?  
+  
+- Objetivo: **explicación e inferencia**.  
+
+- Modelos suelen ser **transparentes** (fácil interpretar).  
+]
+
+.pull-right[
+### $\hat{y}$-problems  
+
+- Foco en **predicciones** para nuevos casos.  
+
+- Preguntas:  
+  - ¿Qué tan bien predice el modelo en datos futuros?  
+  - ¿Qué modelo predice mejor?  
+  
+- Objetivo: **desempeño y utilidad práctica**.  
+
+- Modelos pueden ser tratados como **black-box** (no importa cómo, mientras prediga bien).  
+]
+
+---
+class: inverse, center, middle
+
+## Regresión Logística como Machine Learning
+
+---
+## Regresión Logística como Machine Learning
+
+<br><br>
+<br>
+
+.middle[
+.center[
+![](https://www.researchgate.net/publication/376856079/figure/fig1/AS:11431281226110814@1709092685557/Famous-internet-meme-displaying-the-relation-between-statistics-Machine-Learning-and.png)
+]
+]
+---
+# Regresión Logística: el **“hello world”** de ML
+
+<br>
+
+- **Qué resuelve:**  
+
+  - Estima la probabilidad de un evento binario ($Y=0/1$).  
+  - Ejemplos: ¿un mail es spam? ¿alguien tendrá una aventura?  
+
+<br>
+
+- **Cómo funciona:**  
+
+  - Ajusta una combinación lineal de predictores $X\beta$.  
+  - Pasa ese valor por la **curva sigmoide** → convierte log-odds en probabilidades (0–1).  
+  - Aprende de los datos para **generalizar** a casos no observados (nuevos datos, futuro, etc.).  
+
+<br>
+
+- **Por qué es importante:**  
+
+  - Interpretable: cada predictor tiene un rol claro en la probabilidad.  
+  - Eficiente: funciona bien incluso con muestras pequeñas.  
+  - Fundacional: es la base sobre la cual se construyen modelos más complejos en ML.  
+
+
+---
+
+## Ejemplo empírico
+
+$$\newcommand{\vect}[1]{\boldsymbol{#1}}$$
+
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+# load data on extra-marital affairs from package "Ecdat"
+library("Ecdat")
+library("viridis")
+library("tidyverse")
+library("modelr")
+library("cowplot")
+library("margins")
+library("rsample")
+library("arm")
+library("DescTools")
+library("caret")
+
+theme_set(theme_cowplot())
+
+data(Fair)
+affairsdata <- Fair %>% as_tibble()
+
+# create a binary variable indicating wether persons has ever had an affair
+affairsdata <- affairsdata %>% 
+  mutate(everaffair = case_when(nbaffairs == 0 ~ "Never", nbaffairs > 0 ~ "At least once") ) %>%
+  # map into 0/1 code
+  mutate(everaffair_d = case_when(nbaffairs == 0 ~ 0, nbaffairs > 0 ~ 1))
+```
+
+Continuando con el ejemplo de clases anteriores, ajustamos el siguiente modelo:
+
+$$\ln \frac{p_{i}}{1-p_{i}} = \beta_{0} + \beta_{1}\text{ym}_{i} + \beta_{2}\text{male}_{i} + \beta_{3}\text{rate}_{i} + \beta_{4}\text{rate}^{2}_{i}$$
+
+Llamemos a este modelo, modelo $M$:
+
+<br>
+
+```{r,echo=FALSE}
+logit_affairs <-  glm(everaffair_d ~ ym + factor(sex) + rate + I(rate^2) ,family=binomial(link="logit"), data=affairsdata)
+summary(logit_affairs)$coefficients
+print(paste0("log-likelihood: ",round(logLik(logit_affairs),3),
+             " Deviance: ", round(summary(logit_affairs)$deviance,3) ))
+print(paste0("AIC: ", round(summary(logit_affairs)$aic,3),
+             " BIC: ", round(BIC(logit_affairs),3) ))
+```
+
+---
+## Likelihood como función de pérdida
+
+- En ML, entrenar un modelo = encontrar parámetros que **maximicen la verosimilitud**  
+  (o equivalentemente **minimicen la pérdida**).  
+
+--
+
+- En regresión logística, cada $y_i$ es Bernoulli con probabilidad $p_i$:  
+
+$$
+P(y_i \mid p_i) = p_i^{y_i}(1-p_i)^{1-y_i}
+$$  
+
+--
+
+- La probabilidad conjunta de todos los datos:  
+
+$$
+\mathcal{L}(\beta) = \prod_{i=1}^{n} p_i^{y_i}(1-p_i)^{1-y_i}
+$$  
+
+--
+
+- Tomando logaritmos:  
+
+$$
+\ell(\beta) = \sum_{i=1}^{n} \big[ y_i \ln p_i + (1-y_i) \ln(1-p_i) \big]
+$$  
+
+--
+
+- En ML a esto le llamamos **log-loss** o **cross-entropy loss**:  
+
+$$
+\text{LogLoss} = -\ell(\beta)
+$$  
+
+---
+## Likelihood como función de pérdida
+
+- Si las predicciones del modelo son correctas ($y=1$ y $p$ cercano a 1) → log-loss bajo.
+- Si se equivocan ($y=1$ pero $p$ cercano a 0) → log-loss alto.
+- Entrenar = **ajustar $\beta$ para minimizar log-loss** (= maximizar likelihood).
+
+
+Likelihood maximizada en nuestro ejemplo:
+
+```{r}
+ll_m <- logLik(logit_affairs); print(c(Likelihood = exp(ll_m[1]), log_likelihood = ll_m[1]))
+```
+
+
+--
+
+.bold[Versión ML: Log-loss promedio ]
+
+En machine learning se suele trabajar con la **log-loss promedio** para obtener una pérdida por observación (comparable entre datasets de distinto tamaño).
+
+
+$$
+\text{LogLoss} = -\frac{1}{n}\,\ell(\beta)
+$$
+```{r}
+n <- length(affairsdata$everaffair_d); log_loss <- -1/n * as.numeric(ll_m[1]); log_loss
+```
+
+
+---
+
+## Modelos de referencia (baselines)
+
+En ML y estadística es común usar **modelos de referencia** para poner en contexto el desempeño de un modelo más complejo.  Dos extremos:
+
+--
+<br><br>
+
+- **Modelo nulo ($M_N$)**  
+  - El más simple posible: siempre predice la probabilidad promedio global.  
+  - Ventaja: parsimonioso y fácil de interpretar.  
+  - Desventaja: genera las peores predicciones posibleså, ignora covariables.  
+
+
+```{r,echo=TRUE, warning=FALSE,message=FALSE}
+# modelo nulo
+logit_affairs_sex_sat <- glm(everaffair_d ~ 1,family=binomial(link="logit"), data=affairsdata)
+```
+--
+<br>
+
+- **Modelo saturado ($M_S$)**  
+  - El más complejo posible: ajusta un parámetro distinto para cada observación.  
+  - Ventaja: fit perfecto (cero perdida).  
+  - Desventaja: no generaliza → memoriza los datos.  
+
+```{r,echo=TRUE, warning=FALSE,message=FALSE}
+# modelo saturado
+logit_affairs_sex_sat <- glm(everaffair_d ~ factor(1:nrow(affairsdata)) ,family=binomial(link="logit"), data=affairsdata)
+```
+
+
+
+---
+
+## Baselines vs Modelo de Interés
+
+.center[
+![dev](models.png)
+]
+
+
+
+---
+## Residual Deviance y Null Deviance
+
+En modelos logísticos, el **log-likelihood ratio** puede re-expresarse como **Deviance**, que es esencialmente una medida de **pérdida (loss)**. Dos tipos de deviance:
+
+<br>
+
+
+- **Residual Deviance:**  $D = -2 \cdot (\log\mathcal{L}_{M} - \log \mathcal{L}_{S})$  
+  - Evalúa el ajuste de $M$ respecto al modelo saturado (fit perfecto).  
+
+<br>
+
+- **Null Deviance:** $D_N = -2 \cdot (\log\mathcal{L}_{0} - \log \mathcal{L}_{S})$  
+  - Equivale al "total explicable", similar a la varianza total en OLS.  
+
+<br>
+--
+
+- **Distribución muestral:** $D \sim \chi^{2}(df = n-k), \quad  \text{donde k es el número de parámetros en M}$  
+
+
+<br>
+
+Interpretación:
+
+- $D$ alto (p-value bajo) → "mal ajuste" (alto error, modelo se queda corto).  
+- $D$ bajo (p-value alto) → "buen ajuste" (más parámetros no agregan valor.  
+
+---
+
+## Residual Deviance y Null Deviance
+
+.center[
+![dev](deviances.png)
+]
+
+---
+## Residual Deviance y Log-loss promedio
+
+<br>
+
+```{r,echo=FALSE}
+# Coeficientes del modelo
+summary(logit_affairs)$coefficients
+
+# Null vs Residual Deviance reportados por R
+print(paste0("Null Deviance: ", round(logit_affairs$null.deviance,3),
+             " | Residual Deviance: ", round(summary(logit_affairs)$deviance,3) ))
+```
+
+
+```{r,echo=TRUE}
+# Cálculo manual de la Residual Deviance
+D <- -2 * (logLik(logit_affairs)[1] - logLik(logit_affairs_sex_sat)[1])
+
+
+# Relación con log-loss promedio
+log_likelihood <- as.numeric(logLik(logit_affairs))
+log_loss <- -1/length(affairsdata$everaffair_d) * log_likelihood
+print(paste0("Log-loss promedio: ", round(log_loss,4)))
+```
+
+---
+## Pseudo - $R^2$
+
+<br>
+--
+
+- En modelos OLS es común medir ajuste usando el coeficiente $R^2$, es decir, % de varianza explicada por el modelo.
+
+--
+
+- En GLM's la varianza no es separable de la media, por tanto no se puede descomponer.
+
+--
+
+- Existe una variedad de alternativas al $R^2$, llamadas genéricamente pseudo - $R^2$. Uno de los más comunes es:
+
+<br>
+--
+
+$$\text{McFadden’s } R^{2} = 1 - \frac{D}{D_{0}} = 1 - \frac{(\log\mathcal{L}_{S} - \log \mathcal{L}_{M})}{ (\log\mathcal{L}_{S} - \log \mathcal{L}_{N})}$$
+<br>
+--
+
+.bold[Intuición:]  fracción del total del "explicable" del likelihood que es explicado por el modelo $M$.
+
+  - $R^{2} \in [0,1]$, donde 0 indica el peor fit posible y 1 indica el mejor fit posible. 
+
+---
+## Pseudo - $R^2$: ejemplo empírico
+
+```{r,echo=FALSE}
+summary(logit_affairs)$coefficients
+```
+
+<br>
+--
+
+.bold[Residual deviance]:
+```{r}
+R2 <- 1 - logit_affairs$deviance/logit_affairs$null.deviance; R2
+
+# versión automática
+PseudoR2(logit_affairs, which="McFadden")
+```
+
+
+---
+class: inverse, center, middle
+
+# Regresión Logística como clasificador
+---
+
+## De Probabilidades a clases
+
+
+- La regresión logística entrega **scores probabilísticos**:   $\hat{p}_i = \Pr(Y_i=1\mid X_i,\hat\beta)$
+
+<br>
+--
+
+- Para convertir un score en decisión usamos un **umbral de corte** $\tau$:
+
+$$
+\hat{y}_i =
+\begin{cases}
+1 & \text{si } \hat{p}_i > \tau \\
+0 & \text{si } \hat{p}_i \leq \tau
+\end{cases}
+$$
+
+<br>
+--
+
+- Por defecto: $\tau=0.5$  
+
+- En ML, el umbral se ajusta al problema:  
+  - Spam: es peor que se cuele spam → corte bajo.  
+  - Subsidio: es peor dejar fuera a quien lo necesita → corte bajo.  
+  - Examen de enfermedad peligrosa:
+    - Detección temprana: es peor no encontrar la enfermedad → corte bajo.  
+    - Confirmación: es peor asustar a alguien sano → corte alto.
+
+.bold[👉 Un clasificador es un modelo + una regla de decisión.]
+
+
+---
+
+## Matriz de Confusión (Confusion Matrix)
+
+.pull-left[
+![](conf_mat.png)
+]
+
+.pull-right[
+- **Accuracy**: $(TP+TN)/N$  
+  % de clasificaciones correctas  
+
+- **Misclassification Rate**: $(FP+FN)/N$  
+  % de clasificaciones incorrectas  
+
+- **True Positive Rate (Recall / Sensitivity)**:  
+  $TP/(TP+FN)$  
+
+- **True Negative Rate (Specificity)**:  
+  $TN/(TN+FP)$  
+
+- **Precision (PPV)**:  
+  $TP/(TP+FP)$  
+
+- **Prevalence**:  
+  $(TP+FN)/N$  
+]
+
+<br>
+--
+
+📌 Estas métricas capturan distintos aspectos del desempeño de un clasificador.  
+En ML es clave elegir métricas alineadas con el problema (ej: medicina ≠ marketing).  
+
+---
+## Ejemplo empírico: infidelidad
+
+```{r}
+p_hat <- predict(logit_affairs, type = "response")
+y_hat <- if_else(p_hat>0.5,1,0)
+
+conf_mat <- confusionMatrix(
+  factor(y_hat),
+  factor(logit_affairs$model$everaffair_d),
+  positive = "1",   # fuerza a que la clase 1 sea tratada como "positiva"
+  dnn = c("Predicho","Real")
+)
+
+
+conf_mat$table
+```
+
+---
+## Ejemplo empírico: infidelidad
+
+.pull-left[
+```{r, echo=FALSE}
+df_pred <- tibble(
+  p_hat = p_hat,
+  y_true = logit_affairs$model$everaffair_d,
+  y_hat = y_hat
+)
+
+ggplot(df_pred, aes(x=p_hat, fill=factor(y_true))) +
+  geom_histogram(position="identity", alpha=0.6, bins=20) +
+  geom_vline(xintercept=0.5, linetype="dashed", color="red") +
+  scale_fill_manual(values=c("#00BFC4","#F8766D"),
+                    name="Valor real", labels=c("0 = Nunca","1 = Al menos una vez")) +
+  labs(title="Distribución de probabilidades predichas",
+       x="Probabilidad estimada de infidelidad",
+       y="Frecuencia") +
+  theme_minimal()
+```
+
+]
+
+.pull-right[
+```{r, echo=FALSE}
+# Seleccionar métricas clave
+metrics <- conf_mat$byClass[c("Sensitivity","Specificity","Precision","F1","Balanced Accuracy")]
+
+# Mostrar tabla ordenada
+knitr::kable(round(metrics, 3), caption = "Métricas principales del clasificador logístico")
+```
+]
+
+
+---
+## Curva ROC y AUC
+
+Recordemos:
+
+- **Sensibilidad (TPR):**  
+  $$
+  \text{TPR} = \frac{TP}{TP+FN}
+  $$
+
+- **Especificidad (TNR):**  
+  $$
+  \text{TNR} = \frac{TN}{TN+FP}
+  $$
+
+- **FPR (tasa de falsos positivos):**  
+  $$
+  \text{FPR} = 1 - \text{TNR} = \frac{FP}{FP+TN}
+  $$
+
+
+
+---
+
+## Paso 1: Probabilidades → Clasificación
+
+- El modelo entrega **scores probabilísticos** $\hat{p}_i$.  
+- Con un umbral $\tau$ decidimos la clase:  
+
+$$
+\hat{y}_i =
+\begin{cases}
+1 & \text{si } \hat{p}_i > \tau \\
+0 & \text{si } \hat{p}_i \leq \tau
+\end{cases}
+$$
+
+---
+
+## Paso 2: Medir desempeño en cada τ
+
+Para cada $\tau$ calculamos:
+
+$$
+x(\tau) = FPR(\tau) = \frac{FP(\tau)}{FP(\tau)+TN(\tau)}
+$$
+
+$$
+y(\tau) = TPR(\tau) = \frac{TP(\tau)}{TP(\tau)+FN(\tau)}
+$$
+
+---
+
+## Paso 3: Trazar la curva
+
+- Cada $\tau$ produce un punto $(FPR(\tau), TPR(\tau))$.  
+- Moviendo $\tau$ de 1 → 0 se generan todos los puntos.  
+- Conectando esos puntos obtenemos la **curva ROC**.  
+
+.center[
+.bold[👉 La curva ROC es una representación paramétrica en función de $\tau$.]  
+]
+---
+
+## ROC: idea clave
+
+- Cada **umbral** $\tau$ genera un punto (FPR, TPR).  
+- La **curva ROC** conecta todos los puntos para $\tau \in [0,1]$.  
+- La diagonal (línea gris) corresponde a un clasificador aleatorio.  
+- Mejor desempeño = curva más arriba a la izquierda.  
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# --- ROC: código gráfico y explicativo (versión para slide 16:9) ---------------
+
+# 1) Paquetes y datos -----------------------------------------------------------
+library(Ecdat)
+library(tidyverse)
+library(pROC)
+library(cowplot)
+library(ggrepel)
+
+theme_set(theme_minimal(base_size = 16))
+
+data(Fair)
+df <- as_tibble(Fair) %>%
+  mutate(y = if_else(nbaffairs > 0, 1L, 0L))
+
+# 2) Modelo logístico y scores --------------------------------------------------
+m_logit <- glm(y ~ ym + factor(sex) + rate + I(rate^2),
+               data = df, family = binomial)
+p_hat <- predict(m_logit, type = "response")
+
+# 3) ROC completa y data.frame de puntos ---------------------------------------
+roc_obj <- roc(response = df$y, predictor = p_hat, quiet = TRUE)
+roc_df  <- coords(roc_obj, x = "all",
+                  ret = c("specificity","sensitivity","threshold"),
+                  transpose = FALSE) |>
+  as_tibble() |>
+  mutate(FPR = 1 - specificity, TPR = sensitivity) |>
+  arrange(FPR)
+
+# 4) Umbrales ilustrativos y sus (FPR, TPR) ------------------------------------
+taus <- c(0.2, 0.5, 0.8)
+rates_at_tau <- function(tau){
+  yhat <- as.integer(p_hat > tau)
+  TP <- sum(yhat==1 & df$y==1); TN <- sum(yhat==0 & df$y==0)
+  FP <- sum(yhat==1 & df$y==0); FN <- sum(yhat==0 & df$y==1)
+  tibble(tau = tau,
+         TPR = TP/(TP+FN),
+         FPR = FP/(FP+TN))
+}
+pts <- map_dfr(taus, rates_at_tau)
+
+# 5) Panel A: Densidad de scores + líneas de corte -----------------------------
+lab_tau <- tibble(x = taus, y = 0.02,
+                  txt = paste0("\u03C4 = ", taus),  # τ
+                  col = c("#00F5D4","#FF4D6D","#6C63FF"))
+
+pA <- ggplot(df, aes(x = p_hat, colour = factor(y), fill = factor(y))) +
+  geom_histogram(alpha = 0.35, adjust = 1) +
+  geom_vline(xintercept = taus, linetype = "dashed",
+             colour = lab_tau$col) +
+  geom_label(data = lab_tau, aes(x = x, y = y, label = txt),
+             inherit.aes = FALSE,
+             size = 4, label.size = 0, fill = "white") +
+  scale_colour_manual(values = c("#00BFC4","#F8766D"), guide = "none") +
+  scale_fill_manual(values = c("#00BFC4","#F8766D"),
+                    name = "Valor real",
+                    labels = c("0 = No", "1 = Sí")) +
+  scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2)) +
+  scale_y_continuous(expand = expansion(mult = c(0.02, 0.12))) +
+  labs(title = "Scores (probabilidades) y umbrales (τ)",
+       subtitle = "Cada τ separa los scores y define la clase 0/1",
+       x = "Probabilidad estimada (score)",
+       y = "Densidad") +
+  theme(plot.margin = margin(10, 20, 10, 10),
+        legend.position = c(0.82, 0.85))
+
+# 6) Panel B: ROC con puntos por τ, línea de azar, ejes fijos -------------------
+auc_val <- as.numeric(auc(roc_obj))
+
+pB <- ggplot(roc_df, aes(x = FPR, y = TPR)) +
+  geom_path(linewidth = 1.4, colour = "#FF4D6D") +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", colour = "grey50") +
+  geom_point(data = pts, aes(FPR, TPR), colour = "#6C63FF", size = 3) +
+  geom_label_repel(data = pts,
+                   aes(FPR, TPR, label = paste0("\u03C4 = ", tau)),
+                   size = 4, seed = 123, label.size = 0,
+                   box.padding = 0.25, min.segment.length = 0) +
+  coord_cartesian(xlim = c(0,1), ylim = c(0,1), expand = FALSE) +
+  scale_x_continuous(breaks = seq(0,1,0.2)) +
+  scale_y_continuous(breaks = seq(0,1,0.2)) +
+  labs(title = paste0("Curva ROC (AUC = ", round(auc_val, 3), ")"),
+       subtitle = "Cada punto corresponde a un umbral τ distinto",
+       x = "FPR = 1 - Especificidad",
+       y = "TPR = Sensibilidad") +
+  theme(plot.margin = margin(10, 10, 10, 10))
+
+```
+.pull-left[
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
+pA
+```
+]
+.pull-right[
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
+pB
+```
+]
+
+
+---
+## AUC: Área bajo la curva
+
+
+- El **AUC (Area Under the Curve)** resume el desempeño en un número: $AUC = \int_{0}^{1} TPR(FPR)\, dFPR$
+
+- Interpretación: probabilidad de que el clasificador asigne un score mayor a un positivo que a un negativo elegido al azar.  
+
+
+.pull-left[
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
+library(Ecdat)
+library(tidyverse)
+library(pROC)
+
+# Datos y modelo logístico
+data(Fair)
+affairsdata <- as_tibble(Fair) %>%
+  mutate(everaffair_d = ifelse(nbaffairs > 0, 1, 0))
+
+logit_affairs <- glm(everaffair_d ~ ym + factor(sex) + rate + I(rate^2),
+                     family = binomial(link = "logit"),
+                     data = affairsdata)
+
+# Probabilidades predichas
+p_hat <- predict(logit_affairs, type = "response")
+
+# ROC y AUC del modelo logístico
+roc_obj <- roc(affairsdata$everaffair_d, p_hat)
+auc_value <- auc(roc_obj)
+
+# ROC de un modelo aleatorio
+set.seed(123)
+bad_scores <- runif(length(p_hat))
+roc_bad <- roc(affairsdata$everaffair_d, bad_scores)
+
+# Gráfico comparativo
+plot(roc_bad, col="#999999", lwd=2,
+     main=paste0("ROC: comparación\nAUC logit = ", round(auc_value,3)))
+lines(roc_obj, col="#FF4D6D", lwd=2)
+abline(a=0, b=1, lty=2, col="grey")
+legend("bottomright",
+       legend=c("Modelo logístico","Modelo azar"),
+       col=c("#FF4D6D","#999999"), lwd=2)
+```
+]
+
+.pull-right[
+
+- AUC ≈ 0.5 → clasificador no mejor que azar.
+
+- AUC ≈ 1 → clasificador perfecto.
+
+- El modelo logístico (rojo) queda arriba de la diagonal → tiene poder de discriminación.
+
+- 👉 Entre más arriba a la izquierda, mejor el clasificador.
+]
+
+---
+
+## Ejemplo empírico: infidelidad
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(Ecdat)
+library(tidyverse)
+library(caret)
+library(pROC)
+library(cowplot)
+
+# Data
+data(Fair)
+affairsdata <- Fair %>% as_tibble() %>%
+  mutate(everaffair_d = ifelse(nbaffairs > 0, 1, 0))
+
+# Logistic model
+logit_affairs <- glm(everaffair_d ~ ym + factor(sex) + rate + I(rate^2),
+                     family = binomial(link = "logit"),
+                     data = affairsdata)
+
+# Predicted probs
+p_hat <- predict(logit_affairs, type = "response")
+
+# ROC curve
+roc_obj <- roc(affairsdata$everaffair_d, p_hat)
+
+# AUC
+auc_value <- auc(roc_obj)
+
+# Plot ROC curve
+p1 <- ggroc(roc_obj, colour="#FF4D6D", size=1.2) +
+  geom_abline(slope=1, intercept=0, linetype="dashed", colour="grey") +
+  labs(title="Curva ROC - Modelo Infidelidad",
+       subtitle=paste0("AUC = ", round(auc_value,3)),
+       x="False Positive Rate (1 - Specificity)",
+       y="True Positive Rate (Sensitivity)") +
+  theme_minimal()
+
+# Compare with random model
+set.seed(123)
+bad_scores <- runif(length(p_hat))
+roc_bad <- roc(affairsdata$everaffair_d, bad_scores)
+p2 <- ggroc(list("Modelo logístico"=roc_obj,
+                 "Modelo azar"=roc_bad),
+            aes="colour", size=1.2) +
+  scale_color_manual(values=c("#FF4D6D","#999999")) +
+  geom_abline(slope=1, intercept=0, linetype="dashed", colour="grey") +
+  labs(title="Comparación: ROC",
+       x="False Positive Rate",
+       y="True Positive Rate") +
+  theme_minimal()
+
+cowplot::plot_grid(p1,p2,nrow=1)
+```
+
+---
+class: inverse, center, middle
+
+
+##Hasta la próxima clase. Gracias!
+
+<br>
+Mauricio Bucca <br>
+https://mebucca.github.io/ <br>
+github.com/mebucca
+
+
+
+
