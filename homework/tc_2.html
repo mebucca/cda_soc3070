@@ -160,45 +160,105 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
+<hr>
 <section id="preguntas" class="level2">
 <h2 class="anchored" data-anchor-id="preguntas">Preguntas</h2>
 <section id="distribución-de-probabilidad-de-x_i" class="level3">
 <h3 class="anchored" data-anchor-id="distribución-de-probabilidad-de-x_i">1) Distribución de probabilidad de <span class="math inline">\(X_i\)</span></h3>
-<p>Explica por qué <span class="math inline">\(X_i\)</span> sigue una distribución binomial, escribe explícitamente la función probabilidad de <span class="math inline">\(X_i\)</span> y expresa las probabilidades de obtener <span class="math inline">\(X_i=0\)</span>, <span class="math inline">\(X_i=1\)</span> y <span class="math inline">\(X_i=2\)</span> en términos de <span class="math inline">\(p\)</span>.</p>
+<blockquote class="blockquote">
+<p><strong>Solución</strong><br>
+Cada lanzamiento corresponde a una distribución binomial con 2 intentos y probabilidad de éxito <span class="math inline">\(p\)</span>:<br>
+<span class="math display">\[
+P(X_i = k) = \binom{2}{k} p^k (1-p)^{2-k}, \quad k=0,1,2.
+\]</span><br>
+Es decir:<br>
+- <span class="math inline">\(P(X=0) = (1-p)^2\)</span><br>
+- <span class="math inline">\(P(X=1) = 2p(1-p)\)</span><br>
+- <span class="math inline">\(P(X=2) = p^2\)</span></p>
+</blockquote>
+<hr>
 </section>
 <section id="variable-de-ganancia-y" class="level3">
 <h3 class="anchored" data-anchor-id="variable-de-ganancia-y">2) Variable de ganancia <span class="math inline">\(Y\)</span></h3>
-<p>El casino paga de la siguiente manera:<br>
+<p>El casino paga:<br>
 - <span class="math inline">\(X=2\)</span>: gana <strong>$2000</strong>.<br>
 - <span class="math inline">\(X=1\)</span>: gana <strong>$500</strong>.<br>
 - <span class="math inline">\(X=0\)</span>: pierde <strong>$1000</strong>.</p>
-<p>Define la variable de ganancia <span class="math inline">\(Y\)</span> y escribe su distribución de probabilidad.</p>
+<blockquote class="blockquote">
+<p><strong>Distribución de <span class="math inline">\(Y\)</span>:</strong><br>
+- <span class="math inline">\(Y=2000\)</span> con prob. <span class="math inline">\(p^2\)</span><br>
+- <span class="math inline">\(Y=500\)</span> con prob. <span class="math inline">\(2p(1-p)\)</span><br>
+- <span class="math inline">\(Y=-1000\)</span> con prob. <span class="math inline">\((1-p)^2\)</span></p>
+</blockquote>
+<hr>
 </section>
 <section id="valor-esperado-de-y" class="level3">
 <h3 class="anchored" data-anchor-id="valor-esperado-de-y">3) Valor esperado de <span class="math inline">\(Y\)</span></h3>
-<p>Usando la distribución encontrada en la pregunta anterior, calcula el valor esperado <span class="math inline">\(\mathbb{E}[Y]\)</span>.</p>
+<blockquote class="blockquote">
+<p><strong>Solución</strong><br>
+<span class="math display">\[
+\mathbb{E}[Y] = 2000 p^2 + 500 \cdot 2p(1-p) -1000(1-p)^2.
+\]</span></p>
+</blockquote>
+<hr>
 </section>
 <section id="log-likelihood-function-de-p-con-los-datos-observados" class="level3">
 <h3 class="anchored" data-anchor-id="log-likelihood-function-de-p-con-los-datos-observados">4) Log-likelihood function de <span class="math inline">\(p\)</span> con los datos observados</h3>
-<p>A partir de los datos observados (un 0 y dos 2), construye la función de verosimilitud <span class="math inline">\(L(p)\)</span> mostrando el producto de probabilidades individuales, simplifícala, y luego transforma a log-verosimilitud <span class="math inline">\(\ell(p)\)</span>.</p>
+<p>En los 3 lanzamientos se obtuvo:<br>
+- 1 vez el valor 0,<br>
+- 0 veces el valor 1,<br>
+- 2 veces el valor 2.</p>
+<p><strong>Paso 1. Probabilidades teóricas de cada valor:</strong><br>
+- <span class="math inline">\(P(X=0) = (1-p)^2\)</span><br>
+- <span class="math inline">\(P(X=2) = p^2\)</span></p>
+<p><strong>Paso 2. Verosimilitud como producto de probabilidades individuales:</strong><br>
+Los datos fueron <span class="math inline">\((0,2,2)\)</span>.<br>
+Dado que los lanzamientos son independientes:<br>
+<span class="math display">\[
+L(p) = P(X=0)\cdot P(X=2)\cdot P(X=2).
+\]</span></p>
+<p>Reemplazando:<br>
+<span class="math display">\[
+L(p) = (1-p)^2 \cdot (p^2) \cdot (p^2).
+\]</span></p>
+<p><strong>Paso 3. Simplificar:</strong><br>
+<span class="math display">\[
+L(p) = (1-p)^2 \cdot p^4.
+\]</span></p>
+<p><strong>Paso 4. Pasar a logaritmos:</strong><br>
+<span class="math display">\[
+\ell(p) = 2\ln(1-p) + 4\ln p.
+\]</span></p>
+<hr>
 </section>
 <section id="graficar-la-log-likelihood" class="level3">
 <h3 class="anchored" data-anchor-id="graficar-la-log-likelihood">5) Graficar la log-likelihood</h3>
-<p>Escribe el código en R para graficar la log-likelihood <span class="math inline">\(\ell(p)\)</span> en el rango <span class="math inline">\(p \in [0,1]\)</span>. Reemplaza <code>\_agrega_aqui_tu_funcion_</code> con la expresión encontrada en la pregunta 4.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>mydata <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">p =</span> <span class="fu">seq</span>(<span class="fl">0.01</span>, <span class="fl">0.99</span>, <span class="at">by=</span><span class="fl">0.01</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">logLik =</span> <span class="st">`</span><span class="at">_agrega_aqui_tu_funcion_</span><span class="st">`</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">logLik =</span> <span class="dv">2</span><span class="sc">*</span><span class="fu">log</span>(<span class="dv">1</span><span class="sc">-</span>p) <span class="sc">+</span> <span class="dv">4</span><span class="sc">*</span><span class="fu">log</span>(p))</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(mydata, <span class="fu">aes</span>(<span class="at">x=</span>p, <span class="at">y=</span>logLik)) <span class="sc">+</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color=</span><span class="st">"#AA134e"</span>, <span class="at">linewidth=</span><span class="fl">1.2</span>) <span class="sc">+</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x=</span><span class="st">"Probabilidad de cara (p)"</span>, <span class="at">y=</span><span class="st">"Log-likelihood"</span>,</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">title=</span><span class="st">"Log-likelihood function de p (datos: 0,2,2)"</span>) <span class="sc">+</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="tc_2_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
 </div>
+</div>
+</div>
+<hr>
 </section>
 <section id="estimación-visual-de-p" class="level3">
 <h3 class="anchored" data-anchor-id="estimación-visual-de-p">6) Estimación visual de <span class="math inline">\(p\)</span></h3>
-<p>Basándote en el gráfico anterior, estima visualmente el valor de <span class="math inline">\(\hat{p}\)</span> que maximiza la log-likelihood e interpreta su significado en este contexto.</p>
+<blockquote class="blockquote">
+<p><strong>Solución</strong><br>
+La curva alcanza su máximo alrededor de <span class="math inline">\(p \approx 0.67\)</span>.<br>
+Esto significa que, con los datos observados (un 0 y dos 2), el valor más plausible para la probabilidad de cara es aproximadamente <strong>67%</strong>.</p>
+</blockquote>
 </section>
 </section>
 

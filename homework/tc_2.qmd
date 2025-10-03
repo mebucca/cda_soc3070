@@ -15,51 +15,97 @@ library("dplyr")
 
 <br>
 
-Un jugador lanza **dos monedas** (no necesariamente justas) en cada ronda $i$. Sea $X_i$ el número de caras en el lanzamiento $i$. La probabilidad de que una moneda muestre cara es $p$, y las monedas son independientes.
+Un jugador lanza **dos monedas** (no necesariamente justas) en cada ronda $i$. Sea $X_i$ el número de caras en el lanzamiento $i$. La probabilidad de que una moneda muestre cara es $p$, y las monedas son independientes.  
 
-La siguiente tabla muestra los resultados de **3 lanzamientos** observados:
+La siguiente tabla muestra los resultados de **3 lanzamientos** observados:  
 
 | Tirada | $X_i$: número de caras |
 |--------|------------------------|
-| 1      | 0                      |
-| 2      | 2                      |
-| 3      | 2                      |
+| 1      | 0 |
+| 2      | 2 |
+| 3      | 2 |
 
+---
 
 ## Preguntas
 
-### 1) Distribución de probabilidad de $X_i$
+### 1) Distribución de probabilidad de $X_i$  
 
-Explica por qué $X_i$ sigue una distribución binomial, escribe explícitamente la función probabilidad de $X_i$ y expresa las probabilidades de obtener $X_i=0$, $X_i=1$ y $X_i=2$ en términos de $p$.
+> **Solución**  
+> Cada lanzamiento corresponde a una distribución binomial con 2 intentos y probabilidad de éxito $p$:  
+> $$
+> P(X_i = k) = \binom{2}{k} p^k (1-p)^{2-k}, \quad k=0,1,2.
+> $$  
+> Es decir:  
+> - $P(X=0) = (1-p)^2$  
+> - $P(X=1) = 2p(1-p)$  
+> - $P(X=2) = p^2$
 
+---
 
-### 2) Variable de ganancia $Y$
+### 2) Variable de ganancia $Y$  
 
-El casino paga de la siguiente manera:  
+El casino paga:  
 - $X=2$: gana **$2000**.  
 - $X=1$: gana **$500**.  
 - $X=0$: pierde **$1000**.  
 
-Define la variable de ganancia $Y$ y escribe su distribución de probabilidad.
+> **Distribución de $Y$:**  
+> - $Y=2000$ con prob. $p^2$  
+> - $Y=500$ con prob. $2p(1-p)$  
+> - $Y=-1000$ con prob. $(1-p)^2$  
 
+---
 
-### 3) Valor esperado de $Y$
+### 3) Valor esperado de $Y$  
 
-Usando la distribución encontrada en la pregunta anterior, calcula el valor esperado $\mathbb{E}[Y]$.
+> **Solución**  
+> $$
+> \mathbb{E}[Y] = 2000 p^2 + 500 \cdot 2p(1-p) -1000(1-p)^2.
+> $$
 
+---
 
 ### 4) Log-likelihood function de $p$ con los datos observados
 
-A partir de los datos observados (un 0 y dos 2), construye la función de verosimilitud $L(p)$ mostrando el producto de probabilidades individuales, simplifícala, y luego transforma a log-verosimilitud $\ell(p)$.
+En los 3 lanzamientos se obtuvo:  
+- 1 vez el valor 0,  
+- 0 veces el valor 1,  
+- 2 veces el valor 2.  
 
+**Paso 1. Probabilidades teóricas de cada valor:**  
+- $P(X=0) = (1-p)^2$  
+- $P(X=2) = p^2$  
 
-### 5) Graficar la log-likelihood
+**Paso 2. Verosimilitud como producto de probabilidades individuales:**  
+Los datos fueron $(0,2,2)$.  
+Dado que los lanzamientos son independientes:  
+$$
+L(p) = P(X=0)\cdot P(X=2)\cdot P(X=2).
+$$  
 
-Escribe el código en R para graficar la log-likelihood $\ell(p)$ en el rango $p \in [0,1]$. Reemplaza `\_agrega_aqui_tu_funcion_` con la expresión encontrada en la pregunta 4.
+Reemplazando:  
+$$
+L(p) = (1-p)^2 \cdot (p^2) \cdot (p^2).
+$$  
 
-```{r, echo=TRUE, eval=FALSE, warning=FALSE, message=FALSE}
+**Paso 3. Simplificar:**  
+$$
+L(p) = (1-p)^2 \cdot p^4.
+$$  
+
+**Paso 4. Pasar a logaritmos:**  
+$$
+\ell(p) = 2\ln(1-p) + 4\ln p.
+$$  
+
+---
+
+### 5) Graficar la log-likelihood  
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
 mydata <- data.frame(p = seq(0.01, 0.99, by=0.01)) %>%
-  mutate(logLik = `_agrega_aqui_tu_funcion_`)
+  mutate(logLik = 2*log(1-p) + 4*log(p))
 
 ggplot(mydata, aes(x=p, y=logLik)) +
   geom_line(color="#AA134e", linewidth=1.2) +
@@ -68,7 +114,10 @@ ggplot(mydata, aes(x=p, y=logLik)) +
   theme_bw()
 ```
 
+---
 
-### 6) Estimación visual de $p$
+### 6) Estimación visual de $p$  
 
-Basándote en el gráfico anterior, estima visualmente el valor de $\hat{p}$ que maximiza la log-likelihood e interpreta su significado en este contexto.
+> **Solución**  
+> La curva alcanza su máximo alrededor de $p \approx 0.67$.  
+> Esto significa que, con los datos observados (un 0 y dos 2), el valor más plausible para la probabilidad de cara es aproximadamente **67%**.
