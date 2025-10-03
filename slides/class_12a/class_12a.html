@@ -21,9 +21,6 @@ class: center, middle, inverse, title-slide
 .author[
 ### <br> Mauricio Bucca<br> Profesor Asistente, Sociología UC
 ]
-.date[
-### 02 October, 2025
-]
 
 ---
 
@@ -36,7 +33,7 @@ class: inverse, center, middle
 
 ---
 
-## `\(\hat{\beta}\)`-problems `\(\quad\)` vs  `\(\quad \hat{y}\)`-problems
+## `\(\hat{\beta}\)`-problems vs. `\(\hat{y}\)`-problems
 
 (Mullainathan &amp; Spiess, 2017) 
 
@@ -245,7 +242,7 @@ En ML y estadística es común usar **modelos de referencia** para poner en cont
 
 ``` r
 # modelo nulo
-logit_affairs_sex_sat &lt;- glm(everaffair_d ~ 1,family=binomial(link="logit"), data=affairsdata)
+logit_affairs_sex_null &lt;- glm(everaffair_d ~ 1,family=binomial(link="logit"), data=affairsdata)
 ```
 --
 &lt;br&gt;
@@ -374,7 +371,7 @@ print(paste0("Log-loss promedio: ", round(log_loss,4)))
   - `\(R^{2} \in [0,1]\)`, donde 0 indica el peor fit posible y 1 indica el mejor fit posible. 
 
 ---
-## Pseudo - `\(R^2\)`: ejemplo empírico
+## Pseudo - `\(R^2\)`
 
 
 ```
@@ -451,7 +448,14 @@ $$
 
 ---
 
-## Matriz de Confusión (Confusion Matrix)
+## Matriz de Confusión
+
+.center[
+![](https://miro.medium.com/v2/resize:fit:4800/format:webp/1*mL-nYY6MFhiG0uoR5kJaCA.jpeg)
+]
+---
+
+## Matriz de Confusión
 
 .pull-left[
 ![](conf_mat.png)
@@ -486,16 +490,25 @@ En ML es clave elegir métricas alineadas con el problema (ej: medicina ≠ mark
 ---
 ## Ejemplo empírico: infidelidad
 
+Clasificamos como “Nunca infiel” a todas las personas cuya probabilidad predicha sea menor o igual a 0.5, y como “Al menos una vez” a aquellas cuya probabilidad predicha supere dicho umbral.
+
+$$
+\hat{y}_i =
+`\begin{cases}
+1 &amp; \text{si } \hat{p}_i &gt; 0.5 \quad (\text{Al menos una vez}) \\\\
+0 &amp; \text{si } \hat{p}_i \leq 0.5 \quad (\text{Nunca infiel})
+\end{cases}`
+$$
+
+
 
 ``` r
 p_hat &lt;- predict(logit_affairs, type = "response")
 y_hat &lt;- if_else(p_hat&gt;0.5,1,0)
 
 conf_mat &lt;- confusionMatrix(
-  factor(y_hat),
-  factor(logit_affairs$model$everaffair_d),
-  positive = "1",   # fuerza a que la clase 1 sea tratada como "positiva"
-  dnn = c("Predicho","Real")
+  factor(y_hat), factor(logit_affairs$model$everaffair_d),
+  positive = "1", dnn = c("Predicho","Real")
 )
 
 
@@ -532,115 +545,141 @@ Table: Métricas principales del clasificador logístico
 
 
 ---
-## Curva ROC y AUC
+## Umbral y predicción
 
-Recordemos:
-
-- **Sensibilidad (TPR):**  
-  $$
-  \text{TPR} = \frac{TP}{TP+FN}
-  $$
-
-- **Especificidad (TNR):**  
-  $$
-  \text{TNR} = \frac{TN}{TN+FP}
-  $$
-
-- **FPR (tasa de falsos positivos):**  
-  $$
-  \text{FPR} = 1 - \text{TNR} = \frac{FP}{FP+TN}
-  $$
-
-
-
----
-
-## Paso 1: Probabilidades → Clasificación
-
-- El modelo entrega **scores probabilísticos** `\(\hat{p}_i\)`.  
-- Con un umbral `\(\tau\)` decidimos la clase:  
-
-$$
-\hat{y}_i =
-`\begin{cases}
-1 &amp; \text{si } \hat{p}_i &gt; \tau \\
-0 &amp; \text{si } \hat{p}_i \leq \tau
-\end{cases}`
-$$
-
----
-
-## Paso 2: Medir desempeño en cada τ
-
-Para cada `\(\tau\)` calculamos:
-
-$$
-x(\tau) = FPR(\tau) = \frac{FP(\tau)}{FP(\tau)+TN(\tau)}
-$$
-
-$$
-y(\tau) = TPR(\tau) = \frac{TP(\tau)}{TP(\tau)+FN(\tau)}
-$$
-
----
-
-## Paso 3: Trazar la curva
-
-- Cada `\(\tau\)` produce un punto `\((FPR(\tau), TPR(\tau))\)`.  
-- Moviendo `\(\tau\)` de 1 → 0 se generan todos los puntos.  
-- Conectando esos puntos obtenemos la **curva ROC**.  
-
-.center[
-.bold[👉 La curva ROC es una representación paramétrica en función de `\(\tau\)`.]  
-]
----
-
-## ROC: idea clave
-
-- Cada **umbral** `\(\tau\)` genera un punto (FPR, TPR).  
-- La **curva ROC** conecta todos los puntos para `\(\tau \in [0,1]\)`.  
-- La diagonal (línea gris) corresponde a un clasificador aleatorio.  
-- Mejor desempeño = curva más arriba a la izquierda.  
+- Cada umbral `\(\tau\)` genera un nivel de Especificidad y Sensibilidad: `\(:\{\text{Specificity}(\tau), \text{Sensitivity}(\tau)\}\)` para `\(\tau \in [0,1]\)`.
 
 
 
 .pull-left[
-![](class_12a_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
-]
-.pull-right[
-![](class_12a_files/figure-html/unnamed-chunk-16-1.png)&lt;!-- --&gt;
+![](class_12a_files/figure-html/plot_scores-1.png)&lt;!-- --&gt;
 ]
 
+.pull-right[
+- Umbrales bajos → más predicciones positivas
+- Umbrales altos → más predicciones negativas
+]
+
+---
+## Curva ROC
+
+- La **curva ROC** conecta todos los puntos `\(:\{1 - \text{Specificity}(\tau), \quad \text{Sensitivity}(\tau)\}\)` para `\(\tau \in [0,1]\)`.
+
+- La diagonal corresponde a un clasificador aleatorio.
+
+- Mejor desempeño = curva más arriba a la izquierda.
+
+.pull-left[
+![](class_12a_files/figure-html/plot_scores2-1.png)&lt;!-- --&gt;
+]
+
+.pull-right[
+![](class_12a_files/figure-html/plot_roc-1.png)&lt;!-- --&gt;
+]
 
 ---
 ## AUC: Área bajo la curva
 
+- El **AUC** resume el desempeño en un solo número: `\(AUC = \int_{0}^{1}\text{Sensibilidad}(\tau)\, d(1-\text{Especificidad}(\tau))\)`
 
-- El **AUC (Area Under the Curve)** resume el desempeño en un número: `\(AUC = \int_{0}^{1} TPR(FPR)\, dFPR\)`
 
-- Interpretación: probabilidad de que el clasificador asigne un score mayor a un positivo que a un negativo elegido al azar.  
+- **Interpretación**: probabilidad de que el modelo asigne mayor score a un positivo que a un negativo (elegidos al azar).
 
 
 .pull-left[
-![](class_12a_files/figure-html/unnamed-chunk-17-1.png)&lt;!-- --&gt;
+![](class_12a_files/figure-html/plot_auc-1.png)&lt;!-- --&gt;
 ]
 
 .pull-right[
+**Interpretación del AUC:**
 
-- AUC ≈ 0.5 → clasificador no mejor que azar.
+- **AUC ≈ 0.5**: Sin poder discriminatorio (como azar)
 
-- AUC ≈ 1 → clasificador perfecto.
+- **AUC ≈ 0.7-0.8**: Discriminación aceptable
 
-- El modelo logístico (rojo) queda arriba de la diagonal → tiene poder de discriminación.
+- **AUC &gt; 0.9**: Discriminación excelente
 
-- 👉 Entre más arriba a la izquierda, mejor el clasificador.
+- **AUC = 1**: Clasificador perfecto
+
+👉 Nuestro modelo tiene AUC = 0.674, indicando poder discriminatorio moderado.
 ]
 
 ---
+## Selección del umbral óptimo
 
-## Ejemplo empírico: infidelidad
 
-![](class_12a_files/figure-html/unnamed-chunk-18-1.png)&lt;!-- --&gt;
+- No existe un único "mejor" umbral: depende del contexto y los costos de errar.
+
+- Criterios comunes: **Youden**, **punto más cercano a (0,1)**, etc.
+
+Cómo extraer umbrales en R:
+
+
+``` r
+# Índice de Youden (maximiza TPR - FPR)
+coords(roc_obj, x = "best", 
+       best.method = "youden")
+```
+
+```
+##   threshold specificity sensitivity
+## 1  0.222457   0.5698448   0.6933333
+```
+
+``` r
+# Punto más cercano a (0,1)
+coords(roc_obj, x = "best", 
+       best.method = "closest.topleft")
+```
+
+```
+##   threshold specificity sensitivity
+## 1  0.222457   0.5698448   0.6933333
+```
+
+---
+## Selección del umbral óptimo
+
+- No existe un único "mejor" umbral: depende del contexto y los costos de errar.
+
+- Criterios comunes: **Youden**, **punto más cercano a (0,1)**, etc.
+
+Cómo extraer umbrales en R:
+
+
+``` r
+# Ver todas las coordenadas
+coords(roc_obj, x = "all") %&gt;% head(n=13)
+```
+
+```
+##    threshold specificity sensitivity
+## 1       -Inf  0.00000000   1.0000000
+## 2  0.1069478  0.00886918   1.0000000
+## 3  0.1080786  0.01773836   1.0000000
+## 4  0.1100684  0.03991131   0.9866667
+## 5  0.1162936  0.11308204   0.9733333
+## 6  0.1268852  0.14412417   0.9400000
+## 7  0.1331680  0.14855876   0.9333333
+## 8  0.1345351  0.18181818   0.9200000
+## 9  0.1370424  0.19068736   0.9200000
+## 10 0.1430321  0.23059867   0.9133333
+## 11 0.1488562  0.26164080   0.8933333
+## 12 0.1574665  0.31707317   0.8666667
+## 13 0.1649799  0.32150776   0.8666667
+```
+
+---
+class: middle
+
+## en el próximo episodio ...
+
+
+.center[
+![cross](https://miro.medium.com/max/1224/1*hPDx1TYs9oMrbZRf-VYSUw.jpeg)
+]
+
+
 
 ---
 class: inverse, center, middle

@@ -2,7 +2,6 @@
 title: "Análisis de Datos Categóricos (SOC3070)"
 subtitle: "Regresión Logística para Predicción"
 author: "<br> Mauricio Bucca<br> Profesor Asistente, Sociología UC"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   xaringan::moon_reader:
     lib_dir: libs
@@ -15,8 +14,8 @@ output:
       countIncrementalSlides: true
       slideNumberFormat: "%current%"
 editor_options: 
-  chunz_output_type: console
   
+  chunk_output_type: console
 ---  
 class: inverse, center, middle
 
@@ -24,12 +23,12 @@ class: inverse, center, middle
 library(tidyverse)
 library(xaringanthemer)
 style_duo_accent(
-  primary_color   = "#FF4D6D",  # Magenta neón
-  secondary_color = "#00F5D4",  # Turquesa brillante 
-  background_color = "#f8f7f3", # Azul oscuro profundo
-  header_font_google = google_font("Archivo"),
-  text_font_google   = google_font("Inconsolata"), 
-  link_color = "#FFD60A"        # Amarillo eléctrico para resaltar enlaces
+  primary_color   = "#E4572E",   # naranja quemado (energía, foco)  
+  secondary_color = "#29335C",   # azul marino profundo (contraste serio)  
+  background_color = "#F4F1DE",  # beige claro, cálido y legible  
+  header_font_google = google_font("Archivo"),  
+  text_font_google   = google_font("Inconsolata"),  
+  link_color = "#76B041"         # verde oliva brillante para resaltar  
 )
 ```
 
@@ -38,7 +37,7 @@ style_duo_accent(
 
 ---
 
-## $\hat{\beta}$-problems $\quad$ vs  $\quad \hat{y}$-problems
+## $\hat{\beta}$-problems vs. $\hat{y}$-problems
 
 (Mullainathan & Spiess, 2017) 
 
@@ -249,7 +248,7 @@ En ML y estadística es común usar **modelos de referencia** para poner en cont
 
 ```{r,echo=TRUE, warning=FALSE,message=FALSE}
 # modelo nulo
-logit_affairs_sex_sat <- glm(everaffair_d ~ 1,family=binomial(link="logit"), data=affairsdata)
+logit_affairs_sex_null <- glm(everaffair_d ~ 1,family=binomial(link="logit"), data=affairsdata)
 ```
 --
 <br>
@@ -367,7 +366,7 @@ $$\text{McFadden’s } R^{2} = 1 - \frac{D}{D_{0}} = 1 - \frac{(\log\mathcal{L}_
   - $R^{2} \in [0,1]$, donde 0 indica el peor fit posible y 1 indica el mejor fit posible. 
 
 ---
-## Pseudo - $R^2$: ejemplo empírico
+## Pseudo - $R^2$
 
 ```{r,echo=FALSE}
 summary(logit_affairs)$coefficients
@@ -426,7 +425,14 @@ $$
 
 ---
 
-## Matriz de Confusión (Confusion Matrix)
+## Matriz de Confusión
+
+.center[
+![](https://miro.medium.com/v2/resize:fit:4800/format:webp/1*mL-nYY6MFhiG0uoR5kJaCA.jpeg)
+]
+---
+
+## Matriz de Confusión
 
 .pull-left[
 ![](conf_mat.png)
@@ -461,15 +467,24 @@ En ML es clave elegir métricas alineadas con el problema (ej: medicina ≠ mark
 ---
 ## Ejemplo empírico: infidelidad
 
+Clasificamos como “Nunca infiel” a todas las personas cuya probabilidad predicha sea menor o igual a 0.5, y como “Al menos una vez” a aquellas cuya probabilidad predicha supere dicho umbral.
+
+$$
+\hat{y}_i =
+\begin{cases}
+1 & \text{si } \hat{p}_i > 0.5 \quad (\text{Al menos una vez}) \\\\
+0 & \text{si } \hat{p}_i \leq 0.5 \quad (\text{Nunca infiel})
+\end{cases}
+$$
+
+
 ```{r}
 p_hat <- predict(logit_affairs, type = "response")
 y_hat <- if_else(p_hat>0.5,1,0)
 
 conf_mat <- confusionMatrix(
-  factor(y_hat),
-  factor(logit_affairs$model$everaffair_d),
-  positive = "1",   # fuerza a que la clase 1 sea tratada como "positiva"
-  dnn = c("Predicho","Real")
+  factor(y_hat), factor(logit_affairs$model$everaffair_d),
+  positive = "1", dnn = c("Predicho","Real")
 )
 
 
@@ -512,290 +527,249 @@ knitr::kable(round(metrics, 3), caption = "Métricas principales del clasificado
 
 
 ---
-## Curva ROC y AUC
+## Umbral y predicción
 
-Recordemos:
+- Cada umbral $\tau$ genera un nivel de Especificidad y Sensibilidad: $:\{\text{Specificity}(\tau), \text{Sensitivity}(\tau)\}$ para $\tau \in [0,1]$.
 
-- **Sensibilidad (TPR):**  
-  $$
-  \text{TPR} = \frac{TP}{TP+FN}
-  $$
-
-- **Especificidad (TNR):**  
-  $$
-  \text{TNR} = \frac{TN}{TN+FP}
-  $$
-
-- **FPR (tasa de falsos positivos):**  
-  $$
-  \text{FPR} = 1 - \text{TNR} = \frac{FP}{FP+TN}
-  $$
-
-
-
----
-
-## Paso 1: Probabilidades → Clasificación
-
-- El modelo entrega **scores probabilísticos** $\hat{p}_i$.  
-- Con un umbral $\tau$ decidimos la clase:  
-
-$$
-\hat{y}_i =
-\begin{cases}
-1 & \text{si } \hat{p}_i > \tau \\
-0 & \text{si } \hat{p}_i \leq \tau
-\end{cases}
-$$
-
----
-
-## Paso 2: Medir desempeño en cada τ
-
-Para cada $\tau$ calculamos:
-
-$$
-x(\tau) = FPR(\tau) = \frac{FP(\tau)}{FP(\tau)+TN(\tau)}
-$$
-
-$$
-y(\tau) = TPR(\tau) = \frac{TP(\tau)}{TP(\tau)+FN(\tau)}
-$$
-
----
-
-## Paso 3: Trazar la curva
-
-- Cada $\tau$ produce un punto $(FPR(\tau), TPR(\tau))$.  
-- Moviendo $\tau$ de 1 → 0 se generan todos los puntos.  
-- Conectando esos puntos obtenemos la **curva ROC**.  
-
-.center[
-.bold[👉 La curva ROC es una representación paramétrica en función de $\tau$.]  
-]
----
-
-## ROC: idea clave
-
-- Cada **umbral** $\tau$ genera un punto (FPR, TPR).  
-- La **curva ROC** conecta todos los puntos para $\tau \in [0,1]$.  
-- La diagonal (línea gris) corresponde a un clasificador aleatorio.  
-- Mejor desempeño = curva más arriba a la izquierda.  
-
-
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
-# --- ROC: código gráfico y explicativo (versión para slide 16:9) ---------------
-
-# 1) Paquetes y datos -----------------------------------------------------------
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
 library(Ecdat)
 library(tidyverse)
 library(pROC)
-library(cowplot)
 library(ggrepel)
 
-theme_set(theme_minimal(base_size = 16))
+# Tema consistente
+theme_set(theme_minimal(base_size = 14))
+custom_theme <- theme(
+  plot.title = element_text(face = "bold", size = 16),
+  plot.subtitle = element_text(size = 12, color = "grey40"),
+  legend.position = "top",
+  panel.grid.minor = element_blank()
+)
 
+# Paleta de colores consistente
+COLORS <- list(
+  primary = "#FF4D6D",
+  secondary = "#6C63FF",
+  tertiary = "#00F5D4",
+  positive = "#F8766D",
+  negative = "#00BFC4",
+  neutral = "grey60"
+)
+
+# Preparar datos
 data(Fair)
 df <- as_tibble(Fair) %>%
   mutate(y = if_else(nbaffairs > 0, 1L, 0L))
 
-# 2) Modelo logístico y scores --------------------------------------------------
+# Modelo logístico
 m_logit <- glm(y ~ ym + factor(sex) + rate + I(rate^2),
                data = df, family = binomial)
 p_hat <- predict(m_logit, type = "response")
 
-# 3) ROC completa y data.frame de puntos ---------------------------------------
+# ROC
 roc_obj <- roc(response = df$y, predictor = p_hat, quiet = TRUE)
-roc_df  <- coords(roc_obj, x = "all",
-                  ret = c("specificity","sensitivity","threshold"),
-                  transpose = FALSE) |>
-  as_tibble() |>
-  mutate(FPR = 1 - specificity, TPR = sensitivity) |>
+roc_df <- coords(roc_obj, x = "all",
+                 ret = c("specificity", "sensitivity", "threshold"),
+                 transpose = FALSE) %>%
+  as_tibble() %>%
+  mutate(FPR = 1 - specificity, TPR = sensitivity) %>%
   arrange(FPR)
 
-# 4) Umbrales ilustrativos y sus (FPR, TPR) ------------------------------------
-taus <- c(0.2, 0.5, 0.8)
-rates_at_tau <- function(tau){
+# Umbrales de ejemplo
+calc_rates <- function(tau) {
   yhat <- as.integer(p_hat > tau)
-  TP <- sum(yhat==1 & df$y==1); TN <- sum(yhat==0 & df$y==0)
-  FP <- sum(yhat==1 & df$y==0); FN <- sum(yhat==0 & df$y==1)
-  tibble(tau = tau,
-         TPR = TP/(TP+FN),
-         FPR = FP/(FP+TN))
+  TP <- sum(yhat == 1 & df$y == 1)
+  TN <- sum(yhat == 0 & df$y == 0)
+  FP <- sum(yhat == 1 & df$y == 0)
+  FN <- sum(yhat == 0 & df$y == 1)
+  tibble(tau = tau, TPR = TP/(TP+FN), FPR = FP/(FP+TN))
 }
-pts <- map_dfr(taus, rates_at_tau)
 
-# 5) Panel A: Densidad de scores + líneas de corte -----------------------------
-lab_tau <- tibble(x = taus, y = 0.02,
-                  txt = paste0("\u03C4 = ", taus),  # τ
-                  col = c("#00F5D4","#FF4D6D","#6C63FF"))
+taus <- c(0.2, 0.5, 0.8)
+pts <- map_dfr(taus, calc_rates)
+```
 
-pA <- ggplot(df, aes(x = p_hat, colour = factor(y), fill = factor(y))) +
-  geom_histogram(alpha = 0.35, adjust = 1) +
-  geom_vline(xintercept = taus, linetype = "dashed",
-             colour = lab_tau$col) +
-  geom_label(data = lab_tau, aes(x = x, y = y, label = txt),
-             inherit.aes = FALSE,
-             size = 4, label.size = 0, fill = "white") +
-  scale_colour_manual(values = c("#00BFC4","#F8766D"), guide = "none") +
-  scale_fill_manual(values = c("#00BFC4","#F8766D"),
-                    name = "Valor real",
-                    labels = c("0 = No", "1 = Sí")) +
-  scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2)) +
-  scale_y_continuous(expand = expansion(mult = c(0.02, 0.12))) +
-  labs(title = "Scores (probabilidades) y umbrales (τ)",
-       subtitle = "Cada τ separa los scores y define la clase 0/1",
-       x = "Probabilidad estimada (score)",
-       y = "Densidad") +
-  theme(plot.margin = margin(10, 20, 10, 10),
-        legend.position = c(0.82, 0.85))
+.pull-left[
+```{r plot_scores, echo=FALSE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
+# Panel A: Distribución de scores
+ggplot(df, aes(x = p_hat, fill = factor(y))) +
+  geom_histogram(aes(y = after_stat(count)), 
+                 alpha = 0.7, bins = 30, position = "identity") +
+  geom_vline(data = tibble(tau = taus, 
+                          col = c(COLORS$tertiary, COLORS$primary, COLORS$secondary)),
+             aes(xintercept = tau, color = col), 
+             linetype = "dashed", linewidth = 1, show.legend = FALSE) +
+  geom_label(data = tibble(x = taus, y = c(35, 30, 25),
+                          txt = paste0("τ = ", taus)),
+             aes(x = x, y = y, label = txt), 
+             inherit.aes = FALSE, size = 4, fill = "white", 
+             label.padding = unit(0.3, "lines")) +
+  scale_fill_manual(values = c(COLORS$negative, COLORS$positive),
+                    name = "Clase real:",
+                    labels = c("Negativo (0)", "Positivo (1)")) +
+  scale_color_identity() +
+  scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
+  labs(title = "Distribución de scores por umbral",
+       subtitle = "Cada τ define cómo clasificar las observaciones",
+       x = "Score (probabilidad estimada)",
+       y = "Frecuencia") +
+  custom_theme +
+  theme(legend.position = c(0.75, 0.88),
+        legend.background = element_rect(fill = "white", color = NA))
+```
+]
 
-# 6) Panel B: ROC con puntos por τ, línea de azar, ejes fijos -------------------
+.pull-right[
+- Umbrales bajos → más predicciones positivas
+- Umbrales altos → más predicciones negativas
+]
+
+---
+## Curva ROC
+
+- La **curva ROC** conecta todos los puntos $:\{1 - \text{Specificity}(\tau), \quad \text{Sensitivity}(\tau)\}$ para $\tau \in [0,1]$.
+
+- La diagonal corresponde a un clasificador aleatorio.
+
+- Mejor desempeño = curva más arriba a la izquierda.
+
+.pull-left[
+```{r plot_scores2, echo=FALSE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5, ref.label='plot_scores'}
+```
+]
+
+.pull-right[
+```{r plot_roc, echo=FALSE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
+# Panel B: Curva ROC
 auc_val <- as.numeric(auc(roc_obj))
 
-pB <- ggplot(roc_df, aes(x = FPR, y = TPR)) +
-  geom_path(linewidth = 1.4, colour = "#FF4D6D") +
-  geom_abline(slope = 1, intercept = 0, linetype = "dashed", colour = "grey50") +
-  geom_point(data = pts, aes(FPR, TPR), colour = "#6C63FF", size = 3) +
+ggplot(roc_df, aes(x = FPR, y = TPR)) +
+  geom_abline(slope = 1, intercept = 0, 
+              linetype = "dashed", color = COLORS$neutral, linewidth = 0.8) +
+  geom_path(linewidth = 1.5, color = COLORS$primary) +
+  geom_point(data = pts, aes(x = FPR, y = TPR), 
+             color = COLORS$secondary, size = 4, shape = 16) +
   geom_label_repel(data = pts,
-                   aes(FPR, TPR, label = paste0("\u03C4 = ", tau)),
-                   size = 4, seed = 123, label.size = 0,
-                   box.padding = 0.25, min.segment.length = 0) +
-  coord_cartesian(xlim = c(0,1), ylim = c(0,1), expand = FALSE) +
-  scale_x_continuous(breaks = seq(0,1,0.2)) +
-  scale_y_continuous(breaks = seq(0,1,0.2)) +
-  labs(title = paste0("Curva ROC (AUC = ", round(auc_val, 3), ")"),
-       subtitle = "Cada punto corresponde a un umbral τ distinto",
-       x = "FPR = 1 - Especificidad",
-       y = "TPR = Sensibilidad") +
-  theme(plot.margin = margin(10, 10, 10, 10))
-
-```
-.pull-left[
-```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
-pA
+                   aes(x = FPR, y = TPR, label = paste0("τ=", tau)),
+                   size = 4, seed = 42, box.padding = 0.5,
+                   min.segment.length = 0, segment.color = COLORS$secondary) +
+  coord_fixed(xlim = c(0, 1), ylim = c(0, 1), expand = FALSE) +
+  scale_x_continuous(breaks = seq(0, 1, 0.2)) +
+  scale_y_continuous(breaks = seq(0, 1, 0.2)) +
+  labs(subtitle = "Trade-off entre TPR y FPR según el umbral",
+       x = "FPR (1 - Especificidad)",
+       y = "TPR (Sensibilidad)") +
+  custom_theme +
+  theme(panel.grid.major = element_line(color = "grey90"))
 ```
 ]
-.pull-right[
-```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
-pB
-```
-]
-
 
 ---
 ## AUC: Área bajo la curva
 
+- El **AUC** resume el desempeño en un solo número: $AUC = \int_{0}^{1}\text{Sensibilidad}(\tau)\, d(1-\text{Especificidad}(\tau))$
 
-- El **AUC (Area Under the Curve)** resume el desempeño en un número: $AUC = \int_{0}^{1} TPR(FPR)\, dFPR$
 
-- Interpretación: probabilidad de que el clasificador asigne un score mayor a un positivo que a un negativo elegido al azar.  
+- **Interpretación**: probabilidad de que el modelo asigne mayor score a un positivo que a un negativo (elegidos al azar).
 
 
 .pull-left[
-```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
-library(Ecdat)
-library(tidyverse)
-library(pROC)
-
-# Datos y modelo logístico
-data(Fair)
-affairsdata <- as_tibble(Fair) %>%
-  mutate(everaffair_d = ifelse(nbaffairs > 0, 1, 0))
-
-logit_affairs <- glm(everaffair_d ~ ym + factor(sex) + rate + I(rate^2),
-                     family = binomial(link = "logit"),
-                     data = affairsdata)
-
-# Probabilidades predichas
-p_hat <- predict(logit_affairs, type = "response")
-
-# ROC y AUC del modelo logístico
-roc_obj <- roc(affairsdata$everaffair_d, p_hat)
-auc_value <- auc(roc_obj)
-
-# ROC de un modelo aleatorio
+```{r plot_auc, echo=FALSE, fig.width=6, fig.height=5}
+# Modelo aleatorio para comparación
 set.seed(123)
-bad_scores <- runif(length(p_hat))
-roc_bad <- roc(affairsdata$everaffair_d, bad_scores)
+random_scores <- runif(nrow(df))
+roc_random <- roc(df$y, random_scores, quiet = TRUE)
 
-# Gráfico comparativo
-plot(roc_bad, col="#999999", lwd=2,
-     main=paste0("ROC: comparación\nAUC logit = ", round(auc_value,3)))
-lines(roc_obj, col="#FF4D6D", lwd=2)
-abline(a=0, b=1, lty=2, col="grey")
-legend("bottomright",
-       legend=c("Modelo logístico","Modelo azar"),
-       col=c("#FF4D6D","#999999"), lwd=2)
+# Crear data frames para plotting
+roc_model_df <- coords(roc_obj, x = "all", transpose = FALSE) %>%
+  mutate(FPR = 1 - specificity, TPR = sensitivity, Model = "Logit")
+
+roc_random_df <- coords(roc_random, x = "all", transpose = FALSE) %>%
+  mutate(FPR = 1 - specificity, TPR = sensitivity, Model = "Aleatorio")
+
+combined_df <- bind_rows(roc_model_df, roc_random_df)
+
+ggplot(combined_df, aes(x = FPR, y = TPR, color = Model)) +
+  geom_abline(slope = 1, intercept = 0, 
+              linetype = "dashed", color = COLORS$neutral, linewidth = 0.8) +
+  geom_path(linewidth = 1.5) +
+  scale_color_manual(values = c("Logit" = COLORS$primary, 
+                                "Aleatorio" = COLORS$neutral),
+                    name = NULL) +
+  coord_fixed(xlim = c(0, 1), ylim = c(0, 1), expand = FALSE) +
+  scale_x_continuous(breaks = seq(0, 1, 0.2)) +
+  scale_y_continuous(breaks = seq(0, 1, 0.2)) +
+  labs(title = "Comparación de modelos",
+       subtitle = paste0("AUC Logit = ", round(auc(roc_obj), 3), 
+                        " | AUC Aleatorio ≈ 0.5"),
+       x = "FPR (1 - Especificidad)",
+       y = "TPR (Sensibilidad)") +
+  custom_theme +
+  theme(legend.position = c(0.8, 0.2),
+        legend.background = element_rect(fill = "white", color = "grey80"),
+        panel.grid.major = element_line(color = "grey90"))
 ```
 ]
 
 .pull-right[
+**Interpretación del AUC:**
 
-- AUC ≈ 0.5 → clasificador no mejor que azar.
+- **AUC ≈ 0.5**: Sin poder discriminatorio (como azar)
 
-- AUC ≈ 1 → clasificador perfecto.
+- **AUC ≈ 0.7-0.8**: Discriminación aceptable
 
-- El modelo logístico (rojo) queda arriba de la diagonal → tiene poder de discriminación.
+- **AUC > 0.9**: Discriminación excelente
 
-- 👉 Entre más arriba a la izquierda, mejor el clasificador.
+- **AUC = 1**: Clasificador perfecto
+
+👉 Nuestro modelo tiene AUC = `r round(auc(roc_obj), 3)`, indicando poder discriminatorio moderado.
 ]
 
 ---
+## Selección del umbral óptimo
 
-## Ejemplo empírico: infidelidad
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
-library(Ecdat)
-library(tidyverse)
-library(caret)
-library(pROC)
-library(cowplot)
+- No existe un único "mejor" umbral: depende del contexto y los costos de errar.
 
-# Data
-data(Fair)
-affairsdata <- Fair %>% as_tibble() %>%
-  mutate(everaffair_d = ifelse(nbaffairs > 0, 1, 0))
+- Criterios comunes: **Youden**, **punto más cercano a (0,1)**, etc.
 
-# Logistic model
-logit_affairs <- glm(everaffair_d ~ ym + factor(sex) + rate + I(rate^2),
-                     family = binomial(link = "logit"),
-                     data = affairsdata)
+Cómo extraer umbrales en R:
 
-# Predicted probs
-p_hat <- predict(logit_affairs, type = "response")
+```{r}
+# Índice de Youden (maximiza TPR - FPR)
+coords(roc_obj, x = "best", 
+       best.method = "youden")
 
-# ROC curve
-roc_obj <- roc(affairsdata$everaffair_d, p_hat)
-
-# AUC
-auc_value <- auc(roc_obj)
-
-# Plot ROC curve
-p1 <- ggroc(roc_obj, colour="#FF4D6D", size=1.2) +
-  geom_abline(slope=1, intercept=0, linetype="dashed", colour="grey") +
-  labs(title="Curva ROC - Modelo Infidelidad",
-       subtitle=paste0("AUC = ", round(auc_value,3)),
-       x="False Positive Rate (1 - Specificity)",
-       y="True Positive Rate (Sensitivity)") +
-  theme_minimal()
-
-# Compare with random model
-set.seed(123)
-bad_scores <- runif(length(p_hat))
-roc_bad <- roc(affairsdata$everaffair_d, bad_scores)
-p2 <- ggroc(list("Modelo logístico"=roc_obj,
-                 "Modelo azar"=roc_bad),
-            aes="colour", size=1.2) +
-  scale_color_manual(values=c("#FF4D6D","#999999")) +
-  geom_abline(slope=1, intercept=0, linetype="dashed", colour="grey") +
-  labs(title="Comparación: ROC",
-       x="False Positive Rate",
-       y="True Positive Rate") +
-  theme_minimal()
-
-cowplot::plot_grid(p1,p2,nrow=1)
+# Punto más cercano a (0,1)
+coords(roc_obj, x = "best", 
+       best.method = "closest.topleft")
 ```
+
+---
+## Selección del umbral óptimo
+
+- No existe un único "mejor" umbral: depende del contexto y los costos de errar.
+
+- Criterios comunes: **Youden**, **punto más cercano a (0,1)**, etc.
+
+Cómo extraer umbrales en R:
+
+```{r}
+# Ver todas las coordenadas
+coords(roc_obj, x = "all") %>% head(n=13)
+```
+
+---
+class: middle
+
+## en el próximo episodio ...
+
+
+.center[
+![cross](https://miro.medium.com/max/1224/1*hPDx1TYs9oMrbZRf-VYSUw.jpeg)
+]
+
+
 
 ---
 class: inverse, center, middle
