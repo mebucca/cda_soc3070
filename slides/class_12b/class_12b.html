@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Análisis de Datos Categóricos (SOC3070)</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="  Mauricio Bucca  Profesor Asistente, Sociología UC" />
+    <script src="libs/header-attrs-2.29/header-attrs.js"></script>
+    <link rel="stylesheet" href="gentle-r.css" type="text/css" />
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Análisis de Datos Categóricos (SOC3070)
+]
+.subtitle[
+## Regresión Logística, Cross-Validation
+]
+.author[
+### <br> Mauricio Bucca<br> Profesor Asistente, Sociología UC
+]
+
+---
+
+class: inverse, center, middle
+
+
+
+
+
+
+# Predicción y "overfitting" 
+
+
+---
+class: middle
+
+## en capítulo anterior ...
+
+
+.center[
+![conf](https://miro.medium.com/v2/resize:fit:4800/format:webp/1*mL-nYY6MFhiG0uoR5kJaCA.jpeg)
+]
+
+
+---
+## Overfitting
+
+.bold[Desafíos para el desarrollo de un modelo predictivo]
+
+--
+
+- El modelo debe predecir adecuadamente los datos (bajo sesgo)
+
+--
+
+- El modelo debe ser parsimonioso (pocos parámetros)
+
+--
+
+- Debe tener un desempeño consistente en diferentes muestras (baja varianza)
+
+&lt;br&gt;
+--
+.bold[Problema: trade-off entre sesgo y varianza]
+
+.center[
+![overfitting](underfit_right_overfit.png)
+]
+
+
+---
+## Trade-off entre sesgo y varianza
+
+&lt;br&gt;
+.center[
+![overfitting](underfit_right_overfit.png)
+]
+
+&lt;br&gt;
+
+- Modelos muy complejos ajustan incluso el ruido idiosincrático de los datos con que fueron entrenados, lo que deteriora su desempeño en nuevos datos.
+
+- Modelos demasiado simples ignoran patrones reales, generando errores sistemáticos tanto dentro como fuera de la muestra.
+
+---
+## Information Criteria
+
+--
+
+
+- Information Criteria fueron desarrollados con el fin de prevenir problemas de over-fitting y maximizar desempeño fuera de la muestra.
+
+
+--
+
+
+- Information Criteria miden la capacidad predictiva de un modelo pero incluyen una .bold[penalty] por el número de parámetros.
+
+--
+
+- .bold[Intuición]: entre dos modelos con "similar" capacidad preferimos el más parsimonioso (menos parámetros).
+
+
+--
+
+- Ventaja sobre .bold[Deviance] y .bold[LRT]: Information Criteria pueden comparar modelos no-anidados. 
+
+&lt;br&gt;
+--
+
+.pull-left[
+.center[Forma general,]
+]
+
+.pull-righ[
+`\(IC: \overbrace{-2 \log \mathcal{L}_{M}}^{\text{fit}} + \underbrace{k \cdot q}_{\text{parsimonia}}\)`
+
+]
+
+--
+
+- `\(\mathcal{L}_{M}\)` es la likelihood maximizada del modelo `\(M\)`
+- `\(k\)` es el número de parámetros del modelo `\(M\)`
+- `\(q\)` es una constante que "penaliza" la cantidad de parámetros
+
+---
+## Information Criteria: AIC y BIC
+
+
+Dos Information Criteria son especialmente relevantes:
+
+--
+
+
+.bold[Akaike Information Criterion (AIC)]
+
+.content-box-blue[
+`$$\text{AIC} =  -2\log \mathcal{L}_{M} + 2k$$`
+]
+
+--
+
+
+.bold[Bayesian Information Criterion (BIC)] 
+
+.content-box-blue[
+`$$\text{BIC} =  -2\log \mathcal{L}_{M} +  \log(n)k$$`
+]
+
+--
+
+- Un número más bajo en AIC y BIC indica mejor ajuste
+
+--
+
+- Por lo general `\(2 &lt; \log(n)\)`, por tanto BIC tiende a preferir modelos más simples comparado con AIC
+
+
+
+
+---
+## Information Criteria, AIC y BIC: ejemplo empírico
+
+.pull-left[
+.bold[M0]
+
+```
+##                     Estimate Std. Error
+## (Intercept)       0.15392342 0.42235014
+## ym                0.02151079 0.02128940
+## factor(child)yes  0.40748669 0.28317859
+## rate             -0.46156942 0.08716552
+```
+]
+.pull-right[
+.bold[M1]
+
+```
+##                  Estimate Std. Error
+## (Intercept)  -0.266307697 1.23046679
+## ym            0.323852015 0.34131053
+## rate         -0.440911381 0.29923262
+## I(ym^2)      -0.017675977 0.01850644
+## ym:rate      -0.024816327 0.08519081
+## rate:I(ym^2)  0.001767463 0.00468650
+```
+]
+
+¿Más .bold[complejo] mejor?
+
+--
+
+
+``` r
+inf_crit &lt;- function(m) { aic = -2*logLik(m)[1] + 2*m$rank
+  bic = -2*logLik(m)[1] + log(length(m$fitted.values))*m$rank
+  return(c(AIC=aic,BIC=bic))
+}
+```
+
+--
+
+.pull-left[
+
+```
+##      AIC      BIC 
+## 639.7727 657.3671
+```
+]
+.pull-right[
+
+```
+##      AIC      BIC 
+## 640.3737 666.7653
+```
+]
+
+.bold[Respuesta:] el modelo más simple es preferible. 
+--
+ *(nota: pueden usar funciones `AIC()` y `BIC()` en `R`)
+
+&lt;style type="text/css"&gt;
+.pull-right ~ * { clear: unset; }
+.pull-right + * { clear: both; }
+&lt;/style&gt;
+
+
+---
+## In-sample vs out-of-sample
+
+&lt;br&gt;
+--
+
+- Information criteria penaliza la complejidad del modelo para prevenir "over-fitting".
+--
+ Todavía hay un problema ...
+
+&lt;br&gt;
+--
+
+- Todos los estadísticos que hemos visto (incluyendo AIC y BIC) evalúan los modelos en la .bold[misma muestra] en que son estimados
+  
+  - No conocemos el desempeño del modelo .bold[fuera de la muestra]. Riesgo de "over-fitting".
+
+&lt;br&gt;  
+--
+
+- Evaluación de un modelo fuera de muestra se conoce como .bold[cross-validación].
+
+ - Herramienta estándar para evaluación de modelos predictivos.
+
+---
+## In-sample vs out-of-sample
+
+&lt;br&gt;
+
+.center[
+![cross](https://miro.medium.com/max/1224/1*hPDx1TYs9oMrbZRf-VYSUw.jpeg)
+]
+
+---
+## Cross-Validation
+
+--
+
+.img-right[![churros](churros.png)]
+
+- Principio básico de cross-validation: .bold["no double dipping!"]
+
+--
+
+  - estima el modelo en un dataset (training set)
+
+--
+
+  - evalúa el modelo en un dataset distinto (test set)
+
+&lt;br&gt;
+
+.pull-left[
+![train_test](train_test.png)
+
+]
+
+---
+## Limitaciones del split único
+
+
+&lt;br&gt;
+
+- Separar los datos en un solo .bold[training set] y .bold[test set] es útil, pero tiene problemas prácticos:
+
+--
+
+  - Los resultados dependen del azar: distintos splits pueden producir .bold[errores muy distintos].  
+  
+  - En muestras pequeñas, usar parte de los datos solo para test reduce la .bold[precisión de la estimación].  
+  
+  - No aprovechamos toda la información disponible.
+
+&lt;br&gt;
+--
+
+.bold[Idea:]  Usar *todos* los datos, pero nunca al mismo tiempo para estimar y evaluar.
+
+- Así nace la .bold[k-fold cross-validation]: una forma más estable y eficiente de medir el error predictivo.
+
+---
+## k-fold cross-Validation
+
+.pull-left[
+![kfold](kfold_cv.gif)
+
+]
+
+--
+
+.pull-right[
+.bold[Algoritmo:]
+
+
+- (1) Divide los datos en `\(k\)` grupos (folds) del mismo tamaño. 
+
+  - (1.1) Reserva la `\(i\)`-fold como test set.
+
+  - (1.2) Ajusta el modelo en las restantes `\(k-1\)` folds (training set). 
+
+]
+
+&lt;br&gt;
+--
+- (2) Usa el modelo ajustado en el training set `\(i\)` (1.2) para predecir el outcome de interés en el test set (1.1)
+  
+  - (2.1) Calcula una medida de error predictivo ("test error"), `\(E_{i}\)`
+
+&lt;br&gt;
+--
+- (3) Repite (1) y (2) `\(k\)`-veces, produciendo `\(\{E_{1}, E_{2}, \dots , E_{k}\}\)`
+
+
+--
+- (4) Calcula el .bold[k-fold cross-validation error] promediando el error a través de las `\(k\)`-folds.:
+
+`$$\text{CV-error} =  \frac{1}{k} \sum_{i=1}^{k} E_{i}$$`
+
+---
+
+## k-fold Cross-Validation: ejemplo empírico
+
+--
+
+ - .bold[Contexto:] Queremos evaluar la capacidad predictiva donde modelos, uno más simple y otro más complejo. 
+ - Usamos datos sobre infidelidad (variable binaria `everaffair_d`), con predictores `ym` (años de matrimonio), `rate` (satisfacción), y `child` (presencia de hijos).
+
+--
+
+.pull-left[
+.bold[Modelo simple (M0)]
+
+
+```
+##                     Estimate Std. Error
+## (Intercept)       0.15392342 0.42235014
+## ym                0.02151079 0.02128940
+## factor(child)yes  0.40748669 0.28317859
+## rate             -0.46156942 0.08716552
+```
+
+]
+
+.pull-right[
+.bold[Modelo complejo (M1)]
+
+
+```
+##                  Estimate Std. Error
+## (Intercept)  -0.266307697 1.23046679
+## ym            0.323852015 0.34131053
+## rate         -0.440911381 0.29923262
+## I(ym^2)      -0.017675977 0.01850644
+## ym:rate      -0.024816327 0.08519081
+## rate:I(ym^2)  0.001767463 0.00468650
+```
+
+]
+
+&lt;br&gt;
+
+¿Más .bold[complejo] = mejor predicción?
+
+
+---
+
+## k-fold Cross-Validation: ejemplo empírico
+
+.bold[Evaluemos usando k-fold Cross-Validation]
+
+&lt;br&gt;
+
+
+``` r
+library(caret)
+
+# definimos control de validación cruzada (10 folds, repetida)
+ctrl &lt;- trainControl(method = "repeatedcv", number = 10, savePredictions = TRUE)
+
+# cross-valida M0
+cv_logit_affairs0 &lt;- train(factor(everaffair_d) ~ ym + factor(child) + rate,
+                           data = affairsdata, method = "glm", family = "binomial", trControl = ctrl)
+
+# cross-valida M1
+cv_logit_affairs1 &lt;- train(factor(everaffair_d) ~ factor(child)*ym*rate +  factor(child)*I(ym^2)*rate,  
+                           data = affairsdata, method = "glm", family = "binomial", trControl = ctrl)
+```
+
+---
+
+## k-fold Cross-Validation: ejemplo empírico
+
+&lt;br&gt;
+
+--
+.pull-left[
+
+``` r
+cv_logit_affairs0$resample %&gt;% head()
+```
+
+```
+##    Accuracy       Kappa    Resample
+## 1 0.7666667  0.15151515 Fold01.Rep1
+## 2 0.7333333 -0.03225806 Fold02.Rep1
+## 3 0.7500000  0.00000000 Fold03.Rep1
+## 4 0.7500000  0.00000000 Fold04.Rep1
+## 5 0.7833333  0.18750000 Fold05.Rep1
+## 6 0.7333333  0.08571429 Fold06.Rep1
+```
+]
+
+.pull-right[
+
+``` r
+cv_logit_affairs1$resample %&gt;% head()
+```
+
+```
+##    Accuracy       Kappa    Resample
+## 1 0.7500000  0.06250000 Fold01.Rep1
+## 2 0.7333333  0.03030303 Fold02.Rep1
+## 3 0.7000000 -0.09090909 Fold03.Rep1
+## 4 0.7333333 -0.03225806 Fold04.Rep1
+## 5 0.7833333  0.31578947 Fold05.Rep1
+## 6 0.7049180 -0.08928571 Fold06.Rep1
+```
+]
+
+---
+## k-fold Cross-Validation: ejemplo empírico
+
+
+&lt;br&gt;
+.bold[Error promedio de cross-validation]
+
+
+
+``` r
+cv_logit_affairs1
+```
+
+```
+## Generalized Linear Model 
+## 
+## 601 samples
+##   3 predictor
+##   2 classes: '0', '1' 
+## 
+## No pre-processing
+## Resampling: Cross-Validated (10 fold, repeated 1 times) 
+## Summary of sample sizes: 541, 541, 541, 541, 541, 540, ... 
+## Resampling results:
+## 
+##   Accuracy   Kappa     
+##   0.7354918  0.02798378
+```
+
+---
+## Desempeño promedio en términos de clasificación
+
+
+
+
+``` r
+affairsdata &lt;- affairsdata %&gt;%
+  mutate(
+    everaffair_d = factor(
+      everaffair_d,
+      levels = c(0, 1),        # or whatever your original coding is
+      labels = c("no", "yes")  # valid names for caret
+    )
+  )
+
+ctrl &lt;- trainControl(method = "repeatedcv", number = 10,
+                     savePredictions = TRUE,
+                     classProbs = TRUE,
+                     summaryFunction = twoClassSummary)
+
+# cross-valida M0
+cv_logit_affairs0 &lt;- train(everaffair_d ~ ym + factor(child) + rate,
+                           data = affairsdata, method = "glm", family = "binomial", trControl = ctrl)
+
+# cross-valida M1
+cv_logit_affairs1 &lt;- train(everaffair_d ~ factor(child)*ym*rate +  factor(child)*I(ym^2)*rate,  
+                           data = affairsdata, method = "glm", family = "binomial", trControl = ctrl)
+```
+
+---
+## Desempeño promedio en términos de clasificación
+
+.bold[Modelo M0]
+
+
+``` r
+confusionMatrix(cv_logit_affairs0)
+```
+
+```
+## Cross-Validated (10 fold, repeated 1 times) Confusion Matrix 
+## 
+## (entries are percentual average cell counts across resamples)
+##  
+##           Reference
+## Prediction   no  yes
+##        no  72.7 23.6
+##        yes  2.3  1.3
+##                             
+##  Accuracy (average) : 0.7404
+```
+
+``` r
+cv_logit_affairs0$results
+```
+
+```
+##   parameter      ROC      Sens       Spec      ROCSD     SensSD     SpecSD
+## 1      none 0.674132 0.9689372 0.05333333 0.06981582 0.02149146 0.06885304
+```
+
+
+---
+## Desempeño promedio en términos de clasificación
+
+
+.bold[Modelo M1]
+
+
+``` r
+confusionMatrix(cv_logit_affairs1)
+```
+
+```
+## Cross-Validated (10 fold, repeated 1 times) Confusion Matrix 
+## 
+## (entries are percentual average cell counts across resamples)
+##  
+##           Reference
+## Prediction   no  yes
+##        no  71.7 23.0
+##        yes  3.3  2.0
+##                             
+##  Accuracy (average) : 0.7371
+```
+
+``` r
+cv_logit_affairs1$results
+```
+
+```
+##   parameter       ROC      Sens Spec      ROCSD    SensSD     SpecSD
+## 1      none 0.6547665 0.9557005 0.08 0.06573301 0.0346437 0.09322745
+```
+
+---
+class: center, middle
+
+![](https://miro.medium.com/v2/resize:fit:818/format:webp/1*U23Qnn3mfPaRGjPalFtAJA.jpeg)
+
+---
+class: inverse, center, middle
+
+
+##Hasta la próxima clase. Gracias!
+
+&lt;br&gt;
+Mauricio Bucca &lt;br&gt;
+https://mebucca.github.io/ &lt;br&gt;
+github.com/mebucca
+
+
+
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": true,
+  "slideNumberFormat": "%current%"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
