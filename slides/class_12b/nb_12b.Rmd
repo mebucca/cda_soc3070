@@ -1,0 +1,163 @@
+---
+title: "Práctica: Evaluación de Modelos Logísticos y Cross-Validation"
+author: "SOC3070 · Mauricio Bucca"
+date: today
+format:
+  html:
+    theme: default
+    highlight: tango
+    code-copy: true
+    code-fold: show
+---
+
+```{r, echo=FALSE, message=FALSE,warning=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  comment = "#>",
+  prompt = TRUE,
+  class.source = "python-code",
+  class.output = "python-output"
+)
+
+# Packages
+library(pacman)
+p_load("tidyverse", "broom", "ggplot2", "caret", "rsample", "viridis", "cowplot", "Ecdat")
+
+# Paleta Julia
+julia <- list(
+  navy   = "#003f5c",
+  teal   = "#2f4b7c",
+  coral  = "#ff6361",
+  orange = "#ffa600",
+  sand   = "#f4e1a4"
+)
+
+theme_julia <- function() {
+  theme_minimal(base_family = "Inconsolata") +
+    theme(
+      plot.background = element_rect(fill = "white", color = NA),
+      panel.border = element_rect(fill=NA, color=julia$navy, size=0.6),
+      axis.text = element_text(color=julia$navy, size=13),
+      axis.title = element_text(color=julia$teal, size=15, face="bold"),
+      plot.title = element_text(color=julia$coral, size=18, face="bold"),
+      plot.subtitle = element_text(color=julia$orange, size=14),
+      legend.position = "right"
+    )
+}
+```
+
+### 1. Contexto y objetivos
+
+Evaluar el desempeño predictivo de un modelo logístico con cross-validation.
+
+### 2. Cargar y preparar los datos
+
+```{r, echo=FALSE, message=FALSE,warning=FALSE}
+data(Fair)
+affairs <- as_tibble(Fair) %>%
+  mutate(
+    everaffair_d = factor(ifelse(nbaffairs > 0, "yes", "no")),
+    child = factor(child)
+  )
+
+glimpse(affairs)
+```
+
+### 3. Dos modelos de distinta complejidad
+
+```{r, echo=FALSE, message=FALSE,warning=FALSE}
+m0 <- glm(everaffair_d ~ ym + child + rate, data = affairs, family = binomial)
+m1 <- glm(everaffair_d ~ child * ym * rate + child * I(ym^2) * rate,
+          data = affairs, family = binomial)
+
+summary(m0)$coefficients[,1:2]
+summary(m1)$coefficients[,1:2]
+```
+
+### 4. Evaluación in-sample: AIC y BIC
+
+```{r, echo=FALSE, message=FALSE,warning=FALSE}
+
+inf_crit <- function(m){
+  aic <- AIC(m)
+  bic <- BIC(m)
+  tibble(Modelo = deparse(formula(m)), AIC = aic, BIC = bic)
+}
+
+bind_rows(inf_crit(m0), inf_crit(m1))
+```
+
+### 5. Limitación: posible overfitting
+
+Usamos cross-validation para evaluar fuera de muestra.
+
+### 6. Cross-validation con caret
+
+```{r, echo=TRUE, message=FALSE,warning=FALSE}
+
+ctrl <- trainControl(
+  method = "repeatedcv",
+  number = 10,
+  savePredictions = TRUE,
+  classProbs = TRUE,
+  summaryFunction = twoClassSummary
+)
+
+set.seed(123)
+
+cv_m0 <- train(
+  everaffair_d ~ ym + child + rate,
+  data = affairs, method = "glm",
+  family = "binomial", trControl = ctrl,
+  metric = "ROC"
+)
+
+cv_m1 <- train(
+  everaffair_d ~ child * ym * rate + child * I(ym^2) * rate,
+  data = affairs, method = "glm",
+  family = "binomial", trControl = ctrl,
+  metric = "ROC"
+)
+```
+
+### 7. Resultados del cross-validation
+
+```{r, echo=TRUE, message=FALSE,warning=FALSE}
+cv_m0$results
+cv_m1$results
+```
+
+### 8. Matrices de confusión promedio
+
+```{r, echo=TRUE, message=FALSE,warning=FALSE}
+confusionMatrix(cv_m0)
+confusionMatrix(cv_m1)
+```
+
+### 9. Visualización del desempeño cruzado
+
+```{r, echo=TRUE, message=FALSE,warning=FALSE}
+
+resamps <- resamples(list(Simple = cv_m0, Complejo = cv_m1))
+bwplot(resamps, metric = "ROC", main = "Comparación de desempeño (10-fold CV)")
+
+cv_compare <- bind_rows(
+  cv_m0$resample %>% mutate(modelo = "Simple"),
+  cv_m1$resample %>% mutate(modelo = "Complejo")
+)
+
+ggplot(cv_compare, aes(x = modelo, y = ROC, fill = modelo)) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c(julia$coral, julia$teal)) +
+  labs(
+    title = "Desempeño en validación cruzada",
+    subtitle = "Comparación del área bajo la curva (ROC)",
+    x = "", y = "ROC promedio"
+  ) +
+  theme_julia()
+```
+
+### 10. Conclusión
+Cross-validation permite estimar error fuera de muestra y evitar sobreajuste. En regresión logística, guía la selección de modelos con verdadero poder clasificador.
