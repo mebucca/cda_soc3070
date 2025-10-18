@@ -5,6 +5,7 @@ format: html
 editor: visual
 ---
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -74,6 +75,8 @@ pre.python-output, code.python-output {
 }
 ```
 
+
+
 ```{r, echo=T, message=FALSE}
 # Instalar y cargar paquetes necesarios
 # install.packages("titanic")
@@ -93,6 +96,7 @@ Ponderación: 6% de la nota final del curso.
 $\newcommand{\vect}[1]{\boldsymbol{#1}}$
 
 ![Titanic (1997)](https://e01-elmundo.uecdn.es/assets/multimedia/imagenes/2017/11/20/15111928435925.jpg)
+
 
 ## Datos:
 
@@ -120,20 +124,79 @@ modelo_titanic <- glm(Survived ~ Age + I(Age^2) + Sex + Age:Sex,
 summary(modelo_titanic)
 ```
 
-------------------------------------------------------------------------
+---
 
 ### 1. Probabilidades estimadas
 
 Calcula y grafica la probabilidad de sobrevivencia estimada por el modelo para hombres y mujeres en todo el rango de edad. El resultado debe verse así:
 
-------------------------------------------------------------------------
+```{r, echo=T}
+ages <- seq(min(df$Age), max(df$Age), 1)
+newdata <- expand.grid(Age=ages, Sex=levels(df$Sex))
+newdata$pred <- predict(modelo_titanic, newdata, type="response")
+
+ggplot(newdata, aes(x=Age, y=pred, color=Sex)) +
+  geom_line(size=1.2) +
+  labs(title="Probabilidad de sobrevivencia",
+       x="Edad", y="Probabilidad de sobrevivencia") +
+  scale_color_julia() +
+  theme_julia()
+```
+
+---
 
 ### 2. Diferencia hombres − mujeres
 
-Calcula la diferencia en probabilidades predichas de sobrevivencia entre hombres y mujeres (hombres − mujeres) para cada edad.
+Calcula la diferencia en probabilidades de sobrevivencia entre hombres y mujeres (hombres − mujeres) para cada edad.
 
-------------------------------------------------------------------------
+```{r, echo=T}
+obs <- newdata %>%
+  pivot_wider(names_from=Sex, values_from=pred) %>%
+  mutate(diff = male - female)
+head(obs)
+```
+
+---
 
 ### 3. Bootstrap para intervalos de confianza
 
 Usa bootstrap (500 réplicas) para estimar un intervalo de confianza al 95% para la diferencia en probabilidades entre hombres y mujeres en cada edad. Grafica la curva estimada junto con su intervalo. El resultado debe verse similar a esto:
+
+```{r, echo=T}
+set.seed(123)
+
+boot_fun <- function(data){
+  m <- glm(Survived ~ Age + I(Age^2) + Sex + Age:Sex,
+           data=data, family=binomial)
+  nd <- expand.grid(Age=ages, Sex=levels(data$Sex))
+  nd$pred <- predict(m, nd, type="response")
+  nd %>%
+    pivot_wider(names_from=Sex, values_from=pred) %>%
+    mutate(diff = male - female) %>%
+    pull(diff)
+}
+
+B <- 500
+boot_diffs <- replicate(B, boot_fun(df[sample(nrow(df), replace=TRUE), ]))
+
+ci <- apply(boot_diffs, 1, quantile, c(0.025, 0.975), na.rm=TRUE)
+ci_df <- obs %>%
+  mutate(lower = ci[1,], upper = ci[2,])
+
+ggplot(ci_df, aes(x=Age, y=diff)) +
+  geom_line(aes(color="diff"), size=1) +
+  geom_ribbon(aes(ymin=lower, ymax=upper, fill="IC 95%"), alpha=0.2) +
+  geom_hline(yintercept=0, linetype="dashed", color=julia$navy) +
+  labs(title="Diferencia en probabilidad de sobrevivencia",
+       x="Edad", y="Diferencia de probabilidades",
+       color="", fill="") +
+  scale_color_julia() +
+  scale_fill_julia() +
+  theme_julia()
+
+```
+
+---
+
+* Si la curva está por encima de 0, los hombres de esa edad tienen mayor probabilidad de sobrevivir que las mujeres. Si está por debajo de 0, ocurre lo contrario. La banda sombreada muestra la incertidumbre (IC 95%) alrededor de la diferencia.
+
