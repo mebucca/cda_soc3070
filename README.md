@@ -32,7 +32,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | 29    | Septiembre| Inferencia en Regresión logística | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_11/class_11#1) [`[Code]`](slides/class_11/class_11.Rmd) [`[Notebook]`](https://mebucca.github.io/cda_soc3070/slides/class_11/nb_11#1)     
 | 6     | Octubre   | Clasificación con Regresión logística  | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_12a/class_12a#1) [`[Code]`](slides/class_12a/class_12a.Rmd)  |
 | 13    | Octubre   | Cross-validation con Regresión logística  |[`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_12b/class_12b#1) [`[Code]`](slides/class_12b/class_12b.Rmd) [`[Notebook]`](https://mebucca.github.io/cda_soc3070/slides/class_12b/nb_12b#1) |
-| 20    | Octubre   | —                          |                                                                                                                              |
+| 20    | Octubre   | Regresión Logística Multinomial  | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_13/class_13#1) [`[Code]`](slides/class_13/class_13.Rmd) |
 | 27    | Octubre   | —                          |                                                                                                                              |
 | 3     | Noviembre | —                          |                                                                                                                              |
 | 10    | Noviembre | —                          |                                                                                                                              |

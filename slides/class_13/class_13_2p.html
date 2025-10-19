@@ -4,7 +4,7 @@
     <title>Análisis de Datos Categóricos (SOC3070)</title>
     <meta charset="utf-8" />
     <meta name="author" content="  Mauricio Bucca  Profesor Asistente, Sociología UC" />
-    <script src="libs/header-attrs-2.27/header-attrs.js"></script>
+    <script src="libs/header-attrs-2.29/header-attrs.js"></script>
     <link rel="stylesheet" href="gentle-r.css" type="text/css" />
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
@@ -16,13 +16,10 @@ class: center, middle, inverse, title-slide
 # Análisis de Datos Categóricos (SOC3070)
 ]
 .subtitle[
-## Clase #13: Regresión Logística Multinomial
+## Regresión Logística Multinomial
 ]
 .author[
 ### <br> Mauricio Bucca<br> Profesor Asistente, Sociología UC
-]
-.date[
-### 03 November, 2024
 ]
 
 ---
@@ -157,48 +154,7 @@ En nuestro ejemplo: `\(\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{
 .pull-right[
 ![](class_13_2p_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
 ]
-
-
----
-## Efectos marginales sobre el logit 
-
-.pull-left[
-
-```
-##   (Intercept)  statusquo       sexM
-## N   0.1099473 -1.7644993  0.6981650
-## U   1.2905014  0.3357059 -0.2920198
-## Y   0.7772821  1.8948940 -0.1141098
-```
-]
-
-.pull-right[
-Si `male=1` y `statusquo=0`, entonces `logit(p_N)` y `logit(p_Y)` son=
-
-``` r
-c(N=0.11 -1.76*0 + 0.7*1,
-  Y=0.78  + 1.9*0 + -0.11*1)
-```
-
-```
-##    N    Y 
-## 0.81 0.67
-```
-
-Si `male=1` y `statusquo=1`, entonces `logit(p_N)` y `logit(p_Y)` son=
-
-``` r
-c(N=0.11 -1.76*1 + 0.7*1,
-  Y=0.78  + 1.9*1 + -0.11*1)
-```
-
-```
-##     N     Y 
-## -0.95  2.57
-```
-]
-
-
+s
 ---
 ## Efectos marginales sobre el logit 
 
@@ -377,7 +333,7 @@ exp(summary(mlogit_vote_sq_sex)$coefficients)
 --
   
 .pull-right[
-  ![](class_13_2p_files/figure-html/unnamed-chunk-13-1.png)&lt;!-- --&gt;
+  ![](class_13_2p_files/figure-html/unnamed-chunk-10-1.png)&lt;!-- --&gt;
 ]
 
 ---
@@ -597,7 +553,7 @@ summary(mlogit_vote_sq_sex)$coefficients
 --
   
 .pull-right[
-![](class_13_2p_files/figure-html/unnamed-chunk-22-1.png)&lt;!-- --&gt;
+![](class_13_2p_files/figure-html/unnamed-chunk-19-1.png)&lt;!-- --&gt;
 ]
 
 ---
@@ -607,13 +563,13 @@ summary(mlogit_vote_sq_sex)$coefficients
 .pull-left[
 `$$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{j=1} e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}$$`
 
-![](class_13_2p_files/figure-html/unnamed-chunk-23-1.png)&lt;!-- --&gt;
+![](class_13_2p_files/figure-html/unnamed-chunk-20-1.png)&lt;!-- --&gt;
 ]
 
 .pull-right[
 `$$\frac{\partial p_{ij}}{\partial x_{k}} = p_{j} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{j=1}p_{j} \cdot \beta_{jk}\bigg)$$`
 
-![](class_13_2p_files/figure-html/unnamed-chunk-24-1.png)&lt;!-- --&gt;
+![](class_13_2p_files/figure-html/unnamed-chunk-21-1.png)&lt;!-- --&gt;
 ]
 
 ---
@@ -652,97 +608,6 @@ Cantidades de interes:
 
 ]
 
-
----
-## Efectos marginales sobre la probabilidad de la categoría `\(j\)`: AME
-
---
-
-`$$\text{Aproximación numérica:} \quad \frac{1}{n} \sum_{i} \frac{\partial p_{ij}}{\partial x_{k}} \approx  \frac{1}{n} \sum_{i}  \frac{p_{ij}(x_{1}, \dots ,x_{k} = c + \delta) - p_{ij}(x_{1}, \dots ,x_{k} = c )}{\delta}$$`
---
-
-AME de apoyo al status-quo:
-
-``` r
-delta = 0.1
-p_hat &lt;- predict(mlogit_vote_sq_sex, type="probs") %&gt;% as_tibble()  %&gt;% mutate(id = row_number()) %&gt;% 
-         pivot_longer(-id, names_to="vote", values_to="prob") 
-
-plebs_1988_delta &lt;- plebs_1988 %&gt;% mutate(statusquo = statusquo + delta) 
-p_hat_delta &lt;- predict(mlogit_vote_sq_sex, newdata=plebs_1988_delta ,type="probs")  %&gt;% as_tibble() %&gt;% mutate(id = row_number()) %&gt;% pivot_longer(-id, names_to="vote", values_to="prob_delta") 
-
-p_hat_delta &lt;- p_hat_delta %&gt;% left_join(p_hat, by=c("id","vote")) %&gt;% mutate(me_sq = (prob_delta  - prob)/delta) %&gt;% dplyr::select(id,vote,me_sq) %&gt;% pivot_wider(names_from = "vote", values_from = "me_sq") %&gt;% drop_na()
-```
-
---
-
-
-
-``` r
-p_hat_delta %&gt;% dplyr::summarise(across(A:Y, ~ mean(.x)))
-```
-
-```
-## # A tibble: 1 × 4
-##         A      N      U     Y
-##     &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;
-## 1 0.00663 -0.255 0.0273 0.221
-```
-
----
-## Efectos marginales sobre la probabilidad de la categoría `\(j\)`: AME
-
---
-
-Usando el paquete `marginaleffects`:
-
-
-``` r
-avg_slopes(mlogit_vote_sq_sex, variables="statusquo")
-```
-
-```
-## 
-##  Group Estimate Std. Error      z Pr(&gt;|z|)    S     2.5 %   97.5 %
-##      A  0.00448    0.00181   2.47   0.0135  6.2  0.000926  0.00803
-##      N -0.26360    0.00372 -70.90   &lt;0.001  Inf -0.270890 -0.25632
-##      U  0.02473    0.00348   7.11   &lt;0.001 39.7  0.017916  0.03154
-##      Y  0.23439    0.00210 111.79   &lt;0.001  Inf  0.230285  0.23850
-## 
-## Term: statusquo
-## Type:  probs 
-## Comparison: mean(dY/dX)
-## Columns: term, group, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted
-```
-
----
-## Efectos marginales sobre la probabilidad de la categoría `\(j\)`: MEM
-
-`$$\text{Aproximación numérica:} \quad \frac{\partial p_{ij}}{\partial x_{k}} \approx  \frac{p_{ij}(x_{1}=\bar{x_{1}}, \dots ,x_{k} = \bar{x_{k}} + \delta) - p_{ij}(x_{1}=\bar{x_{1}}, \dots ,x_{k} =\bar{x_{k}} )}{\delta}$$`
---
-MEM de apoyo al status-quo:
-
-``` r
-delta = 0.1; grid &lt;- plebs_1988 %&gt;% data_grid(sex, .model=mlogit_vote_sq_sex)
-grid_delta &lt;- plebs_1988 %&gt;% data_grid(sex, .model=mlogit_vote_sq_sex) %&gt;% mutate(statusquo = statusquo + delta)
-
-p_hat &lt;- predict(mlogit_vote_sq_sex, type="probs", newdata =grid) %&gt;% as_tibble() %&gt;% 
-  mutate(id = c("F","M"))%&gt;% pivot_longer(-id, names_to="vote", values_to="prob") 
-
-p_hat_delta &lt;- predict(mlogit_vote_sq_sex, type="probs", newdata =grid_delta) %&gt;% as_tibble() %&gt;% 
-  mutate(id = c("F","M")) %&gt;% pivot_longer(-id, names_to="vote", values_to="prob_delta") 
-
-p_hat_delta &lt;- p_hat_delta %&gt;% left_join(p_hat, by=c("id","vote")) %&gt;% mutate(me_sq = (prob_delta  - prob)/delta) %&gt;% dplyr::select(id,vote,me_sq) %&gt;% pivot_wider(names_from = "vote", values_from = "me_sq") %&gt;% drop_na(); p_hat_delta
-```
-
-```
-## # A tibble: 2 × 5
-##   id          A      N       U     Y
-##   &lt;chr&gt;   &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;
-## 1 F     -0.0542 -0.306 -0.0436 0.404
-## 2 M     -0.0111 -0.521  0.0852 0.447
-```
-
 ---
 ## Efectos marginales sobre la probabilidad de la categoría `\(j\)`: MEM
 
@@ -754,30 +619,20 @@ Usando el paquete `marginaleffects`:
 
 ``` r
 grid &lt;- plebs_1988 %&gt;% data_grid(sex, .model=mlogit_vote_sq_sex)
-marginaleffects(mlogit_vote_sq_sex, variables="statusquo", newdata=grid)
-```
-
-```
-## Warning in marginaleffects(mlogit_vote_sq_sex, variables = "statusquo", : 'marginaleffects' is deprecated.
-## Use 'slopes()' instead.
-## See help("Deprecated")
+avg_slopes(mlogit_vote_sq_sex, variables="statusquo", newdata=grid)
 ```
 
 ```
 ## 
-##  Group  Estimate Std. Error        z Pr(&gt;|z|)     S   2.5 %  97.5 %
-##      A -0.047003     0.0117  -4.0075   &lt;0.001  14.0 -0.0700 -0.0240
-##      A  0.000316     0.0119   0.0266    0.979   0.0 -0.0229  0.0235
-##      N -0.331055     0.0192 -17.2798   &lt;0.001 219.8 -0.3686 -0.2935
-##      N -0.543378     0.0212 -25.5756   &lt;0.001 476.8 -0.5850 -0.5017
-##      U -0.013886     0.0206  -0.6754    0.499   1.0 -0.0542  0.0264
-##      U  0.114648     0.0207   5.5314   &lt;0.001  24.9  0.0740  0.1553
-##      Y  0.391945     0.0165  23.7216   &lt;0.001 410.8  0.3596  0.4243
-##      Y  0.428414     0.0217  19.7256   &lt;0.001 285.3  0.3858  0.4710
+##  Group Estimate Std. Error      z Pr(&gt;|z|)     S   2.5 %   97.5 %
+##      A  -0.0233     0.0108  -2.16  0.03100   5.0 -0.0446 -0.00213
+##      N  -0.4372     0.0139 -31.44  &lt; 0.001 718.5 -0.4645 -0.40996
+##      U   0.0504     0.0159   3.17  0.00152   9.4  0.0192  0.08152
+##      Y   0.4102     0.0140  29.31  &lt; 0.001 625.0  0.3828  0.43761
 ## 
 ## Term: statusquo
-## Type:  probs 
-## Columns: rowid, term, group, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted, sex, statusquo, vote
+## Type: probs
+## Comparison: dY/dX
 ```
 
 
@@ -850,11 +705,11 @@ github.com/mebucca
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
-"ratio": "16:9",
-"highlightStyle": "github",
-"highlightLines": true,
-"countIncrementalSlides": true,
-"slideNumberFormat": "%current%"
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": true,
+  "slideNumberFormat": "%current%"
 });
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));
