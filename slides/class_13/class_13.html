@@ -4,7 +4,7 @@
     <title>Análisis de Datos Categóricos (SOC3070)</title>
     <meta charset="utf-8" />
     <meta name="author" content="  Mauricio Bucca  Profesor Asistente, Sociología UC" />
-    <script src="libs/header-attrs-2.27/header-attrs.js"></script>
+    <script src="libs/header-attrs-2.29/header-attrs.js"></script>
     <link rel="stylesheet" href="gentle-r.css" type="text/css" />
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
@@ -16,13 +16,10 @@ class: center, middle, inverse, title-slide
 # Análisis de Datos Categóricos (SOC3070)
 ]
 .subtitle[
-## Clase #13: Regresión Logística Multinomial - Estructura Teórica
+## Regresión Logística Multinomial - Estructura Teórica
 ]
 .author[
 ### <br> Mauricio Bucca<br> Profesor Asistente, Sociología UC
-]
-.date[
-### 28 October, 2024
 ]
 
 ---
@@ -3067,6 +3064,513 @@ predict(mlogit_vote_sq, type="prob")
 ]
 
 
+---  
+class: inverse, center, middle
+
+## Regresión Logística Multinomial: interpretación de efectos
+
+---
+class: center, middle
+
+## Efectos marginales sobre el logit 
+
+
+---
+## Un ejemplo empírico
+
+
+```
+## # A tibble: 2,700 × 8
+##    region population sex     age education income statusquo vote 
+##    &lt;fct&gt;       &lt;int&gt; &lt;fct&gt; &lt;int&gt; &lt;fct&gt;      &lt;int&gt;     &lt;dbl&gt; &lt;fct&gt;
+##  1 C          175000 F        64 P             NA     -1.80 U    
+##  2 M           25000 M        27 S           7500     -1.74 &lt;NA&gt; 
+##  3 SA         250000 F        21 PS         35000     -1.73 N    
+##  4 SA         250000 F        42 S          35000     -1.48 &lt;NA&gt; 
+##  5 SA         250000 M        27 S           7500     -1.34 N    
+##  6 C          250000 F        22 S           7500     -1.33 N    
+##  7 M           15000 M        34 P          15000     -1.33 N    
+##  8 SA         250000 M        66 S          35000     -1.31 &lt;NA&gt; 
+##  9 SA         250000 F        25 S          15000     -1.31 A    
+## 10 S          250000 F        39 S          15000     -1.31 N    
+## # ℹ 2,690 more rows
+```
+
+.pull-left[
+Continuando con los datos del plebiscito de 1988, ajustaremos el siguiente modelo:
+
+`$$\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}$$`
+
+donde:
+
+- `\(p_{iJ} =\mathbb{P}(\text{vote}_{i}=\text{A})\)`
+
+- `\(p_{ij} =\mathbb{P}(\text{vote}_{i}=j), \quad j \in \{\text{N},\text{U},\text{Y}\}\)`
+
+- `\(\text{logit}(p_{ij})\)` es el .bold[log odds] de votar N/U/Y vs A.
+
+- `\(p_{ij}\)`'s  son una función de apoyo al status-quo (statusquo) y género (sex)
+
+]
+
+--
+.pull-right[
+
+``` r
+mlogit_vote_sq_sex &lt;- multinom(vote ~ statusquo + sex, trace=F, data=plebs_1988); 
+summary(mlogit_vote_sq_sex)
+```
+
+```
+## Call:
+## multinom(formula = vote ~ statusquo + sex, data = plebs_1988, 
+##     trace = F)
+## 
+## Coefficients:
+##   (Intercept)  statusquo       sexM
+## N   0.1099473 -1.7644993  0.6981650
+## U   1.2905014  0.3357059 -0.2920198
+## Y   0.7772821  1.8948940 -0.1141098
+## 
+## Std. Errors:
+##   (Intercept) statusquo      sexM
+## N   0.1435548 0.1284951 0.1727614
+## U   0.1143529 0.1035609 0.1716492
+## Y   0.1289686 0.1181259 0.1794425
+## 
+## Residual Deviance: 4322.571 
+## AIC: 4340.571
+```
+]
+
+---
+## Efectos marginales sobre el logit
+
+Un modelo de regresión logística multinomial consiste de `\(J-1\)` ecuaciones:
+
+`$$\text{logit}(p_{ij}) = \ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}$$`
+--
+
+- El intercepto `\(\beta_{j0}\)` corresponde al log del ratio entre la probabilidad de obtener `\(j\)` en vez de `\(J\)` -- `\(\text{logit}(p_{j})\)` --, cuando `\(x_{1} = \dots = x_{k} = 0\)`
+
+--
+
+- El efecto marginal de `\(x_{k}\)` sobre el `\(\text{logit}(p_{j})\)` por:
+
+
+.pull-left[
+.content-box-blue[
+`$$\frac{\partial\text{logit}(p_{ij})}{\partial x_{k}} = \beta_{jk}$$`
+]
+]
+.pull-right[
+.content-box-yellow[
+"Un cambio infinitesimal en `\(x_{k}\)`  ( `\(\partial x_{k}\)` ) se traduce en un cambio en `\(\partial x_{k} \beta_{jk}\)` unidades en el `\(\text{logit}(p_{j})\)`"
+] 
+]
+
+--
+
+.bold[Importante:] los coeficientes y sus transformaciones entregan información sobre las probabilidades .bold[relativas] de los diferentes `\(j\)`'s (con respecto a categoría de referencia).
+
+---
+## Efectos marginales sobre el logit 
+
+En nuestro ejemplo: `\(\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}\)`
+
+&lt;br&gt;
+
+.pull-left[
+
+```
+##   (Intercept)  statusquo       sexM
+## N   0.1099473 -1.7644993  0.6981650
+## U   1.2905014  0.3357059 -0.2920198
+## Y   0.7772821  1.8948940 -0.1141098
+```
+]
+.pull-right[
+![](class_13_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
+]
+
+---
+class:center, middle
+
+## Efectos multiplicativos sobre las odds 
+
+
+---
+## Efectos multiplicativos sobre las odds 
+
+Dado el siguiente modelo de regresión logística multinomial: 
+
+
+`$$\text{logit}(p_{ij}) = \ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}$$`
+
+&lt;br&gt;
+--
+
+exponenciando a ambos lados obtenemos 
+
+`$$\frac{p_{ij}}{p_{iJ}} = e^{\beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}}$$`
+
+--
+
+equivalentemente
+
+.content-box-blue[
+`$$\frac{p_{ij}}{p_{iJ}} =  e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i1}}  \dots e^{\beta_{jk} x_{ik}}$$`
+]
+
+---
+## Efectos multiplicativos sobre las odds: odds ratios
+
+Considera la situación en que `\(i\)` y `\(i^{´}\)` son dos observaciones con `\(x_{k}=c\)` y `\(x_{k}=c+1\)`, respectivamente. El resto de las covariables toman valores idénticos. 
+--
+ Las odds de observar `\(j\)` en vez de `\(J\)` son:
+
+
+- `\(p_{ij}/(p_{iJ}) = e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i1}}  \dots (e^{\beta_{jk}})^{c}\)`
+
+- `\(p_{i^{´}j}/(p_{i^{´}J}) = e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i^{´}1}}  \dots (e^{\beta_{jk}})^{c+1}\)`
+
+
+&lt;br&gt;
+--
+
+El ratio de las odd de éxito entre `\(i^{´}\)` e `\(i\)` está dado por:
+
+`\begin{align}
+\frac{p_{i^{´}j}/p_{i^{´}J}}{p_{ij}/p_{iJ}} &amp;= \frac{e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i^{´}1}}  \dots (e^{\beta_{jk}})^{c+1}}{e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i1}}  \dots (e^{\beta_{jk}})^{c}} = e^{\beta_{jk}}
+\end{align}`
+
+&lt;br&gt;
+En otras palabras, manteniendo otros factores constantes, `\(e^{\beta_{jk}}\)` representa la odds ratio de `\(j\)` vs `\(J\)` entre el caso con `\(x_{k}\)` aumentado en una unidad, y el caso con `\(x_{k}\)` en un nivel basal dado. 
+
+---
+## Efectos multiplicativos sobre las odds 
+
+
+.content-box-yellow[
+"Un cambio en `\(\Delta\)` unidades de `\(x_{k}\)` multiplica el ratio entre las probabilidad de obtener `\(j\)` vs `\(J\)` por `\(e^{\Delta \beta_{jk}}\)`"
+] 
+
+&lt;br&gt;
+.bold[Propiedades]:
+
+--
+
+- `\(e^{\beta_{jk}}\)` está restringido al rango `\([0,\infty+)\)`. Es una constante que "comprime" o amplifica el ratio entre las probabilidades de `\(j\)` vs `\(J\)`
+
+--
+
+- Si `\(\beta_{jk} &lt; 0  \to  (0 &lt; e^{\beta_{jk}} &lt; 1)\)`. Es decir, un aumento en `\(x_{k}\)` está asociado con una reducción (multiplicativa) del ratio entre las probabilidades de  `\(j\)` vs `\(J\)`
+
+--
+
+- Si `\(\beta_{jk} = 0  \to  (e^{\beta_{jk}} =1)\)`. Es decir, un cambio en `\(x_{k}\)` está asociado a un cambio nulo en el ratio entre las probabilidades de  `\(j\)` vs `\(J\)`
+
+--
+
+- Si `\(\beta_{jk} &gt; 0  \to  (e^{\beta_{jk}} &gt; 1)\)`. Es decir, un aumento en `\(x_{k}\)` está asociado a aumento (multiplicativo) en el ratio entre las probabilidades de  `\(j\)` vs `\(J\)`
+
+
+---
+## Efectos multiplicativos sobre las odds 
+
+En nuestro ejemplo: `\(\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}\)`, por tanto:
+  
+  
+.pull-left[
+  `\(\frac{p_{ij}}{p_{iJ}} = e^{\beta_{j0}} \cdot  e^{\beta_{j1}\text{statusquo}_{i}} \cdot e^{ \beta_{j2}\text{male}_{i} }\)`
+      
+
+``` r
+# coeffs
+summary(mlogit_vote_sq_sex)$coefficients
+```
+
+```
+##   (Intercept)  statusquo       sexM
+## N   0.1099473 -1.7644993  0.6981650
+## U   1.2905014  0.3357059 -0.2920198
+## Y   0.7772821  1.8948940 -0.1141098
+```
+
+``` r
+# exp(coeffs)
+exp(summary(mlogit_vote_sq_sex)$coefficients)
+```
+
+```
+##   (Intercept) statusquo      sexM
+## N    1.116219 0.1712725 2.0100610
+## U    3.634609 1.3989276 0.7467538
+## Y    2.175551 6.6518429 0.8921600
+```
+    
+]
+
+--
+  
+.pull-right[
+
+![](class_13_files/figure-html/unnamed-chunk-17-1.png)&lt;!-- --&gt;
+]
+
+
+---
+class:center, middle
+
+## Efectos marginales sobre la probabilidad de la categoría `\(j\)`
+
+
+---
+## Efectos marginales sobre la probabilidad de la categoría `\(j\)`
+
+--
+
+Dado el siguiente modelo de regresión logística multinomial: 
+
+
+`$$\text{logit}(p_{ij}) = \ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}$$`
+&lt;br&gt;
+--
+Queremos saber el .bold[efecto marginal] de los predictores sobre la .bold[probabilidad] de observar cada categoría `\(j: \{1, \dots, J\}\)`. Formalmente
+
+&lt;br&gt;
+--
+
+`$$\frac{\partial p_{ij}}{\partial x_{k}}$$`
+--
+
+`$$\vdots$$`
+
+---
+## Efectos marginales sobre la probabilidad de la categoría `\(j\)`
+
+Después de varios pasos, obtenemos:
+
+&lt;br&gt;
+.content-box-yellow[
+`$$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{j=1}p_{ij} \cdot \beta_{jk}\bigg)$$`
+]
+
+&lt;br&gt;
+donde
+
+`$$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{j=1}  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}$$`
+---
+## Efectos marginales sobre la probabilidad de la categoría `\(j\)`
+
+
+.pull-left[
+Analizando `$$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{j=1}p_{ij} \cdot \beta_{jk}\bigg)$$`
+]
+
+--
+
+.pull-right[
+podemos notar que  `\(\sum^{J-1}_{j=1}p_{ij} \cdot \beta_{jk} \equiv \overline{\beta_{jk}}, \quad\)` el "efecto promedio de" `\(x_k\)`. Se desprende que:
+]
+
+&lt;br&gt;
+--
+
+- El signo del efecto marginal de los predictores .bold[no necesariamente] corresponde al signo del parámetro estimado en la regresión. 
+--
+
+  - `\(\frac{\partial p_{ij}}{\partial x_{k}} &gt; 0 \quad\)`  si  `\(\quad \beta_{jk} &gt; \sum^{J-1}_{j=1}p_{j} \cdot \beta_{jk}\)`
+  
+  - `\(\frac{\partial p_{ij}}{\partial x_{k}} = 0 \quad\)`  si  `\(\quad \beta_{jk} = \sum^{J-1}_{j=1}p_{j} \cdot \beta_{jk}\)`
+
+  - `\(\frac{\partial p_{ij}}{\partial x_{k}} &lt; 0 \quad\)`  si  `\(\quad \beta_{jk} &lt; \sum^{J-1}_{j=1}p_{j} \cdot \beta_{jk}\)`
+
+&lt;br&gt;
+--
+.bold[Nota]: No tiene mucho sentido testear si efectos marginales son distintos de cero.
+
+
+---
+## Efectos marginales sobre la probabilidad de la categoría `\(j\)`
+
+.pull-left[
+si `$$\frac{\partial p_{ij}}{\partial x_{k}} = p_{j} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{j=1}p_{j} \cdot \beta_{jk}\bigg)$$`
+]
+
+--
+
+.pull-right[
+y `$$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{j=1}  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}$$` 
+]
+
+
+&lt;br&gt;
+--
+
+- Es claro que el efecto marginal de `\(x_{k}\)` varía dependiendo del valor de `\(x_{k}\)`, de su coeficiente `\(\beta_{jk}\)`, y de todas las otras covariables con sus respectivos coeficientes.
+
+---
+## Efectos marginales sobre la probabilidad de la categoría `\(j\)`
+
+En nuestro ejemplo: `\(\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}\)`, por tanto:
+  
+  
+.pull-left[
+  `$$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{j=1} e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}$$`
+      
+&lt;br&gt;      
+
+``` r
+summary(mlogit_vote_sq_sex)$coefficients
+```
+
+```
+##   (Intercept)  statusquo       sexM
+## N   0.1099473 -1.7644993  0.6981650
+## U   1.2905014  0.3357059 -0.2920198
+## Y   0.7772821  1.8948940 -0.1141098
+```
+    
+]
+
+
+--
+  
+.pull-right[
+![](class_13_files/figure-html/unnamed-chunk-19-1.png)&lt;!-- --&gt;
+]
+
+---
+## Efectos marginales sobre la probabilidad de la categoría `\(j\)`
+
+
+.pull-left[
+`$$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{j=1} e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}$$`
+
+![](class_13_files/figure-html/unnamed-chunk-20-1.png)&lt;!-- --&gt;
+]
+
+.pull-right[
+`$$\frac{\partial p_{ij}}{\partial x_{k}} = p_{j} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{j=1}p_{j} \cdot \beta_{jk}\bigg)$$`
+
+![](class_13_files/figure-html/unnamed-chunk-21-1.png)&lt;!-- --&gt;
+]
+
+---
+## Efectos marginales sobre la probabilidad de la categoría `\(j\)`
+
+- Efectos marginales son _esencialmente_ heterogéneos. No hay un efecto sino muchos. 
+
+--
+
+- Heterogeneidad crece con la complejidad del modelo: número de predictores, interacciones, etc. 
+
+--
+
+- Más aún, en el caso de modelos de regresión logística multinomial, los efectos marginales no son necesariamente monotónicos (pueden cambiar de signo).
+
+--
+
+- En la práctica, muchas veces queremos UN número que resuma el efecto marginal. 
+
+&lt;br&gt;
+--
+.pull-left[
+![For god sakes just give me the damn number](https://i.makeagif.com/media/8-29-2018/ior4IF.gif)
+]
+
+--
+
+Cantidades de interes:
+.pull-right[
+
+* Average Marginal Effects (AME)
+
+* Marginal Effects at the Mean (MEM)
+
+* Marginal Effects at Representative Values (MER)
+
+]
+
+---
+## Efectos marginales sobre la probabilidad de la categoría `\(j\)`: MEM
+
+--
+
+Usando el paquete `marginaleffects`:
+
+
+
+``` r
+grid &lt;- plebs_1988 %&gt;% data_grid(sex, .model=mlogit_vote_sq_sex)
+avg_slopes(mlogit_vote_sq_sex, variables="statusquo", newdata=grid)
+```
+
+```
+## 
+##  Group Estimate Std. Error      z Pr(&gt;|z|)     S   2.5 %   97.5 %
+##      A  -0.0233     0.0108  -2.16  0.03100   5.0 -0.0446 -0.00213
+##      N  -0.4372     0.0139 -31.44  &lt; 0.001 718.5 -0.4645 -0.40996
+##      U   0.0504     0.0159   3.17  0.00152   9.4  0.0192  0.08152
+##      Y   0.4102     0.0140  29.31  &lt; 0.001 625.0  0.3828  0.43761
+## 
+## Term: statusquo
+## Type: probs
+## Comparison: dY/dX
+```
+
+
+---
+class: inverse, center, middle
+
+## Independence of Irrelevant Alternatives (IIA)
+
+
+---
+## Independence of Irrelevant Alternatives (IIA)
+
+--
+
+- Cuando regresión logística Multinomial es utilizada para modelar decisiones (choice), el modelo descansa en el supuesto implícito de IIA
+
+--
+
+- IIA: las odds (probabilidades relativas) de seleccionar cualquiera de las `\(J\)` alternativas no son afectadas por la existencia de alternativas irrelavantes.
+
+&lt;br&gt;
+--
+.bold[Ejemplo] (McFadden’s 1974):
+
+-  Una persona puede viajar al trabajo en: `\(\{\text{auto}, \text{ bus rojo}\}\)`
+-  `\(\mathbb{P}(\text{auto}) =  \mathbb{P}(\text{ bus rojo}) = 1/2\)`. Odds=1.
+
+--
+
+- Supongamos se amplía el conjunto de alternativas: `\(\{\text{auto}, \text{ bus rojo},  \text{ bus azul}\}\)`
+
+--
+
+- Dado que los buses sólo difieren en color, esperaríamos que `\(\mathbb{P}(\text{ bus rojo}) = \mathbb{P}(\text{bus azul})\)`
+
+- Único modo de retener Odds entre auto y bus rojo es si: `\(\mathbb{P}(\text{auto}) =  \mathbb{P}(\text{ bus rojo}) = \mathbb{P}(\text{bus azul}) = 1/3\)`
+
+--
+
+- Sería más realista esperar que `\(\mathbb{P}(\text{auto}) = 1/2)\)` y `\(\quad \mathbb{P}(\text{ bus rojo}) = \mathbb{P}(\text{bus azul}) = 1/4\)`
+
+ - Sin embargo, violaría IIA porque las odds entre auto y bus rojo serían (1/2)/(1/4)=2.
+
+---
+## Independence of Irrelevante Alternatives (IIA)
+
+Existe una variedad de tests para el supuesto de IIA, pero ninguno ha mostrado ser concluyente:
+
+.center[
+![iia](iia.png)
+]
+
+
 ---
 class: inverse, center, middle
 
@@ -3082,15 +3586,19 @@ github.com/mebucca
 
 
 
+
+
+
+
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
-"ratio": "16:9",
-"highlightStyle": "github",
-"highlightLines": true,
-"countIncrementalSlides": true,
-"slideNumberFormat": "%current%"
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": true,
+  "slideNumberFormat": "%current%"
 });
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));

@@ -1,8 +1,7 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Clase #13: Regresión Logística Multinomial"
+subtitle: "Regresión Logística Multinomial"
 author: "<br> Mauricio Bucca<br> Profesor Asistente, Sociología UC"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   xaringan::moon_reader:
     lib_dir: libs
@@ -33,7 +32,7 @@ style_duo_accent(primary_color ="#556B2F", secondary_color = "#317589",
 ```
 
 
-## Regresión Logística Multinomial: Interpretación
+## Regresión Logística Multinomial: interpretación de efectos
 
 ---
 class:center, middle
@@ -159,32 +158,7 @@ predictions %>% filter(str_detect(quant, "^l")) %>% separate(quant,sep=8, into=c
   
 ```
 ]
-
-
----
-## Efectos marginales sobre el logit 
-
-.pull-left[
-```{r, echo=FALSE}
-summary(mlogit_vote_sq_sex)$coefficients
-```
-]
-
-.pull-right[
-Si `male=1` y `statusquo=0`, entonces `logit(p_N)` y `logit(p_Y)` son=
-```{r}
-c(N=0.11 -1.76*0 + 0.7*1,
-  Y=0.78  + 1.9*0 + -0.11*1)
-```
-
-Si `male=1` y `statusquo=1`, entonces `logit(p_N)` y `logit(p_Y)` son=
-```{r}
-c(N=0.11 -1.76*1 + 0.7*1,
-  Y=0.78  + 1.9*1 + -0.11*1)
-```
-]
-
-
+s
 ---
 ## Efectos marginales sobre el logit 
 
@@ -623,64 +597,6 @@ Cantidades de interes:
 
 ]
 
-
----
-## Efectos marginales sobre la probabilidad de la categoría $j$: AME
-
---
-
-$$\text{Aproximación numérica:} \quad \frac{1}{n} \sum_{i} \frac{\partial p_{ij}}{\partial x_{k}} \approx  \frac{1}{n} \sum_{i}  \frac{p_{ij}(x_{1}, \dots ,x_{k} = c + \delta) - p_{ij}(x_{1}, \dots ,x_{k} = c )}{\delta}$$
---
-
-AME de apoyo al status-quo:
-```{r}
-delta = 0.1
-p_hat <- predict(mlogit_vote_sq_sex, type="probs") %>% as_tibble()  %>% mutate(id = row_number()) %>% 
-         pivot_longer(-id, names_to="vote", values_to="prob") 
-
-plebs_1988_delta <- plebs_1988 %>% mutate(statusquo = statusquo + delta) 
-p_hat_delta <- predict(mlogit_vote_sq_sex, newdata=plebs_1988_delta ,type="probs")  %>% as_tibble() %>% mutate(id = row_number()) %>% pivot_longer(-id, names_to="vote", values_to="prob_delta") 
-
-p_hat_delta <- p_hat_delta %>% left_join(p_hat, by=c("id","vote")) %>% mutate(me_sq = (prob_delta  - prob)/delta) %>% dplyr::select(id,vote,me_sq) %>% pivot_wider(names_from = "vote", values_from = "me_sq") %>% drop_na()
-```
-
---
-
-
-```{r}
-p_hat_delta %>% dplyr::summarise(across(A:Y, ~ mean(.x)))
-```
-
----
-## Efectos marginales sobre la probabilidad de la categoría $j$: AME
-
---
-
-Usando el paquete `marginaleffects`:
-
-```{r}
-avg_slopes(mlogit_vote_sq_sex, variables="statusquo")
-```
-
----
-## Efectos marginales sobre la probabilidad de la categoría $j$: MEM
-
-$$\text{Aproximación numérica:} \quad \frac{\partial p_{ij}}{\partial x_{k}} \approx  \frac{p_{ij}(x_{1}=\bar{x_{1}}, \dots ,x_{k} = \bar{x_{k}} + \delta) - p_{ij}(x_{1}=\bar{x_{1}}, \dots ,x_{k} =\bar{x_{k}} )}{\delta}$$
---
-MEM de apoyo al status-quo:
-```{r}
-delta = 0.1; grid <- plebs_1988 %>% data_grid(sex, .model=mlogit_vote_sq_sex)
-grid_delta <- plebs_1988 %>% data_grid(sex, .model=mlogit_vote_sq_sex) %>% mutate(statusquo = statusquo + delta)
-
-p_hat <- predict(mlogit_vote_sq_sex, type="probs", newdata =grid) %>% as_tibble() %>% 
-  mutate(id = c("F","M"))%>% pivot_longer(-id, names_to="vote", values_to="prob") 
-
-p_hat_delta <- predict(mlogit_vote_sq_sex, type="probs", newdata =grid_delta) %>% as_tibble() %>% 
-  mutate(id = c("F","M")) %>% pivot_longer(-id, names_to="vote", values_to="prob_delta") 
-
-p_hat_delta <- p_hat_delta %>% left_join(p_hat, by=c("id","vote")) %>% mutate(me_sq = (prob_delta  - prob)/delta) %>% dplyr::select(id,vote,me_sq) %>% pivot_wider(names_from = "vote", values_from = "me_sq") %>% drop_na(); p_hat_delta
-```
-
 ---
 ## Efectos marginales sobre la probabilidad de la categoría $j$: MEM
 
@@ -691,7 +607,7 @@ Usando el paquete `marginaleffects`:
 
 ```{r}
 grid <- plebs_1988 %>% data_grid(sex, .model=mlogit_vote_sq_sex)
-marginaleffects(mlogit_vote_sq_sex, variables="statusquo", newdata=grid)
+avg_slopes(mlogit_vote_sq_sex, variables="statusquo", newdata=grid)
 
 ```
 
