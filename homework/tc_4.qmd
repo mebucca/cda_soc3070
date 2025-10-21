@@ -74,6 +74,7 @@ pre.python-output, code.python-output {
 }
 ```
 
+
 Ponderación: 6% de la nota final del curso.
 
 ![Spam)](https://www.pandasecurity.com/en/mediacenter/src/uploads/2021/07/block-spam-yahoo-01-1.gif)
@@ -141,15 +142,139 @@ glimpse(spam)
 
     -   Modelo 2 (completo): incluye todas las variables disponibles en el dataset.
 
+```{r, echo=T}
+# Modelo 1: parsimonioso con variables sustantivas
+m1 <- glm(spam ~ word_freq_free + word_freq_money + char_freq_exc +
+            capital_run_length_average, data = spam, family = binomial)
+
+# Modelo 2: completo con todas las variables
+m2 <- glm(spam ~ ., data = spam, family = binomial)
+```
+
 2.  Para cada modelo, calcula las probabilidades predichas de ser spam para cada correo electrónico.
+
+```{r, echo=T}
+p1 <- predict(m1, type = "response")
+p2 <- predict(m2, type = "response")
+```
 
 3.  Calcula manualmente el log-loss promedio de cada modelo.
 
+```{r, echo=T}
+logloss <- function(y, p) {
+  -mean(y * log(p) + (1 - y) * log(1 - p))
+}
+
+ll1 <- logloss(spam$spam, p1); print(ll1)
+ll2 <- logloss(spam$spam, p2); print(ll2)
+```
+
 4.  Grafica la curva ROC y calcula el AUC para ambos modelos.
+
+```{r, echo=T}
+roc1 <- roc(spam$spam, p1); plot(roc1)
+roc2 <- roc(spam$spam, p2); plot(roc2)
+
+auc1 <- auc(roc1); print(auc1)
+auc2 <- auc(roc2); print(auc2)
+```
 
 5.  Con base en los resultados de (3) y (4), elige un modelo y define un umbral τ para clasificar correos como spam o no-spam.
 
+El modelo mas complejo es más predictivo. Elegimos un umbral relativamente estricto: τ = 0.7
+
+-   Con τ = 0.7 exigimos más "evidencia" antes de etiquetar un correo como spam.
+-   Esto reduce falsos positivos (legítimos mal clasificados como spam), a costa de aumentar falsos negativos (spam que se cuelan).
+-   Es razonable si nuestra prioridad es no perder correos legítimos.
+
+```{r, echo=T}
+tau <- 0.7
+```
+
 6.  Usando el modelo y umbral seleccionados en (5), construye una matriz de confusión. Elige una métrica relevante (accuracy, recall, precisión o F1), justifica tu elección e interpreta los resultados.
 
-7. Repite la comparación entre ambos modelos utilizando validación cruzada k-fold. Evalúa si el modelo que considerabas mejor se mantiene como preferido o si cambia la conclusión. En caso de que cambie, explica por qué ocurrió este cambio. Finalmente, reporta los resultados de la matriz de confusión promediada a partir de la validación cruzada.
+```{r, echo=T}
+pred_class <- ifelse(p2 > tau, 1, 0)
+
+cm <- confusionMatrix(factor(pred_class),
+                      factor(spam$spam),
+                      positive = "1")
+print(cm)
+```
+
+El modelo clasifica correctamente el 91% de los correos (Accuracy). Del total de spam, el modelo detecta un 82% (Sensitivity/Recall). Del total de correos legítimos, el modelo reconoce correctamente un 97% (Specificity ≈ 97%).
+
+Este modelo tiene buena performance pero prioriza minimizar falsos positivos (no molestar al usuario con mails legítimos marcados como spam), a costa de aceptar un cierto nivel de falsos negativos (spam que logra pasar).
+
+7.  Repite la comparación entre ambos modelos utilizando validación cruzada k-fold. Evalúa si el modelo que considerabas mejor se mantiene como preferido o si cambia la conclusión. En caso de que cambie, explica por qué ocurrió este cambio. Finalmente, reporta los resultados de la matriz de confusión promediada a partir de la validación cruzada.
+
+
+```{r}
+
+library(tidyverse)
+library(caret)
+library(pROC)
+
+
+set.seed(123)
+ctrl <- trainControl(
+  method = "cv",
+  number = 10,
+  summaryFunction = twoClassSummary,
+  classProbs = TRUE,
+  savePredictions = TRUE
+)
+
+spam$spam <- factor(ifelse(spam$spam == 1, "spam", "not_spam"))
+
+
+m1_cv <- train(
+  spam ~ word_freq_free + word_freq_money + char_freq_exc + capital_run_length_average,
+  data = spam,
+  method = "glm",
+  family = "binomial",
+  trControl = ctrl,
+  metric = "ROC"
+)
+
+m2_cv <- train(
+  spam ~ .,
+  data = spam,
+  method = "glm",
+  family = "binomial",
+  trControl = ctrl,
+  metric = "ROC"
+)
+
+res <- resamples(list(M1 = m1_cv, M2 = m2_cv))
+summary(res)
+
+bwplot(res, main = "Comparación de desempeño por validación cruzada (10-fold)")
+dotplot(res)
+```
+
+```{r}
+# Obtener predicciones del modelo más predictivo
+mean(m1_cv$results$ROC); mean(m2_cv$results$ROC)
+```
+
+Modelo con mejor AUC promedio es el más complejo.
+
+```{r}
+tau <- 0.7
+preds <- m2_cv$pred
+
+# Clasificación con τ = 0.7
+preds$pred_tau <- ifelse(preds$spam > tau, "spam", "not_spam") |> factor(levels = c("not_spam", "spam"))
+
+# Matriz de confusión promedio (promedio sobre folds)
+cm <- confusionMatrix(preds$pred_tau, preds$obs, positive = "spam")
+cm
+```
+
+
+El modelo completo mantiene un mejor desempeño promedio en validación cruzada,
+con mayor AUC, confirmando que su complejidad se traduce en mejor capacidad
+predictiva y generalización. La matriz de confusión promedio muestra alta sensibilidad y especificidad,
+indicando que el modelo generaliza bien sin sobreajustar excesivamente.
 
