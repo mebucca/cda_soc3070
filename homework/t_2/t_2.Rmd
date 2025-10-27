@@ -32,11 +32,21 @@ En particular, deberán estimar los efectos de las dos manipulaciones experiment
 
 Para mayor contexto pueden revisar el artículo en el link indicado en el repositorio. Igualmente, los datos están disponibles en el repositorio del curso para ser descargados. 
 
-````{r, message=FALSE, warnings=FALSE}
-path <- url("https://raw.githubusercontent.com/mebucca/cda_soc3070/master/homework/t_2/data_t_2.csv")
-data_paper <- read_csv(path) %>% mutate(W=if_else(W=="TRUE",1,0))
-data_paper %>% glimpse()
-````
+```{r, message=FALSE, warning=FALSE}
+library(readr)
+library(dplyr)
+
+url <- "https://raw.githubusercontent.com/mebucca/cda_soc3070/master/homework/t_2/data_t_2.csv"
+path <- "data_t_2.csv"
+
+if (!file.exists(path)) download.file(url, path, mode = "wb")
+
+data_paper <- read_csv(path, show_col_types = FALSE) %>%
+  mutate(W = if_else(W == "TRUE", 1, 0))
+
+glimpse(data_paper)
+
+```
 
 \pagebreak
 
