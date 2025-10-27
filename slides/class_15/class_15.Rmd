@@ -108,8 +108,8 @@ ggplot(data = mydata, mapping = aes(x = x)) +
       geom_vline(xintercept = rate, color = "red", size=1.5) +
       theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
       axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
-      legend.text = element_text(size = 18), legend.position = "none") +
-       annotate(geom="text", x= rate + 800, y=0.0001, label=expression(mu), color="black", parse=TRUE, size=8) 
+      legend.text = element_text(size = 18), legend.position = "none") 
+       #annotate(geom="text", x= rate + 800, y=0.0001, label=expression(mu), color="black", parse=TRUE, size=8) 
 ```
 ]
 
@@ -145,8 +145,8 @@ ggplot(data = mydata, mapping = aes(x = x)) +
       geom_vline(xintercept = 1961122, color = "blue", size=1.5) +
       theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
       axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
-      legend.text = element_text(size = 18), legend.position = "none") +
-  annotate(geom="text", x= 1961122 - 40000, y=0.0002, label=expression(paste(y[i]," = 1.961.122")), color="black", parse=TRUE, size=8) 
+      legend.text = element_text(size = 18), legend.position = "none") 
+  #annotate(geom="text", x= 1961122 - 40000, y=0.0002, label=expression(paste(y[i]," = 1.961.122")), color="black", parse=TRUE, size=8) 
 ```
 ]
 
@@ -1338,43 +1338,199 @@ Cantidades de interés:
 ]
 
 ---
-## Efectos marginales sobre $\mu$, recuentos/tasas
-
-Ejemplo AME de "median age" sobre "tasa de muertes por millón de habitantes". .bold[Aproximación numérica]:
+## Ejemplo: MER para tasa
+Ejemplo MER de "median age" (fijo al promedio global) sobre "tasa de muertes por millón de habitantes" por continente:
 
 <br>
 --
 
-$$\frac{\partial \mu_{i}}{\partial x_{k}} \approx  \frac{\mu_{i}(n_{i}=10^{6}, x_{1}, \dots ,x_{k} = c + \delta) - \mu_{i}(n_{i}=10^{6}, x_{1}, \dots ,x_{k} = c )}{\delta}$$
---
 
-```{r}
-delta = 0.1
-grid <- covid_subdata %>% dplyr::select(median_age,continent,population) %>% mutate(population = 10^6)
-grid_delta <- covid_subdata %>% dplyr::select(median_age,continent,population) %>% mutate(population = 10^6) %>% mutate(median_age = median_age + delta) 
+```{r,message=FALSE,warning=FALSE}
+grid <- covid_subdata %>% data_grid(median_age = mean(median_age,na.rm=T),continent,population=10^6)
 
-predictions <- grid %>% mutate(mu_hat = predict(poisson_death_agecont_rate, newdata=grid, type="response"))
-predictions_delta <- grid_delta %>% mutate(mu_hat_delta = predict(poisson_death_agecont_rate, newdata=grid_delta, type="response"))
-
-mes <- tibble(mu_hat = predictions$mu_hat, mu_hat_delta = predictions_delta$mu_hat_delta) %>%
-  mutate(me = (mu_hat_delta-mu_hat)/delta)
+marginaleffects::slopes(poisson_death_agecont_rate, newdata = grid, variables = "median_age")
 ```
 
---
 
-.pull-left[
-```{r}
-ame = round(mean(mes$me, na.rm=T),2)
-ame
+---
+class: inverse, center, middle
 
+## Datos de recuento
+###  Regresión Poisson y Quasi-Poisson
+
+---
+## Regresión Poisson
+
+
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+library("tidyverse")
+library("Ecdat")
+library("viridis")
+library("modelr")
+library("MASS")
+library("cowplot")
+library("margins")
+library("sjPlot")
+library("sjmisc")
+library("sjlabelled")
+library("nnet")
+library("lmtest")
+
+theme_set(theme_cowplot())
+
+
+data(Fair)
+affairsdata <- Fair %>% as_tibble()
+
+# create a binary variable indicating whether persons has ever had an affair
+affairsdata <- affairsdata %>% 
+  mutate(affairs_order = case_when(nbaffairs == 0 ~ "fiel",
+                             nbaffairs > 0  & nbaffairs <=3 ~ "ocasional",
+                             nbaffairs >= 7  ~ "compulsivo"))  %>%
+  mutate(affairs_count = nbaffairs) %>%
+  mutate(affairs_binary = case_when(nbaffairs > 0 ~ 1,
+                             nbaffairs == 0 ~ 0)
+)
+
+affairsdata$affairs_order <- ordered(affairsdata$affairs_order, c("fiel","ocasional","compulsivo"))
 ```
-]
-.pull-right[
+
+
+
 ```{r, warning=F, message=F}
-summary(
-  margins(poisson_death_agecont_rate, at = list(population = 10^6)))[6,3]
+poisson_1 <- glm(affairs_count ~ ym, family=poisson(link="log"), data=affairsdata)
+poisson_2 <- glm(affairs_count ~ ym + rate, family=poisson(link="log"), data=affairsdata)
 ```
-]
+
+<br>
+
+```{r, echo=F, warning=F, message=F}
+tab_model(poisson_1,poisson_2, p.style = "stars",   show.ci = FALSE, show.p = FALSE, transform = NULL)
+```
+
+---
+## Over-dispersion en regresión Poisson
+
+<br>
+--
+
+
+- En un modelo de regresión Poisson cada $i$ sigue una distribución $y_{i} \sim \text{Poisson}(\mu_{i} = e^{X_{i}\beta})$
+
+
+--
+
+- No hay un parámetro adicional para la varianza. Por definición: $\mathbb{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}=e^{X_{i}\beta}$
+
+<br>
+--
+
+- Esto puede resultar en una sub-estimación o sobre-estimación de la varianza de los datos. 
+
+  - Por lo general resulta en una subestimación de la varianza de los datos.
+
+<br> 
+--
+
+- Este caso se conocer como "over-dispersion". Los datos son más dispersos de lo esperando de acuerdo al modelo.
+  
+  - Over-dispersion no afecta la estimación de los coeficientes pero la inferencia demasiado "liberal": errores estándar
+
+---
+## Over-dispersion en regresión Poisson
+
+--
+
+- Es posible detectar over-dispersion inspeccionando los residuos "estandarizados" de un modelo Poisson. Formalmente:
+
+$$z_{i} = \frac{y_{i} - \mu_{i}}{\sigma_{i}} = \frac{y_{i} - \mu_{i}}{\sqrt{\mu_{i}}} = \frac{y_{i} - e^{X_{i}\beta}}{\sqrt{e^{X_{i}\beta}}}$$
+--
+
+- Si los $y_{i}$'s distribuyen Poisson entonces $z_{i} \sim \mathcal{N}(0,1)$. Luego, la presencia de residuos grandes indican over-dispersion. La "suma de residuos al cuadrado" resume esta información:
+
+$$\text{ssr} = \sum^{n}_{i=1} z^{2}_{i}$$
+
+--
+
+- Si el modelo Poisson es correcto $\text{ssr} \sim \chi^2_{\text{df}=n-k}$, con valor esperado $\mathbb{E}(\text{ssr})=n-k$
+
+--
+
+- El ratio entre ambos, $\frac{\text{ssr}}{n-k}$, es un estimado del "factor de dispersión".
+
+--
+
+- Obtenemos la inferencia correcta multiplicando los SE's por $\sqrt{\frac{\text{ssr}}{n-k}}$.
+
+
+---
+## Over-dispersion en regresión Poisson
+
+--
+
+En nuestro modelo Poisson más complejo:
+
+```{r, warning=F, message=F}
+n = length(poisson_2$fitted.values); k = poisson_2$rank
+yhat <- predict(poisson_2, type="response")
+z <- (affairsdata$affairs_count - yhat)/sqrt(yhat)
+rss = sum(z^2)
+```
+```{r, echo=F,warning=F, message=F}
+cat("rss = ", rss, " , rss esperado = ", n-k)
+```
+
+<br>
+--
+
+En este caso el factor de over-dispersion es:
+
+```{r}
+cat("factor de dispersión = ", rss/(n-k))
+```
+
+---
+## Regressión Quasi-Poisson 
+
+La regressión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferenciadel modelo.
+
+--
+
+$$y_{i} \sim \text{quasi-Poisson}(\mu_{i} = e^{X_{i}\beta}, \sigma= \sqrt{\omega \cdot  e^{X_{i}\beta}})$$
+
+<br>
+donde $\omega$ es el factor de dispersion.
+
+--
+
+  - Regressión Poisson es un caso especial de quasi-Poisson ( $\omega=1$ ).
+  
+<br>
+--
+
+Implementación en `R`:
+
+```{r, warning=F, message=F}
+qpoisson_2 <- glm(affairs_count ~ ym + rate, family=quasipoisson(link="log"), data=affairsdata)
+```
+
+```{r,echo=F}
+summary(qpoisson_2)$coefficients
+cat("dispersion = ", summary(qpoisson_2)$dispersion)
+```
+
+---
+## Quasi-Poisson
+
+```{r, warning=F, message=F}
+qpoisson_2 <- glm(affairs_count ~ ym + rate, family=quasipoisson(link="log"), data=affairsdata)
+```
+
+<br>
+
+```{r, echo=F}
+tab_model(poisson_2,qpoisson_2, p.style = "stars",   show.ci = FALSE, show.p = FALSE, transform = NULL)
+```
 
 ---
 class: inverse, center, middle

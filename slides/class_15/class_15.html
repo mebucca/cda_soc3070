@@ -4,7 +4,7 @@
     <title>Análisis de Datos Categóricos (SOC3070)</title>
     <meta charset="utf-8" />
     <meta name="author" content="  Mauricio Bucca  Profesor Asistente, Sociología UC" />
-    <script src="libs/header-attrs-2.27/header-attrs.js"></script>
+    <script src="libs/header-attrs-2.29/header-attrs.js"></script>
     <link rel="stylesheet" href="gentle-r.css" type="text/css" />
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
@@ -16,13 +16,10 @@ class: center, middle, inverse, title-slide
 # Análisis de Datos Categóricos (SOC3070)
 ]
 .subtitle[
-## Clase #15: Regresión Poisson
+## Regresión Poisson
 ]
 .author[
 ### <br> Mauricio Bucca<br> Profesor Asistente, Sociología UC
-]
-.date[
-### 03 November, 2024
 ]
 
 ---
@@ -1224,54 +1221,277 @@ Cantidades de interés:
 ]
 
 ---
-## Efectos marginales sobre `\(\mu\)`, recuentos/tasas
-
-Ejemplo AME de "median age" sobre "tasa de muertes por millón de habitantes". .bold[Aproximación numérica]:
+## Ejemplo: MER para tasa
+Ejemplo MER de "median age" (fijo al promedio global) sobre "tasa de muertes por millón de habitantes" por continente:
 
 &lt;br&gt;
 --
 
-`$$\frac{\partial \mu_{i}}{\partial x_{k}} \approx  \frac{\mu_{i}(n_{i}=10^{6}, x_{1}, \dots ,x_{k} = c + \delta) - \mu_{i}(n_{i}=10^{6}, x_{1}, \dots ,x_{k} = c )}{\delta}$$`
+
+
+``` r
+grid &lt;- covid_subdata %&gt;% data_grid(median_age = mean(median_age,na.rm=T),continent,population=10^6)
+
+marginaleffects::slopes(poisson_death_agecont_rate, newdata = grid, variables = "median_age")
+```
+
+```
+## 
+##  Estimate Std. Error     z Pr(&gt;|z|)     S  2.5 % 97.5 %
+##    -0.404    0.00563 -71.7   &lt;0.001   Inf -0.415 -0.393
+##    -0.776    0.01212 -64.0   &lt;0.001   Inf -0.799 -0.752
+##    -5.890    0.10428 -56.5   &lt;0.001   Inf -6.094 -5.686
+##    -8.673    0.14009 -61.9   &lt;0.001   Inf -8.948 -8.399
+##    -0.364    0.01244 -29.3   &lt;0.001 623.8 -0.389 -0.340
+##    -9.534    0.14912 -63.9   &lt;0.001   Inf -9.826 -9.242
+## 
+## Term: median_age
+## Type:  response 
+## Columns: rowid, term, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted, median_age, continent, population, total_deaths
+```
+
+
+---
+class: inverse, center, middle
+
+## Datos de recuento
+###  Regresión Poisson y Quasi-Poisson
+
+---
+## Regresión Poisson
+
+
+
+
+
+
+
+``` r
+poisson_1 &lt;- glm(affairs_count ~ ym, family=poisson(link="log"), data=affairsdata)
+poisson_2 &lt;- glm(affairs_count ~ ym + rate, family=poisson(link="log"), data=affairsdata)
+```
+
+&lt;br&gt;
+
+&lt;table style="border-collapse:collapse; border:none;"&gt;
+&lt;tr&gt;
+&lt;th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; "&gt;&amp;nbsp;&lt;/th&gt;
+&lt;th colspan="1" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; "&gt;affairs count&lt;/th&gt;
+&lt;th colspan="1" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; "&gt;affairs count&lt;/th&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; "&gt;Predictors&lt;/td&gt;
+&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Log-Mean&lt;/td&gt;
+&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Log-Mean&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;(Intercept)&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;0.36 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;1.37 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;ym&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.08 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.06 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;rate&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;0.42 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;"&gt;Observations&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="1"&gt;601&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="1"&gt;601&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;"&gt;R&lt;sup&gt;2&lt;/sup&gt; Nagelkerke&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1"&gt;0.234&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1"&gt;0.474&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td colspan="3" style="font-style:italic; border-top:double black; text-align:right;"&gt;* p&amp;lt;0.05&amp;nbsp;&amp;nbsp;&amp;nbsp;** p&amp;lt;0.01&amp;nbsp;&amp;nbsp;&amp;nbsp;*** p&amp;lt;0.001&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;/table&gt;
+
+---
+## Over-dispersion en regresión Poisson
+
+&lt;br&gt;
 --
 
 
-``` r
-delta = 0.1
-grid &lt;- covid_subdata %&gt;% dplyr::select(median_age,continent,population) %&gt;% mutate(population = 10^6)
-grid_delta &lt;- covid_subdata %&gt;% dplyr::select(median_age,continent,population) %&gt;% mutate(population = 10^6) %&gt;% mutate(median_age = median_age + delta) 
+- En un modelo de regresión Poisson cada `\(i\)` sigue una distribución `\(y_{i} \sim \text{Poisson}(\mu_{i} = e^{X_{i}\beta})\)`
 
-predictions &lt;- grid %&gt;% mutate(mu_hat = predict(poisson_death_agecont_rate, newdata=grid, type="response"))
-predictions_delta &lt;- grid_delta %&gt;% mutate(mu_hat_delta = predict(poisson_death_agecont_rate, newdata=grid_delta, type="response"))
-
-mes &lt;- tibble(mu_hat = predictions$mu_hat, mu_hat_delta = predictions_delta$mu_hat_delta) %&gt;%
-  mutate(me = (mu_hat_delta-mu_hat)/delta)
-```
 
 --
 
-.pull-left[
+- No hay un parámetro adicional para la varianza. Por definición: `\(\mathbb{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}=e^{X_{i}\beta}\)`
+
+&lt;br&gt;
+--
+
+- Esto puede resultar en una sub-estimación o sobre-estimación de la varianza de los datos. 
+
+  - Por lo general resulta en una subestimación de la varianza de los datos.
+
+&lt;br&gt; 
+--
+
+- Este caso se conocer como "over-dispersion". Los datos son más dispersos de lo esperando de acuerdo al modelo.
+  
+  - Over-dispersion no afecta la estimación de los coeficientes pero la inferencia demasiado "liberal": errores estándar
+
+---
+## Over-dispersion en regresión Poisson
+
+--
+
+- Es posible detectar over-dispersion inspeccionando los residuos "estandarizados" de un modelo Poisson. Formalmente:
+
+`$$z_{i} = \frac{y_{i} - \mu_{i}}{\sigma_{i}} = \frac{y_{i} - \mu_{i}}{\sqrt{\mu_{i}}} = \frac{y_{i} - e^{X_{i}\beta}}{\sqrt{e^{X_{i}\beta}}}$$`
+--
+
+- Si los `\(y_{i}\)`'s distribuyen Poisson entonces `\(z_{i} \sim \mathcal{N}(0,1)\)`. Luego, la presencia de residuos grandes indican over-dispersion. La "suma de residuos al cuadrado" resume esta información:
+
+`$$\text{ssr} = \sum^{n}_{i=1} z^{2}_{i}$$`
+
+--
+
+- Si el modelo Poisson es correcto `\(\text{ssr} \sim \chi^2_{\text{df}=n-k}\)`, con valor esperado `\(\mathbb{E}(\text{ssr})=n-k\)`
+
+--
+
+- El ratio entre ambos, `\(\frac{\text{ssr}}{n-k}\)`, es un estimado del "factor de dispersión".
+
+--
+
+- Obtenemos la inferencia correcta multiplicando los SE's por `\(\sqrt{\frac{\text{ssr}}{n-k}}\)`.
+
+
+---
+## Over-dispersion en regresión Poisson
+
+--
+
+En nuestro modelo Poisson más complejo:
+
 
 ``` r
-ame = round(mean(mes$me, na.rm=T),2)
-ame
+n = length(poisson_2$fitted.values); k = poisson_2$rank
+yhat &lt;- predict(poisson_2, type="response")
+z &lt;- (affairsdata$affairs_count - yhat)/sqrt(yhat)
+rss = sum(z^2)
 ```
 
 ```
-## [1] -3.13
+## rss =  4172.6  , rss esperado =  598
 ```
-]
-.pull-right[
+
+&lt;br&gt;
+--
+
+En este caso el factor de over-dispersion es:
+
 
 ``` r
-summary(
-  margins(poisson_death_agecont_rate, at = list(population = 10^6)))[6,3]
+cat("factor de dispersión = ", rss/(n-k))
 ```
 
 ```
-## median_age 
-##  -3.210944
+## factor de dispersión =  6.977591
 ```
-]
+
+---
+## Regressión Quasi-Poisson 
+
+La regressión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferenciadel modelo.
+
+--
+
+`$$y_{i} \sim \text{quasi-Poisson}(\mu_{i} = e^{X_{i}\beta}, \sigma= \sqrt{\omega \cdot  e^{X_{i}\beta}})$$`
+
+&lt;br&gt;
+donde `\(\omega\)` es el factor de dispersion.
+
+--
+
+  - Regressión Poisson es un caso especial de quasi-Poisson ( `\(\omega=1\)` ).
+  
+&lt;br&gt;
+--
+
+Implementación en `R`:
+
+
+``` r
+qpoisson_2 &lt;- glm(affairs_count ~ ym + rate, family=quasipoisson(link="log"), data=affairsdata)
+```
+
+
+```
+##                Estimate Std. Error   t value     Pr(&gt;|t|)
+## (Intercept)  1.36592517 0.34532278  3.955503 8.553030e-05
+## ym           0.05575781 0.01757849  3.171935 1.591856e-03
+## rate        -0.42036507 0.07268757 -5.783177 1.181990e-08
+```
+
+```
+## dispersion =  6.977591
+```
+
+---
+## Quasi-Poisson
+
+
+``` r
+qpoisson_2 &lt;- glm(affairs_count ~ ym + rate, family=quasipoisson(link="log"), data=affairsdata)
+```
+
+&lt;br&gt;
+
+&lt;table style="border-collapse:collapse; border:none;"&gt;
+&lt;tr&gt;
+&lt;th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; "&gt;&amp;nbsp;&lt;/th&gt;
+&lt;th colspan="1" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; "&gt;affairs count&lt;/th&gt;
+&lt;th colspan="1" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; "&gt;affairs count&lt;/th&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; "&gt;Predictors&lt;/td&gt;
+&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Log-Mean&lt;/td&gt;
+&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Log-Mean&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;(Intercept)&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;1.37 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;1.37 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;ym&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.06 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.06 &lt;sup&gt;**&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;rate&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;0.42 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;0.42 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;"&gt;Observations&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="1"&gt;601&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="1"&gt;601&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;"&gt;R&lt;sup&gt;2&lt;/sup&gt; Nagelkerke&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1"&gt;0.474&lt;/td&gt;
+&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1"&gt;0.474&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td colspan="3" style="font-style:italic; border-top:double black; text-align:right;"&gt;* p&amp;lt;0.05&amp;nbsp;&amp;nbsp;&amp;nbsp;** p&amp;lt;0.01&amp;nbsp;&amp;nbsp;&amp;nbsp;*** p&amp;lt;0.001&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;/table&gt;
 
 ---
 class: inverse, center, middle
@@ -1292,11 +1512,11 @@ github.com/mebucca
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
-"ratio": "16:9",
-"highlightStyle": "github",
-"highlightLines": true,
-"countIncrementalSlides": true,
-"slideNumberFormat": "%current%"
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": true,
+  "slideNumberFormat": "%current%"
 });
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));
