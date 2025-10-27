@@ -1660,9 +1660,18 @@ exchange” con “level of redistribution” = 2).</p>
 <p>Para mayor contexto pueden revisar el artículo en el link indicado en
 el repositorio. Igualmente, los datos están disponibles en el
 repositorio del curso para ser descargados.</p>
-<pre class="r"><code>path &lt;- url(&quot;https://raw.githubusercontent.com/mebucca/cda_soc3070/master/homework/t_2/data_t_2.csv&quot;)
-data_paper &lt;- read_csv(path) %&gt;% mutate(W=if_else(W==&quot;TRUE&quot;,1,0))
-data_paper %&gt;% glimpse()</code></pre>
+<pre class="r"><code>library(readr)
+library(dplyr)
+
+url &lt;- &quot;https://raw.githubusercontent.com/mebucca/cda_soc3070/master/homework/t_2/data_t_2.csv&quot;
+path &lt;- &quot;data_t_2.csv&quot;
+
+if (!file.exists(path)) download.file(url, path, mode = &quot;wb&quot;)
+
+data_paper &lt;- read_csv(path, show_col_types = FALSE) %&gt;%
+  mutate(W = if_else(W == &quot;TRUE&quot;, 1, 0))
+
+glimpse(data_paper)</code></pre>
 <pre><code>## Rows: 660
 ## Columns: 8
 ## $ groupId  &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2…
