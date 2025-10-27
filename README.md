@@ -33,11 +33,11 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | 6     | Octubre   | Clasificación con Regresión logística  | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_12a/class_12a#1) [`[Code]`](slides/class_12a/class_12a.Rmd)  |
 | 13    | Octubre   | Cross-validation con Regresión logística  |[`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_12b/class_12b#1) [`[Code]`](slides/class_12b/class_12b.Rmd) [`[Notebook]`](https://mebucca.github.io/cda_soc3070/slides/class_12b/nb_12b#1) |
 | 20    | Octubre   | Regresión Logística Multinomial  | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_13/class_13#1) [`[Code]`](slides/class_13/class_13.Rmd) |
-| 27    | Octubre   | —                          |                                                                                                                              |
-| 3     | Noviembre | —                          |                                                                                                                              |
-| 10    | Noviembre | —                          |                                                                                                                              |
-| 17    | Noviembre | —                          |                                                                                                                              |
-| 24    | Noviembre | —                          |                                                                                                                              |
+| 27    | Octubre   | Regresión Poisson  | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_14/class_14#1) [`[Code]`](slides/class_14/class_14.Rmd)                          |                                                                                                                              |
+| 3     | Noviembre | NO HAY CLASES                        |                                                                                                                              |
+| 10    | Noviembre | Clase Final                          |                                                                                                                              |
+
+| 24    | Noviembre | Sesión Posters (trabajo final)                          |                                                                                                                              |
 
 
 **IMPORTANTE:** Este curso permite el uso ético y transparente de herramientas de inteligencia artificial generativa, únicamente como herramienta de estudio o apoyo en la escritura de código. El estudiantado deberá declarar explícitamente en los anexos de cada trabajo qué herramientas fueron utilizadas, con qué propósito y, si se solicita, compartir los comandos o prompts empleados. El uso de IA no exime a los y las estudiantes de dominar plenamente el contenido de sus trabajos. Para verificar esto, en la clase posterior a la entrega de cualquier tarea o trabajo, un estudiante serán seleccionado al azar para explicar oralmente frente a la clase el procedimiento seguido en alguna de sus respuestas. En base a esta exposición, su nota podrá ser reconsiderada. El uso no autorizado o no declarado será considerado una falta a la integridad académica.
