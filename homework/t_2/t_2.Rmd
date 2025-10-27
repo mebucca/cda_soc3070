@@ -1,0 +1,86 @@
+---
+title: "SOC3070 Análisis de Datos Categóricos"
+author: "Trabajo 2"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r, echo=FALSE,message=FALSE, warnings=FALSE}
+# Escribir install.packages("tinytex") en la consola para instalar "tinytex"
+# Escribir install.packages("tidyverse") en la consola para instalar "tinytex"
+# Escribir install.packages("modelr") en la consola para instalar "tinytex"
+library("tinytex")
+library("tidyverse")
+library("nnet")
+library("modelr")
+library("MASS")
+library("marginaleffects")
+```
+
+**Información**
+
+Ponderación: 20% de la nota final del curso.
+Entrega: Desde el momento de entrega, los estudiantes tienen 2 semanas exactas de plazo para completar esta tarea. Responder las preguntas _bonus_ NO es un requisito necesario para obtener puntaje completo. Responder incorrectamente las preguntas _bonus_ no afectará negativamente la nota obtenida, pero responderlas correctamente mejorará la nota obtenida en un máximo de 0.7 puntos (o en la cantidad necesaria para obtener nota máxima si la nota original fuera superior a 6.3)
+
+**Introducción**
+
+En esta tarea usarán regresión logística multinomial (MNLR) para re-analizar un subconjunto de los datos utilizados en el artículo _"It’s not just how the game is played, it’s whether you win or lose"_ (2019). Este estudio utiliza un experimento online para identificar el efecto causal de las desigualdades de oportunidades y de resultados sobre creencias acerca de las causas de la desigualdad y percepciones de justicia. 
+
+En particular, deberán estimar los efectos de las dos manipulaciones experimentales del estudio sobre las probabilidades de atribuir los resultados de la competencia al talento ("talent"), la suerte ("luck") o circunstancias externas al individuo  ("rules"). Estas respuestas se encuentan en la variable `LTC`. Una de las manipulaciones experimentales es el status de ganador o perdedor de los participantes (variable `W`, donde W=1 corresponde a los ganadores). La otra es el nivel de desigualdad de oportunidades en la competencia, el cual es determinado por el tratamiento al que cada individuo fue asignado (variable `T`). Para esta tarea usarán el subconjunto de datos correspondientes a los tratamientos RA ("random exchange", es decir, "level of redistribution" = 0), RE1 ("regressive exchange" con "level of redistribution" = 1) y RE2 ("regressive exchange" con "level of redistribution" = 2). 
+
+Para mayor contexto pueden revisar el artículo en el link indicado en el repositorio. Igualmente, los datos están disponibles en el repositorio del curso para ser descargados. 
+
+````{r, message=FALSE, warnings=FALSE}
+path <- url("https://raw.githubusercontent.com/mebucca/cda_soc3070/master/homework/t_2/data_t_2.csv")
+data_paper <- read_csv(path) %>% mutate(W=if_else(W=="TRUE",1,0))
+data_paper %>% glimpse()
+````
+
+\pagebreak
+
+**Ejercicios**
+
+1. Usa regresión logística multinomial para estimar modelar las atribuciones de los resultados a las reglas/talento/suerte en función del estatus de ganarador/perdedor y el tratamiento(variables `T` y `W` sin interacción). Presenta un `summary()` de los resultados. Usa `LTC = "rules"` como categoría de referencia en la variable dependiente.
+
+````{r}
+data_paper$LTC <- factor(data_paper$LTC, levels = c("rules","talent","luck"))
+````
+
+1.1 Interpreta los coeficientes asociados a `W-talent` y  `TRE2-luck`.
+
+
+1.2 Transforma e interpreta el coeficiente correspondiente a `W-talent` en términos de odds-ratios (o probabilidades relativas) y presenta el desarrollo formal de dicha odds-ratio.
+
+
+1.3. Calcula la odds ratio de atribuir los resultados al talento en vez de a la suerte entre ganadores y perdedores.
+
+
+1.4 Manipula los resultados del modelo para obtener las probabilidades esperadas de que los ganadores del tratamiento RA sostengan que los resultados de la competencia se deben principalmente al "talento". Expresa formalmente la ecuación correspondiente a esta predicción.
+
+
+1.5 Agrega un control por `age` al modelo estimado en 1. Presenta un `summary()` de los resultados.
+
+
+1.6. (Bonus 1) De acuerdo al modelo estimado en 1.5., ¿cuál es _efecto_ (marginal) de edad sobre la probabilidad de que un ganador de 30 años en el tratamiento RA atribuya los resultados al talento?
+
+
+2. Usando los datos de infidelidad, estima un modelo Poisson para la tasa de infidelidad a lo largo del matrimonio.
+
+```{r,  include=TRUE, echo=TRUE, warning=FALSE, message=FALSE}
+library("Ecdat")
+data(Fair)
+affairsdata <- Fair %>% as_tibble()
+```
+
+- La variable `nbaffairs` mide la cantidad de relaciones extra-matrimoniales que ha tenido una persona. La variable `ym` mide los años que una persona ha estado casada.
+ 
+- Modela la tasa de relaciones extra-matrimoniales que ha tenido una persona como función de su genero (`age`), su felicidad en el matrimonio (`rate`) y la interacción entre ambas.
+
+
+2.1 Interpreta el efecto multiplicativo de la variable felicidad en el matrimonio sobre la tasa de infidelidad de los hombres.
+
+
+2.2 Estima la cantidad esperada de relaciones extra-matrimoniales para una mujer en un matrimonio infeliz (`rate`=2) de 20 años de duración.
+
