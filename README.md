@@ -33,7 +33,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | 6     | Octubre   | Clasificación con Regresión logística  | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_12a/class_12a#1) [`[Code]`](slides/class_12a/class_12a.Rmd)  |
 | 13    | Octubre   | Cross-validation con Regresión logística  |[`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_12b/class_12b#1) [`[Code]`](slides/class_12b/class_12b.Rmd) [`[Notebook]`](https://mebucca.github.io/cda_soc3070/slides/class_12b/nb_12b#1) |
 | 20    | Octubre   | Regresión Logística Multinomial  | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_13/class_13#1) [`[Code]`](slides/class_13/class_13.Rmd) |
-| 27    | Octubre   | Regresión Poisson  | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_14/class_14#1) [`[Code]`](slides/class_14/class_14.Rmd)                          |                                                                                                                              |
+| 27    | Octubre   | Regresión Poisson  | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_15/class_15#1) [`[Code]`](slides/class_15/class_15.Rmd)                          |                                                                                                                              |
 | 3     | Noviembre | NO HAY CLASES                        |                                                                                                                              |
 | 10    | Noviembre | Clase Final                          |                                                                                                                              |
 
