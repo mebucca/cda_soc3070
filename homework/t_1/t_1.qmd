@@ -20,26 +20,27 @@ options(scipen = 999)
 
 ## Introducción
 
-El hundimiento del *Titanic* en abril de 1912, durante su viaje inaugural de Southampton a Nueva York, ha sido uno de los desastres marítimos más recordados de la historia. La tragedia provocó la muerte de más de 1.500 personas y dio lugar a numerosas investigaciones sobre seguridad marítima y desigualdades sociales en el acceso a los botes salvavidas.
+El hundimiento del *Titanic* en abril de 1912, durante su viaje inaugural de Southampton a Nueva York, ha sido uno de los desastres marítimos más recordados de la historia. La tragedia provocó la muerte de más de 1.500 personas y dio lugar a numerosas investigaciones sobre seguridad marítima y desigualdades sociales en el acceso a los botes salvavidas.  
 
-![Titanic (1997)](https://e01-elmundo.uecdn.es/assets/multimedia/imagenes/2017/11/20/15111928435925.jpg)
+
+![Titanic (1997)](https://upload.wikimedia.org/wikipedia/en/2/2e/Titanic_poster.jpg)
 
 ## Datos
 
-Para este ejercicio utilizaremos el paquete **`titanic`** de `R`, que contiene distintos conjuntos de datos derivados de los registros de pasajeros del Titanic. Entre ellos, el más comúnmente usado es `titanic_train`, que proviene del famoso desafío de *Kaggle* y resume información clave de cada pasajero, incluyendo:
+Para este ejercicio utilizaremos el paquete **`titanic`** de `R`, que contiene distintos conjuntos de datos derivados de los registros de pasajeros del Titanic. Entre ellos, el más comúnmente usado es `titanic_train`, que proviene del famoso desafío de *Kaggle* y resume información clave de cada pasajero, incluyendo:  
 
--   **PassengerId**: Identificador único del pasajero.\
--   **Pclass**: Clase económica (1ª, 2ª o 3ª).\
--   **Name**: Nombre completo.\
--   **Sex**: Sexo.\
--   **Age**: Edad en años.\
--   **SibSp**: Número de hermanos/as o cónyuge a bordo.\
--   **Parch**: Número de padres o hijos a bordo.\
--   **Ticket**: Número de boleto.\
--   **Fare**: Tarifa pagada por el pasaje.\
--   **Cabin**: Cabina asignada (si corresponde).\
--   **Embarked**: Puerto de embarque (C = Cherbourg, Q = Queenstown, S = Southampton).\
--   **Survived**: Variable binaria que indica si el pasajero sobrevivió (1) o no (0).
+- **PassengerId**: Identificador único del pasajero.  
+- **Pclass**: Clase económica (1ª, 2ª o 3ª).  
+- **Name**: Nombre completo.  
+- **Sex**: Sexo.  
+- **Age**: Edad en años.  
+- **SibSp**: Número de hermanos/as o cónyuge a bordo.  
+- **Parch**: Número de padres o hijos a bordo.  
+- **Ticket**: Número de boleto.  
+- **Fare**: Tarifa pagada por el pasaje.  
+- **Cabin**: Cabina asignada (si corresponde).  
+- **Embarked**: Puerto de embarque (C = Cherbourg, Q = Queenstown, S = Southampton).  
+- **Survived**: Variable binaria que indica si el pasajero sobrevivió (1) o no (0).  
 
 Visualización rápida de las primeras filas del conjunto de datos:
 
@@ -48,65 +49,397 @@ Visualización rápida de las primeras filas del conjunto de datos:
 kable(head(titanic_train))
 ```
 
+
 ## Ejercicios
 
 ### I. LPM
 
-1.  Calcula las probabilidades de que un **hombre** haya sobrevivido en el Titanic $(p_h)$ y de que una **mujer** haya sobrevivido $(p_m)$. Calcula la diferencia entre ambas proporciones.
+1. Calcula las probabilidades de que un **hombre** haya sobrevivido en el Titanic $(p_h)$ y de que una **mujer** haya sobrevivido $(p_m)$. Calcula la diferencia entre ambas proporciones.
 
-------------------------------------------------------------------------
+```{r}
+library(dplyr)
 
-2.  Usa un **LPM** para estimar la probabilidad de **sobrevivir** en función del **sexo**. Escribe la ecuación de regresión correspondiente y presenta un `summary()` de los resultados. Explica el significado estadístico de cada coeficiente y su conexión con los resultados de la pregunta anterior.
+p <- titanic_train %>%
+  group_by(Sex) %>%
+  summarise(p = mean(Survived, na.rm = TRUE)) %>%
+  pull()
 
-------------------------------------------------------------------------
+p_m <- p[which(levels(titanic_train$Sex) == "female")]
+p_h <- p[which(levels(titanic_train$Sex) == "male")]
+
+cat("La probabilidad de sobrevivir para un hombre es:", round(p_h, 2), "\n")
+cat("La probabilidad de sobrevivir para una mujer es:", round(p_m, 2), "\n")
+
+diff_p <- round(p_m - p_h, 2)
+cat("Diferencia en probabilidad de sobrevivir (mujeres – hombres):", diff_p)
+```
+
+---
+
+2. Usa un **LPM** para estimar la probabilidad de **sobrevivir** en función del **sexo**. Escribe la ecuación de regresión correspondiente y presenta un `summary()` de los resultados. Explica el significado estadístico de cada coeficiente y su conexión con los resultados de la pregunta anterior.
+
+La ecuación de regresión es:
+
+$$
+\mathbb{P}(\text{Survived | Sex}) = \beta_{0} + \beta_{1}\,\mathbb{1}\{\text{male}\}
+$$
+
+Implementación en `R`:
+
+```{r}
+lpm_1 <- lm(Survived ~ factor(Sex), data = titanic_train)
+summary(lpm_1)
+```
+
+**Interpretación:**
+
+* $\beta_0$ (intercepto): probabilidad de sobrevivir para las **mujeres** (grupo de referencia).
+* $\beta_1$: cambio en la probabilidad de sobrevivir cuando el pasajero es **hombre**, en comparación con las mujeres.
+* $\beta_0 + \beta_1$: probabilidad de sobrevivir para los hombres.
+
+De acuerdo con estos datos:
+
+* Las mujeres tienen una probabilidad de sobrevivir cercana al **74%**,
+* Los hombres alrededor del **19%**,
+* Lo que implica una diferencia de más de **55 puntos porcentuales**.
+
+Esto refleja claramente la regla social de *"women and children first"* aplicada durante la evacuación del Titanic.
+
 
 3.  Usa un LPM para estimar la probabilidad de **sobrevivir** en función del **sexo**, controlando por la **edad** de los pasajeros. Escribe la ecuación de regresión correspondiente y presenta un `summary()` de los resultados. Explica el significado estadístico de cada coeficiente y provee una breve interpretación sustantiva.
 
-------------------------------------------------------------------------
+La ecuación de regresión es:  
 
-4.  De acuerdo al modelo estimado en la pregunta anterior, ¿cuál es el efecto marginal de la **edad** sobre la probabilidad esperada de sobrevivir?
+$$
+\mathbb{P}(\text{Survived | Sex, Age}) = \beta_{0} + \beta_{1}\,\mathbb{1}\{\text{male}\} + \beta_{2}\,\text{Age}
+$$
 
-------------------------------------------------------------------------
+Implementación en `R`:
 
-5.  En base al modelo usado en II.3., calcula las probabilidades esperadas de sobrevivir para un **hombre** y una **mujer** de 30 años. Expresa formalmente las ecuaciones correspondientes a estas predicciones.
+```{r}
+lpm_2 <- lm(Survived ~ factor(Sex) + Age, data = titanic_train)
+summary(lpm_2)
+```
 
-------------------------------------------------------------------------
+**Interpretación de los coeficientes:**
 
-6.  Agrega una **interacción** entre `Sex` y `Age` al modelo estimado en II.3. Escribe la ecuación de regresión y presenta un `summary()` de los resultados. Interpreta el efecto de la edad estimado en términos estadísticos y sustantivos.
+* $\beta_0$ es el intercepto: probabilidad de sobrevivir para una mujer de edad cero (hipotético, solo sirve como punto de referencia).
+* $\beta_1$ mide la diferencia en la probabilidad de sobrevivir entre hombres y mujeres de la misma edad. Un valor negativo indica que los hombres tenían menos probabilidad de sobrevivir que las mujeres, controlando por edad.
+* $\beta_2$ mide el efecto de la edad sobre la probabilidad de sobrevivir: cuánto cambia la probabilidad de sobrevivir por cada año adicional de edad, manteniendo constante el sexo.
+
+En general, los resultados muestran que los hombres tenían una probabilidad mucho menor de sobrevivir que las mujeres, y que la probabilidad de sobrevivir también decrecía con la edad.
+
+---
+
+4. De acuerdo al modelo estimado en la pregunta anterior, ¿cuál es el efecto marginal de la **edad** sobre la probabilidad esperada de sobrevivir?
+
+El efecto marginal de la edad sobre la probabilidad de sobrevivir está dado por:
+
+$$
+\frac{\partial \mathbb{P}(\text{Survived | Sex, Age}) }{\partial \text{Age}} = \beta_{2} = 
+$$
+
+```{r}
+lpm_2$coefficients["Age"]
+```
+
+---
+
+5. En base al modelo usado en II.3., calcula las probabilidades esperadas de sobrevivir para un **hombre** y una **mujer** de 30 años. Expresa formalmente las ecuaciones correspondientes a estas predicciones.
+
+Formalmente:
+
+* Para una mujer de 30 años:
+
+$$
+\mathbb{P}(\text{Survived | Sex='female', Age=30}) = \beta_{0} + \beta_{2}\cdot 30
+$$
+
+```{r}
+p_m30_lpm <- lpm_2$coefficients[1] + lpm_2$coefficients["Age"]*30
+names(p_m30_lpm) <- ""
+print(p_m30_lpm)
+```
+
+* Para un hombre de 30 años:
+
+$$
+\mathbb{P}(\text{Survived | Sex='male', Age=30}) = \beta_{0} + \beta_{1} + \beta_{2}\cdot 30
+$$
+
+```{r}
+p_h30_lpm <- lpm_2$coefficients[1] + lpm_2$coefficients[2] + lpm_2$coefficients["Age"]*30
+names(p_h30_lpm) <- ""
+print(p_h30_lpm)
+```
+
+Implementación automática en `R`:
+
+```{r}
+library(modelr)
+
+newx <- titanic_train %>%
+  data_grid(Sex = c("female", "male"),
+            Age = 30,
+            .model = lpm_2)
+
+newy <- newx %>%
+  mutate(pred_prob = predict(lpm_2, newdata = newx))
+
+print(newy)
+```
+
+---
+
+6. Agrega una **interacción** entre `Sex` y `Age` al modelo estimado en II.3. Escribe la ecuación de regresión y presenta un `summary()` de los resultados. Interpreta el efecto de la edad estimado en términos estadísticos y sustantivos.
+
+La ecuación de regresión es:
+
+$$
+\mathbb{P}(\text{Survived | Sex, Age}) = \beta_{0} + \beta_{1}\,\mathbb{1}\{\text{male}\} + \beta_{2}\,\text{Age} + \beta_{3}\,(\mathbb{1}\{\text{male}\}\times \text{Age})
+$$
+
+Implementación en `R`:
+
+```{r}
+lpm_3 <- lm(Survived ~ factor(Sex)*Age, data = titanic_train)
+summary(lpm_3)
+```
+
+**Interpretación:**
+
+* Para **mujeres**, la probabilidad esperada de sobrevivir depende de la edad según:
+
+$$
+\mathbb{P}(\text{Survived | female, Age}) = \beta_{0} + \beta_{2}\cdot Age
+$$
+
+El efecto marginal de la edad es $\beta_{2}$.
+
+* Para **hombres**, la probabilidad esperada de sobrevivir depende de la edad según:
+
+$$
+\mathbb{P}(\text{Survived | male, Age}) = (\beta_{0}+\beta_{1}) + (\beta_{2}+\beta_{3})\cdot Age
+$$
+
+El efecto marginal de la edad es $\beta_{2} + \beta_{3}$.
+
+Esto permite comparar no solo las diferencias de género, sino también cómo la edad afecta diferencialmente la probabilidad de sobrevivir entre hombres y mujeres.
 
 ### II. Regresión Logística
 
 1.  Calcula las *odds* de que un **hombre** haya sobrevivido en el Titanic $(\text{odd}_h)$ y de que una **mujer** haya sobrevivido $(\text{odd}_m)$. Calcula el *odds ratio* entre ambas *odds* (hombres vs mujeres) e interpreta el resultado.
 
-------------------------------------------------------------------------
+Implementación en `R`:
 
-2.  Usa una **regresión logística** para estimar la log-odds de sobrevivir en función del sexo. Escribe la ecuación de regresión correspondiente y presenta un `summary()` de los resultados. Explica el significado estadístico de cada coeficiente y su conexión con los resultados de la pregunta anterior.
+```{r}
+tabla <- titanic_train %>% with(table(Sex, Survived))
 
-------------------------------------------------------------------------
+odd_m <- tabla["female","1"]/tabla["female","0"]
+odd_h <- tabla["male","1"]/tabla["male","0"]
 
-3.  Estima una regresión logística para las *log-odds* de sobrevivir en función del sexo, **controlando por la edad** de los pasajeros. Escribe la ecuación de regresión correspondiente y presenta un `summary()` de los resultados. Explica cada coeficiente.
+cat("Las odds de sobrevivir para un hombre son:", round(odd_h, 2), "\n")
+cat("Las odds de sobrevivir para una mujer son:", round(odd_m, 2), "\n")
 
-------------------------------------------------------------------------
+theta <- round(odd_h/odd_m, 2)
+cat("El odds ratio (hombres/mujeres) es:", theta)
+```
 
-4.  ¿Cuál es la fórmula para el **efecto marginal de la edad** sobre la probabilidad esperada de sobrevivir?
+El *odds ratio* obtenido es muy inferior a 1 (cercano a 0.09). Esto significa que, en el Titanic, los hombres tenían aproximadamente un **90% menos chances relativas** de sobrevivir que las mujeres.
 
-------------------------------------------------------------------------
+---
 
-5.  Calcula las **probabilidades esperadas de sobrevivir** para un hombre y una mujer de **30 años** según el modelo estimado en II.3.
+2. Usa una **regresión logística** para estimar la log-odds de sobrevivir en función del sexo. Escribe la ecuación de regresión correspondiente y presenta un `summary()` de los resultados. Explica el significado estadístico de cada coeficiente y su conexión con los resultados de la pregunta anterior.
 
-------------------------------------------------------------------------
+La ecuación de regresión es:
 
-6.  De acuerdo al modelo estimado en II.3., ¿cuál es el efecto marginal de la edad sobre la probabilidad de sobrevivir para un hombre y una mujer de 30 años?
+$$
+\ln\frac{\mathbb{P}(\text{Survived | Sex})}{1-\mathbb{P}(\text{Survived | Sex})} =  \beta_{0} + \beta_{1}\,\mathbb{1}\{\text{male}\}
+$$
 
-------------------------------------------------------------------------
+Implementación en `R`:
 
-### III. Bonus:
+```{r}
+logit_1 <- glm(Survived ~ factor(Sex), family=binomial(link="logit"), data=titanic_train)
+summary(logit_1)
+```
 
-A continuación se muestra un gráfico que representa las **probabilidades predichas de sobrevivir en el Titanic** en función de la **edad**, **sexo** y **clase del pasaje (Pclass)**.
+Interpretación:
 
-1.  A partir del gráfico, deduzcan cuál puede ser el modelo que generó estas superficies de probabilidad.
+* $\beta_0$ es el intercepto y representa las *log-odds* de sobrevivir para las mujeres (grupo de referencia).
+* $\beta_1$ es el coeficiente para el sexo masculino. Su valor negativo indica que los hombres tienen menores *log-odds* de sobrevivir que las mujeres.
 
-2.  Estimen dicho modelo en `R`.
+En términos de odds:
 
-3.  Reproduzcan un gráfico lo más parecido posible.
+* Mujeres: $\text{odd}_m = e^{\beta_0}$
+* Hombres: $\text{odd}_h = e^{\beta_0 + \beta_1}$
+* Por tanto, $\theta = e^{\beta_1}$ es el *odds ratio*.
 
+---
+
+3. Estima una regresión logística para las *log-odds* de sobrevivir en función del sexo, **controlando por la edad** de los pasajeros. Escribe la ecuación de regresión correspondiente y presenta un `summary()` de los resultados. Explica cada coeficiente.
+
+La ecuación es:
+
+$$
+\ln\frac{\mathbb{P}(\text{Survived | Sex, Age})}{1-\mathbb{P}(\text{Survived | Sex, Age})} = \beta_{0} + \beta_{1}\,\mathbb{1}\{\text{male}\} + \beta_{2}\,\text{Age}
+$$
+
+Implementación en `R`:
+
+```{r}
+logit_2 <- glm(Survived ~ factor(Sex) + Age, family=binomial(link="logit"), data=titanic_train)
+summary(logit_2)
+```
+
+* $\beta_0$: intercepto, representa las *log-odds* de sobrevivir para una mujer de edad cero (referencia teórica).
+* $\beta_1$: efecto del sexo masculino, controlando por edad. Un coeficiente negativo confirma que los hombres tenían menores chances de sobrevivir.
+* $\beta_2$: efecto de la edad sobre las *log-odds* de sobrevivir. Un valor negativo indica que los pasajeros de mayor edad tenían menores probabilidades de sobrevivir, manteniendo constante el sexo.
+
+---
+
+4. ¿Cuál es la fórmula para el **efecto marginal de la edad** sobre la probabilidad esperada de sobrevivir?
+
+$$
+\frac{\partial\mathbb{P}(\text{Survived | Sex, Age})}{\partial \text{Age}} = \beta_{2}\,\mathbb{P}(\text{Survived | Sex, Age})\cdot (1-\mathbb{P}(\text{Survived | Sex, Age}))
+$$
+
+---
+
+5. Calcula las **probabilidades esperadas de sobrevivir** para un hombre y una mujer de **30 años** según el modelo estimado en II.3.
+
+Formalmente:
+
+* Mujer de 30 años:
+
+$$
+\mathbb{P}(\text{Survived | Sex='female', Age=30}) = \frac{1}{1 + e^{-(\beta_{0} + \beta_{2}\cdot 30)}}
+$$
+
+```{r}
+p_m30_logit <- 1/(1 + exp(-(logit_2$coefficients[1] + logit_2$coefficients["Age"]*30)))
+p_m30_logit
+```
+
+* Hombre de 30 años:
+
+$$
+\mathbb{P}(\text{Survived | Sex='male', Age=30}) = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1} + \beta_{2}\cdot 30)}}
+$$
+
+```{r}
+p_h30_logit <- 1/(1 + exp(-(logit_2$coefficients[1] + logit_2$coefficients[2] + logit_2$coefficients["Age"]*30)))
+p_h30_logit
+```
+
+Implementación automática en `R`:
+
+```{r}
+newx <- titanic_train %>%
+  data_grid(Sex=c("female","male"), Age=30, .model=logit_2)
+
+newy <- newx %>% mutate(pred_prob = predict(logit_2, newdata=newx, type="response"))
+print(newy)
+```
+
+---
+
+6. De acuerdo al modelo estimado en II.3., ¿cuál es el efecto marginal de la edad sobre la probabilidad de sobrevivir para un hombre y una mujer de 30 años?
+
+Recordemos:
+
+$$
+\frac{\partial\mathbb{P}(\text{Survived | Sex, Age})}{\partial \text{Age}} = \beta_{2}\,\mathbb{P}(\text{Survived | Sex, Age}) \cdot (1 - \mathbb{P}(\text{Survived | Sex, Age}))
+$$
+
+Implementación en `R`:
+
+```{r}
+dydx_m30 <- logit_2$coefficients["Age"]*p_m30_logit*(1-p_m30_logit)
+dydx_h30 <- logit_2$coefficients["Age"]*p_h30_logit*(1-p_h30_logit)
+
+cat("Efecto marginal de la edad para mujeres de 30 años:", dydx_m30, "\n")
+cat("Efecto marginal de la edad para hombres de 30 años:", dydx_h30, "\n")
+```
+
+Implementación automática con `marginaleffects`:
+
+```{r}
+slopes(logit_2, variables="Age", newdata=data.frame(Sex=c("female","male"), Age=30))
+```
+
+A diferencia del LPM, en la regresión logística el efecto marginal de la edad depende del nivel de las variables explicativas. Esto implica que los efectos son más pequeños cuando las probabilidades están muy cerca de 0 o de 1, y más grandes en rangos intermedios de probabilidad.
+
+\pagebreak
+
+## Bonus:
+
+A continuación se muestra un gráfico que representa las **probabilidades predichas de sobrevivir en el Titanic** en función de la **edad**, **sexo** y **clase del pasaje (Pclass)**.  
+
+1. A partir del gráfico, deduzcan cuál puede ser el modelo que generó estas superficies de probabilidad.  
+
+2. Estimen dicho modelo en `R`.  
+
+3. Reproduzcan un gráfico lo más parecido posible.  
+
+
+Aquí estimamos una regresión logística con interacciones entre **edad**, **sexo** y **clase**:  
+
+$$
+\ln\frac{\mathbb{P}(\text{Survived})}{1-\mathbb{P}(\text{Survived})} 
+= \beta_0 + \beta_1 \,\text{Sex} + \beta_2 \,\text{Age} + \beta_3 \,\text{Pclass} 
++ \beta_4 (\text{Sex}\times \text{Pclass}) + \beta_5 (\text{Age}\times \text{Pclass})
+$$
+
+Implementación en `R`:
+
+```{r}
+logit_bonus <- glm(Survived ~ Sex*Pclass + Age*Pclass,
+                   data = titanic_train,
+                   family = binomial(link="logit"))
+summary(logit_bonus)
+```
+
+Creamos una cuadrícula de valores de **edad**, **sexo** y **clase** para obtener predicciones de probabilidades.
+
+```{r}
+
+grid <- expand.grid(
+  Age = seq(0, 80, by=2),
+  Pclass = 1:3,
+  Sex = c("female","male")
+)
+
+grid$pred <- predict(logit_bonus, newdata = grid, type="response")
+```
+
+Visualización con heatmap
+
+```{r}
+
+ggplot(grid, aes(x = Age, y = factor(Pclass), fill = pred)) +
+  geom_raster(interpolate = TRUE) +
+  scale_fill_viridis_c(name = "Prob. de sobrevivir", option = "C") +
+  facet_wrap(~Sex) +
+  labs(
+    title = "Supervivencia predicha en el Titanic",
+    subtitle = "Probabilidades según edad, clase y sexo",
+    x = "Edad",
+    y = "Clase del pasaje"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(panel.grid = element_blank())
+```
+
+
+El gráfico presenta la probabilidad predicha de sobrevivir en el Titanic en función de la edad, la clase del pasaje y el sexo.
+
+Efecto de la edad: en ambos sexos, la probabilidad de sobrevivir tiende a disminuir con la edad. El descenso es más pronunciado en tercera clase, lo que sugiere que la vulnerabilidad asociada a la edad se amplifica en condiciones de menor estatus social.
+
+Efecto de la clase: las probabilidades de sobrevivir son mucho mayores en primera clase, intermedias en segunda y bastante más bajas en tercera. Esto refleja tanto desigualdades estructurales (ubicación de cabinas, acceso a botes salvavidas) como normas sociales que priorizaron ciertos grupos.
+
+Efecto del sexo: las mujeres presentan una ventaja clara y consistente en todas las clases y edades. La diferencia entre mujeres y hombres es especialmente marcada en primera y segunda clase, donde la mayoría de las mujeres, sin importar la edad, tenían alta probabilidad de sobrevivir, mientras que en los hombres las probabilidades eran mucho más bajas y decrecían con la edad.
+
+En conjunto, el gráfico refleja una interacción entre clase, edad y sexo:
+
+La supervivencia está determinada tanto por factores biológicos/sociales (edad, sexo) como por factores estructurales (estatus socioeconómico representado por la clase del pasaje).

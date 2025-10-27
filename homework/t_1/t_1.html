@@ -146,7 +146,7 @@ window.Quarto = {
 <p>El hundimiento del <em>Titanic</em> en abril de 1912, durante su viaje inaugural de Southampton a Nueva York, ha sido uno de los desastres marítimos más recordados de la historia. La tragedia provocó la muerte de más de 1.500 personas y dio lugar a numerosas investigaciones sobre seguridad marítima y desigualdades sociales en el acceso a los botes salvavidas.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://e01-elmundo.uecdn.es/assets/multimedia/imagenes/2017/11/20/15111928435925.jpg" class="img-fluid figure-img"></p>
+<p><img src="https://upload.wikimedia.org/wikipedia/en/2/2e/Titanic_poster.jpg" class="img-fluid figure-img"></p>
 <figcaption>Titanic (1997)</figcaption>
 </figure>
 </div>
@@ -312,72 +312,535 @@ window.Quarto = {
 <ol type="1">
 <li>Calcula las probabilidades de que un <strong>hombre</strong> haya sobrevivido en el Titanic <span class="math inline">\((p_h)\)</span> y de que una <strong>mujer</strong> haya sobrevivido <span class="math inline">\((p_m)\)</span>. Calcula la diferencia entre ambas proporciones.</li>
 </ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> titanic_train <span class="sc">%&gt;%</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Sex) <span class="sc">%&gt;%</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">p =</span> <span class="fu">mean</span>(Survived, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>()</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>p_m <span class="ot">&lt;-</span> p[<span class="fu">which</span>(<span class="fu">levels</span>(titanic_train<span class="sc">$</span>Sex) <span class="sc">==</span> <span class="st">"female"</span>)]</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>p_h <span class="ot">&lt;-</span> p[<span class="fu">which</span>(<span class="fu">levels</span>(titanic_train<span class="sc">$</span>Sex) <span class="sc">==</span> <span class="st">"male"</span>)]</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"La probabilidad de sobrevivir para un hombre es:"</span>, <span class="fu">round</span>(p_h, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>La probabilidad de sobrevivir para un hombre es:  </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"La probabilidad de sobrevivir para una mujer es:"</span>, <span class="fu">round</span>(p_m, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>La probabilidad de sobrevivir para una mujer es:  </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>diff_p <span class="ot">&lt;-</span> <span class="fu">round</span>(p_m <span class="sc">-</span> p_h, <span class="dv">2</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Diferencia en probabilidad de sobrevivir (mujeres – hombres):"</span>, diff_p)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Diferencia en probabilidad de sobrevivir (mujeres – hombres): </code></pre>
+</div>
+</div>
 <hr>
 <ol start="2" type="1">
 <li>Usa un <strong>LPM</strong> para estimar la probabilidad de <strong>sobrevivir</strong> en función del <strong>sexo</strong>. Escribe la ecuación de regresión correspondiente y presenta un <code>summary()</code> de los resultados. Explica el significado estadístico de cada coeficiente y su conexión con los resultados de la pregunta anterior.</li>
 </ol>
-<hr>
+<p>La ecuación de regresión es:</p>
+<p><span class="math display">\[
+\mathbb{P}(\text{Survived | Sex}) = \beta_{0} + \beta_{1}\,\mathbb{1}\{\text{male}\}
+\]</span></p>
+<p>Implementación en <code>R</code>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>lpm_1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Survived <span class="sc">~</span> <span class="fu">factor</span>(Sex), <span class="at">data =</span> titanic_train)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(lpm_1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Survived ~ factor(Sex), data = titanic_train)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-0.7420 -0.1889 -0.1889  0.2580  0.8111 
+
+Coefficients:
+                Estimate Std. Error t value            Pr(&gt;|t|)    
+(Intercept)      0.74204    0.02307   32.17 &lt;0.0000000000000002 ***
+factor(Sex)male -0.55313    0.02866  -19.30 &lt;0.0000000000000002 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.4087 on 889 degrees of freedom
+Multiple R-squared:  0.2952,    Adjusted R-squared:  0.2944 
+F-statistic: 372.4 on 1 and 889 DF,  p-value: &lt; 0.00000000000000022</code></pre>
+</div>
+</div>
+<p><strong>Interpretación:</strong></p>
+<ul>
+<li><span class="math inline">\(\beta_0\)</span> (intercepto): probabilidad de sobrevivir para las <strong>mujeres</strong> (grupo de referencia).</li>
+<li><span class="math inline">\(\beta_1\)</span>: cambio en la probabilidad de sobrevivir cuando el pasajero es <strong>hombre</strong>, en comparación con las mujeres.</li>
+<li><span class="math inline">\(\beta_0 + \beta_1\)</span>: probabilidad de sobrevivir para los hombres.</li>
+</ul>
+<p>De acuerdo con estos datos:</p>
+<ul>
+<li>Las mujeres tienen una probabilidad de sobrevivir cercana al <strong>74%</strong>,</li>
+<li>Los hombres alrededor del <strong>19%</strong>,</li>
+<li>Lo que implica una diferencia de más de <strong>55 puntos porcentuales</strong>.</li>
+</ul>
+<p>Esto refleja claramente la regla social de <em>“women and children first”</em> aplicada durante la evacuación del Titanic.</p>
 <ol start="3" type="1">
 <li>Usa un LPM para estimar la probabilidad de <strong>sobrevivir</strong> en función del <strong>sexo</strong>, controlando por la <strong>edad</strong> de los pasajeros. Escribe la ecuación de regresión correspondiente y presenta un <code>summary()</code> de los resultados. Explica el significado estadístico de cada coeficiente y provee una breve interpretación sustantiva.</li>
 </ol>
+<p>La ecuación de regresión es:</p>
+<p><span class="math display">\[
+\mathbb{P}(\text{Survived | Sex, Age}) = \beta_{0} + \beta_{1}\,\mathbb{1}\{\text{male}\} + \beta_{2}\,\text{Age}
+\]</span></p>
+<p>Implementación en <code>R</code>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>lpm_2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Survived <span class="sc">~</span> <span class="fu">factor</span>(Sex) <span class="sc">+</span> Age, <span class="at">data =</span> titanic_train)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(lpm_2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Survived ~ factor(Sex) + Age, data = titanic_train)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-0.7786 -0.2115 -0.1931  0.2471  0.8401 
+
+Coefficients:
+                  Estimate Std. Error t value            Pr(&gt;|t|)    
+(Intercept)      0.7804879  0.0394345  19.792 &lt;0.0000000000000002 ***
+factor(Sex)male -0.5469036  0.0323428 -16.910 &lt;0.0000000000000002 ***
+Age             -0.0009206  0.0010730  -0.858               0.391    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.4144 on 711 degrees of freedom
+  (177 observations deleted due to missingness)
+Multiple R-squared:  0.2911,    Adjusted R-squared:  0.2891 
+F-statistic:   146 on 2 and 711 DF,  p-value: &lt; 0.00000000000000022</code></pre>
+</div>
+</div>
+<p><strong>Interpretación de los coeficientes:</strong></p>
+<ul>
+<li><span class="math inline">\(\beta_0\)</span> es el intercepto: probabilidad de sobrevivir para una mujer de edad cero (hipotético, solo sirve como punto de referencia).</li>
+<li><span class="math inline">\(\beta_1\)</span> mide la diferencia en la probabilidad de sobrevivir entre hombres y mujeres de la misma edad. Un valor negativo indica que los hombres tenían menos probabilidad de sobrevivir que las mujeres, controlando por edad.</li>
+<li><span class="math inline">\(\beta_2\)</span> mide el efecto de la edad sobre la probabilidad de sobrevivir: cuánto cambia la probabilidad de sobrevivir por cada año adicional de edad, manteniendo constante el sexo.</li>
+</ul>
+<p>En general, los resultados muestran que los hombres tenían una probabilidad mucho menor de sobrevivir que las mujeres, y que la probabilidad de sobrevivir también decrecía con la edad.</p>
 <hr>
 <ol start="4" type="1">
 <li>De acuerdo al modelo estimado en la pregunta anterior, ¿cuál es el efecto marginal de la <strong>edad</strong> sobre la probabilidad esperada de sobrevivir?</li>
 </ol>
+<p>El efecto marginal de la edad sobre la probabilidad de sobrevivir está dado por:</p>
+<p><span class="math display">\[
+\frac{\partial \mathbb{P}(\text{Survived | Sex, Age}) }{\partial \text{Age}} = \beta_{2} =
+\]</span></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>lpm_2<span class="sc">$</span>coefficients[<span class="st">"Age"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         Age 
+-0.000920578 </code></pre>
+</div>
+</div>
 <hr>
 <ol start="5" type="1">
 <li>En base al modelo usado en II.3., calcula las probabilidades esperadas de sobrevivir para un <strong>hombre</strong> y una <strong>mujer</strong> de 30 años. Expresa formalmente las ecuaciones correspondientes a estas predicciones.</li>
 </ol>
+<p>Formalmente:</p>
+<ul>
+<li>Para una mujer de 30 años:</li>
+</ul>
+<p><span class="math display">\[
+\mathbb{P}(\text{Survived | Sex='female', Age=30}) = \beta_{0} + \beta_{2}\cdot 30
+\]</span></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>p_m30_lpm <span class="ot">&lt;-</span> lpm_2<span class="sc">$</span>coefficients[<span class="dv">1</span>] <span class="sc">+</span> lpm_2<span class="sc">$</span>coefficients[<span class="st">"Age"</span>]<span class="sc">*</span><span class="dv">30</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(p_m30_lpm) <span class="ot">&lt;-</span> <span class="st">""</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_m30_lpm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          
+0.7528705 </code></pre>
+</div>
+</div>
+<ul>
+<li>Para un hombre de 30 años:</li>
+</ul>
+<p><span class="math display">\[
+\mathbb{P}(\text{Survived | Sex='male', Age=30}) = \beta_{0} + \beta_{1} + \beta_{2}\cdot 30
+\]</span></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>p_h30_lpm <span class="ot">&lt;-</span> lpm_2<span class="sc">$</span>coefficients[<span class="dv">1</span>] <span class="sc">+</span> lpm_2<span class="sc">$</span>coefficients[<span class="dv">2</span>] <span class="sc">+</span> lpm_2<span class="sc">$</span>coefficients[<span class="st">"Age"</span>]<span class="sc">*</span><span class="dv">30</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(p_h30_lpm) <span class="ot">&lt;-</span> <span class="st">""</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_h30_lpm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          
+0.2059669 </code></pre>
+</div>
+</div>
+<p>Implementación automática en <code>R</code>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(modelr)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>newx <span class="ot">&lt;-</span> titanic_train <span class="sc">%&gt;%</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data_grid</span>(<span class="at">Sex =</span> <span class="fu">c</span>(<span class="st">"female"</span>, <span class="st">"male"</span>),</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">Age =</span> <span class="dv">30</span>,</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">.model =</span> lpm_2)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>newy <span class="ot">&lt;-</span> newx <span class="sc">%&gt;%</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pred_prob =</span> <span class="fu">predict</span>(lpm_2, <span class="at">newdata =</span> newx))</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(newy)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  Sex      Age pred_prob
+  &lt;chr&gt;  &lt;dbl&gt;     &lt;dbl&gt;
+1 female    30     0.753
+2 male      30     0.206</code></pre>
+</div>
+</div>
 <hr>
 <ol start="6" type="1">
 <li>Agrega una <strong>interacción</strong> entre <code>Sex</code> y <code>Age</code> al modelo estimado en II.3. Escribe la ecuación de regresión y presenta un <code>summary()</code> de los resultados. Interpreta el efecto de la edad estimado en términos estadísticos y sustantivos.</li>
 </ol>
+<p>La ecuación de regresión es:</p>
+<p><span class="math display">\[
+\mathbb{P}(\text{Survived | Sex, Age}) = \beta_{0} + \beta_{1}\,\mathbb{1}\{\text{male}\} + \beta_{2}\,\text{Age} + \beta_{3}\,(\mathbb{1}\{\text{male}\}\times \text{Age})
+\]</span></p>
+<p>Implementación en <code>R</code>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>lpm_3 <span class="ot">&lt;-</span> <span class="fu">lm</span>(Survived <span class="sc">~</span> <span class="fu">factor</span>(Sex)<span class="sc">*</span>Age, <span class="at">data =</span> titanic_train)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(lpm_3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = Survived ~ factor(Sex) * Age, data = titanic_train)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-0.8579 -0.2275 -0.1616  0.2555  0.9571 
+
+Coefficients:
+                     Estimate Std. Error t value             Pr(&gt;|t|)    
+(Intercept)          0.655775   0.056616  11.583 &lt; 0.0000000000000002 ***
+factor(Sex)male     -0.349223   0.072288  -4.831           0.00000167 ***
+Age                  0.003547   0.001811   1.959              0.05053 .  
+factor(Sex)male:Age -0.006842   0.002241  -3.053              0.00235 ** 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.412 on 710 degrees of freedom
+  (177 observations deleted due to missingness)
+Multiple R-squared:  0.3003,    Adjusted R-squared:  0.2973 
+F-statistic: 101.6 on 3 and 710 DF,  p-value: &lt; 0.00000000000000022</code></pre>
+</div>
+</div>
+<p><strong>Interpretación:</strong></p>
+<ul>
+<li>Para <strong>mujeres</strong>, la probabilidad esperada de sobrevivir depende de la edad según:</li>
+</ul>
+<p><span class="math display">\[
+\mathbb{P}(\text{Survived | female, Age}) = \beta_{0} + \beta_{2}\cdot Age
+\]</span></p>
+<p>El efecto marginal de la edad es <span class="math inline">\(\beta_{2}\)</span>.</p>
+<ul>
+<li>Para <strong>hombres</strong>, la probabilidad esperada de sobrevivir depende de la edad según:</li>
+</ul>
+<p><span class="math display">\[
+\mathbb{P}(\text{Survived | male, Age}) = (\beta_{0}+\beta_{1}) + (\beta_{2}+\beta_{3})\cdot Age
+\]</span></p>
+<p>El efecto marginal de la edad es <span class="math inline">\(\beta_{2} + \beta_{3}\)</span>.</p>
+<p>Esto permite comparar no solo las diferencias de género, sino también cómo la edad afecta diferencialmente la probabilidad de sobrevivir entre hombres y mujeres.</p>
 </section>
 <section id="ii.-regresión-logística" class="level3">
 <h3 class="anchored" data-anchor-id="ii.-regresión-logística">II. Regresión Logística</h3>
 <ol type="1">
 <li>Calcula las <em>odds</em> de que un <strong>hombre</strong> haya sobrevivido en el Titanic <span class="math inline">\((\text{odd}_h)\)</span> y de que una <strong>mujer</strong> haya sobrevivido <span class="math inline">\((\text{odd}_m)\)</span>. Calcula el <em>odds ratio</em> entre ambas <em>odds</em> (hombres vs mujeres) e interpreta el resultado.</li>
 </ol>
+<p>Implementación en <code>R</code>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>tabla <span class="ot">&lt;-</span> titanic_train <span class="sc">%&gt;%</span> <span class="fu">with</span>(<span class="fu">table</span>(Sex, Survived))</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>odd_m <span class="ot">&lt;-</span> tabla[<span class="st">"female"</span>,<span class="st">"1"</span>]<span class="sc">/</span>tabla[<span class="st">"female"</span>,<span class="st">"0"</span>]</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>odd_h <span class="ot">&lt;-</span> tabla[<span class="st">"male"</span>,<span class="st">"1"</span>]<span class="sc">/</span>tabla[<span class="st">"male"</span>,<span class="st">"0"</span>]</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Las odds de sobrevivir para un hombre son:"</span>, <span class="fu">round</span>(odd_h, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Las odds de sobrevivir para un hombre son: 0.23 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Las odds de sobrevivir para una mujer son:"</span>, <span class="fu">round</span>(odd_m, <span class="dv">2</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Las odds de sobrevivir para una mujer son: 2.88 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>theta <span class="ot">&lt;-</span> <span class="fu">round</span>(odd_h<span class="sc">/</span>odd_m, <span class="dv">2</span>)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"El odds ratio (hombres/mujeres) es:"</span>, theta)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>El odds ratio (hombres/mujeres) es: 0.08</code></pre>
+</div>
+</div>
+<p>El <em>odds ratio</em> obtenido es muy inferior a 1 (cercano a 0.09). Esto significa que, en el Titanic, los hombres tenían aproximadamente un <strong>90% menos chances relativas</strong> de sobrevivir que las mujeres.</p>
 <hr>
 <ol start="2" type="1">
 <li>Usa una <strong>regresión logística</strong> para estimar la log-odds de sobrevivir en función del sexo. Escribe la ecuación de regresión correspondiente y presenta un <code>summary()</code> de los resultados. Explica el significado estadístico de cada coeficiente y su conexión con los resultados de la pregunta anterior.</li>
 </ol>
+<p>La ecuación de regresión es:</p>
+<p><span class="math display">\[
+\ln\frac{\mathbb{P}(\text{Survived | Sex})}{1-\mathbb{P}(\text{Survived | Sex})} =  \beta_{0} + \beta_{1}\,\mathbb{1}\{\text{male}\}
+\]</span></p>
+<p>Implementación en <code>R</code>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>logit_1 <span class="ot">&lt;-</span> <span class="fu">glm</span>(Survived <span class="sc">~</span> <span class="fu">factor</span>(Sex), <span class="at">family=</span><span class="fu">binomial</span>(<span class="at">link=</span><span class="st">"logit"</span>), <span class="at">data=</span>titanic_train)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(logit_1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = Survived ~ factor(Sex), family = binomial(link = "logit"), 
+    data = titanic_train)
+
+Coefficients:
+                Estimate Std. Error z value             Pr(&gt;|z|)    
+(Intercept)       1.0566     0.1290   8.191 0.000000000000000258 ***
+factor(Sex)male  -2.5137     0.1672 -15.036 &lt; 0.0000000000000002 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 1186.7  on 890  degrees of freedom
+Residual deviance:  917.8  on 889  degrees of freedom
+AIC: 921.8
+
+Number of Fisher Scoring iterations: 4</code></pre>
+</div>
+</div>
+<p>Interpretación:</p>
+<ul>
+<li><span class="math inline">\(\beta_0\)</span> es el intercepto y representa las <em>log-odds</em> de sobrevivir para las mujeres (grupo de referencia).</li>
+<li><span class="math inline">\(\beta_1\)</span> es el coeficiente para el sexo masculino. Su valor negativo indica que los hombres tienen menores <em>log-odds</em> de sobrevivir que las mujeres.</li>
+</ul>
+<p>En términos de odds:</p>
+<ul>
+<li>Mujeres: <span class="math inline">\(\text{odd}_m = e^{\beta_0}\)</span></li>
+<li>Hombres: <span class="math inline">\(\text{odd}_h = e^{\beta_0 + \beta_1}\)</span></li>
+<li>Por tanto, <span class="math inline">\(\theta = e^{\beta_1}\)</span> es el <em>odds ratio</em>.</li>
+</ul>
 <hr>
 <ol start="3" type="1">
 <li>Estima una regresión logística para las <em>log-odds</em> de sobrevivir en función del sexo, <strong>controlando por la edad</strong> de los pasajeros. Escribe la ecuación de regresión correspondiente y presenta un <code>summary()</code> de los resultados. Explica cada coeficiente.</li>
 </ol>
+<p>La ecuación es:</p>
+<p><span class="math display">\[
+\ln\frac{\mathbb{P}(\text{Survived | Sex, Age})}{1-\mathbb{P}(\text{Survived | Sex, Age})} = \beta_{0} + \beta_{1}\,\mathbb{1}\{\text{male}\} + \beta_{2}\,\text{Age}
+\]</span></p>
+<p>Implementación en <code>R</code>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>logit_2 <span class="ot">&lt;-</span> <span class="fu">glm</span>(Survived <span class="sc">~</span> <span class="fu">factor</span>(Sex) <span class="sc">+</span> Age, <span class="at">family=</span><span class="fu">binomial</span>(<span class="at">link=</span><span class="st">"logit"</span>), <span class="at">data=</span>titanic_train)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(logit_2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = Survived ~ factor(Sex) + Age, family = binomial(link = "logit"), 
+    data = titanic_train)
+
+Coefficients:
+                 Estimate Std. Error z value             Pr(&gt;|z|)    
+(Intercept)      1.277273   0.230169   5.549         0.0000000287 ***
+factor(Sex)male -2.465920   0.185384 -13.302 &lt; 0.0000000000000002 ***
+Age             -0.005426   0.006310  -0.860                 0.39    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 964.52  on 713  degrees of freedom
+Residual deviance: 749.96  on 711  degrees of freedom
+  (177 observations deleted due to missingness)
+AIC: 755.96
+
+Number of Fisher Scoring iterations: 4</code></pre>
+</div>
+</div>
+<ul>
+<li><span class="math inline">\(\beta_0\)</span>: intercepto, representa las <em>log-odds</em> de sobrevivir para una mujer de edad cero (referencia teórica).</li>
+<li><span class="math inline">\(\beta_1\)</span>: efecto del sexo masculino, controlando por edad. Un coeficiente negativo confirma que los hombres tenían menores chances de sobrevivir.</li>
+<li><span class="math inline">\(\beta_2\)</span>: efecto de la edad sobre las <em>log-odds</em> de sobrevivir. Un valor negativo indica que los pasajeros de mayor edad tenían menores probabilidades de sobrevivir, manteniendo constante el sexo.</li>
+</ul>
 <hr>
 <ol start="4" type="1">
 <li>¿Cuál es la fórmula para el <strong>efecto marginal de la edad</strong> sobre la probabilidad esperada de sobrevivir?</li>
 </ol>
+<p><span class="math display">\[
+\frac{\partial\mathbb{P}(\text{Survived | Sex, Age})}{\partial \text{Age}} = \beta_{2}\,\mathbb{P}(\text{Survived | Sex, Age})\cdot (1-\mathbb{P}(\text{Survived | Sex, Age}))
+\]</span></p>
 <hr>
 <ol start="5" type="1">
 <li>Calcula las <strong>probabilidades esperadas de sobrevivir</strong> para un hombre y una mujer de <strong>30 años</strong> según el modelo estimado en II.3.</li>
 </ol>
+<p>Formalmente:</p>
+<ul>
+<li>Mujer de 30 años:</li>
+</ul>
+<p><span class="math display">\[
+\mathbb{P}(\text{Survived | Sex='female', Age=30}) = \frac{1}{1 + e^{-(\beta_{0} + \beta_{2}\cdot 30)}}
+\]</span></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>p_m30_logit <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">/</span>(<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(<span class="sc">-</span>(logit_2<span class="sc">$</span>coefficients[<span class="dv">1</span>] <span class="sc">+</span> logit_2<span class="sc">$</span>coefficients[<span class="st">"Age"</span>]<span class="sc">*</span><span class="dv">30</span>)))</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>p_m30_logit</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(Intercept) 
+  0.7529664 </code></pre>
+</div>
+</div>
+<ul>
+<li>Hombre de 30 años:</li>
+</ul>
+<p><span class="math display">\[
+\mathbb{P}(\text{Survived | Sex='male', Age=30}) = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1} + \beta_{2}\cdot 30)}}
+\]</span></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>p_h30_logit <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">/</span>(<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(<span class="sc">-</span>(logit_2<span class="sc">$</span>coefficients[<span class="dv">1</span>] <span class="sc">+</span> logit_2<span class="sc">$</span>coefficients[<span class="dv">2</span>] <span class="sc">+</span> logit_2<span class="sc">$</span>coefficients[<span class="st">"Age"</span>]<span class="sc">*</span><span class="dv">30</span>)))</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>p_h30_logit</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(Intercept) 
+  0.2056377 </code></pre>
+</div>
+</div>
+<p>Implementación automática en <code>R</code>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>newx <span class="ot">&lt;-</span> titanic_train <span class="sc">%&gt;%</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data_grid</span>(<span class="at">Sex=</span><span class="fu">c</span>(<span class="st">"female"</span>,<span class="st">"male"</span>), <span class="at">Age=</span><span class="dv">30</span>, <span class="at">.model=</span>logit_2)</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>newy <span class="ot">&lt;-</span> newx <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">pred_prob =</span> <span class="fu">predict</span>(logit_2, <span class="at">newdata=</span>newx, <span class="at">type=</span><span class="st">"response"</span>))</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(newy)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  Sex      Age pred_prob
+  &lt;chr&gt;  &lt;dbl&gt;     &lt;dbl&gt;
+1 female    30     0.753
+2 male      30     0.206</code></pre>
+</div>
+</div>
 <hr>
 <ol start="6" type="1">
 <li>De acuerdo al modelo estimado en II.3., ¿cuál es el efecto marginal de la edad sobre la probabilidad de sobrevivir para un hombre y una mujer de 30 años?</li>
 </ol>
-<hr>
+<p>Recordemos:</p>
+<p><span class="math display">\[
+\frac{\partial\mathbb{P}(\text{Survived | Sex, Age})}{\partial \text{Age}} = \beta_{2}\,\mathbb{P}(\text{Survived | Sex, Age}) \cdot (1 - \mathbb{P}(\text{Survived | Sex, Age}))
+\]</span></p>
+<p>Implementación en <code>R</code>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>dydx_m30 <span class="ot">&lt;-</span> logit_2<span class="sc">$</span>coefficients[<span class="st">"Age"</span>]<span class="sc">*</span>p_m30_logit<span class="sc">*</span>(<span class="dv">1</span><span class="sc">-</span>p_m30_logit)</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>dydx_h30 <span class="ot">&lt;-</span> logit_2<span class="sc">$</span>coefficients[<span class="st">"Age"</span>]<span class="sc">*</span>p_h30_logit<span class="sc">*</span>(<span class="dv">1</span><span class="sc">-</span>p_h30_logit)</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Efecto marginal de la edad para mujeres de 30 años:"</span>, dydx_m30, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Efecto marginal de la edad para mujeres de 30 años: -0.001009261 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Efecto marginal de la edad para hombres de 30 años:"</span>, dydx_h30, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Efecto marginal de la edad para hombres de 30 años: -0.0008863252 </code></pre>
+</div>
+</div>
+<p>Implementación automática con <code>marginaleffects</code>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slopes</span>(logit_2, <span class="at">variables=</span><span class="st">"Age"</span>, <span class="at">newdata=</span><span class="fu">data.frame</span>(<span class="at">Sex=</span><span class="fu">c</span>(<span class="st">"female"</span>,<span class="st">"male"</span>), <span class="at">Age=</span><span class="dv">30</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+  Estimate Std. Error      z Pr(&gt;|z|)   S    2.5 %  97.5 %    Sex Age
+ -0.001009    0.00118 -0.855    0.393 1.3 -0.00332 0.00131 female  30
+ -0.000886    0.00103 -0.858    0.391 1.4 -0.00291 0.00114 male    30
+
+Term: Age
+Type: response
+Comparison: dY/dX</code></pre>
+</div>
+</div>
+<p>A diferencia del LPM, en la regresión logística el efecto marginal de la edad depende del nivel de las variables explicativas. Esto implica que los efectos son más pequeños cuando las probabilidades están muy cerca de 0 o de 1, y más grandes en rangos intermedios de probabilidad.</p>
+<div style="page-break-after: always;"></div>
 </section>
-<section id="iii.-bonus" class="level3">
-<h3 class="anchored" data-anchor-id="iii.-bonus">III. Bonus:</h3>
+</section>
+<section id="bonus" class="level2">
+<h2 class="anchored" data-anchor-id="bonus">Bonus:</h2>
 <p>A continuación se muestra un gráfico que representa las <strong>probabilidades predichas de sobrevivir en el Titanic</strong> en función de la <strong>edad</strong>, <strong>sexo</strong> y <strong>clase del pasaje (Pclass)</strong>.</p>
 <ol type="1">
 <li><p>A partir del gráfico, deduzcan cuál puede ser el modelo que generó estas superficies de probabilidad.</p></li>
 <li><p>Estimen dicho modelo en <code>R</code>.</p></li>
 <li><p>Reproduzcan un gráfico lo más parecido posible.</p></li>
 </ol>
+<p>Aquí estimamos una regresión logística con interacciones entre <strong>edad</strong>, <strong>sexo</strong> y <strong>clase</strong>:</p>
+<p><span class="math display">\[
+\ln\frac{\mathbb{P}(\text{Survived})}{1-\mathbb{P}(\text{Survived})}
+= \beta_0 + \beta_1 \,\text{Sex} + \beta_2 \,\text{Age} + \beta_3 \,\text{Pclass}
++ \beta_4 (\text{Sex}\times \text{Pclass}) + \beta_5 (\text{Age}\times \text{Pclass})
+\]</span></p>
+<p>Implementación en <code>R</code>:</p>
 <div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>logit_bonus <span class="ot">&lt;-</span> <span class="fu">glm</span>(Survived <span class="sc">~</span> Sex<span class="sc">*</span>Pclass <span class="sc">+</span> Age<span class="sc">*</span>Pclass,</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">data =</span> titanic_train,</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link=</span><span class="st">"logit"</span>))</span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(logit_bonus)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = Survived ~ Sex * Pclass + Age * Pclass, family = binomial(link = "logit"), 
+    data = titanic_train)
+
+Coefficients:
+                Estimate Std. Error z value         Pr(&gt;|z|)    
+(Intercept)     7.709898   1.113964   6.921 0.00000000000448 ***
+Sexmale        -6.160221   0.938520  -6.564 0.00000000005247 ***
+Pclass         -2.298666   0.408510  -5.627 0.00000001834264 ***
+Age            -0.029716   0.020474  -1.451            0.147    
+Sexmale:Pclass  1.498049   0.352569   4.249 0.00002147677972 ***
+Pclass:Age     -0.004127   0.008975  -0.460            0.646    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 964.52  on 713  degrees of freedom
+Residual deviance: 623.78  on 708  degrees of freedom
+  (177 observations deleted due to missingness)
+AIC: 635.78
+
+Number of Fisher Scoring iterations: 6</code></pre>
+</div>
+</div>
+<p>Creamos una cuadrícula de valores de <strong>edad</strong>, <strong>sexo</strong> y <strong>clase</strong> para obtener predicciones de probabilidades.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>grid <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Age =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">80</span>, <span class="at">by=</span><span class="dv">2</span>),</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">Pclass =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>,</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">Sex =</span> <span class="fu">c</span>(<span class="st">"female"</span>,<span class="st">"male"</span>)</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>grid<span class="sc">$</span>pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(logit_bonus, <span class="at">newdata =</span> grid, <span class="at">type=</span><span class="st">"response"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Visualización con heatmap</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(grid, <span class="fu">aes</span>(<span class="at">x =</span> Age, <span class="at">y =</span> <span class="fu">factor</span>(Pclass), <span class="at">fill =</span> pred)) <span class="sc">+</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_raster</span>(<span class="at">interpolate =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis_c</span>(<span class="at">name =</span> <span class="st">"Prob. de sobrevivir"</span>, <span class="at">option =</span> <span class="st">"C"</span>) <span class="sc">+</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>Sex) <span class="sc">+</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Supervivencia predicha en el Titanic"</span>,</span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Probabilidades según edad, clase y sexo"</span>,</span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Edad"</span>,</span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Clase del pasaje"</span></span>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">14</span>) <span class="sc">+</span></span>
+<span id="cb47-12"><a href="#cb47-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">panel.grid =</span> <span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="t_1_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="t_1_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
-</section>
+<p>El gráfico presenta la probabilidad predicha de sobrevivir en el Titanic en función de la edad, la clase del pasaje y el sexo.</p>
+<p>Efecto de la edad: en ambos sexos, la probabilidad de sobrevivir tiende a disminuir con la edad. El descenso es más pronunciado en tercera clase, lo que sugiere que la vulnerabilidad asociada a la edad se amplifica en condiciones de menor estatus social.</p>
+<p>Efecto de la clase: las probabilidades de sobrevivir son mucho mayores en primera clase, intermedias en segunda y bastante más bajas en tercera. Esto refleja tanto desigualdades estructurales (ubicación de cabinas, acceso a botes salvavidas) como normas sociales que priorizaron ciertos grupos.</p>
+<p>Efecto del sexo: las mujeres presentan una ventaja clara y consistente en todas las clases y edades. La diferencia entre mujeres y hombres es especialmente marcada en primera y segunda clase, donde la mayoría de las mujeres, sin importar la edad, tenían alta probabilidad de sobrevivir, mientras que en los hombres las probabilidades eran mucho más bajas y decrecían con la edad.</p>
+<p>En conjunto, el gráfico refleja una interacción entre clase, edad y sexo:</p>
+<p>La supervivencia está determinada tanto por factores biológicos/sociales (edad, sexo) como por factores estructurales (estatus socioeconómico representado por la clase del pasaje).</p>
 </section>
 
 </main>
