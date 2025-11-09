@@ -15,7 +15,7 @@
  *    - xaringan wiki: https://github.com/yihui/xaringan/wiki
  *    - remarkjs wiki: https://github.com/gnab/remark/wiki
  *
- *  Version: 0.4.2
+ *  Version: 0.4.3
  *
  * ------------------------------------------------------- */
 @import url(https://fonts.googleapis.com/css?family=Inconsolata&display=swap);
@@ -44,21 +44,21 @@
 
   /* Colors */
   --text-color: #000000;
-  --header-color: #214431;
+  --header-color: #712661;
   --background-color: #f8f7f3;
   --link-color: #F3a1F4;
-  --text-bold-color: #214431;
+  --text-bold-color: #712661;
   --code-highlight-color: rgba(255,255,0,0.5);
   --inverse-text-color: #000000;
-  --inverse-background-color: #AFFF3E;
+  --inverse-background-color: #A2CFFE;
   --inverse-header-color: #000000;
   --inverse-link-color: #F3a1F4;
-  --title-slide-background-color: #214431;
+  --title-slide-background-color: #712661;
   --title-slide-text-color: #FFFFFF;
-  --header-background-color: #214431;
+  --header-background-color: #712661;
   --header-background-text-color: #f8f7f3;
-  --primary: #214431;
-  --secondary: #AFFF3E;
+  --primary: #712661;
+  --secondary: #A2CFFE;
   --white: #FFFFFF;
   --black: #000000;
 }
@@ -101,10 +101,10 @@ h1, h2, h3 {
 }
 .remark-inline-code {
   font-size: var(--code-inline-font-size);
-  color: #214431;
+  color: #712661;
 }
 .remark-slide-number {
-  color: #214431;
+  color: #712661;
   opacity: 1;
   font-size: 0.9rem;
 }
@@ -152,10 +152,10 @@ a, a > code {
   float: left;
 }
 .left-column h2, .left-column h3 {
-  color: #21443199;
+  color: #71266199;
 }
 .left-column h2:last-of-type, .left-column h3:last-child {
-  color: #214431;
+  color: #712661;
 }
 .right-column {
   width: 75%;
@@ -177,7 +177,7 @@ img, video, iframe {
   max-width: 100%;
 }
 blockquote {
-  border-left: solid 5px #AFFF3E80;
+  border-left: solid 5px #A2CFFE80;
   padding-left: 1em;
 }
 .remark-slide table {
@@ -194,7 +194,7 @@ th, td {
 .remark-slide table:not(.table-unshaded) thead,
 .remark-slide table:not(.table-unshaded) tfoot,
 .remark-slide table:not(.table-unshaded) tr:nth-child(even) {
-  background: #EFFFD8;
+  background: #ECF5FE;
 }
 table.dataTable tbody {
   background-color: var(--background-color);
@@ -204,7 +204,7 @@ table.dataTable.display tbody tr.odd {
   background-color: var(--background-color);
 }
 table.dataTable.display tbody tr.even {
-  background-color: #EFFFD8;
+  background-color: #ECF5FE;
 }
 table.dataTable.hover tbody tr:hover, table.dataTable.display tbody tr:hover {
   background-color: rgba(255, 255, 255, 0.5);

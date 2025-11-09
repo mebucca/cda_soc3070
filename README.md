@@ -35,7 +35,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | 20    | Octubre   | Regresión Logística Multinomial  | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_13/class_13#1) [`[Code]`](slides/class_13/class_13.Rmd) |
 | 27    | Octubre   | Regresión Poisson  | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_15/class_15#1) [`[Code]`](slides/class_15/class_15.Rmd)                          |                                                                                                                              |
 | 3     | Noviembre | NO HAY CLASES                        |                                                                                                                              |
-| 10    | Noviembre | Clase Final                          |                                                                                                                              |
+| 10    | Noviembre | Clase Final                          | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_17/class_17#1) [`[Code]`](slides/class_17/class_17.Rmd) |
 
 | 24    | Noviembre | Sesión Posters (trabajo final)                          |                                                                                                                              |
 
@@ -66,7 +66,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | Tarea corta 3   | 6 de Octubre     | 13 de Octubre   | [`[TC3]`](https://mebucca.github.io/cda_soc3070/homework/tc_3#1) [`[TC3.qmd]`](homework/tc_3.qmd)  |
 | Tarea corta 4   | 13 de Octubre    | 20 de Octubre   | [`[TC4]`](https://mebucca.github.io/cda_soc3070/homework/tc_4#1) [`[TC4.qmd]`](homework/tc_4.qmd)  |
 | Trabajo 2       | 27 de Octubre    | 10 de Noviembre | [`[T2]`](https://mebucca.github.io/cda_soc3070/homework/t_2/t_2#1) [`[T2.qmd]`](homework/t_2/t_2.qmd)  |
-| Trabajo final   | 29 de Septiembte |                 | [`[TF]`](https://mebucca.github.io/cda_soc3070/homework/t_final#1) [`[TF.qmd]`](homework/t_final.qmd)  |
+| Trabajo final   | 29 de Septiembte | 24 de Noviembre  | [`[TF]`](https://mebucca.github.io/cda_soc3070/homework/t_final#1) [`[TF.qmd]`](homework/t_final.qmd)  |
 
 
 ## Recursos computacionales
