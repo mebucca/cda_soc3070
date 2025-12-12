@@ -34,7 +34,7 @@ notas <- notas %>%
   )
 
 notas %>% 
-  rename(`Nota Final` = nota_final) %>% select(-Nombres) %>%
+  rename(`Nota Final` = nota_final) %>% 
   mutate(`P(Nota Final < tunota)` =rank(`Nota Final`)/n()) %>%
   knitr::kable(digits=c(0,1,1,1,1,2)) %>% kable_styling(font_size = 9)
 
