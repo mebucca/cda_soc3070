@@ -69,6 +69,9 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 | Trabajo final   | 29 de Septiembte | 24 de Noviembre  | [`[TF]`](https://mebucca.github.io/cda_soc3070/homework/t_final#1) [`[TF.qmd]`](homework/t_final.qmd)  |
 
 
+Notas Finales: [`[Notas]`](https://mebucca.github.io/cda_soc3070/grades/notas_final#1)
+
+
 ## Recursos computacionales
 
 ### Para usuarios de `R`
