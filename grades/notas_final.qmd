@@ -1,0 +1,54 @@
+---
+title: "Nota Final (SOC3070)"
+author: "Mauricio Bucca"
+format: html
+editor: visual
+---
+
+## Notas
+```{r, echo=F, message=FALSE, warning=FALSE}
+library("pacman")
+p_load(googlesheets4, tidyverse, kableExtra,mclust)
+
+
+sheet_url <- "https://docs.google.com/spreadsheets/d/1rs1YAW4IcvFs8Ad6K5Vy-pKUDMSGYeMHZ5WDCwn1f7s/edit?gid=1054188155#gid=1054188155"
+
+notas  <- gs4_get(sheet_url)
+notas  <- read_sheet(notas, sheet= "Notas")
+
+
+```
+
+```{r, echo=F, message=FALSE, warning=FALSE}
+
+# casos con una prueba faltante 
+
+notas <- notas %>% 
+  mutate(
+    participacion = 7,
+    nota_final =
+      0.24 * rowMeans(across(starts_with("tc")), na.rm = TRUE) +
+      0.40 * rowMeans(across(c(t1, t2)), na.rm = TRUE) +
+      0.30 * tf +
+      0.06 * participacion
+  )
+
+notas %>% 
+  rename(`Nota Final` = nota_final) %>% select(-Nombres) %>%
+  mutate(`P(Nota Final < tunota)` =rank(`Nota Final`)/n()) %>%
+  knitr::kable(digits=c(0,1,1,1,1,2)) %>% kable_styling(font_size = 9)
+
+```
+
+## Pedestal de Honor
+
+```{r, echo=F, message=FALSE, warning=FALSE}
+
+notas  %>% 
+  select(c(1,2),nota_final) %>%
+  rename(`Nota Final` = nota_final) %>%
+  arrange(desc(`Nota Final`)) %>%
+  head(5) %>%
+  knitr::kable(digits=1) %>% kable_styling(font_size = 9)
+
+```
