@@ -1,0 +1,699 @@
+---
+title: "Nivelación matemática"
+subtitle: "Pre-cálculo, cálculo y fundamentos de probabilidad"
+author: "Mauricio Bucca"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    code-fold: true
+    theme: cosmo
+    embed-resources: true
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r setup}
+#| include: false
+library(tidyverse)
+theme_set(theme_minimal(base_size = 13))
+palette_curso <- c("#2C7FB8", "#D95F02", "#1B9E77", "#7570B3", "#E6AB02")
+
+circle_df <- function(cx, cy, r, n = 100) {
+  theta <- seq(0, 2 * pi, length.out = n)
+  tibble(x = cx + r * cos(theta), y = cy + r * sin(theta))
+}
+```
+
+Este documento reúne, en un solo lugar, el material de nivelación matemática del curso: **pre-cálculo** (funciones, exponenciales, logaritmos, sumatorias), **cálculo** (derivadas, gradiente, integrales) y una **introducción a probabilidad**. No es un curso de matemáticas — la meta es instalar el vocabulario mínimo para que estas herramientas no sean un obstáculo cuando aparezcan más adelante en el curso.
+
+::: {.panel-tabset}
+
+## 1. Pre-cálculo
+
+### Funciones
+
+Una función $f$ de un conjunto $D$ (el **dominio**) a un conjunto $Y$ (el **codominio**) es una regla que asigna un único elemento $f(x) \in Y$ a cada elemento $x \in D$:
+
+$$f: D \to Y, \qquad x \mapsto f(x) \qquad (\text{``}y = f(x)\text{''})$$
+
+El conjunto de todos los valores que efectivamente toma $f(x)$ se llama **recorrido** (o rango) de la función, y puede ser un subconjunto propio del codominio.
+
+Intuitivamente, una función es una máquina: entra $x$, sale $f(x)$, y cada entrada produce siempre la misma salida (aunque dos entradas distintas puedan compartir la misma salida).
+
+```{r fn-maquina}
+#| fig-cap: "Una función como máquina: entra x, sale f(x)"
+#| fig-height: 2.2
+ggplot() +
+  annotate("segment", x = 0, xend = 1.9, y = 1, yend = 1,
+           arrow = arrow(length = unit(0.3, "cm")), linewidth = 1) +
+  annotate("rect", xmin = 2, xmax = 4, ymin = 0.5, ymax = 1.5,
+           fill = palette_curso[1], alpha = 0.15, color = palette_curso[1], linewidth = 1) +
+  annotate("text", x = 3, y = 1, label = "f", size = 8, fontface = "bold", color = palette_curso[1]) +
+  annotate("segment", x = 4.1, xend = 6, y = 1, yend = 1,
+           arrow = arrow(length = unit(0.3, "cm")), linewidth = 1) +
+  annotate("text", x = 1, y = 1.35, label = "x  (entrada, dominio)") +
+  annotate("text", x = 5, y = 1.35, label = "f(x)  (salida, recorrido)") +
+  xlim(-0.2, 6.2) + ylim(0.2, 1.8) +
+  theme_void()
+```
+
+Cuando una función se define con una fórmula y no se restringe el dominio explícitamente, se asume el **dominio natural**: el conjunto más grande de valores de $x$ para los que la fórmula produce un número real. Para encontrarlo, la pregunta siempre es la misma: *¿qué valores de $x$ "rompen" la fórmula?* Hay dos culpables habituales:
+
+- **Dividir por cero**: si $x$ aparece en un denominador, hay que excluir el valor que lo anula.
+- **Raíz de un número negativo**: si $x$ aparece bajo una raíz par ($\sqrt{\ }$), lo de adentro no puede ser negativo.
+
+Dos ejemplos paso a paso:
+
+**$y = 1/x$.** El único problema es dividir por cero. Preguntamos: ¿para qué $x$ se anula el denominador? Para $x=0$. Excluimos ese único punto: dominio $= (-\infty,0)\cup(0,\infty)$. El recorrido se razona igual pero al revés: ¿qué valores de $y$ *nunca* se alcanzan? Como $1/x$ nunca da exactamente $0$ (no existe $x$ tal que $1/x=0$), el recorrido excluye el $0$: $(-\infty,0)\cup(0,\infty)$.
+
+**$y = \sqrt{4-x}$.** El problema es la raíz: necesitamos que lo de adentro sea $\ge 0$, es decir $4-x \ge 0$, o sea $x \le 4$. Dominio $= (-\infty,4]$. El recorrido: una raíz cuadrada nunca es negativa, así que el recorrido es $[0,\infty)$.
+
+Con la misma lógica se arman los otros tres casos:
+
+| Función | Dominio | Recorrido | Razón del dominio |
+|---|---|---|---|
+| $y = x^2$ | $(-\infty,\infty)$ | $[0,\infty)$ | ningún valor de $x$ rompe la fórmula |
+| $y = 1/x$ | $(-\infty,0)\cup(0,\infty)$ | $(-\infty,0)\cup(0,\infty)$ | excluir $x=0$ (división por cero) |
+| $y = \sqrt{x}$ | $[0,\infty)$ | $[0,\infty)$ | necesita $x \ge 0$ (raíz par) |
+| $y = \sqrt{4-x}$ | $(-\infty,4]$ | $[0,\infty)$ | necesita $4-x \ge 0$ |
+| $y = \sqrt{1-x^2}$ | $[-1,1]$ | $[0,1]$ | necesita $1-x^2 \ge 0$, es decir $-1\le x\le 1$ |
+
+::: {.callout-tip}
+**Ejercicio resuelto.** Encontrar el dominio de $g(x) = \sqrt{x^2-3x}$.
+
+1. Es una raíz par $\Rightarrow$ necesitamos $x^2-3x \ge 0$.
+2. Factorizamos: $x(x-3) \ge 0$.
+3. Un producto de dos términos es $\ge 0$ cuando ambos son positivos o ambos son negativos: eso pasa cuando $x \le 0$ **o** $x \ge 3$.
+4. Dominio: $(-\infty,0] \cup [3,\infty)$.
+:::
+
+Ejemplo de evaluación directa: $f(x) = 2x + 1$, evaluada en $x=2$ da $f(2) = 2(2)+1 = 5$.
+
+```{r fn-lineal}
+#| fig-cap: "f(x) = 2x + 1"
+x_values <- seq(-5, 5, 0.1)
+tibble(x = x_values, y = 2 * x_values + 1) %>%
+  ggplot(aes(x, y)) +
+  geom_line(color = palette_curso[1], linewidth = 1.3) +
+  labs(x = "x", y = "f(x)")
+```
+
+**Funciones comunes.** Muchas de las funciones que vamos a usar en el curso son casos particulares de unas pocas familias:
+
+- **Lineal**: $f(x) = mx + b$.
+- **Cuadrática / cúbica** (casos de **potencia**, $f(x) = x^n$): capturan curvatura y asimetría.
+- **Polinomios**: sumas de potencias, $p(x) = a_nx^n + \dots + a_1x + a_0$.
+- **Racionales**: cocientes de polinomios, $f(x) = p(x)/q(x)$.
+
+```{r fn-comunes}
+#| fig-cap: "Funciones potencia: lineal, cuadrática y cúbica"
+x_values <- seq(-2, 2, length.out = 200)
+tibble(x = x_values, Lineal = x_values, `Cuadrática` = x_values^2, `Cúbica` = x_values^3) %>%
+  pivot_longer(-x, names_to = "función", values_to = "y") %>%
+  ggplot(aes(x, y, color = función)) +
+  geom_line(linewidth = 1.2) +
+  scale_color_manual(values = palette_curso[1:3]) +
+  coord_cartesian(ylim = c(-4, 4)) +
+  labs(x = "x", y = "f(x)", color = NULL)
+```
+
+Nótese la simetría: las funciones con potencia **par** ($x^2$) son simétricas respecto al eje $y$; las de potencia **impar** ($x^3$) son simétricas respecto al origen.
+
+### Funciones exponenciales
+
+Una función de la forma $f(x) = a^x$, con base constante $a > 0$, $a \neq 1$, es una **función exponencial**. Su dominio es siempre $(-\infty,\infty)$ y su recorrido $(0,\infty)$ — una exponencial nunca vale cero ni es negativa.
+
+::: {.callout-warning}
+No confundir $2^x$ (exponencial, $x$ en el exponente) con $x^2$ (potencia, $x$ en la base).
+:::
+
+Reglas de exponentes (válidas para $a,b>0$ y cualquier real $x,y$):
+
+| Regla | Fórmula |
+|---|---|
+| Producto | $a^x \cdot a^y = a^{x+y}$ |
+| Cociente | $a^x / a^y = a^{x-y}$ |
+| Potencia de potencia | $(a^x)^y = a^{xy}$ |
+| Producto de bases | $a^x \cdot b^x = (ab)^x$ |
+| Cociente de bases | $a^x / b^x = (a/b)^x$ |
+
+```{r fn-exponenciales}
+#| fig-cap: "Funciones exponenciales con distintas bases"
+x_values <- seq(-3, 3, length.out = 200)
+tibble(x = x_values, `2^x` = 2^x_values, `e^x` = exp(x_values), `3^x` = 3^x_values) %>%
+  pivot_longer(-x, names_to = "base", values_to = "y") %>%
+  filter(y < 25) %>%
+  ggplot(aes(x, y, color = base)) +
+  geom_line(linewidth = 1.2) +
+  scale_color_manual(values = palette_curso[1:3]) +
+  labs(x = "x", y = "f(x)", color = NULL)
+```
+
+La base más importante en cálculo es el número $e \approx 2.718281828$: es la única base para la cual la recta tangente a $y=a^x$ tiene pendiente exactamente 1 en $x=0$. Esto simplifica enormemente el trabajo con derivadas (ver sección de Cálculo), y es la base que usamos, por ejemplo, para pasar de log-odds a probabilidades en regresión logística.
+
+**Crecimiento exponencial, paso a paso.** ¿De dónde sale la fórmula $y=y_0e^{kx}$? Pensemos en $\$100$ invertidos al 5.5% de interés anual, compuesto una vez al año.
+
+1. Al final del año 1: el monto es el capital más el interés, $100 + 0.055\times 100 = 100(1.055)$.
+2. Al final del año 2: se vuelve a aplicar el 5.5% sobre el nuevo monto: $100(1.055)\times 1.055 = 100(1.055)^2$.
+3. Repitiendo el proceso $x$ veces, después de $x$ años el monto es $A = 100(1.055)^x$ — una función exponencial con base $1.055$.
+
+```{r fn-interes}
+#| fig-cap: "Crecimiento de $100 al 5.5% anual, compuesto anualmente"
+anios <- 0:10
+tibble(anio = anios, monto = 100 * 1.055^anios)
+```
+
+Si el interés se compone **continuamente** en vez de una vez al año, el mismo razonamiento (llevado al límite) da la versión con $e$: $A = P e^{rt}$, con $P$ el capital inicial, $r$ la tasa anual y $t$ los años transcurridos. Es la misma idea de "crecimiento proporcional al monto actual", solo que la capitalización es instantánea en vez de anual.
+
+Más en general, la familia $y = y_0 e^{kx}$ modela crecimiento cuando $k>0$ y decaimiento cuando $k<0$ — el signo de $k$ es lo único que distingue crecer de decaer. Un ejemplo de decaimiento: el carbono-14 se modela como $y = y_0 e^{-rt}$ ($r>0$), usado para datar restos orgánicos — cada año que pasa queda una fracción constante del carbono-14 del año anterior, igual que cada año de interés multiplica el capital por un factor constante.
+
+### Funciones logarítmicas
+
+Toda función exponencial $f(x) = a^x$ es **uno-a-uno** (entradas distintas dan salidas distintas), por lo que tiene una función inversa: el **logaritmo en base $a$**, $y = \log_a x$, definido por
+
+$$\log_a x = y \iff a^y = x.$$
+
+El dominio de $\log_a x$ es $(0,\infty)$ (el recorrido de $a^x$); su recorrido es $(-\infty,\infty)$ (el dominio de $a^x$).
+
+El caso más importante es la base $e$: el **logaritmo natural**, $\ln x = \log_e x$, que satisface
+
+$$\ln x = y \iff e^y = x, \qquad \ln e = 1.$$
+
+```{r fn-logaritmo}
+#| fig-cap: "e^x y ln(x) son funciones inversas: sus gráficos son simétricos respecto a la recta y = x"
+x_exp <- seq(-2, 2.5, length.out = 300)
+x_log <- seq(0.05, 12, length.out = 300)
+
+ggplot() +
+  geom_line(data = tibble(x = x_exp, y = exp(x_exp)), aes(x, y, color = "e^x"), linewidth = 1.2) +
+  geom_line(data = tibble(x = x_log, y = log(x_log)), aes(x, y, color = "ln(x)"), linewidth = 1.2) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey60") +
+  scale_color_manual(values = c("e^x" = palette_curso[1], "ln(x)" = palette_curso[2])) +
+  coord_cartesian(xlim = c(-2, 6), ylim = c(-2, 6)) +
+  labs(x = "x", y = "f(x)", color = NULL)
+```
+
+Propiedades algebraicas (para $b, x > 0$):
+
+| Regla | Fórmula |
+|---|---|
+| Producto | $\ln(bx) = \ln b + \ln x$ |
+| Cociente | $\ln(b/x) = \ln b - \ln x$ |
+| Recíproco | $\ln(1/x) = -\ln x$ |
+| Potencia | $\ln(x^r) = r\ln x$ |
+| Inversa (base $a$) | $a^{\log_a x} = x, \quad \log_a(a^x) = x$ |
+| Inversa (base $e$) | $e^{\ln x} = x, \quad \ln(e^x) = x$ |
+| Cambio de base | $\log_a x = \dfrac{\ln x}{\ln a}$ |
+
+**¿Para qué sirve, en la práctica?** El logaritmo es la herramienta para "bajar" una $x$ que está atrapada en un exponente. Ejemplo: ¿cuánto hay que esperar para que $\$100$ invertidos al 5.5% anual se dupliquen? Necesitamos resolver $100(1.055)^x = 200$ para $x$.
+
+1. Simplificamos: $(1.055)^x = 2$.
+2. Aplicamos $\ln$ a ambos lados (si dos números son iguales, sus logaritmos también lo son): $\ln\big((1.055)^x\big) = \ln 2$.
+3. Usamos la regla de la potencia, $\ln(x^r) = r\ln x$, para bajar el exponente: $x \cdot \ln(1.055) = \ln 2$.
+4. Despejamos: $x = \dfrac{\ln 2}{\ln(1.055)}$.
+
+```{r log-despejar}
+log(2) / log(1.055)
+```
+
+Es decir, la inversión tarda unos 13 años en duplicarse. Este patrón — "aplicar $\ln$, bajar el exponente con la regla de la potencia, despejar" — es el mismo que se usa para resolver cualquier ecuación donde la incógnita está en el exponente.
+
+Dos usos concretos que aparecen más adelante en el curso:
+
+- **Log-verosimilitud**: aplicar $\ln$ a un producto de probabilidades lo convierte en una suma, mucho más fácil de derivar (clave para máxima verosimilitud).
+- **Función de enlace logarítmica**: $\ln(\mu_i) = \eta_i$ garantiza que una cantidad esperada positiva (un conteo) nunca sea negativa, sin importar qué valores tome $\eta_i$.
+
+### Sumatorias
+
+La sumatoria $\Sigma$ es notación para sumar una secuencia de términos:
+
+$$\sum_{i=1}^{n} a_i = a_1 + a_2 + \dots + a_n$$
+
+donde $i$ es el índice y $n$ el límite superior (cuántos términos sumar).
+
+```{r sumatoria-esquema}
+#| fig-cap: "Σ acumula cada término, uno tras otro"
+tibble(i = factor(1:5), termino = 1:5) %>%
+  ggplot(aes(i, termino)) +
+  geom_col(fill = palette_curso[1], width = 0.6) +
+  geom_text(aes(label = termino), vjust = -0.4) +
+  labs(x = "i", y = expression(a[i])) +
+  theme(panel.grid.minor = element_blank())
+```
+
+Dos propiedades útiles:
+
+$$\sum_{i=1}^{n} c = c \cdot n \qquad \text{(suma de una constante)}$$
+
+Por ejemplo, $\sum_{i=1}^{5} 1 = 1+1+1+1+1 = 5$: sumar la constante $1$ cinco veces es lo mismo que $1 \times 5$.
+
+$$\sum_{i=1}^{n} i = \frac{n(n+1)}{2} \qquad \text{(suma de los primeros } n \text{ naturales)}$$
+
+Verifiquemos la fórmula con $n=5$, expandiendo la suma término a término y comparando con la fórmula:
+
+```{r sumatoria-verificacion}
+n <- 5
+suma_expandida <- 1 + 2 + 3 + 4 + 5
+suma_formula <- n * (n + 1) / 2
+c(expandida = suma_expandida, formula = suma_formula)
+```
+
+Ambas dan 15 — la fórmula no es magia, es solo un atajo para no tener que escribir todos los términos cuando $n$ es grande.
+
+**Aplicación.** Ventas diarias de una empresa durante una semana:
+
+| Día | Ventas |
+|---|---|
+| Lunes | 1500 |
+| Martes | 1200 |
+| Miércoles | 1800 |
+| Jueves | 1300 |
+| Viernes | 1400 |
+| Sábado | 2000 |
+| Domingo | 1700 |
+
+```{r sumatoria-ventas}
+ventas_diarias <- c(1500, 1200, 1800, 1300, 1400, 2000, 1700)
+sum(ventas_diarias)
+```
+
+El total semanal es, literalmente, $\sum_{i=1}^{7} \text{ventas}_i$.
+
+## 2. Cálculo
+
+### Derivadas
+
+Para una introducción visual e intuitiva a las derivadas, antes de leer las fórmulas: [mathsisfun.com — Derivatives Introduction](https://www.mathsisfun.com/calculus/derivatives-introduction.html).
+
+La derivada de $f$ en un punto $x_0$ mide **cuánto y en qué dirección** cambia $f$ ante un cambio infinitesimal de $x$: es la pendiente de la recta tangente en ese punto.
+
+Antes de la fórmula, recordemos qué es una pendiente: cuánto sube (o baja) una recta por cada unidad que avanza hacia la derecha.
+
+$$\text{pendiente} = \frac{\text{cambio en } y}{\text{cambio en } x} = \frac{\Delta y}{\Delta x}$$
+
+```{r deriv-pendiente-esquema}
+#| fig-cap: "Pendiente = Δy / Δx"
+ggplot() +
+  geom_segment(aes(x = 1, xend = 4, y = 1, yend = 3), color = palette_curso[1], linewidth = 1.3) +
+  geom_segment(aes(x = 1, xend = 4, y = 1, yend = 1), linetype = "dashed", color = "grey50") +
+  geom_segment(aes(x = 4, xend = 4, y = 1, yend = 3), linetype = "dashed", color = "grey50") +
+  geom_point(data = tibble(x = c(1, 4), y = c(1, 3)), aes(x, y), size = 3) +
+  annotate("text", x = 2.5, y = 0.75, label = "Δx") +
+  annotate("text", x = 4.25, y = 2, label = "Δy", hjust = 0) +
+  coord_equal(xlim = c(0.5, 5), ylim = c(0.5, 3.5)) +
+  theme_void()
+```
+
+El problema es que esta idea de pendiente solo tiene sentido entre **dos** puntos distintos — necesitamos "estirar" el mismo cálculo hasta un único punto. Ahí es donde entra el límite:
+
+$$f'(x_0) = \lim_{h \to 0} \frac{f(x_0+h)-f(x_0)}{h}$$
+
+El cociente $\frac{f(x_0+h)-f(x_0)}{h}$ es la pendiente de la recta que une los puntos $(x_0, f(x_0))$ y $(x_0+h, f(x_0+h))$ — una **secante**. La derivada es lo que le pasa a esa pendiente cuando $h$ se hace cada vez más chico, es decir, cuando el segundo punto se acerca al primero hasta casi tocarlo: la secante se convierte en tangente.
+
+```{r deriv-secante-esquema}
+#| fig-cap: "A medida que h se achica, la secante se acerca a la tangente"
+f <- function(x) x^2
+x0 <- 1
+hs <- c(1.4, 0.8, 0.3)
+
+secantes <- map_dfr(hs, function(h) {
+  x1 <- x0 + h
+  pendiente <- (f(x1) - f(x0)) / h
+  tibble(h = paste0("h = ", h), x = c(x0 - 0.3, x1 + 0.3),
+         y = f(x0) + pendiente * (c(x0 - 0.3, x1 + 0.3) - x0))
+})
+
+curva <- tibble(x = seq(-0.3, 3, 0.05), y = f(x))
+tangente_real <- tibble(x = c(0.4, 2.2), y = f(x0) + 2 * x0 * (c(0.4, 2.2) - x0))
+
+ggplot() +
+  geom_line(data = curva, aes(x, y), color = "grey40", linewidth = 1) +
+  geom_line(data = secantes, aes(x, y, color = h, group = h), linewidth = 1) +
+  geom_line(data = tangente_real, aes(x, y), color = "black", linetype = "dashed", linewidth = 1) +
+  geom_point(aes(x = x0, y = f(x0)), size = 3) +
+  scale_color_manual(values = palette_curso[c(4, 2, 1)], name = NULL) +
+  labs(x = "x", y = "f(x)")
+```
+
+La línea negra punteada es la tangente verdadera en $x_0=1$ (pendiente $2$); las secantes de colores, con $h$ cada vez más chico, se le acercan.
+
+**De dónde sale la regla de la potencia, paso a paso.** Apliquemos la definición a $f(x) = x^2$:
+
+1. $f(x_0+h) = (x_0+h)^2 = x_0^2 + 2x_0h + h^2$.
+2. $f(x_0+h) - f(x_0) = (x_0^2 + 2x_0h + h^2) - x_0^2 = 2x_0h + h^2$.
+3. Dividimos por $h$: $\dfrac{2x_0h+h^2}{h} = 2x_0 + h$.
+4. Tomamos el límite cuando $h\to 0$: $2x_0 + h \to 2x_0$.
+
+Es decir, $f'(x_0) = 2x_0$ — exactamente lo que predice la regla de la potencia, $\frac{d}{dx}x^n = nx^{n-1}$, con $n=2$. La regla general se obtiene repitiendo este mismo álgebra para cualquier $n$.
+
+```{r deriv-tangente}
+#| fig-cap: "f(x) = x², tangente en x = 2 (pendiente f'(2) = 4)"
+f_x <- function(x) x^2
+f_prime <- function(x) 2 * x
+x0 <- 2
+pendiente <- f_prime(x0)
+y0 <- f_x(x0)
+tangente <- function(x) pendiente * (x - x0) + y0
+
+x_values <- seq(-1, 4, 0.05)
+tibble(x = x_values, f = f_x(x_values), t = tangente(x_values)) %>%
+  ggplot(aes(x)) +
+  geom_line(aes(y = f), color = palette_curso[1], linewidth = 1.3) +
+  geom_line(aes(y = t), color = palette_curso[2], linewidth = 1.1, linetype = "dashed") +
+  geom_point(aes(x = x0, y = y0), size = 3) +
+  coord_cartesian(ylim = c(-2, 12)) +
+  labs(x = "x", y = "f(x)")
+```
+
+Reglas básicas:
+
+| Regla | Fórmula |
+|---|---|
+| Potencia | $\dfrac{d}{dx} x^n = n x^{n-1}$ |
+| Exponencial | $\dfrac{d}{dx} e^x = e^x$ |
+| Logaritmo | $\dfrac{d}{dx} \ln x = \dfrac{1}{x}$ |
+| Suma | $\dfrac{d}{dx}\big(g(x)+h(x)\big) = g'(x) + h'(x)$ |
+| Regla de la cadena | $\dfrac{d}{dx} f(g(x)) = f'(g(x))\cdot g'(x)$ |
+
+**Regla de la cadena, paso a paso.** Sirve para derivar una función compuesta: una función "de afuera" aplicada a una función "de adentro". Ejemplo: derivar $h(x) = (3x+1)^2$.
+
+1. Identificamos las dos capas: la de afuera es "elevar al cuadrado", $f(u) = u^2$; la de adentro es $g(x) = 3x+1$. Entonces $h(x) = f(g(x))$.
+2. Derivamos la de afuera *dejando la de adentro intacta*: $f'(u) = 2u \;\Rightarrow\; f'(g(x)) = 2(3x+1)$.
+3. Derivamos la de adentro: $g'(x) = 3$.
+4. Multiplicamos: $h'(x) = f'(g(x))\cdot g'(x) = 2(3x+1)\cdot 3 = 6(3x+1) = 18x+6$.
+
+La misma receta —derivar de afuera hacia adentro, multiplicando— es la que se usa, por ejemplo, para derivar la sigmoide $\sigma(z) = \frac{1}{1+e^{-z}}$ cuando $z=\beta_0+\beta_1x$ (clase de regresión logística): la de afuera es $\sigma$, la de adentro es la parte lineal.
+
+Ejemplo de la regla de la suma: si $f(x) = 2x^2 + 3x^3$, entonces $f'(x) = 4x + 9x^2$ (se deriva cada término por separado y se suman los resultados).
+
+```{r deriv-suma}
+#| fig-cap: "Regla de la suma: f(x) = g(x) + h(x) ⟹ f'(x) = g'(x) + h'(x)"
+f <- function(x) 2 * x^2 + 3 * x^3
+f_prime <- function(x) 4 * x + 9 * x^2
+x_values <- seq(-3, 3, 0.05)
+
+tibble(x = x_values, fx = f(x_values), dfx = f_prime(x_values)) %>%
+  pivot_longer(-x, names_to = "curva", values_to = "y") %>%
+  mutate(curva = recode(curva, fx = "f(x) = 2x² + 3x³", dfx = "f'(x) = 4x + 9x²")) %>%
+  ggplot(aes(x, y, color = curva)) +
+  geom_line(linewidth = 1.2) +
+  scale_color_manual(values = palette_curso[1:2]) +
+  coord_cartesian(ylim = c(-50, 50)) +
+  labs(x = "x", y = NULL, color = NULL)
+```
+
+**Aplicación.** Si la población de un país en el año $t$ es $P(t) = 500 + 20t^2$, su tasa de cambio es $P'(t) = 40t$:
+
+```{r deriv-poblacion}
+P_prime <- function(t) 40 * t
+P_prime(10)
+```
+
+En $t=10$, la población crece a razón de 400 personas por año.
+
+**El punto más importante: dónde la derivada es cero.** Si $f$ tiene un máximo (o mínimo) en $x^*$, la tangente ahí es horizontal: $f'(x^*) = 0$.
+
+```{r deriv-maximo}
+#| fig-cap: "Máximo de f: la tangente es horizontal"
+f <- function(x) -(x - 1)^2 + 4
+x_values <- seq(-2, 4, length.out = 200)
+tibble(x = x_values, y = f(x_values)) %>%
+  ggplot(aes(x, y)) +
+  geom_line(color = palette_curso[1], linewidth = 1.2) +
+  geom_hline(yintercept = 4, linetype = "dashed", color = "grey60") +
+  geom_point(aes(x = 1, y = 4), color = palette_curso[2], size = 3) +
+  annotate("text", x = 1.5, y = 4.3, label = "f'(x*) = 0") +
+  labs(x = "x", y = "f(x)")
+```
+
+Esta observación —"buscar el máximo es buscar dónde la pendiente es cero"— es exactamente el mecanismo detrás de la estimación por **máxima verosimilitud (MLE)**: se deriva una log-verosimilitud, se iguala a cero, y se resuelve.
+
+### Gradiente
+
+Cuando $f$ depende de **varias variables**, $f(x_1,\dots,x_p)$, tiene una derivada respecto a cada una — una **derivada parcial**, $\dfrac{\partial f}{\partial x_j}$, que trata a las demás variables como constantes. El vector de todas las derivadas parciales es el **gradiente**:
+
+$$\nabla f(x) = \left(\frac{\partial f}{\partial x_1}, \dots, \frac{\partial f}{\partial x_p}\right)$$
+
+**Calculemos uno, paso a paso.** Sea $f(x,y) = x^2+y^2$, y evaluemos el gradiente en el punto $(1, 0.5)$.
+
+1. Derivada parcial respecto a $x$ (tratamos $y$ como constante): $\dfrac{\partial f}{\partial x} = 2x$.
+2. Derivada parcial respecto a $y$ (tratamos $x$ como constante): $\dfrac{\partial f}{\partial y} = 2y$.
+3. El gradiente como función es $\nabla f(x,y) = (2x,\, 2y)$.
+4. Evaluado en $(1, 0.5)$: $\nabla f(1,0.5) = (2\times 1,\; 2\times 0.5) = (2,\,1)$.
+
+Ese vector $(2,1)$ es exactamente la flecha blanca del gráfico de abajo: parada en $(1,0.5)$, apuntando en la dirección $(2,1)$ — la dirección en la que $f$ crece más rápido desde ese punto.
+
+```{r gradiente-plot}
+#| fig-cap: "f(x,y) = x² + y²: el gradiente en un punto apunta hacia donde f crece más rápido"
+grid <- expand_grid(x = seq(-3, 3, 0.15), y = seq(-3, 3, 0.15)) %>%
+  mutate(z = x^2 + y^2)
+punto <- tibble(x = 1, y = 0.5)
+
+ggplot(grid, aes(x, y, z = z)) +
+  geom_contour_filled(alpha = 0.7, bins = 10, show.legend = FALSE) +
+  geom_point(data = punto, aes(z = NULL), size = 3, color = "white") +
+  geom_segment(aes(x = 1, y = 0.5, xend = 1 + 2 * 1 * 0.15, yend = 0.5 + 2 * 0.5 * 0.15, z = NULL),
+               arrow = arrow(length = unit(0.25, "cm")), color = "white", linewidth = 1) +
+  coord_equal() +
+  labs(x = "x", y = "y")
+```
+
+- El gradiente apunta en la dirección en que $f$ crece más rápido.
+- "Moverse en la dirección **contraria** al gradiente" (descenso de gradiente) es, literalmente, cómo se entrenan la mayoría de los modelos de las últimas clases del curso (regularización, gradient boosting, redes neuronales).
+
+### Integrales
+
+Así como la derivada mide una pendiente, la integral mide un **área acumulada** bajo la curva de $f$ entre $a$ y $b$:
+
+$$\int_a^b f(x)\, dx = \text{área bajo } f \text{ entre } a \text{ y } b$$
+
+**De dónde sale la idea, intuitivamente.** Para aproximar el área bajo $f$ entre $a$ y $b$, se puede dividir el intervalo en $n$ rectángulos angostos de ancho $\Delta x$, con altura $f(x_i)$ en cada uno, y sumarlos — exactamente la sumatoria $\sum_{i=1}^n f(x_i)\,\Delta x$ que vimos en Pre-cálculo.
+
+```{r int-riemann-esquema}
+#| fig-cap: "Aproximando el área bajo f(x) = 2x con rectángulos (suma de Riemann)"
+f <- function(x) 2 * x
+a <- 1; b <- 3; n <- 6
+xs <- seq(a, b, length.out = n + 1)
+rects <- tibble(xmin = xs[-length(xs)], xmax = xs[-1], ymin = 0, ymax = f(xs[-length(xs)]))
+curva <- tibble(x = seq(a - 0.2, b + 0.2, 0.02), y = f(x))
+
+ggplot() +
+  geom_rect(data = rects, aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+            fill = palette_curso[1], alpha = 0.4, color = "white") +
+  geom_line(data = curva, aes(x, y), color = palette_curso[2], linewidth = 1.2) +
+  labs(x = "x", y = "f(x)")
+```
+
+A medida que los rectángulos se hacen más angostos ($\Delta x \to 0$, $n\to\infty$), esa suma se acerca cada vez más al área real bajo la curva. La integral $\int_a^b f(x)\,dx$ es, literalmente, el límite de esa sumatoria. Por suerte, el Teorema Fundamental del Cálculo (más abajo) nos evita tener que sumar infinitos rectángulos a mano.
+
+Propiedades:
+
+$$\int c \cdot f(x)\, dx = c \int f(x)\, dx \qquad \text{(linealidad)}$$
+$$\int \big(f(x)+g(x)\big)\, dx = \int f(x)\, dx + \int g(x)\, dx \qquad \text{(aditividad)}$$
+$$\int_a^b f(x)\, dx = -\int_b^a f(x)\, dx \qquad \text{(invertir el intervalo)}$$
+
+Ejemplo: el área bajo $f(x) = 2x$ entre $x=1$ y $x=3$ es $\int_1^3 2x\, dx = \big[x^2\big]_1^3 = 9 - 1 = 8$.
+
+```{r int-basica}
+#| fig-cap: "∫₁³ 2x dx = 8: área bajo f(x) = 2x entre x = 1 y x = 3"
+x_values <- seq(0, 3.5, 0.02)
+ggplot(tibble(x = x_values, y = 2 * x_values), aes(x, y)) +
+  geom_line(color = palette_curso[1], linewidth = 1.2) +
+  geom_ribbon(data = tibble(x = seq(1, 3, 0.02)) %>% mutate(y = 2 * x),
+              aes(x, ymin = 0, ymax = y), fill = palette_curso[1], alpha = 0.3) +
+  labs(x = "x", y = "f(x)")
+```
+
+**Teorema Fundamental del Cálculo.** Conecta derivación e integración:
+
+1. Si $F(x) = \int_a^x f(t)\, dt$, entonces $F'(x) = f(x)$.
+2. Si $F$ es una antiderivada de $f$, entonces $\int_a^b f(x)\, dx = F(b) - F(a)$.
+
+La segunda parte es la que usamos en la práctica: encontrar una antiderivada y evaluarla en los extremos.
+
+**Ejemplo, paso a paso.** $f(x) = 2x^2+3$ en $[1,2]$.
+
+1. Buscamos una antiderivada $F$ (una función cuya derivada sea $f$): $F(x) = \dfrac{2x^3}{3}+3x$. Verificación rápida: $F'(x) = 2x^2 + 3 = f(x)$. ✓.
+2. Evaluamos en el límite superior: $F(2) = \dfrac{2(2)^3}{3}+3(2) = \dfrac{16}{3}+6$.
+3. Evaluamos en el límite inferior: $F(1) = \dfrac{2(1)^3}{3}+3(1) = \dfrac{2}{3}+3$.
+4. Restamos (superior menos inferior): $F(2)-F(1) = \left(\tfrac{16}{3}+6\right) - \left(\tfrac{2}{3}+3\right) = \tfrac{23}{3}$.
+
+$$\int_1^2 (2x^2+3)\,dx = \tfrac{23}{3}$$
+
+```{r int-ftc}
+#| fig-cap: "∫₁² (2x² + 3) dx = 23/3"
+x_values <- seq(0.5, 3, 0.01)
+ggplot(tibble(x = x_values, y = 2 * x_values^2 + 3), aes(x, y)) +
+  geom_line(color = palette_curso[1], linewidth = 1.2) +
+  geom_ribbon(data = tibble(x = seq(1, 2, 0.01)) %>% mutate(y = 2 * x^2 + 3),
+              aes(x, ymin = 0, ymax = y), fill = palette_curso[2], alpha = 0.4) +
+  labs(x = "x", y = "f(x)")
+```
+
+**Aplicación.** Si la tasa de cambio de una población es $p(t) = 3t^2$ (miles de personas por año, $t$ en años desde 2020), el cambio total de población entre 2020 y 2023 es
+
+$$\int_0^3 3t^2\, dt = \big[t^3\big]_0^3 = 27$$
+
+```{r int-poblacion}
+integrate(function(t) 3 * t^2, 0, 3)
+```
+
+La población aumentó en 27 mil personas en esos 3 años — y `integrate()` (integración numérica) confirma el resultado analítico.
+
+## 3. Introducción a probabilidad
+
+### Experimentos aleatorios y espacio muestral
+
+Un **experimento aleatorio** es un experimento — real o hipotético — en el que todos los posibles resultados son conocidos *a priori*.
+
+> Experimento: tirar un dado. Posibles resultados: números enteros entre 1 y 6.
+
+El conjunto de todos los posibles resultados se llama **espacio muestral**, $\Omega$:
+
+$$\Omega = \{1,2,3,4,5,6\}$$
+
+### Eventos
+
+Un **evento** es un subconjunto bien definido de los posibles resultados de un experimento.
+
+> $A$: "obtener un 1 o un 5" $\to A = \{\text{dado}=1 \text{ o } \text{dado}=5\}$
+
+```{r prob-esquema-evento}
+#| fig-cap: "Un evento A es un subconjunto del espacio muestral Ω"
+circ_a <- circle_df(0, 0, 1.3)
+
+ggplot() +
+  annotate("rect", xmin = -2.2, xmax = 2.2, ymin = -1.8, ymax = 1.8,
+           fill = NA, color = "grey40", linewidth = 1) +
+  geom_polygon(data = circ_a, aes(x, y), fill = palette_curso[1], alpha = 0.4, color = palette_curso[1]) +
+  annotate("text", x = -1.9, y = 1.55, label = "Ω", size = 6, hjust = 0) +
+  annotate("text", x = 0, y = 0, label = "A", size = 6, fontface = "bold") +
+  coord_equal() + theme_void()
+```
+
+### Probabilidad y reglas básicas
+
+A cada evento se le asocia un número que cuantifica su probabilidad de ocurrencia: $\mathbb{P}(A) \in [0,1]$.
+
+Con un dado justo (todos los valores igual de probables): $\mathbb{P}(\text{cada valor}) = 1/6$, y $\mathbb{P}(A) = \mathbb{P}(\text{dado}=1 \text{ o } 5) = 2/6$.
+
+Reglas básicas:
+
+1. **Rango**: $0 \le \mathbb{P}(A) \le 1$.
+2. **Eventos mutuamente excluyentes**: si $A$ y $B$ no pueden ocurrir juntos, $\mathbb{P}(A \text{ y } B) = 0$.
+3. **Unión**: $\mathbb{P}(A \text{ o } B) = \mathbb{P}(A) + \mathbb{P}(B) - \mathbb{P}(A \text{ y } B)$.
+4. Si $A$ y $B$ son mutuamente excluyentes, la regla 3 se simplifica a $\mathbb{P}(A \text{ o } B) = \mathbb{P}(A) + \mathbb{P}(B)$.
+5. **Probabilidad total**: $\mathbb{P}(\Omega) = \sum_i \mathbb{P}(A_i) = 1$, sumando sobre todos los resultados posibles.
+6. **Complemento**: si $A$ y $B$ particionan $\Omega$ (mutuamente excluyentes y exhaustivos), $\mathbb{P}(A) = 1 - \mathbb{P}(B)$.
+
+```{r prob-esquema-union}
+#| fig-cap: "P(A o B) = P(A) + P(B) − P(A y B): la zona de traslape (A y B) no se cuenta dos veces"
+circ_a <- circle_df(-0.6, 0, 1.3)
+circ_b <- circle_df(0.6, 0, 1.3)
+
+ggplot() +
+  annotate("rect", xmin = -2.6, xmax = 2.6, ymin = -1.8, ymax = 1.8,
+           fill = NA, color = "grey40", linewidth = 1) +
+  geom_polygon(data = circ_a, aes(x, y), fill = palette_curso[1], alpha = 0.45, color = palette_curso[1]) +
+  geom_polygon(data = circ_b, aes(x, y), fill = palette_curso[2], alpha = 0.45, color = palette_curso[2]) +
+  annotate("text", x = -2.3, y = 1.55, label = "Ω", size = 6, hjust = 0) +
+  annotate("text", x = -1.1, y = 0, label = "A", size = 6, fontface = "bold") +
+  annotate("text", x = 1.1, y = 0, label = "B", size = 6, fontface = "bold") +
+  annotate("text", x = 0, y = -1.55, label = "A y B (traslape)", size = 4) +
+  coord_equal() + theme_void()
+```
+
+> Ejemplo (regla 3): con $A=\{1,5\}$ y $B=\{5,6\}$, $\mathbb{P}(A \text{ o } B) = \tfrac{1}{6}+\tfrac{1}{6}+\tfrac{1}{6} - \tfrac{1}{6} = \tfrac{2}{6}$ (sin doble-contar el 5).
+
+### Probabilidad condicional
+
+La probabilidad de $A$ **una vez que sabemos** que ocurrió $B$ es la probabilidad condicional de $A$ dado $B$:
+
+$$\mathbb{P}(A \mid B) = \frac{\mathbb{P}(A,B)}{\mathbb{P}(B)}$$
+
+> Ejemplo: dado justo, $A=\{4,5,6\}$ ("cuatro o más"), $B=\{2,4,6\}$ ("par"). $\mathbb{P}(A \mid B) = \dfrac{\mathbb{P}(\{4,6\})}{\mathbb{P}(\{2,4,6\})} = \dfrac{2/6}{3/6} = \dfrac{2}{3} \approx 0.66$.
+
+**Ejercicio.** Un 5% de la población son mujeres (M) con estudios universitarios completos (U); las mujeres son 55% de la población; 20% de la población tiene estudios universitarios completos.
+
+- $\mathbb{P}(U \mid M) = 0.05 / 0.55 \approx 0.09$
+- $\mathbb{P}(M \mid U) = 0.05 / 0.20 = 0.25$
+- $\mathbb{P}(H \mid U) = 1 - \mathbb{P}(M \mid U) = 0.75$ (H = hombre)
+
+Pero, en general, $\mathbb{P}(A\mid B) \neq \mathbb{P}(B\mid A)$ — para invertir el condicionamiento (¿$\mathbb{P}(U \mid H)$?) necesitamos el **Teorema de Bayes**.
+
+### Teorema de Bayes
+
+![Thomas Bayes (1701–1761)](../slides/class_2/tbayes.png){width="160"}
+
+La idea: ya sabemos calcular $\mathbb{P}(A\mid B)$ a partir de $\mathbb{P}(A,B)$. Bayes usa exactamente esa misma definición, escrita dos veces (una para cada orden), para armar un puente entre $\mathbb{P}(A\mid B)$ y $\mathbb{P}(B\mid A)$.
+
+**Derivación, paso a paso:**
+
+1. Por definición de probabilidad condicional: $\mathbb{P}(A \mid B) = \dfrac{\mathbb{P}(A,B)}{\mathbb{P}(B)}$.
+2. Por la misma definición, en el otro orden: $\mathbb{P}(B \mid A) = \dfrac{\mathbb{P}(A,B)}{\mathbb{P}(A)}$.
+3. Despejamos $\mathbb{P}(A,B)$ de la ecuación (2): $\mathbb{P}(A,B) = \mathbb{P}(B\mid A)\,\mathbb{P}(A)$.
+4. Sustituimos ese $\mathbb{P}(A,B)$ en la ecuación (1): $\mathbb{P}(A \mid B) = \dfrac{\mathbb{P}(B\mid A)\,\mathbb{P}(A)}{\mathbb{P}(B)}$.
+5. Intercambiando los nombres $A$ y $B$ (la relación es simétrica), obtenemos el **teorema de Bayes**:
+
+$$\mathbb{P}(B \mid A) = \frac{\mathbb{P}(A \mid B)\,\mathbb{P}(B)}{\mathbb{P}(A)}$$
+
+**Aplicado al ejemplo anterior, paso a paso** (queremos $\mathbb{P}(U\mid H)$, y ya conocemos $\mathbb{P}(H\mid U)=0.75$, $\mathbb{P}(U)=0.2$, $\mathbb{P}(H)=1-0.55=0.45$):
+
+1. Identificamos qué juega el rol de $A$ y de $B$ en la fórmula: aquí $A=H$, $B=U$, así que buscamos $\mathbb{P}(U\mid H)$.
+2. Reemplazamos en la fórmula: $\mathbb{P}(U \mid H) = \dfrac{\mathbb{P}(H \mid U)\,\mathbb{P}(U)}{\mathbb{P}(H)}$.
+3. Sustituimos los números: $= \dfrac{0.75 \times 0.2}{0.45}$.
+4. Calculamos: $= \dfrac{0.15}{0.45} \approx 0.33$.
+
+```{r bayes-check}
+(0.75 * 0.2) / 0.45
+```
+
+### Ley de probabilidad total
+
+Si $\{B_1,\dots,B_n\}$ particiona $\Omega$ en subconjuntos mutuamente excluyentes, entonces
+
+$$\mathbb{P}(A) = \sum_{i=1}^n \mathbb{P}(A \mid B_i)\,\mathbb{P}(B_i)$$
+
+La intuición: si queremos $\mathbb{P}(A)$ pero no la conocemos directamente, la separamos según cada posible "camino" hacia $A$ (uno por cada $B_i$), calculamos la probabilidad de cada camino por separado, y las sumamos.
+
+**Ejemplo, paso a paso.** Mujeres son 55% de la población ($\mathbb{P}(M)=0.55$, y por lo tanto $\mathbb{P}(H)=0.45$); 20% de los hombres tiene estudios universitarios ($\mathbb{P}(U\mid H)=0.2$); 25% de las mujeres los tiene ($\mathbb{P}(U\mid M)=0.25$). Queremos $\mathbb{P}(U)$, la probabilidad de que una persona cualquiera tenga estudios universitarios.
+
+1. $H$ y $M$ particionan a toda la población (todos son hombre o mujer, mutuamente excluyentes) — son los $B_i$ de la fórmula.
+2. Camino 1 ("es hombre y tiene estudios"): $\mathbb{P}(U\mid H)\,\mathbb{P}(H) = 0.2 \times 0.45 = 0.09$.
+3. Camino 2 ("es mujer y tiene estudios"): $\mathbb{P}(U\mid M)\,\mathbb{P}(M) = 0.25 \times 0.55 = 0.1375$.
+4. Sumamos ambos caminos: $\mathbb{P}(U) = 0.09 + 0.1375 = 0.2275$.
+
+```{r probabilidad-total}
+0.2 * 0.45 + 0.25 * 0.55
+```
+
+### Independencia estadística
+
+Dos eventos $A$ y $B$ son **independientes** si la ocurrencia de uno no afecta la probabilidad del otro:
+
+$$\mathbb{P}(A \mid B) = \mathbb{P}(A) \quad\iff\quad \mathbb{P}(A,B) = \mathbb{P}(A)\,\mathbb{P}(B)$$
+
+> Ejemplo: dos monedas justas, $A$ = "cara en la 1ª", $B$ = "sello en la 2ª". $\mathbb{P}(A)=\mathbb{P}(B)=1/2$, $\mathbb{P}(A,B) = 1/4 = \mathbb{P}(A)\mathbb{P}(B)$ — independientes.
+
+### Simulación Monte Carlo
+
+Tiramos dos monedas simultáneamente: una justa y una cargada (90% probabilidad de cara). Si los lanzamientos son independientes, $\mathbb{P}(\text{Cara}_1,\text{Cara}_2) = 0.5 \times 0.9 = 0.45$. Lo verificamos simulando:
+
+```{r montecarlo}
+set.seed(1)
+n <- 10000
+coin1 <- rbinom(n, 1, prob = 0.5)
+coin2 <- rbinom(n, 1, prob = 0.9)
+
+datos_monedas <- tibble(coin1 = coin1, coin2 = coin2) %>%
+  mutate(cc = if_else(coin1 == 1 & coin2 == 1, "Cara-Cara", "Otro"))
+
+prop.table(table(datos_monedas$cc))
+```
+
+La proporción simulada de "Cara-Cara" se acerca a 0.45, confirmando el cálculo teórico.
+
+:::
