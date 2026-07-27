@@ -1,0 +1,1660 @@
+---
+title: "Análisis de Datos Categóricos (SOC3070)"
+subtitle: "Bonus: Regresión Logística (Multinomial) Ordenada"
+author: "Mauricio Bucca · Sociología UC"
+date: today
+body-classes: theme-psg
+course-team: psg
+filters: ["../_shared/course.lua"]
+format:
+  revealjs:
+    css: "../_shared/course.css"
+    slide-number: false
+    theme: default
+    highlight-style: github
+    code-block-font-size: 0.9em
+    width: 1600
+    height: 900
+    html-math-method: katex
+---
+
+```{r course-style, include=FALSE}
+source("../_shared/bikeshare.R")
+course_palette <- use_course_style("psg")
+```
+
+## Antes · Hoy · Después {.class-rhythm}
+
+::: {.full-width}
+
+::: {.content-box}
+**Antes**
+
+regresión multinomial e interpretación de efectos.
+:::
+
+::: {.content-box-primary}
+**Hoy**
+
+regresión logística ordinal y efectos marginales.
+:::
+
+::: {.content-box-secondary}
+**Después**
+
+modelos de conteo.
+:::
+
+:::
+
+
+
+# Regresión Logística (Multinomial) Ordenada {.inverse .center .middle}
+
+## Estructura de un modelo de regresión logística multinomial ordenada
+Un modelo de regresión logística ordenada generaliza la regresión logística (binomial) a situaciones en que la variable dependiente es una  variable discreta con [ dos o más valores ordenados]{.bold} (ejemplo: "muy de acuerdo", "algo de acuerdo", "poco de acuerdo", etc..).
+
+. . .
+
+[Configuración]{.bold}
+
+- Tenemos $n$ observaciones (individuos) independientes: $i = 1, \dots, n$
+
+. . .
+
+- Para cada observación observamos datos $y_{i}, \dots , y_{n}$ que actúan como variable dependiente, donde $y_{i} \in \{j:1,2, \cdots, J\}$
+  - Las $J$ categorías de $y_{i}$ siguen un orden.
+
+. . .
+
+- Asumimos que estos datos son realizaciones de $n$ variables aleatorias con probabilidades $\{p_{1}, p_{2}, \dots, p_{J}\}$.
+
+. . .
+
+- Dichas probabilidades varían de individuo en individuo en función de ciertas covariables.
+
+## Fundamentos teóricos {.inverse .center .middle}
+
+### Interpretación de regresión logística en términos de variable latente
+
+## Regresión logística binomial, variable latente
+Una regresión logística binomial tiene $y_{i} \in \{0,1\}$.
+
+. . .
+
+::: {.pull-left}
+
+$$y_{i} \sim \text{Bernoulli}\big(p_{i} = e^{\eta_{i}}/(1 + e^{\eta_{i}})\big)$$
+
+:::
+
+::: {.pull-right}
+
+donde $\quad \eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$
+
+:::
+
+. . .
+
+Ejemplo: si $\eta_{i}=0$, entonces: $p_{i}=1/(1+1)=0.5$
+
+. . .
+
+Una formulación alternativa describe la variable dependiente $y$ como una [manifestación discreta]{.bold} de una [variable latente]{.bold} (inobservada) continua, $y^{*}$.
+
+::: {.pull-left}
+
+$$y_{i} = \begin{cases}
+1 \quad \text{si} \quad y^{*}_{i} > 0 \\
+0 \quad \text{si} \quad y^{*}_{i} < 0
+\end{cases}$$
+
+:::
+
+::: {.pull-right}
+
+$y^{*}_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki} + \epsilon_{i}$
+
+:::
+
+- $\epsilon_{i}$ sigue una distribución de probabilidad [logística]{.bold}: $\epsilon_{i} \sim \text{logistic}(\mu=0,\sigma=\pi/\sqrt{3}) \approx \mathcal{N}(0,1.6)$
+```{css, echo=FALSE}
+.pull-right ~ * { clear: unset; }
+.pull-right + * { clear: both; }
+```
+
+## Regresión logística binomial, variable latente
+
+[Distribución]{.bold} de error aleatorio en regresión logística con variable latente:
+
+::: {.pull-left}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=6, fig.width=10.5}
+
+# datos de demanda de bicicletas del paquete "ISLR2"
+library(pacman)
+p_load("tidyverse")
+p_load("ISLR2")
+p_load("viridis")
+p_load("modelr")
+p_load("MASS")
+p_load("cowplot")
+p_load("margins")
+
+theme_set(theme_julia())
+
+mydata <- data_frame(x = seq(from = -5, to = 5, by =0.01), logistic = dlogis(x), normal = dnorm(x,0,1.6) ) %>%
+          pivot_longer(-x)
+
+plot <- ggplot(data = mydata, mapping = aes(x = x)) +
+    ## Entire curve
+    geom_path(aes(y=value, group=name, colour=name), size=1.5, alpha=0.8) +
+  labs(title="Densidad de probabilidad", x="e ~ logistic(0,pi/sqrt(3))", colour="Distribución", y="f(.)") +
+     scale_color_course() +
+      geom_vline(xintercept = 0, color = course_palette[["primary"]], size=1.5) +
+      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+      legend.text = element_text(size = 18)) 
+print(plot)
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=6, fig.width=10.5}
+
+# datos de demanda de bicicletas del paquete "ISLR2"
+
+mydata <- data_frame(x = seq(from = -5, to = 5, by =0.01), logistic = plogis(x), normal = pnorm(x,0,1.6) ) %>%
+          pivot_longer(-x)
+
+plot <- ggplot(data = mydata, mapping = aes(x = x)) +
+    ## Entire curve
+    geom_path(aes(y=value, group=name, colour=name), size=1.5, alpha=0.8) +
+  labs(title="Probabilidad acumulada", x="e ~ logistic(0,pi/sqrt(3))", colour="Distribución", y="F(.)") +
+     scale_color_course() +
+        geom_vline(xintercept = 0, color = course_palette[["primary"]], size=1.5) +
+        geom_hline(yintercept = 0.5, color = course_palette[["primary"]], size=1.5, linetype="dotted") +
+        theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+      legend.text = element_text(size = 18)) 
+print(plot)
+```
+
+:::
+
+## Regresión logística binomial, variable latente
+
+::: {.pull-left}
+
+$$y_{i} = \begin{cases}
+  1 \quad \text{si} \quad y^{*}_{i} > 0 \\
+  0 \quad \text{si} \quad y^{*}_{i} < 0
+  \end{cases}$$
+
+:::
+
+. . .
+
+::: {.pull-right}
+
+$y^{*}_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki} + \epsilon_{i}$
+
+:::
+
+- $\epsilon_{i} \sim \text{logistic}(\mu=0,\sigma=\pi/\sqrt{3})$
+
+. . .
+
+\begin{align}\mathbb{P}(y_{i}=0) &= \mathbb{P}(y^{*}_{i}<0) \\  \\
+&= \mathbb{P}(\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki} + \epsilon_{i}  < 0) \\ \\
+&= \mathbb{P}(\epsilon_{i} < -(\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})) \\ \\
+&= F_{\epsilon_{i}}(-(\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})) \quad \text{ i.e. función de probabilidad acumulada} \\ \\ 
+&= \text{logit}^{-1}(-(\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})
+\end{align}
+## Regresión logística binomial, variable latente
+Ajustando el siguiente modelo: $\text{logit(alta demanda}_{i}) = \beta_{0} + \beta_{1}*\text{temp}_{i}$ obtenemos:
+
+::: {.pull-left}
+
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+
+bikedata <- Bikeshare %>% as_tibble()
+
+# variable binaria: alta demanda = top 25% de las horas (percentil 75 de bikers)
+p75 <- quantile(bikedata$bikers, 0.75)
+bikedata <- bikedata %>%
+  mutate(demand = case_when(bikers <= p75 ~ "baja", bikers > p75 ~ "alta") ) %>%
+  # codificación 0/1
+  mutate(high_demand = case_when(bikers <= p75 ~ 0, bikers > p75 ~ 1))
+
+logit_demand_temp <- glm(high_demand ~ temp, family=binomial(link="logit"), data=bikedata)
+summary(logit_demand_temp)$coefficients[,1]
+
+```
+```{r,  include=TRUE, warning=FALSE, message=FALSE}
+xb_1 = coef(logit_demand_temp)[1] + coef(logit_demand_temp)[2]*0.5
+plogis(-xb_1,0,1)
+inv_logit = 1/(1 + exp(xb_1)); inv_logit
+```
+
+:::
+
+. . .
+
+::: {.pull-right}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=6, fig.width=8.5}
+mydata <- data_frame(x = seq(from = -5, to = 5, by =0.01), logit = plogis(x) )
+plot <- ggplot(data = mydata, mapping = aes(x = x)) +
+    ## Entire curve
+    geom_path(aes(y=logit,color=""), size=1.5, alpha=0.8) +
+  labs(y="P(e < -xb)", x="e") +
+     scale_color_course() +
+      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+      legend.text = element_text(size = 18), legend.position="none") +
+      geom_vline(xintercept = -xb_1, color = course_palette[["primary"]], size=1.5) +
+      geom_hline(yintercept = plogis(-xb_1,0,1), color = course_palette[["primary"]], size=1.5, linetype="dotted") +
+        annotate(geom="text", x= xb_1 + 2.2, y=0.1, label=paste0("xb[1] == ", course_number(-xb_1)), color="black", parse=TRUE, size=8)
+print(plot)
+```
+
+:::
+
+## Regresión logística (multinomial) ordenada {.inverse .center .middle}
+
+## Regresión logística (multinomial) ordenada, variable latente
+La formulación con variable latente se puede generalizar al caso en que la variable dependiente toma $J$ valores ordenados, tal que $y \in \{1,2,\dots,J\}$.
+
+. . .
+
+::: {.pull-left}
+
+$$y^{*}_{i} = \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki} + \epsilon_{i}$$
+
+:::
+
+::: {.pull-right}
+
+$$\epsilon_{i} \sim \text{logistic}(\mu=0,\sigma=\pi/\sqrt{3})$$
+
+:::
+
+. . .
+
+En este caso la variable latente $y^{*}$ es dividida en $J$ intervalos usando $J-1$ [cutoff points]{.bold}:  $\alpha_{1} < \alpha_{2} < \dots < \alpha_{J-1} < \alpha_{J}$ 
+
+::: {.pull-left}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=6, fig.width=10.5}
+
+mydata <- data_frame(x = seq(from = -5, to = 5, by =0.01), logistic = dlogis(x))
+plot <- ggplot(data = mydata, mapping = aes(x = x)) +
+    ## Entire curve
+    geom_path(aes(y=logistic), size=1.5, alpha=0.8) +
+  labs(title="Densidad de probabilidad", x="y*", colour="Distribución", y="f(.)") +
+     scale_color_course() +
+      geom_vline(xintercept = c(-2.1,0.4), color = course_palette[["primary"]], size=1.5) +
+      geom_vline(xintercept = 1.3, color = course_palette[["secondary"]], size=1.5) +
+      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+      legend.text = element_text(size = 18))  +
+      annotate(geom="text", x= 1.8, y=1, label='bold("y*_i")', color=course_palette[["secondary"]], parse=TRUE, size=8) +
+      annotate(geom="text", x= -2.4, y=1, label='bold("a1")', color=course_palette[["primary"]], parse=TRUE, size=8) +
+      annotate(geom="text", x= 0.1, y=1, label='bold("a2")', color=course_palette[["primary"]], parse=TRUE, size=8) +
+  theme( axis.text.x=element_blank(), axis.ticks.x=element_blank())
+
+print(plot)
+```
+
+:::
+
+::: {.pull-right}
+
+\begin{align}y_{i}=1 \quad \text{si }&  y^{*}_{i} < \alpha_{1} \\  \\  
+y_{i}=2 \quad \text{si }&  \alpha_{1} < y^{*}_{i} < \alpha_{2} \\ \\  
+& \vdots \\  \\  
+y_{i}=J \quad \text{si }&  y^{*}_{i} > \alpha_{J-1}
+\end{align}
+:::
+
+```{css, echo=FALSE}
+.pull-right ~ * { clear: unset; }
+.pull-right + * { clear: both; }
+```
+
+## Regresión logística (multinomial) ordenada, variable latente
+Esta paramatrización implica que:
+
+::: {.pull-left}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=6, fig.width=10.5}
+
+mydata <- data_frame(x = seq(from = -5, to = 5, by =0.01), logistic = dlogis(x))
+plot <- ggplot(data = mydata, mapping = aes(x = x)) +
+    ## Entire curve
+    geom_path(aes(y=logistic), size=1.5, alpha=0.8) +
+  labs(title="Densidad de probabilidad", x="y*", colour="Distribución", y="f(.)") +
+     scale_color_course() +
+      geom_vline(xintercept = c(-2.1,0.4), color = course_palette[["primary"]], size=1.5) +
+      geom_vline(xintercept = 1.3, color = course_palette[["secondary"]], size=1.5) +
+      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+      legend.text = element_text(size = 18))  +
+      annotate(geom="text", x= 1.8, y=1, label='bold("y*_i")', color=course_palette[["secondary"]], parse=TRUE, size=8) +
+      annotate(geom="text", x= -2.4, y=1, label='bold("a1")', color=course_palette[["primary"]], parse=TRUE, size=8) +
+      annotate(geom="text", x= 0.1, y=1, label='bold("a2")', color=course_palette[["primary"]], parse=TRUE, size=8) +
+      theme( axis.text.x=element_blank(), axis.ticks.x=element_blank())
+
+print(plot)
+```
+
+:::
+
+::: {.pull-right}
+
+\begin{align}\mathbb{P}(y_{i}\leq 1) &= \mathbb{P}(y^{*}_{i}< \alpha_{1}) \\  \\
+&= \mathbb{P}(\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki} + \epsilon_{i}  < \alpha_{1}) \\ \\
+&= \mathbb{P}(\epsilon_{i} < \alpha_{1} -(\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})) \\ \\
+&= F_{\epsilon_{i}}(\alpha_{1} -(\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))  \\ \\ 
+&= \text{logit}^{-1}(\alpha_{1} -(\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))
+\end{align}
+:::
+
+```{css, echo=FALSE}
+.pull-right ~ * { clear: unset; }
+.pull-right + * { clear: both; }
+```
+
+## Regresión logística (multinomial) ordenada, variable latente
+Asimismo,
+
+::: {.pull-left}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=6, fig.width=10.5}
+
+mydata <- data_frame(x = seq(from = -5, to = 5, by =0.01), logistic = dlogis(x))
+plot <- ggplot(data = mydata, mapping = aes(x = x)) +
+    ## Entire curve
+    geom_path(aes(y=logistic), size=1.5, alpha=0.8) +
+  labs(title="Densidad de probabilidad", x="y*", colour="Distribución", y="f(.)") +
+     scale_color_course() +
+      geom_vline(xintercept = c(-2.1,0.4), color = course_palette[["primary"]], size=1.5) +
+      geom_vline(xintercept = 1.3, color = course_palette[["secondary"]], size=1.5) +
+      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+      legend.text = element_text(size = 18))  +
+      annotate(geom="text", x= 1.8, y=1, label='bold("y*_i")', color=course_palette[["secondary"]], parse=TRUE, size=8) +
+      annotate(geom="text", x= -2.4, y=1, label='bold("a1")', color=course_palette[["primary"]], parse=TRUE, size=8) +
+      annotate(geom="text", x= 0.1, y=1, label='bold("a2")', color=course_palette[["primary"]], parse=TRUE, size=8) +
+     theme( axis.text.x=element_blank(), axis.ticks.x=element_blank())
+
+print(plot)
+```
+
+:::
+
+::: {.pull-right}
+
+\begin{align}\mathbb{P}(y_{i}\leq 2) &= \mathbb{P}(y^{*}_{i}< \alpha_{2}) \\  \\
+&= \mathbb{P}(\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki} + \epsilon_{i}  < \alpha_{2}) \\ \\
+&= \mathbb{P}(\epsilon_{i} < \alpha_{2} -(\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})) \\ \\
+&= F_{\epsilon_{i}}(\alpha_{2} -(\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))  \\ \\ 
+&= \text{logit}^{-1}(\alpha_{2} -(\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))
+\end{align}
+:::
+
+. . .
+
+y así sucesivamente ...
+```{css, echo=FALSE}
+.pull-right ~ * { clear: unset; }
+.pull-right + * { clear: both; }
+```
+
+## Regresión logística (multinomial) ordenada, variable latente
+Reiterando, las probabilidades "acumuladas" en cada valor sucesivo de la variable $y$ vienen dadas por: 
+$$\mathbb{P}(y_{i} \leq 1) = \text{logit}^{-1}(\alpha_{1} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))$$
+
+. . .
+
+$$\mathbb{P}(y_{i} \leq 2) = \text{logit}^{-1}(\alpha_{2} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))$$
+$$\vdots$$
+
+. . .
+
+$$\mathbb{P}(y_{i} \leq J-1) = \text{logit}^{-1}(\alpha_{J-1} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))$$
+donde
+
+. . .
+
+- $\alpha_{1}, \alpha_{2}, \dots, \alpha_{j-1}$ son [cutoff points]{.bold} que dividen la variable latente $y^{*}$
+- Valores más alto de $y^{*}$ implican una mayor probabilidad de obtener valores en la variable discreta $y$
+
+## Regresión logística (multinomial) ordenada, variable latente
+Sintéticamente:
+
+::: {.content-box-yellow}
+
+$$\mathbb{P}(y_{i} \leq j) = \text{logit}^{-1}(\alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))$$
+
+:::
+
+::: {.pull-left}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=6, fig.width=10.5}
+
+mydata <- data_frame(x = seq(from = -5, to = 5, by =0.01), logistic = dlogis(x))
+plot <- ggplot(data = mydata, mapping = aes(x = x)) +
+    ## Entire curve
+    geom_path(aes(y=logistic), size=1.5, alpha=0.8) +
+  labs(title="Densidad de probabilidad", x="y*", colour="Distribución", y="f(.)") +
+     scale_color_course() +
+      geom_vline(xintercept = c(-2.1,0.4), color = course_palette[["primary"]], size=1.5) +
+      geom_vline(xintercept = 1.3, color = course_palette[["secondary"]], size=1.5) +
+      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+      legend.text = element_text(size = 18))  +
+      annotate(geom="text", x= 1.8, y=1, label='bold("y*_i")', color=course_palette[["secondary"]], parse=TRUE, size=8) +
+      annotate(geom="text", x= -2.4, y=1, label='bold("a1")', color=course_palette[["primary"]], parse=TRUE, size=8) +
+      annotate(geom="text", x= 0.1, y=1, label='bold("a2")', color=course_palette[["primary"]], parse=TRUE, size=8) +
+     theme( axis.text.x=element_blank(), axis.ticks.x=element_blank())
+
+print(plot)
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=6, fig.width=10.5}
+
+mydata <- data_frame(x = seq(from = -5, to = 5, by =0.01), logistic = plogis(x)) 
+
+plot <- ggplot(data = mydata, mapping = aes(x = x)) +
+    ## Entire curve
+    geom_path(aes(y=logistic), size=1.5, alpha=0.8) +
+  labs(title="Probabilidad acumulada", x="e", colour="Distribución", y="F(.)") +
+     scale_color_course() +
+        geom_vline(xintercept = -2.1 - 1.3, color = course_palette[["secondary"]], size=1.5) +
+        geom_vline(xintercept = 0.4 - 1.3, color = course_palette[["secondary"]], size=1.5) +
+        theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+      legend.text = element_text(size = 18)) +
+      annotate(geom="text", x= -2.7 - 1.6, y=1, label='bold("a1 - xb")', color=course_palette[["secondary"]], parse=TRUE, size=8) +
+      annotate(geom="text", x=  - 1.8, y=1, label='bold("a2 - xb")', color=course_palette[["secondary"]], parse=TRUE, size=8) +
+      geom_hline(yintercept = plogis(-2.1 - 1.3,0,1), color = course_palette[["secondary"]], size=1.5, linetype="dotted") +
+      geom_hline(yintercept = plogis(0.4 - 1.3,0,1), color = course_palette[["secondary"]], size=1.5, linetype="dotted") 
+
+print(plot)
+```
+
+:::
+
+## Regresión logística (multinomial) ordenada
+La función de probabilidad acumulada 
+$$\mathbb{P}(y_{i} \leq j) = \text{logit}^{-1}(\alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))$$
+
+puede ser re-expresada como regresión logística aplicando logit link a ambos lados obtenemos:
+
+. . .
+
+$$\text{logit}[ \mathbb{P}(y_{i} \leq j)] = \alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})$$
+es decir,
+
+. . .
+
+::: {.content-box-blue}
+
+$$\ln \frac{\mathbb{P}(y_{i} \leq j)}{1 - \mathbb{P}(y_{i} \leq j)}  = \ln \frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} > j)} = \alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})$$
+
+:::
+
+## Regresión logística (multinomial) ordenada en la práctica
+Continuando con los datos de demanda de bicicletas, pero ahora considerando la demanda como una variable discreta ordenada:
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+bikedata <- Bikeshare %>% as_tibble()
+
+# variable ordinal de demanda: baja / media / alta según terciles de bikers
+cortes <- quantile(bikedata$bikers, probs = c(0, 1/3, 2/3, 1))
+bikedata <- bikedata %>%
+  mutate(demand_level = cut(bikers, breaks = cortes,
+                            labels = c("baja","media","alta"),
+                            include.lowest = TRUE, ordered_result = TRUE))
+
+# tipo de día como factor (para gráficos y modelos con dos predictores)
+bikedata$workingday <- factor(bikedata$workingday, labels = c("no hábil","hábil"))
+
+bikedata
+print("demand_level:")
+levels(bikedata$demand_level)
+```
+
+## Regresión logística (multinomial) ordenada en la práctica
+
+::: {.pull-left}
+
+Variable latente (baja demanda --> alta demanda)
+$$y^{*} = \beta_{1}\text{temp}_{i} + \epsilon_{i}$$
+
+:::
+
+::: {.pull-right}
+
+Logit acumulado:
+$$\ln \frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} > j)} = \alpha_{j} - \beta_{1}\text{temp}_{i}$$
+
+:::
+
+```{r,warning=FALSE, message=FALSE}
+bikedata$demand_level <- ordered(bikedata$demand_level, c("baja","media","alta"))
+ologit_demand_temp <- polr(demand_level ~ temp, data=bikedata)
+
+```
+
+::: {.pull-left}
+
+```{r}
+summary(ologit_demand_temp)$coefficients[,c(1,2)]
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=6, fig.width=10.5}
+ grid <- bikedata %>% data_grid(temp=seq(0,1,by=0.05),.model = ologit_demand_temp)
+
+predictions <- grid %>% mutate(y_latente = ologit_demand_temp$coefficients*temp)
+
+predictions %>% 
+  ggplot(aes(x=temp, y=y_latente, colour="")) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position="none") +
+  labs(x="temperatura", y="y*")
+
+```
+
+:::
+
+## Regresión logística (multinomial) ordenada en la práctica
+
+::: {.pull-left}
+
+Variable latente (baja demanda --> alta demanda)
+$$y^{*} = \beta_{1}\text{temp}_{i} + \epsilon_{i}$$
+
+:::
+
+::: {.pull-right}
+
+Logit acumulado:
+$$\ln \frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} > j)} = \alpha_{j} - \beta_{1}\text{temp}_{i}$$
+
+:::
+
+```{r,warning=FALSE, message=FALSE}
+bikedata$demand_level <- ordered(bikedata$demand_level, c("baja","media","alta"))
+ologit_demand_temp <- polr(demand_level ~ temp, data=bikedata)
+
+```
+
+::: {.pull-left}
+
+```{r}
+summary(ologit_demand_temp)$coefficients[,c(1,2)]
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=6, fig.width=10.5}
+ grid <- bikedata %>% data_grid(temp=seq(0,1,by=0.05),.model = ologit_demand_temp)
+
+predictions <- cbind(grid,predict(ologit_demand_temp, newdata=grid, type="prob")) %>%
+              pivot_longer(-temp, names_to="outcome",values_to="p" ) %>%
+              mutate(p_outcome = paste0("p_",outcome)) %>% dplyr::select(-outcome) %>%
+              pivot_wider(names_from = p_outcome, values_from=p) %>%
+              mutate(logit_baja = log(p_baja/(p_media + p_alta)),
+                     logit_media = log((p_baja + p_media)/p_alta)
+                     ) %>% 
+              dplyr::select(temp,starts_with("logit")) %>%
+              pivot_longer(-temp, names_to="quant", values_to="est")
+
+predictions %>% 
+  ggplot(aes(x=temp, y=est, group=quant, colour=quant)) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position="top") +
+  labs(x="temperatura", y="log-odds demanda <= j")
+
+```
+
+:::
+
+## Regresión logística (multinomial) ordenada en la práctica
+
+::: {.pull-left}
+
+Nuestro modelo: $\ln \frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} > j)} = \alpha_{j} - \beta_{1}\text{temp}_{i}$
+
+:::
+
+::: {.pull-right}
+
+```{r,echo=F, message=FALSE}
+summary(ologit_demand_temp)$coefficients[,c(1,2)]
+```
+
+:::
+
+::: {.pull-left}
+
+```{r, echo=FALSE, fig.height=5, fig.width=6}
+grid <- bikedata %>% data_grid(temp=seq(0,1,by=0.05),.model = ologit_demand_temp)
+
+predictions <- cbind(grid,predict(ologit_demand_temp, newdata=grid, type="prob")) %>%
+              pivot_longer(-temp, names_to="outcome",values_to="p" ) %>%
+              mutate(p_outcome = paste0("p_",outcome)) %>% dplyr::select(-outcome) %>%
+              pivot_wider(names_from = p_outcome, values_from=p) %>%
+              mutate(logit_baja = log(p_baja/(p_media + p_alta)),
+                     logit_media = log((p_baja + p_media)/p_alta)
+                     ) %>% 
+              dplyr::select(temp,starts_with("logit")) %>%
+              pivot_longer(-temp, names_to="quant", values_to="est")
+
+predictions %>% 
+  ggplot(aes(x=temp, y=est, group=quant, colour=quant)) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position="top") +
+  labs(x="temperatura", y="log-odds demanda <= j")
+  
+
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, fig.height=5, fig.width=6}
+grid <- bikedata %>% data_grid(temp=seq(0,1,by=0.05),.model = ologit_demand_temp)
+
+predictions <- cbind(grid,predict(ologit_demand_temp, newdata=grid, type="prob")) %>%
+              pivot_longer(-temp, names_to="outcome",values_to="p" ) %>%
+              mutate(p_outcome = paste0("p_",outcome)) %>% dplyr::select(-outcome) %>%
+              pivot_wider(names_from = p_outcome, values_from=p) %>%
+              mutate(p_media_less = p_baja + p_media, p_alta_less = p_baja + p_media + p_alta) %>%
+              pivot_longer(-temp, names_to="quant", values_to="est")
+
+predictions %>% filter(quant=="p_baja"  | quant=="p_media_less" ) %>% 
+  ggplot(aes(x=temp, y=est, group=quant, colour=quant)) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position="top") +
+  labs(x="temperatura", y="P(demanda <= j)")
+  
+
+```
+
+:::
+
+```{css, echo=FALSE}
+.pull-right ~ * { clear: unset; }
+.pull-right + * { clear: both; }
+```
+
+## Regresión logística (multinomial) ordenada en la práctica
+Podemos calcular los valores de la variable latente a partir del output del modelo. Usemos el caso de un hora con `temp=1`
+
+::: {.pull-left}
+
+Nuestro modelo: $y^{*} =  \beta_{1}\text{temp}_{i}$
+
+:::
+
+::: {.pull-right}
+
+```{r,echo=F, message=FALSE}
+summary(ologit_demand_temp)$coefficients[,c(1,2)]
+```
+
+:::
+
+::: {.pull-left}
+
+```{r}
+y_latente_1 <- as.numeric(ologit_demand_temp$coefficients["temp"]*1); y_latente_1
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=6, fig.width=10.5}
+
+ grid <- bikedata %>% data_grid(temp=seq(0,1,by=0.05),.model = ologit_demand_temp)
+
+predictions <- grid %>% mutate(y_latente = ologit_demand_temp$coefficients*temp)
+
+predictions %>% 
+  ggplot(aes(x=temp, y=y_latente, colour="")) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position="none") +
+  labs(x="temperatura", y="y*") + 
+  geom_hline(yintercept = y_latente_1, color = course_palette[["secondary"]], size=1.5) +
+  annotate(geom="text", x= y_latente_1 + 3, y=0.15, label=paste0("y^'*' == ", course_number(y_latente_1)), color="black", parse=TRUE, size=8)
+```
+
+:::
+
+```{css, echo=FALSE}
+.pull-right ~ * { clear: unset; }
+.pull-right + * { clear: both; }
+```
+
+## Regresión logística (multinomial) ordenada en la práctica
+Igualmente podemos calcular las probabilidades acumuladas a partir del output del modelo. Usemos el caso de un hora con `temp=1`
+
+::: {.pull-left}
+
+Nuestro modelo: $\ln \frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} > j)} = \alpha_{j} - \beta_{1}\text{temp}_{i}$
+
+:::
+
+::: {.pull-right}
+
+```{r,echo=F, message=FALSE}
+summary(ologit_demand_temp)$coefficients[,c(1,2)]
+```
+
+:::
+
+::: {.pull-left}
+
+```{r}
+logit_baja <- as.numeric(ologit_demand_temp$zeta[1] - ologit_demand_temp$coefficients["temp"]*1)
+logit_media <- as.numeric(ologit_demand_temp$zeta[2] - ologit_demand_temp$coefficients["temp"]*1)
+pcum_baja <- 1/(1 + exp(-logit_baja))
+pcum_media <- 1/(1 + exp(-logit_media))
+```
+```{r, echo=FALSE}
+c(pcum_baja = pcum_baja, pcum_media=pcum_media)
+```
+Equivalente:
+```{r}
+c(plogis(logit_baja), plogis(logit_media))
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=6, fig.width=10.5}
+
+mydata <- data_frame(x = seq(from = -5, to = 5, by =0.01), logistic = plogis(x) )
+
+plot <- ggplot(data = mydata, mapping = aes(x = x)) +
+    ## Entire curve
+    geom_path(aes(y=logistic, colour=""), size=1.5, alpha=0.8) +
+    geom_vline(xintercept = logit_baja, color = course_palette[["primary"]], size=1.5) +
+    geom_vline(xintercept = logit_media, color = course_palette[["secondary"]], size=1.5) +
+      labs(y="P(e < a_j- xb)", x="e") +
+     scale_color_course() +
+      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+      legend.text = element_text(size = 18), legend.position = "none") +
+      annotate(geom="text", x= logit_baja - 2.3, y=0.5, label=paste0("logit[baja] == ", course_number(logit_baja)), color="black", parse=TRUE, size=8) +
+        annotate(geom="text", x= logit_media + 2.3, y=0.2, label=paste0("logit[media] == ", course_number(logit_media)), color="black", parse=TRUE, size=8)
+
+print(plot)
+```
+
+:::
+
+```{css, echo=FALSE}
+.pull-right ~ * { clear: unset; }
+.pull-right + * { clear: both; }
+```
+
+## Regresión logística (multinomial) ordenada: probabilidad de categoria $j$
+$$\text{Dado} \quad \mathbb{P}(y_{i} \leq j) = \text{logit}^{-1}(\alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))$$
+
+Podemos calcular la probabilidad de ocurrencia de la categoría $j$ como sigue:
+
+. . .
+
+\begin{align}\mathbb{P}(y_{i} = j) &= \mathbb{P}(y_{i}<j) - \mathbb{P}(y_{i}< j-1) \\ \\
+&= \text{logit}^{-1}(\alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}) ) - \text{logit}^{-1}(\alpha_{j-1} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})) \\ \\
+&= \frac{1}{1 + e^{-(\alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}) )}} - \frac{1}{1 + e^{-(\alpha_{j-1} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))}}
+\end{align}
+## Regresión logística (multinomial) ordenada en la práctica
+
+::: {.pull-left}
+
+Nuestro modelo: $\ln \frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} > j)} = \alpha_{j} - \beta_{1}\text{temp}_{i}$
+
+:::
+
+::: {.pull-right}
+
+```{r,echo=F, message=FALSE}
+summary(ologit_demand_temp)$coefficients[,c(1,2)]
+```
+
+:::
+
+::: {.pull-left}
+
+```{r, echo=FALSE, fig.height=5, fig.width=6}
+grid <- bikedata %>% data_grid(temp=seq(0,1,by=0.05),.model = ologit_demand_temp)
+
+predictions <- cbind(grid,predict(ologit_demand_temp, newdata=grid, type="prob")) %>%
+              pivot_longer(-temp, names_to="outcome",values_to="p" ) %>%
+              mutate(p_outcome = paste0("p_",outcome)) %>% dplyr::select(-outcome) %>%
+              pivot_wider(names_from = p_outcome, values_from=p) %>%
+              mutate(logit_baja = log(p_baja/(p_media + p_alta)),
+                     logit_media = log((p_baja + p_media)/p_alta)
+                     ) %>% 
+              dplyr::select(temp,starts_with("logit")) %>%
+              pivot_longer(-temp, names_to="quant", values_to="est")
+
+predictions %>% 
+  ggplot(aes(x=temp, y=est, group=quant, colour=quant)) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position="top") +
+  labs(x="temperatura", y="log-odds demanda <= j")
+  
+
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, fig.height=5, fig.width=6}
+grid <- bikedata %>% data_grid(temp=seq(0,1,by=0.05),.model = ologit_demand_temp)
+
+predictions <- cbind(grid,predict(ologit_demand_temp, newdata=grid, type="prob")) %>%
+              pivot_longer(-temp, names_to="outcome",values_to="p" ) %>%
+              mutate(p_outcome = paste0("p_",outcome)) %>% dplyr::select(-outcome) %>%
+              pivot_wider(names_from = p_outcome, values_from=p) %>%
+              mutate(p_media_less = p_baja + p_media, p_alta_less = p_baja + p_media + p_alta) %>%
+              pivot_longer(-temp, names_to="quant", values_to="est")
+
+predictions %>% filter(quant=="p_baja"  | quant=="p_media" | quant=="p_alta" ) %>% 
+  ggplot(aes(x=temp, y=est, group=quant, colour=quant)) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position="top") +
+  labs(x="temperatura", y="P(demanda <= j)")
+  
+
+```
+
+:::
+
+```{css, echo=FALSE}
+.pull-right ~ * { clear: unset; }
+.pull-right + * { clear: both; }
+```
+
+## Regresión logística (multinomial) ordenada en la práctica
+Usando $\mathbb{P}(y_{i} = j) = \text{logit}^{-1}(\alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})) - \text{logit}^{-1}(\alpha_{j-1} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))$ calculamos las probabilidades a partir del output del modelo. Para un hora con `temp=1`:
+
+. . .
+
+::: {.pull-left}
+
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+summary(ologit_demand_temp)$coefficients[,c(1,2)]
+```
+```{r}
+logit_baja <- as.numeric(ologit_demand_temp$zeta[1] - ologit_demand_temp$coefficients["temp"]*1)
+logit_media <- as.numeric(ologit_demand_temp$zeta[2] - ologit_demand_temp$coefficients["temp"]*1)
+pcum_baja <- 1/(1 + exp(-logit_baja))
+pcum_media <- 1/(1 + exp(-logit_media))
+```
+```{r, echo=FALSE}
+c(pcum_baja = pcum_baja, pcum_media=pcum_media)
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=6, fig.width=10.5}
+
+mydata <- data_frame(x = seq(from = -5, to = 5, by =0.01), logistic = plogis(x) )
+
+plot <- ggplot(data = mydata, mapping = aes(x = x, y=logistic)) +
+    ## Entire curve
+    geom_path(aes(colour=""), size=1.5, alpha=0.8) +
+    geom_vline(xintercept = logit_baja, color = course_palette[["primary"]], size=1.5) +
+    geom_vline(xintercept = logit_media, color = course_palette[["secondary"]], size=1.5) +
+      labs(y="P(e < xb)", x="e") +
+     scale_color_course() +
+      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+      legend.text = element_text(size = 18), legend.position = "none")  +
+      geom_hline(yintercept = plogis(logit_baja,0,1), color = course_palette[["primary"]], size=1.5, linetype="dotted") +
+      geom_hline(yintercept = plogis(logit_media,0,1), color = course_palette[["secondary"]], size=1.5, linetype="dotted") 
+print(plot)
+```
+
+:::
+
+. . .
+
+```{r}
+c(p_baja= pcum_baja, p_media = pcum_media - pcum_baja, 
+  p_alta=1-pcum_media)
+```
+
+## Regresión logística (multinomial) ordenada en la práctica
+$$\mathbb{P}(y_{i} = j) = \text{logit}^{-1}(\alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})) - \text{logit}^{-1}(\alpha_{j-1} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))$$
+
+::: {.pull-left}
+
+```{r}
+
+# probabilidades
+c(p_baja= pcum_baja, p_media = pcum_media - pcum_baja, 
+  p_alta=1-pcum_media)
+
+# versión automática
+predict(ologit_demand_temp, 
+        newdata = data_frame(temp=1), type="probs" )
+
+predict(ologit_demand_temp, 
+        newdata = data_frame(temp=1), type="class" )
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=6, fig.width=10.5}
+
+mydata <- data_frame(x = seq(from = -5, to = 5, by =0.01), logistic = plogis(x) )
+
+plot <- ggplot(data = mydata, mapping = aes(x = x, y=logistic)) +
+    ## Entire curve
+    geom_path(aes(colour=""), size=1.5, alpha=0.8) +
+    geom_vline(xintercept = logit_baja, color = course_palette[["primary"]], size=1.5) +
+    geom_vline(xintercept = logit_media, color = course_palette[["secondary"]], size=1.5) +
+      labs(y="P(e < xb)", x="e") +
+     scale_color_course() +
+      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+      legend.text = element_text(size = 18), legend.position = "none")  +
+      geom_hline(yintercept = plogis(logit_baja,0,1), color = course_palette[["primary"]], size=1.5, linetype="dotted") +
+      geom_hline(yintercept = plogis(logit_media,0,1), color = course_palette[["secondary"]], size=1.5, linetype="dotted") 
+print(plot)
+```
+
+:::
+
+## Estimación {.inverse .center .middle}
+
+## Estimación
+
+. . .
+
+- Coeficientes y cutoff points son estimados via MLE
+
+. . .
+
+- En `R` usaremos función `MASS::polr` para ajustar estos modelos.
+  - Estima coeficientes correspondientes a efectos sobre la variable latente $y^{*}$
+  - Estima cutoff points
+
+## Interpretación {.inverse .center .middle}
+
+## Efectos marginales sobre el logit {.center .middle}
+
+## Un ejemplo empírico
+
+::: {.pull-left}
+
+Continuando con los datos de demanda de bicicletas, ajustaremos el siguiente modelo:
+$$\underbrace{\ln \frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} > j) } }_{\text{logit}(\mathbb{P}(y_{i} \leq j))}= \alpha_{j} - (\beta_{1}\text{temp}_{i} + \beta_{2}\text{hábil}_{i})$$
+donde:
+
+- $y_{i} \in \{\text{"baja"},\text{"media"}, \text{"alta"}\}$
+- Probabilidades  son una función de la temperatura (temp) y del tipo de día (hábil / no hábil)
+
+:::
+
+. . .
+
+::: {.pull-right}
+
+```{r}
+ologit_demand_temp_work <-
+  polr(demand_level ~ temp + workingday, data=bikedata)
+summary(ologit_demand_temp_work)
+```
+```{r, echo=FALSE}
+# cutoffs y coeficientes estimados (para cálculos ilustrativos)
+a_baja  <- as.numeric(ologit_demand_temp_work$zeta[1])                    # baja|media
+a_media <- as.numeric(ologit_demand_temp_work$zeta[2])                    # media|alta
+b_temp  <- as.numeric(ologit_demand_temp_work$coefficients["temp"])
+b_work  <- as.numeric(ologit_demand_temp_work$coefficients["workingdayhábil"])
+```
+
+:::
+
+## Efectos marginales sobre el logit
+Dado el siguiente modelo de regresión logística ordenada:
+
+$$y^{*}= \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$$
+y
+$$\ln \frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} > j) } = \alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})$$
+
+. . .
+
+- El efecto marginal de $x_{k}$ sobre la variable latente $y^{*}$  está dado por:
+
+::: {.pull-left}
+
+::: {.content-box-blue}
+
+$$\frac{\partial y^{*} }{\partial x_{k}} = \beta_{k}$$
+
+:::
+
+:::
+
+::: {.pull-right}
+
+::: {.content-box-yellow}
+
+"Un aumento en $\Delta$ unidades de $x_{k}$ se traduce en un cambio en $\Delta  \beta_{k}$ unidades la variable latente $y^{*}$"
+
+:::
+
+:::
+
+## Efectos marginales sobre el logit
+Asimismo, dado
+$$\ln \frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} > j) } = \alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})$$
+
+. . .
+
+- los puntos de corte $\alpha_{j}$ corresponden al logit de la probabilidad que $y_{i}$ tome un valor menor o igual que $j$ (en vez mayor que $j$),  cuando $x_{1} = \dots = x_{k} = 0$
+
+. . .
+
+- El efecto marginal de $x_{k}$ sobre el logit de la probabilidad que $y_{i}$ tome un valor menor o igual que $j$ está dado por:
+
+::: {.pull-left}
+
+::: {.content-box-blue}
+
+$$\frac{\partial\text{logit}[\mathbb{P}(y_{i} \leq j)]}{\partial x_{k}} = -\beta_{k}$$
+
+:::
+
+:::
+
+::: {.pull-right}
+
+::: {.content-box-yellow}
+
+"Un aumento en $\Delta$ unidades de $x_{k}$ se traduce en un cambio en $-\beta_{k}\Delta$ unidades en el logit de la probabilidad que $y_{i}$ sean menor o igual que $j$ "
+
+:::
+
+:::
+
+[Importante:]{.bold} El efecto marginal sobre la variable latente ( $\beta_{k}$ ) y sobre el logit ( $-\beta_{k}$ ), es el mismo para cualquier valor de $j$.
+
+## Efectos marginales sobre el logit
+En nuestro ejemplo: $\ln \frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} > j)}= \alpha_{j} - (\beta_{1}\text{temp}_{i} + \beta_{2}\text{hábil}_{i})$
+
+::: {.pull-left}
+
+```{r, echo=FALSE}
+summary(ologit_demand_temp_work)$coefficients[,c(1,2)]
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, fig.width=6, fig.height=5}
+grid <- bikedata %>% data_grid(temp,workingday, .model = ologit_demand_temp_work)
+
+predictions <- cbind(grid,predict(ologit_demand_temp_work, newdata=grid, type="prob")) %>%
+              pivot_longer(-c(temp,workingday), names_to="outcome",values_to="p" ) %>%
+              mutate(p_outcome = paste0("p_",outcome)) %>% dplyr::select(-outcome) %>%
+              pivot_wider(names_from = p_outcome, values_from=p) %>%
+              mutate(logit_baja = log(p_baja/(p_media + p_alta)),
+                     logit_media = log((p_baja + p_media)/p_alta)
+                     ) %>% 
+              dplyr::select(temp,workingday,starts_with("logit")) %>%
+              pivot_longer(-c(temp,workingday), names_to="quant", values_to="est")
+
+predictions %>% 
+  ggplot(aes(x=temp, y=est, group=interaction(quant,workingday), colour=quant)) +
+  geom_path(aes(linetype=workingday), alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position="top") +
+  labs(x="temperatura", y="log-odds demanda <= j")
+  
+```
+
+:::
+
+## Efectos marginales sobre el logit
+
+::: {.pull-left}
+
+```{r, echo=FALSE}
+summary(ologit_demand_temp_work)$coefficients[,c(1,2)]
+```
+
+:::
+
+::: {.pull-right}
+
+Si `temp=1` en un día hábil, entonces `logit(p_baja)` y `logit(p_media)` son=
+```{r}
+c(baja= a_baja - (b_temp*1 + b_work*1),
+  media= a_media - (b_temp*1 + b_work*1))
+```
+Si `temp=2` en un día hábil, entonces `logit(p_baja)` y `logit(p_media)` son=
+```{r}
+c(baja= a_baja - (b_temp*2 + b_work*1),
+  media= a_media - (b_temp*2 + b_work*1))
+```
+
+:::
+
+## Efectos marginales sobre el logit
+
+::: {.pull-left}
+
+```{r, echo=FALSE}
+summary(ologit_demand_temp_work)$coefficients[,c(1,2)]
+```
+
+Por tanto, el efecto sobre el logit ( $-\beta_{temp}$ ) es:
+```{r}
+c(
+coef_temp_baja = (a_baja - (b_temp*2 + b_work*1))-(a_baja - (b_temp*1 + b_work*1)),
+coef_temp_media = (a_media - (b_temp*2 + b_work*1))-(a_media - (b_temp*1 + b_work*1))
+)
+```
+
+:::
+
+::: {.pull-right}
+
+Si `temp=1` en un día hábil, entonces `logit(p_baja)` y `logit(p_media)` son=
+```{r}
+c(baja= a_baja - (b_temp*1 + b_work*1),
+  media= a_media - (b_temp*1 + b_work*1))
+```
+Si `temp=2` en un día hábil, entonces `logit(p_baja)` y `logit(p_media)` son=
+```{r}
+c(baja= a_baja - (b_temp*2 + b_work*1),
+  media= a_media - (b_temp*2 + b_work*1))
+```
+
+:::
+
+## Efectos multiplicativos sobre las odds {.center .middle}
+
+## Efectos multiplicativos sobre las odds
+Dado el siguiente modelo de regresión logística ordinal: 
+$$\ln \frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} > j) } = \alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})$$
+
+. . .
+
+exponenciando a ambos lados obtenemos 
+$$\frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} > j) } = e^{\alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})}$$
+
+. . .
+
+equivalentemente
+
+::: {.content-box-blue}
+
+$$\frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} > j) } = e^{\alpha_{j}}\cdot e^{-\beta_{1} x_{i1}}  \cdots e^{-\beta_{k} x_{ik}}$$
+
+:::
+
+## Efectos multiplicativos sobre las odds: odds ratios
+Considera la situación en que $i$ y $i^{´}$ son dos observaciones con $x_{k}=c$ y $x_{k}=c+1$, respectivamente. El resto de las covariables toman valores idénticos.
+
+. . .
+
+ Las odds de observar $\mathbb{P}(y \leq j)$ vs $\mathbb{P}(y > j)$ son:
+
+- $\mathbb{P}(y_{i} \leq j)/\mathbb{P}(y_{i} > j) = e^{\alpha_{j}} \cdot e^{-\beta_{1} x_{i1}}  \cdots (e^{-\beta_{k}})^{c}$
+- $\mathbb{P}(y_i^{´} \leq j)/\mathbb{P}(y_i^{´} > j)= e^{\alpha_{j}} \cdot e^{-\beta_{1} x_{i^{´}1}}  \cdots (e^{-\beta_{k}})^{c+1}$
+
+. . .
+
+El ratio de las odds entre $i^{´}$ e $i$ está dado por:
+$$\frac{\mathbb{P}(y_i^{´} \leq j)/\mathbb{P}(y_i^{´} > j)}{\mathbb{P}(y_{i} \leq j)/\mathbb{P}(y_{i} > j)} = \frac{e^{\alpha_{j}} \cdot e^{-\beta_{1} x_{i^{´}1}}  \cdots (e^{-\beta_{k}})^{c+1}}{e^{\alpha_{j}} \cdot e^{-\beta_{1} x_{i1}}  \cdots (e^{-\beta_{k}})^{c}} = e^{-\beta_{k}}$$
+
+En otras palabras, manteniendo otros factores constantes, $e^{-\beta_{k}}$ representa la odds ratio de $\mathbb{P}(y \leq j)$ vs $\mathbb{P}(y > j)$ entre el caso con $x_{k}$ aumentado en una unidad, y el caso con $x_{k}$ en un nivel basal dado. 
+[Importante:]{.bold} La misma odd-ratio aplica para la probabilidad acumula de cualquier $j$. Por esta razón el modelo logístico ordenado tambien es conocidos como [proportional odds model]{.bold}. 
+
+## Efectos multiplicativos sobre las odds
+
+::: {.content-box-yellow}
+
+"Un cambio en $\Delta$ unidades de $x_{k}$ multiplica el ratio entre $\mathbb{P}(y<j)$ vs $\mathbb{P}(y>j)$ por $e^{- \beta_{k}\Delta}$"
+
+:::
+
+[Propiedades]{.bold}:
+
+. . .
+
+- $e^{-\beta_{k}}$ está restringido al rango $[0,\infty+)$. Es una constante que "comprime" o amplifica el ratio entre las probabilidades de $\mathbb{P}(y<j)$ vs $\mathbb{P}(y>j)$
+
+. . .
+
+- Si $-\beta_{k} < 0  \to  (0 < e^{-\beta_{k}} < 1)$. Es decir, un aumento en $x_{k}$ está asociado con una reducción (multiplicativa) del ratio entre las probabilidades de  $\mathbb{P}(y<j)$ vs $\mathbb{P}(y>j)$
+
+. . .
+
+- Si $-\beta_{k} = 0  \to  (e^{-\beta_{k}} =1)$. Es decir, un cambio en $x_{k}$ está asociado a un cambio nulo en el ratio entre las probabilidades de $\mathbb{P}(y<j)$ vs $\mathbb{P}(y>j)$
+
+. . .
+
+- Si $-\beta_{k} > 0  \to  (e^{-\beta_{k}} > 1)$. Es decir, un aumento en $x_{k}$ está asociado a aumento (multiplicativo) en el ratio entre las probabilidades de $\mathbb{P}(y<j)$ vs $\mathbb{P}(y>j)$
+
+## Efectos multiplicativos sobre las odds
+En nuestro ejemplo: $\ln \frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} > j)}= \alpha_{j} - (\beta_{1}\text{temp}_{i} + \beta_{2}\text{hábil}_{i})$, donde 
+$\frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} > j)}= e^{\alpha_{j}} \cdot e^{-\beta_{1}\text{temp}_{i}} \cdot e^{-\beta_{2}\text{hábil}_{i}}$
+
+::: {.pull-left}
+
+```{r, message=FALSE}
+#coeffs
+coefs <- summary(ologit_demand_temp_work)$coefficients[1:2,c(1,2)]; coefs
+
+#exp(-coeffs)
+exp(-coefs)[,c(1,NA)]
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, fig.width=6, fig.height=5}
+grid <- bikedata %>% data_grid(temp,workingday, .model = ologit_demand_temp_work)
+
+predictions <- cbind(grid,predict(ologit_demand_temp_work, newdata=grid, type="prob")) %>%
+              pivot_longer(-c(temp,workingday), names_to="outcome",values_to="p" ) %>%
+              mutate(p_outcome = paste0("p_",outcome)) %>% dplyr::select(-outcome) %>%
+              pivot_wider(names_from = p_outcome, values_from=p) %>%
+              mutate(logit_baja = log(p_baja/(p_media + p_alta)),
+                     logit_media = log((p_baja + p_media)/p_alta)
+                     ) %>% 
+              mutate(odd_baja = exp(logit_baja), odd_media = exp(logit_media) ) %>%
+              dplyr::select(temp,workingday,starts_with("odd")) %>%
+              pivot_longer(-c(temp,workingday), names_to="quant", values_to="est")
+
+predictions %>% 
+  ggplot(aes(x=temp, y=est, group=interaction(quant,workingday), colour=quant)) +
+  geom_path(aes(linetype=workingday), alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position="top") +
+  labs(x="temperatura", y="Odds demanda <= j")
+  
+```
+
+:::
+
+## Efectos multiplicativos sobre las odds
+
+::: {.pull-left}
+
+```{r, echo=FALSE, message=F}
+cbind(beta=coefs[,1] , `exp(-beta)`=exp(-coefs)[,1] )
+```
+
+:::
+
+::: {.pull-right}
+
+Si `temp=1` en un día hábil, entonces `odds(p_baja)` y `odds(p_media)` son=
+```{r}
+c(baja= exp(a_baja - (b_temp*1 + b_work*1)),
+  media= exp(a_media - (b_temp*1 + b_work*1)))
+```
+
+. . .
+
+Si `temp=2` en un día hábil, entonces `odds(p_baja)` y `odds(p_media)` son=
+```{r}
+c(baja= exp(a_baja - (b_temp*2 + b_work*1)),
+  media= exp(a_media - (b_temp*2 + b_work*1)))
+```
+
+:::
+
+## Efectos multiplicativos sobre las odds
+
+::: {.pull-left}
+
+```{r, echo=FALSE, message=F}
+cbind(beta=coefs[,1] , `exp(-beta)`=exp(-coefs)[,1] )
+```
+
+Por tanto, la odds ratio ( $e^{-\beta_{temp}}$)  es:
+```{r}
+c(
+or_temp_baja = exp(a_baja - (b_temp*2 + b_work*1))/exp(a_baja - (b_temp*1 + b_work*1)),
+or_temp_media = exp(a_media - (b_temp*2 + b_work*1))/exp(a_media - (b_temp*1 + b_work*1))
+)
+```
+
+:::
+
+::: {.pull-right}
+
+Si `temp=1` en un día hábil, entonces `odds(p_baja)` y `odds(p_media)` son=
+```{r}
+c(baja= exp(a_baja - (b_temp*1 + b_work*1)),
+  media= exp(a_media - (b_temp*1 + b_work*1)))
+```
+Si `temp=2` en un día hábil, entonces `odds(p_baja)` y `odds(p_media)` son=
+```{r}
+c(baja= exp(a_baja - (b_temp*2 + b_work*1)),
+  media= exp(a_media - (b_temp*2 + b_work*1)))
+```
+
+:::
+
+## Efectos marginales sobre la probabilidad de la categoría $j$ {.center .middle}
+
+## Efectos marginales sobre la probabilidad de la categoría $j$
+
+. . .
+
+Dado el siguiente modelo de regresión logística multinomial: 
+$$\ln \frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} > j) } = \alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})$$
+y
+\begin{align}\mathbb{P}(y_{i} = j) &= \mathbb{P}(y_{i}<j) - \mathbb{P}(y_{i}< j-1) \\ \\
+&= \frac{1}{1 + e^{-(\alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}) )}} - \frac{1}{1 + e^{-(\alpha_{j-1} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))}}
+\end{align}
+. . .
+
+Queremos saber el [efecto marginal]{.bold} de los predictores sobre la [probabilidad]{.bold} de observar cada categoría $j: \{1, \dots, J\}$. Formalmente:
+
+. . .
+
+$$\frac{\partial \mathbb{P}(y_{i} = j)}{\partial x_{k}} = \cdots$$
+
+## Efectos marginales sobre la probabilidad de la categoría $j$
+Después de varios pasos, obtenemos:
+
+::: {.content-box-yellow}
+
+$$\frac{\partial \mathbb{P}(y_{i} = j)}{\partial x_{k}} = -\beta_{k} \cdot  \bigg( \mathbb{P}(y_{i} \leq j) \cdot (1 - \mathbb{P}(y_{i} \leq j))  -  \mathbb{P}(y_{i} \leq j-1) \cdot (1 - \mathbb{P}(y_{i} \leq j-1)) \bigg)$$
+
+:::
+
+donde:
+$$\mathbb{P}(y_{i} \leq j) = \text{logit}^{-1}(\alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})) \quad \text{para todo } j$$
+
+## Efectos marginales sobre la probabilidad de la categoría $j$
+Para los casos especiales $j=1$ y $j=J$ observamos que 
+
+- $\frac{\partial \mathbb{P}(y_{i} = 1)}{\partial x_{k}} = -\beta_{k} \cdot \bigg( \mathbb{P}(y_{i} \leq 1) \cdot (1 - \mathbb{P}(y_{i} \leq 1)) - 0\bigg)$
+- $\frac{\partial \mathbb{P}(y_{i} = J)}{\partial x_{k}} = - \beta_{k} \cdot \bigg( 0 -  \mathbb{P}(y_{i} \leq J-1) \cdot (1 - \mathbb{P}(y_{i} \leq J-1))\bigg) = \beta_{k} \cdot \bigg( \mathbb{P}(y_{i} \leq J-1) \cdot (1 - \mathbb{P}(y_{i} \leq J-1))\bigg)$
+
+. . .
+
+Por tanto,:
+
+- Para $j=1$ el efecto marginal sobre la probabilidad $\mathbb{P}(y=1)$ tiene el [signo contrario]{.bold} que el efecto sobre la variable latente $y^{*}$, $\beta_k$.
+- Para $j=J$ el efecto marginal sobre la probabilidad $\mathbb{P}(y=J)$ tiene el [mismo signo]{.bold} que el efecto sobre la variable latente $y^{*}$, $\beta_k$.
+
+## Efectos marginales sobre la probabilidad de la categoría $j$
+Para las categorías intermedias, en cambio:
+
+$$\frac{\partial \mathbb{P}(y_{i} = j)}{\partial x_{k}} = -\beta_{k} \cdot  \bigg( \mathbb{P}(y_{i} \leq j) \cdot (1 - \mathbb{P}(y_{i} \leq j))  -  \mathbb{P}(y_{i} \leq j-1) \cdot (1 - \mathbb{P}(y_{i} \leq j-1)) \bigg)$$
+
+. . .
+
+Podemos notar que:
+
+- Siempre $\mathbb{P}(y_{i} \leq j) > \mathbb{P}(y_{i} \leq j-1)$ (e.j. 0.8 > 0.7)
+- Pero $\bigg( \mathbb{P}(y_{i} \leq j) \cdot (1 - \mathbb{P}(y_{i} \leq j))  -  \mathbb{P}(y_{i} \leq j-1) \cdot (1 - \mathbb{P}(y_{i} \leq j-1)) \bigg)$ puede ser positivo o negativo. (e.j. $0.8*(0.2) - 0.7*(0.3) = -0.05$ ) 
+- Por tanto, para las categorias $j$ intermedias el signo del efecto marginal sobre la probabilidad [no necesariamente coincide]{.bold} con el signo del efecto sobre la variable latente $y^{*}$, $\beta_k$.
+
+## Efectos marginales sobre la probabilidad de la categoría $j$
+En nuestro ejemplo: $\ln \frac{\mathbb{P}(y_{i} \leq j)}{\mathbb{P}(y_{i} > j)}= \alpha_{j} - (\beta_{1}\text{temp}_{i} + \beta_{2}\text{hábil}_{i})$, donde 
+$$\mathbb{P}(y_{i} = j) = \mathbb{P}(y_{i}<j) - \mathbb{P}(y_{i}< j-1) = \frac{1}{1 + e^{-(\alpha_{j} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}) )}} - \frac{1}{1 + e^{-(\alpha_{j-1} - (\beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}))}}$$
+
+::: {.pull-left}
+
+```{r, message=FALSE}
+#coeffs
+coefs <- summary(ologit_demand_temp_work)$coefficients[1:2,c(1,2)]; coefs
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, fig.width=6, fig.height=5}
+grid <- bikedata %>% data_grid(temp,workingday, .model = ologit_demand_temp_work)
+
+predictions <- cbind(grid,predict(ologit_demand_temp_work, newdata=grid, type="prob")) %>%
+              pivot_longer(-c(temp,workingday), names_to="outcome",values_to="p" )
+
+predictions %>% 
+  ggplot(aes(x=temp, y=p, group=interaction(outcome,workingday), colour=outcome)) +
+  geom_path(aes(linetype=workingday), alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position="top") +
+  labs(x="temperatura", y="P( y= j)")
+  
+```
+
+:::
+
+## Efectos marginales sobre la probabilidad de la categoría $j$
+
+::: {.pull-left}
+
+$$\mathbb{P}(y_{i} = j) = \mathbb{P}(y_{i}<j) - \mathbb{P}(y_{i}< j-1)$$ 
+
+:::
+
+::: {.pull-right}
+
+$$\frac{\partial \mathbb{P}(y_{i} = j)}{\partial x_{k}}$$
+
+:::
+
+::: {.pull-left}
+
+```{r, echo=FALSE, fig.width=6, fig.height=5}
+grid <- bikedata %>% data_grid(temp,workingday, .model = ologit_demand_temp_work)
+
+predictions <- cbind(grid,predict(ologit_demand_temp_work, newdata=grid, type="prob")) %>%
+              pivot_longer(-c(temp,workingday), names_to="outcome",values_to="p" )
+
+predictions %>% 
+  ggplot(aes(x=temp, y=p, group=interaction(outcome,workingday), colour=outcome)) +
+  geom_path(aes(linetype=workingday), alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position="top") +
+  labs(x="temperatura", y="P( y= j)")
+  
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, fig.width=6, fig.height=5}
+beta_temp = ologit_demand_temp_work$coefficients[1]
+
+grid <- bikedata %>% data_grid(temp,workingday, .model = ologit_demand_temp_work)
+
+predictions <- cbind(grid,predict(ologit_demand_temp_work, newdata=grid, type="prob")) %>%
+               mutate(me_baja = -beta_temp*baja*(1-baja)) %>%
+               mutate(me_media = -beta_temp*(media*(1-media) - baja*(1-baja))) %>%
+               mutate(me_alta = beta_temp*alta*(1-alta)) %>%
+               dplyr::select(temp,workingday,starts_with("me")) %>%
+               pivot_longer(-c(temp,workingday), names_to="outcome",values_to="p" ) 
+
+predictions %>% 
+  ggplot(aes(x=temp, y=p, group=interaction(outcome,workingday), colour=outcome)) +
+  geom_path(aes(linetype=workingday), alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position="top") +
+  labs(x="temperatura", y="marginal effect sobre P(y= j)") +
+  geom_hline(yintercept = 0, color = "black", size=1.5)
+  
+```
+
+:::
+
+```{css, echo=FALSE}
+.pull-right ~ * { clear: unset; }
+.pull-right + * { clear: both; }
+```
+
+## Efectos marginales sobre la probabilidad de la categoría $j$
+
+- Efectos marginales son _esencialmente_ heterogéneos. No hay un efecto sino muchos.
+
+. . .
+
+- Heterogeneidad crece con la complejidad del modelo: número de predictores, interacciones, etc.
+
+. . .
+
+- Más aún, en el caso de modelos de regresión logística multinomial/ordinal, los efectos marginales no son necesariamente monotónicos (pueden cambiar de signo).
+
+. . .
+
+- En la práctica, muchas veces queremos UN número que resuma el efecto marginal. 
+
+. . .
+
+::: {.pull-left}
+
+**Objetivo:** resumir la heterogeneidad sin confundir un promedio con un efecto universal.
+
+:::
+
+. . .
+
+Cantidades de interes:
+
+::: {.pull-right}
+
+* Average Marginal Effects (AME)
+* Marginal Effects at the Mean (MEM)
+* Marginal Effects at Representative Values (MER)
+
+:::
+
+## Efectos marginales sobre la probabilidad de la categoría $j$: AME
+
+. . .
+
+$$\text{Aproximación numérica:} \quad \frac{1}{n} \sum_{i} \frac{\partial p_{ij}}{\partial x_{k}} \approx  \frac{1}{n} \sum_{i}  \frac{p_{ij}(x_{1}, \dots ,x_{k} = c + \delta) - p_{ij}(x_{1}, \dots ,x_{k} = c )}{\delta}$$
+
+. . .
+
+AME de temp:
+```{r}
+delta = 0.1
+p_hat <- predict(ologit_demand_temp_work, type="probs") %>% as_tibble()  %>% mutate(id = row_number()) %>% 
+         pivot_longer(-id, names_to="demanda", values_to="prob") 
+
+bikedata_delta <- bikedata %>% mutate(temp = temp + delta) 
+p_hat_delta <- predict(ologit_demand_temp_work, newdata=bikedata_delta ,type="probs")  %>% as_tibble() %>% mutate(id = row_number()) %>% pivot_longer(-id, names_to="demanda", values_to="prob_delta") 
+
+p_hat_delta <- p_hat_delta %>% left_join(p_hat, by=c("id","demanda")) %>% mutate(me_temp = (prob_delta  - prob)/delta) %>% dplyr::select(id,demanda,me_temp) %>% pivot_wider(names_from = "demanda", values_from = "me_temp") %>% drop_na()
+```
+
+. . .
+
+::: {.pull-left}
+
+```{r}
+p_hat_delta %>% dplyr::summarise(across(baja:alta, ~ mean(.x)))
+
+```
+
+:::
+
+::: {.pull-right}
+
+```{r}
+summary(margins(ologit_demand_temp_work, variables = "temp"))
+```
+
+:::
+
+## Efectos marginales sobre la probabilidad de la categoría $j$: MEM
+$$\text{Aproximación numérica:} \quad \frac{\partial p_{ij}}{\partial x_{k}} \approx  \frac{p_{ij}(x_{1}=\bar{x_{1}}, \dots ,x_{k} = \bar{x_{k}} + \delta) - p_{ij}(x_{1}=\bar{x_{1}}, \dots ,x_{k} =\bar{x_{k}} )}{\delta}$$
+
+. . .
+
+MEM de temp:
+```{r}
+delta = 0.1
+grid <- bikedata %>% data_grid(workingday, .model=ologit_demand_temp_work)
+grid_delta <- bikedata %>% data_grid(workingday, .model=ologit_demand_temp_work) %>% mutate(temp = temp + delta)
+
+p_hat <- predict(ologit_demand_temp_work, type="probs", newdata =grid) %>% as_tibble() %>% 
+  mutate(id = c("no hábil","hábil"))%>% pivot_longer(-id, names_to="demanda", values_to="prob") 
+
+p_hat_delta <- predict(ologit_demand_temp_work, type="probs", newdata =grid_delta) %>% as_tibble() %>% 
+  mutate(id = c("no hábil","hábil")) %>% pivot_longer(-id, names_to="demanda", values_to="prob_delta") 
+
+p_hat_delta <- p_hat_delta %>% left_join(p_hat, by=c("id","demanda")) %>% mutate(me_temp = (prob_delta  - prob)/delta) %>% dplyr::select(id,demanda,me_temp) %>% pivot_wider(names_from = "demanda", values_from = "me_temp") %>% drop_na(); p_hat_delta
+```
+
+## Gracias {.inverse .center .middle .closing}
+
+**Hasta la próxima clase**
+
+Mauricio Bucca

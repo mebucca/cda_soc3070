@@ -1,0 +1,294 @@
+---
+title: "Análisis de Datos Categóricos (SOC3070)"
+subtitle: "Funciones y Bases de Cálculo"
+author: "Mauricio Bucca · Sociología UC"
+date: today
+body-classes: theme-atletico-madrid
+course-team: atletico-madrid
+filters: ["../_shared/course.lua"]
+format:
+  revealjs:
+    css: "../_shared/course.css"
+    slide-number: false
+    theme: default
+    highlight-style: github
+    code-block-font-size: 0.9em
+    width: 1600
+    height: 900
+    html-math-method: katex
+---
+
+```{r course-style, include=FALSE}
+library(pacman)
+p_load(tidyverse)
+source("../_shared/bikeshare.R")
+course_palette <- use_course_style("atletico_madrid")
+```
+
+## Antes · Hoy · Después {.class-rhythm}
+
+::: {.full-width}
+
+::: {.content-box}
+**Antes**
+
+el curso comienza.
+:::
+
+::: {.content-box-primary}
+**Hoy**
+
+funciones, límites y derivadas.
+:::
+
+::: {.content-box-secondary}
+**Después**
+
+fundamentos de teoría de probabilidad.
+:::
+
+:::
+
+# Nivelación matemática {.inverse .center .middle}
+
+## Por qué empezamos aquí
+
+Este curso usa modelos estadísticos —de la regresión lineal a las redes neuronales— que se expresan con un puñado de herramientas matemáticas concretas: **funciones**, **límites** y **derivadas**.
+
+. . .
+
+No vamos a hacer un curso de cálculo. La meta es mucho más acotada: dejar instalado el vocabulario y la intuición mínima para que, cuando aparezcan por primera vez, no sean un obstáculo sino algo reconocible.
+
+. . .
+
+Cada concepto de hoy tiene un destino concreto más adelante en el curso — lo iremos marcando explícitamente.
+
+## Ruta de la clase
+
+1. Funciones: qué son, cómo se combinan.
+2. Algunas funciones que van a reaparecer todo el curso.
+3. Límites: qué pasa "en el infinito" o "muy cerca de".
+4. Derivadas: la pendiente, y por qué nos importa dónde vale cero.
+5. Un adelanto: derivadas en varias variables (el gradiente).
+
+# Funciones {.inverse .center .middle}
+
+## Qué es una función
+
+Una función es una regla que a cada elemento de un conjunto (el **dominio**) le asigna **exactamente un** elemento de otro conjunto (el **recorrido**):
+
+$$f: X \to Y, \qquad x \mapsto f(x).$$
+
+| Símbolo | Significado |
+|---|---|
+| $X$ | dominio: todos los valores de entrada permitidos |
+| $Y$ | codominio: dónde "viven" las salidas |
+| $f(x)$ | la salida asociada a la entrada $x$ |
+
+. . .
+
+En este curso, $x$ va a ser casi siempre un predictor (temperatura, hora del día) y $f(x)$ una cantidad que queremos predecir o transformar (una probabilidad, un log-odds, un conteo esperado).
+
+## Funciones que van a reaparecer todo el curso
+
+```{r funciones-basicas, echo=FALSE, fig.height=4.6}
+x <- seq(-3, 3, length.out = 300)
+tibble(x = x,
+       Lineal = 1 + 0.8 * x,
+       Cuadrática = x^2,
+       Exponencial = exp(x)) %>%
+  pivot_longer(-x, names_to = "función", values_to = "y") %>%
+  filter(y < 15) %>%
+  ggplot(aes(x, y, color = función)) +
+  geom_line(linewidth = 1.2) +
+  scale_color_course() +
+  coord_cartesian(ylim = c(-3, 10)) +
+  labs(x = "x", y = "f(x)", color = NULL)
+```
+
+- **Lineal**: $f(x) = \beta_0 + \beta_1 x$ — la base de todo el curso hasta que la generalicemos.
+- **Cuadrática**: $f(x) = x^2$ — aparece cada vez que escribimos un término $I(x^2)$ para capturar no linealidad.
+- **Exponencial**: $f(x) = e^x$ — convierte cualquier número real en un número positivo. La usaremos para pasar de log-odds a odds, y de un predictor lineal a una tasa esperada.
+
+## El logaritmo natural: la función inversa de $e^x$
+
+$$\ln(\cdot) \text{ es la inversa de } e^{(\cdot)}: \qquad \ln(e^x) = x, \qquad e^{\ln(x)} = x \ \ (x>0).$$
+
+```{r log-exp, echo=FALSE, fig.height=4.2}
+x <- seq(-2, 2.5, length.out = 300)
+xp <- seq(0.05, 12, length.out = 300)
+p1 <- tibble(x = x, y = exp(x))
+p2 <- tibble(x = xp, y = log(xp))
+
+ggplot() +
+  geom_line(data = p1, aes(x, y, color = "e^x"), linewidth = 1.2) +
+  geom_line(data = p2, aes(x, y, color = "ln(x)"), linewidth = 1.2) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey60") +
+  scale_color_manual(values = c("e^x" = course_palette[["primary"]], "ln(x)" = course_palette[["secondary"]])) +
+  coord_cartesian(xlim = c(-2, 6), ylim = c(-2, 6)) +
+  labs(x = "x", y = "f(x)", color = NULL)
+```
+
+Dos usos concretos que vienen más adelante:
+
+- **Log-verosimilitud** (clase 6): tomamos $\ln$ de un producto de probabilidades para convertirlo en una suma, mucho más fácil de derivar.
+- **Función de enlace logarítmica** (clase 8): $\ln(\mu_i) = \eta_i$ garantiza que una cantidad esperada positiva (un conteo) nunca sea negativa, sin importar qué valores tome $\eta_i$.
+
+## Una función que va a ser protagonista: la sigmoide
+
+$$\sigma(z) = \frac{1}{1+e^{-z}}$$
+
+```{r sigmoide, echo=FALSE, fig.height=4.4}
+z <- seq(-6, 6, length.out = 400)
+tibble(z = z, sigma = 1 / (1 + exp(-z))) %>%
+  ggplot(aes(z, sigma)) +
+  geom_line(linewidth = 1.3, color = course_palette[["primary"]]) +
+  geom_hline(yintercept = c(0, 1), linetype = "dashed", color = "grey60") +
+  labs(x = "z", y = expression(sigma(z)))
+```
+
+- Toma **cualquier** número real $z$ y lo comprime al intervalo $(0,1)$ — exactamente lo que necesitamos para convertir un predictor lineal en una probabilidad.
+- Es, literalmente, la función de enlace de la **regresión logística** (clase 9): $\hat p = \sigma(\beta_0+\beta_1x_1+\dots)$.
+- Nótese que $\sigma$ es una **composición**: primero una función lineal ($z=\beta_0+\beta_1x$), después la sigmoide. Componer funciones simples para construir una más flexible es una idea que reaparece, a mucha mayor escala, en las redes neuronales (clase 21).
+
+# Límites {.inverse .center .middle}
+
+## La idea de límite
+
+Un límite describe qué le pasa a $f(x)$ cuando $x$ se acerca —sin necesariamente llegar— a un valor, incluyendo "acercarse a infinito":
+
+$$\lim_{x \to a} f(x) = L.$$
+
+. . .
+
+No hace falta la definición formal ($\varepsilon$-$\delta$) para lo que necesitamos en este curso — basta la idea intuitiva: **¿hacia dónde se estabiliza $f(x)$ a medida que $x$ crece (o decrece) sin límite?**
+
+## Un límite que ya vamos a usar: $n \to \infty$
+
+```{r limite-e, echo=FALSE, fig.height=4.4}
+n <- 1:200
+tibble(n = n, valor = (1 + 1/n)^n) %>%
+  ggplot(aes(n, valor)) +
+  geom_line(color = course_palette[["primary"]], linewidth = 1.2) +
+  geom_hline(yintercept = exp(1), linetype = "dashed", color = course_palette[["secondary"]]) +
+  annotate("text", x = 150, y = exp(1) + 0.08, label = "e ≈ 2.718", color = course_palette[["secondary"]]) +
+  labs(x = "n", y = expression((1+1/n)^n))
+```
+
+$$\left(1+\frac{1}{n}\right)^{n} \xrightarrow[n\to\infty]{} e \approx 2.718$$
+
+Este tipo de expresión —algo que se estabiliza a medida que $n$ crece— es exactamente la forma de resultados que vamos a citar sin re-derivar, como "la Binomial se aproxima a una Normal cuando $n\to\infty$" (clase 5) o "el estimador es consistente cuando $n\to\infty$" (mencionado en varias clases de inferencia).
+
+## Por qué esto importa
+
+- Cuando el curso diga "asintóticamente Normal" o "cuando $n$ es grande", está haciendo una afirmación sobre un límite.
+- Un límite no es una aproximación cualquiera: describe **hacia dónde converge exactamente** una cantidad, aunque nunca la alcance para $n$ finito.
+- No vamos a calcular límites a mano en este curso — pero sí vamos a *leerlos* e interpretarlos correctamente cada vez que aparezcan.
+
+# Derivadas {.inverse .center .middle}
+
+## La derivada es una pendiente
+
+La derivada de $f$ en un punto $x_0$ mide **cuánto y en qué dirección** cambia $f$ ante un cambio infinitesimal de $x$: es la pendiente de la recta tangente en ese punto.
+
+```{r tangente, echo=FALSE, fig.height=4.6}
+f <- function(x) x^2
+df <- function(x) 2 * x
+xs <- seq(-3, 3, length.out = 200)
+puntos_x <- c(-2, 0.5, 2.2)
+
+tangentes <- map_dfr(puntos_x, function(x0) {
+  pendiente <- df(x0)
+  tibble(
+    x = c(x0 - 0.8, x0 + 0.8),
+    y = f(x0) + pendiente * (c(x0 - 0.8, x0 + 0.8) - x0),
+    x0 = factor(x0)
+  )
+})
+
+ggplot() +
+  geom_line(data = tibble(x = xs, y = f(xs)), aes(x, y),
+            linewidth = 1.2, color = course_palette[["primary"]]) +
+  geom_line(data = tangentes, aes(x, y, group = x0),
+            color = course_palette[["secondary"]], linewidth = 1.1) +
+  geom_point(data = tibble(x = puntos_x, y = f(puntos_x)), aes(x, y),
+             size = 3, color = course_palette[["secondary"]]) +
+  labs(x = "x", y = "f(x)")
+```
+
+$$f'(x_0) = \lim_{h \to 0} \frac{f(x_0+h)-f(x_0)}{h}$$
+
+La derivada combina las dos ideas que acabamos de ver: es un **límite** de una razón de cambio.
+
+## Reglas básicas (las que vamos a usar)
+
+| Regla | Fórmula |
+|---|---|
+| Potencia | $\dfrac{d}{dx} x^n = n x^{n-1}$ |
+| Exponencial | $\dfrac{d}{dx} e^x = e^x$ |
+| Logaritmo | $\dfrac{d}{dx} \ln x = \dfrac{1}{x}$ |
+| Regla de la cadena | $\dfrac{d}{dx} f(g(x)) = f'(g(x))\cdot g'(x)$ |
+
+. . .
+
+La **regla de la cadena** es la que más vamos a invocar: cada vez que derivamos una función compuesta (como $\sigma(z)$ con $z=\beta_0+\beta_1x$), derivamos "de afuera hacia adentro" y multiplicamos.
+
+## El punto más importante de hoy: dónde la derivada es cero
+
+Si $f$ tiene un máximo (o un mínimo) en $x^*$, la recta tangente en ese punto es **horizontal**:
+
+$$f'(x^{*}) = 0.$$
+
+```{r foc, echo=FALSE, fig.height=4.4}
+f <- function(x) -(x - 1)^2 + 4
+xs <- seq(-2, 4, length.out = 200)
+tibble(x = xs, y = f(xs)) %>%
+  ggplot(aes(x, y)) +
+  geom_line(color = course_palette[["primary"]], linewidth = 1.2) +
+  geom_hline(yintercept = 4, linetype = "dashed", color = "grey60") +
+  geom_point(aes(x = 1, y = 4), color = course_palette[["secondary"]], size = 3) +
+  annotate("text", x = 1, y = 4.4, label = "f'(x*) = 0", color = course_palette[["secondary"]]) +
+  labs(x = "x", y = "f(x)")
+```
+
+Esta observación —"buscar el máximo es buscar dónde la pendiente es cero"— es **exactamente** el mecanismo detrás de la estimación por máxima verosimilitud (MLE) que vemos en la clase 6: ahí vamos a derivar una log-verosimilitud, igualarla a cero, y resolver.
+
+## Derivadas parciales y el gradiente
+
+Cuando $f$ depende de **varias variables**, $f(x_1, x_2, \dots, x_p)$, tiene una derivada respecto a cada una — una **derivada parcial**, $\dfrac{\partial f}{\partial x_j}$, que trata a las demás variables como constantes.
+
+. . .
+
+El vector de todas las derivadas parciales se llama **gradiente**:
+
+$$\nabla f(x) = \left(\frac{\partial f}{\partial x_1}, \dots, \frac{\partial f}{\partial x_p}\right).$$
+
+- Apunta en la dirección en que $f$ crece más rápido.
+- "Moverse en la dirección contraria al gradiente" es, literalmente, cómo se entrenan los modelos de las últimas clases del curso (regularización, árboles de gradient boosting, redes neuronales).
+- Retomaremos esta idea, con más detalle y ejemplos, en la clase 20.
+
+## (Opcional) La integral: el área bajo la curva
+
+Así como la derivada mide una pendiente, la integral mide un **área acumulada**:
+
+$$\int_a^b f(x)\, dx = \text{área bajo } f \text{ entre } a \text{ y } b.$$
+
+Un solo uso concreto en este curso: cuando $X$ es una variable aleatoria **continua** con densidad $f(x)$, su valor esperado se define como
+
+$$\mathbb{E}(X) = \int x f(x)\, dx$$
+
+— la versión continua de la suma ponderada por probabilidades que usaremos con variables discretas (clase 5).
+
+## En resumen
+
+- Una función asigna a cada entrada una única salida; vamos a usar constantemente lineal, cuadrática, exponencial, logaritmo y sigmoide.
+- Un límite describe hacia dónde se estabiliza una cantidad — el lenguaje detrás de "asintóticamente Normal" y "cuando $n\to\infty$".
+- La derivada mide una pendiente; su regla de la cadena permite derivar funciones compuestas.
+- $f'(x^*)=0$ en un máximo o mínimo es el principio detrás de la estimación por máxima verosimilitud.
+- El gradiente generaliza la derivada a varias variables, y es el mecanismo detrás de casi todos los algoritmos de ajuste que veremos al final del curso.
+
+## Gracias {.inverse .center .middle .closing}
+
+**Hasta la próxima clase**
+
+Mauricio Bucca

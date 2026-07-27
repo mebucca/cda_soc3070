@@ -1,0 +1,255 @@
+---
+title: "Análisis de Datos Categóricos (SOC3070)"
+subtitle: "Sobre-dispersión y quasi-Poisson"
+author: "Mauricio Bucca · Sociología UC"
+date: today
+body-classes: theme-benfica
+course-team: benfica
+filters: ["../_shared/course.lua"]
+format:
+  revealjs:
+    css: "../_shared/course.css"
+    slide-number: false
+    theme: default
+    highlight-style: github
+    code-block-font-size: 0.9em
+    width: 1600
+    height: 900
+    html-math-method: katex
+---
+
+```{r course-style, include=FALSE}
+source("../_shared/bikeshare.R")
+course_palette <- use_course_style("benfica")
+```
+
+## Antes · Hoy · Después {.class-rhythm}
+
+::: {.full-width}
+
+::: {.content-box}
+**Antes**
+
+regresión Poisson y modelos de conteo.
+:::
+
+::: {.content-box-primary}
+**Hoy**
+
+sobre-dispersión y quasi-Poisson.
+:::
+
+::: {.content-box-secondary}
+**Después**
+
+causalidad.
+:::
+
+:::
+
+
+
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+library(pacman)
+p_load("ISLR2")
+p_load("tidyverse")
+p_load("viridis")
+p_load("modelr")
+p_load("MASS")
+p_load("cowplot")
+p_load("margins")
+p_load("sjPlot")
+p_load("stargazer")
+p_load("sjmisc")
+p_load("sjlabelled")
+p_load("nnet")
+p_load("lmtest")
+
+theme_set(theme_julia())
+
+# datos de demanda horaria de bicicletas (Capital Bikeshare, DC 2011-2012)
+bikedata <- Bikeshare %>% as_tibble()
+
+# outcome sustantivo: demanda horaria (bikers), operacionalizada de 3 formas
+p75 <- quantile(bikedata$bikers, 0.75)
+cortes <- quantile(bikedata$bikers, probs = c(0, 1/3, 2/3, 1))
+
+bikedata <- bikedata %>%
+  mutate(
+    # binaria: alta demanda = top 25% de las horas (umbral P75)
+    high_demand  = if_else(bikers > p75, 1, 0),
+    demand       = if_else(high_demand == 1, "alta", "baja"),
+    # ordinal: baja / media / alta por terciles
+    demand_level = cut(bikers, breaks = cortes,
+                       labels = c("baja","media","alta"),
+                       include.lowest = TRUE, ordered_result = TRUE))
+    # conteo: se usa `bikers` directamente
+```
+
+## Datos de recuento {.inverse .center .middle}
+
+###  Regresión Poisson y Quasi-Poisson
+
+## Regresión Poisson
+```{r, warning=F, message=F}
+poisson_1 <- glm(bikers ~ temp, family=poisson(link="log"), data=bikedata)
+poisson_2 <- glm(bikers ~ temp + hum, family=poisson(link="log"), data=bikedata)
+```
+
+```{r, echo=F, warning=F, message=F}
+stargazer(poisson_1, poisson_2, type = "text", single.row = TRUE)
+```
+
+## Over-dispersion en regresión Poisson
+
+. . .
+
+- En un modelo de regresión Poisson cada $i$ sigue una distribución $y_{i} \sim \text{Poisson}(\mu_{i} = e^{X_{i}\beta})$
+
+. . .
+
+- No hay un parámetro adicional para la varianza. Por definición: $\operatorname{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}=e^{X_{i}\beta}$
+
+. . .
+
+- Esto puede resultar en una sub-estimación o sobre-estimación de la varianza de los datos. 
+  - Por lo general resulta en una subestimación de la varianza de los datos.
+
+. . .
+
+- Este caso se conocer como "over-dispersion". Los datos son más dispersos de lo esperando de acuerdo al modelo.
+  - Over-dispersion no afecta la estimación de los coeficientes pero la inferencia demasiado "liberal": errores estándar
+
+## Over-dispersion en regresión Poisson
+
+. . .
+
+- Es posible detectar over-dispersion inspeccionando los residuos "estandarizados" de un modelo Poisson. Formalmente:
+$$z_{i} = \frac{y_{i} - \mu_{i}}{\sigma_{i}} = \frac{y_{i} - \mu_{i}}{\sqrt{\mu_{i}}} = \frac{y_{i} - e^{X_{i}\beta}}{\sqrt{e^{X_{i}\beta}}}$$
+
+. . .
+
+- Si los $y_{i}$'s distribuyen Poisson entonces $z_{i} \sim \mathcal{N}(0,1)$. Luego, la presencia de residuos grandes indican over-dispersion. La "suma de residuos al cuadrado" resume esta información:
+$$\text{ssr} = \sum^{n}_{i=1} z^{2}_{i}$$
+
+. . .
+
+- Si el modelo Poisson es correcto $\text{ssr} \sim \chi^2_{\text{df}=n-k}$, con valor esperado $\mathbb{E}(\text{ssr})=n-k$
+
+. . .
+
+- El ratio entre ambos, $\frac{\text{ssr}}{n-k}$, es un estimado del "factor de dispersión".
+
+. . .
+
+- Obtenemos la inferencia correcta multiplicando los SE's por $\sqrt{\frac{\text{ssr}}{n-k}}$.
+
+## Over-dispersion en regresión Poisson
+
+. . .
+
+En nuestro modelo Poisson más complejo:
+```{r, warning=F, message=F}
+n = length(poisson_2$fitted.values); k = poisson_2$rank
+yhat <- predict(poisson_2, type="response")
+z <- (bikedata$bikers - yhat)/sqrt(yhat)
+rss = sum(z^2)
+```
+```{r, echo=F,warning=F, message=F}
+cat("rss = ", rss, " , rss esperado = ", n-k)
+```
+
+. . .
+
+En este caso el factor de over-dispersion es:
+```{r}
+cat("factor de dispersión = ", rss/(n-k))
+```
+
+## Regressión Quasi-Poisson
+La regressión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferenciadel modelo.
+
+. . .
+
+$$y_{i} \sim \text{quasi-Poisson}(\mu_{i} = e^{X_{i}\beta}, \sigma= \sqrt{\omega \cdot  e^{X_{i}\beta}})$$
+
+donde $\omega$ es el factor de dispersion.
+
+. . .
+
+  - Regressión Poisson es un caso especial de quasi-Poisson ( $\omega=1$ ).
+
+. . .
+
+Implementación en `R`:
+```{r, warning=F, message=F}
+qpoisson_2 <- glm(bikers ~ temp + hum, family=quasipoisson(link="log"), data=bikedata)
+```
+```{r,echo=F}
+summary(qpoisson_2)$coefficients
+cat("dispersion = ", summary(qpoisson_2)$dispersion)
+```
+
+## Quasi-Poisson
+```{r, warning=F, message=F}
+qpoisson_2 <- glm(bikers ~ temp + hum, family=quasipoisson(link="log"), data=bikedata)
+```
+
+```{r, echo=F}
+stargazer(poisson_2, qpoisson_2, type = "text", single.row = TRUE)
+```
+
+## Una alternativa: binomial negativa
+
+Quasi-Poisson **corrige los errores estándar** después de ajustar; no cambia el modelo de la media. Existe una alternativa que sí modela explícitamente el exceso de varianza: la **regresión binomial negativa**.
+
+. . .
+
+$$\text{Var}(y_i) = \mu_i + \frac{\mu_i^2}{\theta}$$
+
+- $\theta$: parámetro de dispersión estimado por el propio modelo (no solo un factor de corrección post-hoc).
+- $\theta \to \infty$ recupera Poisson ($\text{Var}=\mu$); $\theta$ chico implica sobre-dispersión fuerte.
+
+```{r, warning=F, message=F}
+p_load("MASS")
+nb_2 <- glm.nb(bikers ~ temp + hum, data = bikedata)
+stargazer(qpoisson_2, nb_2, type = "text", single.row = TRUE,
+          column.labels = c("Quasi-Poisson", "Binomial Negativa"))
+```
+
+Quasi-Poisson y binomial negativa suelen dar coeficientes similares; la binomial negativa además permite comparar el ajuste global (AIC, verosimilitud) entre modelos, algo que quasi-Poisson no ofrece por construcción.
+
+## Un problema distinto: exceso de ceros
+
+Sobre-dispersión es un problema de **varianza** (más dispersión que la que Poisson permite). Existe un problema *distinto*, aunque relacionado: el **exceso de ceros** — más observaciones en cero de las que Poisson (o incluso binomial negativa) predicen.
+
+. . .
+
+Ocurre cuando el proceso generador de datos mezcla dos mecanismos:
+
+- un subgrupo que **nunca** puede generar el evento (ceros "estructurales");
+- el resto, que sigue un proceso de conteo normal (donde el cero es solo un resultado posible más).
+
+## ¿Nos pasa esto con `bikers`?
+
+Antes de aplicar cualquier corrección, conviene **mirar los datos**:
+
+```{r}
+mean(bikedata$bikers == 0)
+```
+
+. . .
+
+Cero. En dos años de datos horarios, `bikers` nunca es exactamente 0 — siempre hay al menos un arriendo. Quasi-Poisson y binomial negativa alcanzan aquí precisamente porque **no** hay exceso de ceros que modelar.
+
+. . .
+
+El diagnóstico habría sido distinto con otro outcome: pensemos en "arriendos de bicicletas de carga" (un servicio de nicho, disponible solo en algunas estaciones). Ahí muchas horas en cero no reflejarían "poca demanda" sino "el servicio ni siquiera estaba disponible" — un mecanismo estructural mezclado con demanda genuina. Para ese tipo de outcome existen modelos **Zero-Inflated Poisson (ZIP)**, **Zero-Inflated Negative Binomial (ZINB)**, y modelos **Hurdle** (dos partes: ¿ocurre el evento?, y dado que ocurre, ¿cuánto?).
+
+La lección no es "siempre agregar un modelo de ceros inflados": es **revisar `mean(y == 0)` antes de elegir el modelo**, igual como revisamos la dispersión antes de elegir entre Poisson y sus alternativas.
+
+## Gracias {.inverse .center .middle .closing}
+
+**Hasta la próxima clase**
+
+Mauricio Bucca

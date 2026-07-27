@@ -1,0 +1,926 @@
+---
+title: "Análisis de Datos Categóricos (SOC3070)"
+subtitle: "Introducción a Redes Neuronales"
+author: "Mauricio Bucca · Sociología UC"
+date: today
+body-classes: theme-flamengo
+course-team: flamengo
+filters: ["../_shared/course.lua"]
+format:
+  revealjs:
+    css: "../_shared/course.css"
+    theme: default
+    highlight-style: github
+    slide-number: false
+    width: 1600
+    height: 900
+    html-math-method: katex
+execute:
+  warning: false
+  message: false
+---
+
+```{r setup, include=FALSE}
+library(pacman)
+p_load(tidyverse)
+p_load(nnet)
+source("../_shared/bikeshare.R")
+course <- use_course_data("flamengo")
+bikedata <- course$data
+course_palette <- course$palette
+```
+
+## Antes · Hoy · Después {.class-rhythm}
+
+::: {.full-width}
+
+::: {.content-box}
+**Antes**
+
+árboles, Random Forest y Gradient Boosting.
+:::
+
+::: {.content-box-primary}
+**Hoy**
+
+redes neuronales para clasificación y regresión.
+:::
+
+::: {.content-box-secondary}
+**Después**
+
+un "flavor" de LLMs, usando regresión logística.
+:::
+
+:::
+
+```{r setup-continued, include=FALSE}
+
+set.seed(3070)
+
+# Diseño y partición compartidos (ver _shared/bikeshare.R).
+setup <- bikeshare_learning_setup(bikedata)
+bikedata <- setup$data
+days <- setup$days
+train_days <- setup$train_days
+valid_days <- setup$valid_days
+test_days <- setup$test_days
+id_train <- setup$id_train
+id_valid <- setup$id_valid
+id_test <- setup$id_test
+demand_cutoff <- setup$demand_cutoff
+high_demand <- setup$high_demand
+bikedata$high_demand <- high_demand
+x_all <- setup$x_all
+
+center <- colMeans(x_all[id_train, , drop = FALSE])
+spread <- apply(x_all[id_train, , drop = FALSE], 2, sd)
+spread[spread == 0] <- 1
+scale_with_train <- function(x) scale(x, center = center, scale = spread)
+
+x_train <- scale_with_train(x_all[id_train, , drop = FALSE])
+x_valid <- scale_with_train(x_all[id_valid, , drop = FALSE])
+x_test <- scale_with_train(x_all[id_test, , drop = FALSE])
+y_train <- high_demand[id_train]
+y_valid <- high_demand[id_valid]
+y_test <- high_demand[id_test]
+
+log_loss <- function(y, p) {
+  p <- pmin(pmax(p, 1e-8), 1 - 1e-8)
+  -mean(y * log(p) + (1 - y) * log(1 - p))
+}
+rmse <- function(y, p) sqrt(mean((y - p)^2))
+mae <- function(y, p) mean(abs(y - p))
+
+fit_nn_class <- function(size, decay, x = x_train, y = y_train) {
+  target <- class.ind(factor(y, levels = c(0, 1)))
+  nnet(
+    x = x, y = target, size = size, decay = decay,
+    softmax = TRUE, maxit = 180, MaxNWts = 7000, trace = FALSE
+  )
+}
+
+predict_nn_class <- function(model, x) {
+  as.numeric(predict(model, x, type = "raw")[, 2])
+}
+```
+# Redes neuronales {.inverse .center .middle}
+
+## Ruta de la clase
+
+1. Reconocer una neurona como extensión de un GLM.
+2. Construir un perceptrón multicapa pequeño.
+3. Entrenar para clasificación y regresión.
+4. Regularizar y elegir arquitectura.
+5. Comparar con baselines simples.
+
+Referencia principal: James et al. (2021), *An Introduction to Statistical Learning*, 2ª ed., capítulo 10 ([sitio oficial](https://www.statlearning.com/)).
+
+## El problema no es un juguete
+
+```{r}
+tibble(
+  conjunto = c("Entrenamiento", "Validación", "Test"),
+  días = c(length(train_days), length(valid_days), length(test_days)),
+  horas = c(length(id_train), length(id_valid), length(id_test)),
+  columnas_de_entrada = ncol(x_all)
+)
+```
+
+La red recibe clima, calendario, no linealidades e interacción hora × día hábil. La partición temporal y el umbral aprendido en entrenamiento reproducen una decisión de pronóstico, no una clasificación artificialmente fácil.
+
+## Qué no haremos
+
+- No construiremos una red profunda.
+- No trabajaremos con imágenes ni lenguaje.
+- No interpretaremos pesos como efectos causales.
+- No asumiremos que “más complejo” significa “mejor”.
+
+El objetivo es conectar herramientas conocidas con una arquitectura flexible.
+
+## Retomando la pregunta de la clase pasada
+
+Los árboles y ensambles de la clase 20 resolvieron el problema de la clase 19 —ya no elegimos interacciones a mano—, pero heredaron una limitación: predicciones **escalonadas**, constantes dentro de cada región, sin poder aproximar una relación suave ni extrapolar.
+
+. . .
+
+La pregunta que quedó abierta: **¿se puede aprender una función no lineal —interacciones incluidas— que sea suave en vez de escalonada?**
+
+. . .
+
+Cada modelo del curso, hasta ahora, exigió que **nosotros** especificáramos la forma funcional: qué interacciones incluir en el logit, qué penalización usar, qué preguntas de sí/no hacer en un árbol. Una red neuronal invierte el orden: le damos entradas y salida, y el modelo **aprende directamente de los datos** qué transformaciones intermedias son útiles — de forma continua, no en escalones.
+
+. . .
+
+No es una idea nueva: McCulloch y Pitts propusieron en 1943 la primera neurona artificial (una unidad de umbral); Rosenblatt construyó en 1957 el primer *perceptrón* entrenable. Lo que cambió desde entonces es la escala, no la idea básica.
+
+## Configuración: los mismos datos de la clase 19
+
+La red reutiliza exactamente el outcome, la partición cronológica y la matriz de diseño de la clase 19:
+
+```{r config-data-21, eval=FALSE}
+# Preparación compartida por las clases 19-22 (ver _shared/bikeshare.R)
+setup       <- bikeshare_learning_setup(bikedata)
+high_demand <- setup$high_demand   # outcome: "alta demanda" = top 25% de las horas
+id_train <- setup$id_train; id_valid <- setup$id_valid; id_test <- setup$id_test
+x_all    <- setup$x_all            # la misma matriz de diseño que en la clase 19
+```
+
+## Configuración: escalar las entradas
+
+A diferencia de Ridge/LASSO, las redes son sensibles a la **escala** de las entradas, así que las estandarizamos. La media y la desviación se aprenden **solo en entrenamiento** (volveremos sobre por qué):
+
+```{r config-scale-21, eval=FALSE}
+center <- colMeans(x_all[id_train, ])
+spread <- apply(x_all[id_train, ], 2, sd); spread[spread == 0] <- 1
+
+x_train <- scale(x_all[id_train, ], center, spread); y_train <- high_demand[id_train]
+x_valid <- scale(x_all[id_valid, ], center, spread); y_valid <- high_demand[id_valid]
+x_test  <- scale(x_all[id_test, ],  center, spread); y_test  <- high_demand[id_test]
+```
+
+## De la neurona biológica a la artificial
+
+![Una neurona biológica (dendritas → cuerpo celular → axón) inspira la unidad artificial (entradas → combinación → salida).](https://media.geeksforgeeks.org/wp-content/uploads/20260414151507594095/420047197.webp){fig-align="center" width="70%"}
+
+::: {.footnote}
+Fuente: [GeeksforGeeks — Neural Networks: A Beginner's Guide](https://www.geeksforgeeks.org/machine-learning/neural-networks-a-beginners-guide/)
+:::
+
+| | Red biológica | Red artificial |
+|---|---|---|
+| Unidad | neurona (dendritas, axón) | nodo/unidad |
+| Conexión | sinapsis | peso numérico |
+| Aprendizaje | cambios en la fuerza sináptica | ajuste de pesos vía optimización |
+| Procesamiento | electroquímico, masivamente paralelo | numérico, secuencial por capas |
+
+La analogía es útil para la intuición inicial; de aquí en adelante trabajamos solo con la versión matemática.
+
+## De la regresión logística a una neurona
+
+La regresión logística ya tiene la estructura de una neurona:
+
+$$
+\widehat p=\sigma\left(\beta_0+\sum_jx_j\beta_j\right),
+\qquad
+\sigma(z)=\frac{1}{1+e^{-z}}.
+$$
+
+Entradas → combinación lineal → activación → predicción.
+
+## Anatomía de una neurona
+
+Para entradas $x_1,\ldots,x_p$:
+
+$$z=b+\sum_{j=1}^{p}w_jx_j, \qquad h=g(z).$$
+
+- $w_j$: pesos aprendidos.
+- $b$: sesgo o intercepto.
+- $g(\cdot)$: activación no lineal.
+- $h$: representación producida por la unidad.
+
+Sin activación no lineal, apilar capas seguiría produciendo una función lineal.
+
+## Una neurona, geométricamente
+
+![Estructura de una neurona: entradas, pesos, sesgo y activación.](https://media.geeksforgeeks.org/wp-content/uploads/20251209120638608023/bhu.webp){fig-align="center" width="60%"}
+
+::: {.footnote}
+Fuente: [GeeksforGeeks — What is Perceptron](https://www.geeksforgeeks.org/deep-learning/what-is-perceptron-the-simplest-artificial-neural-network/)
+:::
+
+Antes de la fórmula: **los pesos inclinan la frontera de decisión; el sesgo la desplaza**. Antes de aprender nada, una neurona sin activación no lineal es exactamente una línea (o un plano) que separa el espacio de entradas en dos.
+
+## Un ejemplo de juguete: aprender la función OR
+
+Antes de la demanda de bicicletas, veamos una neurona aprendiendo el problema más simple posible: la función lógica OR.
+
+| $x_1$ | $x_2$ | OR |
+|---:|---:|---:|
+| 0 | 0 | 0 |
+| 0 | 1 | 1 |
+| 1 | 0 | 1 |
+| 1 | 1 | 1 |
+
+Es un problema **linealmente separable**: una sola recta separa el punto $(0,0)$ del resto.
+
+## OR: la neurona aprende una recta
+
+::: {.pull-left}
+
+![Frontera de decisión aprendida (los cuatro puntos de la tabla OR, separados por una recta).](https://media.geeksforgeeks.org/wp-content/uploads/20251209120947314615/a.webp){width="95%"}
+
+:::
+
+::: {.pull-right}
+
+![Errores de clasificación por época de entrenamiento: bajan a cero cuando la recta separa bien los datos.](https://media.geeksforgeeks.org/wp-content/uploads/20251209121005579885/b.webp){width="95%"}
+
+:::
+
+::: {.footnote}
+Fuente: [GeeksforGeeks — What is Perceptron](https://www.geeksforgeeks.org/deep-learning/what-is-perceptron-the-simplest-artificial-neural-network/)
+:::
+
+Con solo 2 entradas y 4 observaciones, ya vemos el ciclo completo: predicción → error → ajuste de pesos → repetir. La demanda de bicicletas es el mismo ciclo, con más entradas y una frontera bastante más compleja que una recta.
+
+## Una capa oculta
+
+Con $H$ unidades ocultas:
+
+$$
+h_k=g\left(a_{k0}+\sum_ja_{kj}x_j\right),
+\qquad
+\widehat y=f\left(b_0+\sum_{k=1}^{H}b_kh_k\right).
+$$
+
+La red combina varias transformaciones aprendidas de temperatura, humedad, calendario y hora.
+
+## Forma vectorial
+
+Con una capa oculta de $H$ unidades, todo se escribe con matrices:
+
+$$
+h=g\big(W^{(1)}x+b^{(1)}\big),\qquad
+\widehat y=f\big(W^{(2)}h+b^{(2)}\big).
+$$
+
+- $W^{(1)}$ es $H\times p$; $W^{(2)}$ es $K\times H$.
+- $g$ se aplica **elemento a elemento**; $f$ es la salida (softmax o lineal).
+- Apilar capas = componer estas transformaciones. Sin $g$ no lineal, la composición colapsa a **una** transformación lineal.
+
+## Arquitectura mínima
+
+```{r network-diagram, echo=FALSE, fig.height=5.3}
+nodes <- bind_rows(
+  tibble(layer = "Entradas", x = 1, y = seq(1, 5), label = c("temp", "hum", "wind", "hora", "día")),
+  tibble(layer = "Oculta", x = 2, y = seq(1.4, 4.6, length.out = 4), label = paste0("h", 1:4)),
+  tibble(layer = "Salida", x = 3, y = 3, label = "p(alta)")
+)
+edges <- crossing(from = which(nodes$x == 1), to = which(nodes$x == 2)) %>%
+  bind_rows(crossing(from = which(nodes$x == 2), to = which(nodes$x == 3))) %>%
+  mutate(x = nodes$x[from], y = nodes$y[from], xend = nodes$x[to], yend = nodes$y[to])
+
+ggplot() +
+  geom_segment(data = edges, aes(x, y, xend = xend, yend = yend),
+               color = course_palette[["secondary"]], alpha = 0.32) +
+  geom_point(data = nodes, aes(x, y, fill = layer), shape = 21, size = 16,
+             color = "white", linewidth = 1.2) +
+  geom_text(data = nodes, aes(x, y, label = label), color = "white", size = 3.5) +
+  scale_fill_course() +
+  scale_x_continuous(breaks = 1:3, labels = c("Entradas", "Capa oculta", "Salida")) +
+  coord_cartesian(xlim = c(0.65, 3.35), ylim = c(0.5, 5.5), clip = "off") +
+  theme(panel.grid = element_blank(), axis.title = element_blank(), axis.text.y = element_blank(),
+        legend.position = "none")
+```
+
+## Funciones de activación
+
+| Activación | Rango | Uso típico |
+|---|---:|---|
+| logística | $(0,1)$ | probabilidad binaria |
+| `tanh` | $(-1,1)$ | capa oculta clásica |
+| ReLU | $[0,\infty)$ | redes modernas |
+| lineal | $(-\infty,\infty)$ | salida de regresión |
+
+`nnet` utiliza una activación logística en la capa oculta.
+
+Regla práctica habitual (fuera de `nnet`, que fija la logística): partir con ReLU en capas ocultas; usar logística/softmax en la salida para clasificación; lineal en la salida para regresión.
+
+## Activaciones comparadas
+
+```{r activations, echo=FALSE, fig.height=4.6}
+z <- seq(-4, 4, length.out = 400)
+tibble(z = z,
+       Sigmoide = 1 / (1 + exp(-z)),
+       Tanh = tanh(z),
+       ReLU = pmax(0, z)) %>%
+  pivot_longer(-z, names_to = "activacion", values_to = "valor") %>%
+  ggplot(aes(z, valor, color = activacion)) +
+  geom_line(linewidth = 1.2) +
+  scale_color_course() +
+  labs(x = "z (pre-activación)", y = "g(z)", color = NULL)
+```
+
+Sin no linealidad, la red sería lineal. La forma de $g$ decide qué tan fácil fluye el gradiente.
+
+::: {.footnote}
+Recordatorio: el gradiente es la derivada de $g$ — indica cuánto cambia la salida de la unidad ante un cambio pequeño en $z$; es lo que backpropagation propaga hacia atrás.
+:::
+
+## La sigmoide se satura
+
+```{r sigmoid-derivative, echo=FALSE, fig.height=4.4}
+zz <- seq(-6, 6, length.out = 400)
+tibble(z = zz, g = 1 / (1 + exp(-zz))) %>%
+  transmute(z, `g(z)` = g, `g'(z)` = g * (1 - g)) %>%
+  pivot_longer(-z, names_to = "curva", values_to = "valor") %>%
+  ggplot(aes(z, valor, color = curva)) +
+  geom_line(linewidth = 1.2) +
+  scale_color_course() +
+  labs(x = "z", y = NULL, color = NULL)
+```
+
+La derivada $g'(z)=g(z)\,[1-g(z)]$ es casi cero cuando $|z|$ es grande: gradientes que se **desvanecen**. Escalar las entradas mantiene $z$ cerca de 0 y facilita el aprendizaje.
+
+::: {.footnote}
+Recordatorio: el gradiente indica cuánto y hacia dónde ajustar un peso para reducir la pérdida; si es casi cero, ese ajuste casi no ocurre — de ahí "gradiente que se desvanece".
+:::
+
+## Propagación hacia adelante
+
+Para una observación:
+
+1. calcular combinaciones lineales ocultas;
+2. aplicar la activación;
+3. combinar unidades ocultas;
+4. transformar la salida;
+5. obtener una probabilidad o valor predicho.
+
+Esto produce la predicción antes de actualizar cualquier peso.
+
+## Función de pérdida
+
+Para clasificación binaria usamos entropía cruzada:
+
+$$
+L=-\frac{1}{n}\sum_{i=1}^{n}
+\left[y_i\log(\widehat p_i)+(1-y_i)\log(1-\widehat p_i)\right].
+$$
+
+Para regresión podemos usar error cuadrático. Entrenar significa buscar pesos que reduzcan la pérdida.
+
+## Softmax y su vínculo con la logística
+
+Para $K$ clases, la salida softmax convierte puntajes $z_k$ en probabilidades:
+
+$$
+\widehat p_k=\frac{e^{z_k}}{\sum_{l=1}^{K}e^{z_l}}.
+$$
+
+- Suma 1 y es positiva: una distribución sobre clases.
+- Con $K=2$ se reduce a la **logística**: $\widehat p_1=\sigma(z_1-z_2)$.
+- Por eso `softmax = TRUE` con dos clases es, en esencia, una regresión logística con una capa oculta añadida.
+
+## El gradiente en la salida: $\widehat p-y$
+
+::: {.footnote}
+Recordatorio: el gradiente de la pérdida respecto a $z$ dice cuánto y en qué dirección mover esa pre-activación para reducir el error; aquí toma una forma particularmente simple.
+:::
+
+Con entropía cruzada y softmax (o sigmoide), el gradiente respecto a la pre-activación de salida se simplifica:
+
+$$
+\frac{\partial L}{\partial z}=\widehat p-y.
+$$
+
+- Es literalmente el **error de predicción**: probabilidad menos etiqueta.
+- Esta cancelación es la que vuelve estable el entrenamiento de clasificadores.
+- Es el punto de partida de la retropropagación.
+
+## Backpropagation: intuición
+
+Backpropagation aplica la regla de la cadena en dos pasadas:
+
+1. **hacia adelante**: calcular la predicción actual de la red;
+2. **hacia atrás**: medir el error en la salida y repartir "la culpa" entre los pesos que contribuyeron a él, capa por capa.
+
+![Backpropagation reparte el error de salida hacia atrás, capa por capa, para actualizar cada peso.](https://media.geeksforgeeks.org/wp-content/uploads/20250701163824448467/Backpropagation-in-Neural-Network-1.webp){fig-align="center" width="55%"}
+
+::: {.footnote}
+Fuente: [GeeksforGeeks — Backpropagation in Neural Network](https://www.geeksforgeeks.org/machine-learning/backpropagation-in-neural-network/)
+:::
+
+No es una teoría nueva: es una forma eficiente de derivar una función compuesta.
+
+## Backpropagation: las ecuaciones
+
+::: {.footnote}
+Recordatorio: cada $\delta$ de abajo es un gradiente — cuánto y hacia dónde ajustar esa capa para reducir la pérdida; la regla de la cadena los encadena capa por capa.
+:::
+
+Para una red de una capa oculta, la regla de la cadena da:
+
+$$
+\delta^{(2)}=\widehat p-y,\qquad
+\frac{\partial L}{\partial W^{(2)}}=\delta^{(2)}h^\top,
+$$
+
+$$
+\delta^{(1)}=\big(W^{(2)\top}\delta^{(2)}\big)\odot g'(z^{(1)}),\qquad
+\frac{\partial L}{\partial W^{(1)}}=\delta^{(1)}x^\top.
+$$
+
+- $\delta$ = "cuánta culpa" tiene cada unidad del error total.
+- $\odot$ = producto elemento a elemento; $g'(z^{(1)})$ es la derivada de la activación oculta.
+- El error se **propaga hacia atrás** multiplicando por los pesos y por $g'$.
+
+## Cómo se entrena
+
+::: {.footnote}
+Recordatorio: el gradiente apunta hacia donde la pérdida crece más rápido; por eso los pesos se mueven en la dirección **contraria** ($-\eta \, \partial L/\partial w$).
+:::
+
+Con los gradientes, se actualizan los pesos para bajar la pérdida:
+
+$$w\leftarrow w-\eta\,\frac{\partial L}{\partial w}.$$
+
+- $\eta$ = tasa de aprendizaje (tamaño del paso).
+- Las redes grandes usan **descenso de gradiente estocástico** por *mini-lotes* y muchas *épocas*.
+- `nnet` es pequeña: optimiza con **BFGS** (cuasi-Newton) hasta `maxit` iteraciones, no con SGD. La idea de "bajar por el gradiente" es la misma.
+
+## Por qué escalar
+
+```{r scaling-table}
+tibble(
+  variable = c("temp", "hum", "windspeed"),
+  media_original = map_dbl(bikedata[c("temp", "hum", "windspeed")], mean),
+  sd_original = map_dbl(bikedata[c("temp", "hum", "windspeed")], sd),
+  media_escalada_train = colMeans(x_train[, c("temp", "hum", "windspeed")]),
+  sd_escalada_train = apply(x_train[, c("temp", "hum", "windspeed")], 2, sd)
+)
+```
+
+Escalar facilita la optimización y evita que una variable domine solo por sus unidades.
+
+## Evitar filtración
+
+La media y desviación usadas para escalar se estiman únicamente en entrenamiento:
+
+$$z_{ij}=\frac{x_{ij}-\bar{x}_{j,\text{train}}}{s_{j,\text{train}}}.$$
+
+Las mismas constantes se aplican a validación y test. Recalcularlas en test revelaría información que el modelo no tendría al desplegarse.
+
+# Clasificación {.inverse .center .middle}
+
+## Baseline logístico
+
+```{r logit-baseline}
+logit <- glm(
+  high_demand ~ temp + atemp + I(temp^2) + hum + I(hum^2) + windspeed +
+    holiday + month + sin(2 * pi * month / 12) + cos(2 * pi * month / 12) +
+    factor(weathersit) + factor(hr) * workingday,
+  data = bikedata[id_train, ], family = binomial
+)
+logit_valid <- predict(logit, bikedata[id_valid, ], type = "response")
+logit_test <- predict(logit, bikedata[id_test, ], type = "response")
+
+tibble(validation_log_loss = log_loss(y_valid, logit_valid))
+```
+
+Una red debe superar un baseline útil, no solo el azar.
+
+## Primer perceptrón multicapa: ejemplo empírico
+
+```{r first-network, cache=TRUE}
+nn_first <- fit_nn_class(size = 6, decay = 0.01)
+nn_first_prob <- predict_nn_class(nn_first, x_valid)
+
+tibble(
+  modelo = c("Logit", "Red: 6 unidades"),
+  validation_log_loss = c(log_loss(y_valid, logit_valid),
+                          log_loss(y_valid, nn_first_prob))
+)
+```
+
+`size = 6` indica seis unidades ocultas; `decay` penaliza pesos grandes.
+
+## Capacidad del modelo
+
+Con $p$ entradas, $H$ unidades ocultas y $K$ salidas, el número de pesos es:
+
+$$H(p+1)+K(H+1).$$
+
+```{r}
+tibble(
+  entradas = ncol(x_train),
+  unidades_ocultas = c(3, 6, 10),
+  pesos = unidades_ocultas * (entradas + 1) + 2 * (unidades_ocultas + 1)
+)
+```
+
+Más unidades aumentan capacidad y costo computacional. También aumentan el riesgo de aprender patrones específicos del entrenamiento.
+
+## Aproximación universal
+
+Una red con **una sola capa oculta** y suficientes unidades puede aproximar cualquier función continua en un dominio acotado (teorema de aproximación universal).
+
+- Es un resultado de **existencia**: dice que la capacidad está; no que la vayamos a *encontrar* ni que *generalice*.
+- "Puede ajustar cualquier cosa" incluye el ruido: de ahí la necesidad de regularización y validación.
+- Más unidades ≠ mejor: preferimos la arquitectura que **generaliza**, no la que memoriza.
+
+## Regularización de pesos: `decay` es Ridge, otra vez
+
+$$L_{\text{penalizada}}=L+\lambda\sum_w w^2.$$
+
+- Es exactamente la penalización **Ridge** de la clase 19, ahora aplicada sobre los pesos de la red en vez de sobre coeficientes de un GLM.
+- `decay` pequeño: red más flexible; `decay` grande: pesos más contraídos, funciones más suaves.
+- Equivale a un **prior gaussiano** $w\sim\mathcal N(0,\tau^2)$ con estimación MAP, tomando $\lambda=1/(2\tau^2)$.
+- Junto con `maxit` (una forma de parada temprana), controla la capacidad efectiva de la red — el mismo compromiso sesgo-varianza de siempre, con otro nombre.
+
+## Tuning conjunto
+
+```{r nn-tuning, cache=TRUE}
+nn_grid <- crossing(size = c(3, 6, 10), decay = c(0.01, 0.08)) %>%
+  mutate(
+    model = map2(size, decay, fit_nn_class),
+    probability = map(model, predict_nn_class, x = x_valid),
+    validation_loss = map_dbl(probability, ~ log_loss(y_valid, .x))
+  )
+
+nn_grid %>% select(size, decay, validation_loss) %>% arrange(validation_loss)
+```
+
+Arquitectura y regularización deben elegirse juntas.
+
+## Superficie de validación
+
+```{r nn-tuning-plot, fig.height=5.2}
+nn_grid %>%
+  mutate(decay = factor(decay)) %>%
+  ggplot(aes(size, validation_loss, color = decay, group = decay)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 3.2) +
+  scale_color_course() +
+  scale_x_continuous(breaks = c(3, 6, 10)) +
+  labs(x = "Unidades ocultas", y = "Log-loss de validación", color = "decay")
+```
+
+## La inicialización también importa
+
+```{r nn-stability, cache=TRUE}
+best <- nn_grid %>% slice_min(validation_loss, n = 1, with_ties = FALSE)
+stability <- map_dfr(1:3, function(run) {
+  set.seed(3070 + run)
+  fit <- fit_nn_class(best$size, best$decay)
+  probability <- predict_nn_class(fit, x_valid)
+  tibble(run = run, validation_log_loss = log_loss(y_valid, probability))
+})
+
+stability %>%
+  summarise(
+    mínimo = min(validation_log_loss),
+    promedio = mean(validation_log_loss),
+    máximo = max(validation_log_loss)
+  )
+```
+
+La misma arquitectura puede converger a soluciones distintas. Una única corrida no permite separar calidad del modelo de una inicialización afortunada.
+
+## El paisaje de optimización
+
+La pérdida de una red **no es convexa**: tiene muchos mínimos locales, mesetas y simetrías entre unidades.
+
+- Distintas inicializaciones → distintas soluciones, todas "válidas".
+- No hay garantía de óptimo global; buscamos soluciones *suficientemente buenas*.
+- Por eso fijamos semillas, comparamos varias corridas y no leemos los pesos como parámetros únicos e identificables.
+
+## Reajuste final
+
+```{r nn-final, cache=TRUE}
+x_dev <- rbind(x_train, x_valid)
+y_dev <- c(y_train, y_valid)
+set.seed(3070)
+nn_final <- fit_nn_class(best$size, best$decay, x = x_dev, y = y_dev)
+nn_test <- predict_nn_class(nn_final, x_test)
+
+id_dev <- c(id_train, id_valid)
+logit_final <- update(logit, data = bikedata[id_dev, ])
+logit_test <- predict(logit_final, bikedata[id_test, ], type = "response")
+
+tibble(size = best$size, decay = best$decay,
+       validation_log_loss = best$validation_loss)
+```
+
+## Comparación fuera de muestra
+
+```{r class-comparison}
+classification_results <- tibble(
+  modelo = c("Logit", "Red neuronal"),
+  log_loss = c(log_loss(y_test, logit_test), log_loss(y_test, nn_test)),
+  accuracy = c(mean((logit_test >= 0.5) == y_test),
+               mean((nn_test >= 0.5) == y_test)),
+  sensitivity = c(mean((logit_test[y_test == 1] >= 0.5)),
+                  mean((nn_test[y_test == 1] >= 0.5)))
+)
+classification_results
+```
+
+## Distribución de probabilidades
+
+```{r class-density, fig.height=5.2}
+tibble(
+  observed = factor(if_else(y_test == 1, "alta", "baja"),
+                    levels = c("baja", "alta")),
+  probability = nn_test
+) %>%
+  ggplot(aes(probability, fill = observed)) +
+  geom_density(alpha = 0.55) +
+  scale_fill_course() +
+  labs(x = "Probabilidad de demanda alta", y = "Densidad", fill = "Observado")
+```
+
+Mayor separación facilita clasificar, pero no garantiza calibración.
+
+## Calibración de la red
+
+```{r nn-calibration, fig.height=5}
+nn_calibration <- tibble(y = y_test, p = nn_test) %>%
+  mutate(bin = ntile(p, 10)) %>%
+  group_by(bin) %>%
+  summarise(predicted = mean(p), observed = mean(y), n = n(), .groups = "drop")
+
+nn_calibration %>%
+  ggplot(aes(predicted, observed, size = n)) +
+  geom_abline(slope = 1, intercept = 0, color = course_palette[["secondary"]]) +
+  geom_point(color = course_palette[["primary"]], alpha = 0.85) +
+  scale_x_continuous(limits = c(0, 1)) +
+  scale_y_continuous(limits = c(0, 1)) +
+  labs(x = "Probabilidad predicha", y = "Frecuencia observada", size = "Horas")
+```
+
+# Predicción del conteo {.inverse .center .middle}
+
+## Cambiar la salida
+
+Para predecir `bikers` usamos salida lineal y modelamos `log1p(bikers)`:
+
+$$\widehat z=b_0+\sum_kb_kh_k,
+\qquad
+\widehat{\text{bikers}}=\exp(\widehat z)-1.$$
+
+La transformación estabiliza la escala y evita que las horas extremas dominen completamente la pérdida.
+
+## Baseline lineal
+
+```{r reg-baseline}
+linear <- lm(
+  log1p(bikers) ~ temp + atemp + I(temp^2) + hum + I(hum^2) + windspeed +
+    holiday + month + sin(2 * pi * month / 12) + cos(2 * pi * month / 12) +
+    factor(weathersit) + factor(hr) * workingday,
+  data = bikedata[id_train, ]
+)
+linear_valid <- pmax(0, expm1(predict(linear, bikedata[id_valid, ])))
+
+tibble(
+  validation_RMSE = rmse(bikedata$bikers[id_valid], linear_valid),
+  validation_MAE = mae(bikedata$bikers[id_valid], linear_valid)
+)
+```
+
+## Tuning de la red de regresión
+
+```{r nn-reg-tuning, cache=TRUE}
+reg_grid <- crossing(size = c(4, 8), decay = c(0.01, 0.08)) %>%
+  mutate(
+    model = map2(size, decay, ~ nnet(
+      x = x_train, y = log1p(bikedata$bikers[id_train]),
+      size = .x, decay = .y, linout = TRUE,
+      maxit = 220, MaxNWts = 7000, trace = FALSE
+    )),
+    prediction = map(model, ~ pmax(0, expm1(as.numeric(predict(.x, x_valid))))),
+    validation_RMSE = map_dbl(prediction, ~ rmse(bikedata$bikers[id_valid], .x))
+  )
+
+reg_grid %>% select(size, decay, validation_RMSE) %>% arrange(validation_RMSE)
+```
+
+## Red de regresión: ejemplo empírico
+
+```{r nn-reg-final, cache=TRUE}
+best_reg <- reg_grid %>% slice_min(validation_RMSE, n = 1, with_ties = FALSE)
+nn_reg_final <- nnet(
+  x = x_dev, y = log1p(bikedata$bikers[c(id_train, id_valid)]),
+  size = best_reg$size, decay = best_reg$decay,
+  linout = TRUE, maxit = 260, MaxNWts = 7000, trace = FALSE
+)
+nn_count <- pmax(0, expm1(as.numeric(predict(nn_reg_final, x_test))))
+linear_final <- update(linear, data = bikedata[c(id_train, id_valid), ])
+linear_test <- pmax(0, expm1(predict(linear_final, bikedata[id_test, ])))
+
+tibble(
+  modelo = c("Regresión lineal", "Red neuronal"),
+  RMSE = c(rmse(bikedata$bikers[id_test], linear_test),
+           rmse(bikedata$bikers[id_test], nn_count)),
+  MAE = c(mae(bikedata$bikers[id_test], linear_test),
+          mae(bikedata$bikers[id_test], nn_count))
+)
+```
+
+## Observado versus predicho
+
+```{r nn-reg-plot, fig.height=5.2}
+tibble(observed = bikedata$bikers[id_test], predicted = nn_count) %>%
+  slice_sample(n = min(1400, length(id_test))) %>%
+  ggplot(aes(observed, predicted)) +
+  geom_point(color = course_palette[["primary"]], alpha = 0.35) +
+  geom_abline(slope = 1, intercept = 0,
+              color = course_palette[["secondary"]], linewidth = 1.2) +
+  coord_equal() +
+  labs(x = "Bikers observado", y = "Bikers predicho")
+```
+
+## Residuos por hora
+
+```{r nn-hour-errors, fig.height=5}
+tibble(
+  hour = bikedata$hour[id_test],
+  residual = bikedata$bikers[id_test] - nn_count
+) %>%
+  group_by(hour) %>%
+  summarise(MAE = mean(abs(residual)), .groups = "drop") %>%
+  ggplot(aes(hour, MAE)) +
+  geom_line(color = course_palette[["primary"]], linewidth = 1.2) +
+  geom_point(color = course_palette[["secondary"]], size = 2.4) +
+  scale_x_continuous(breaks = seq(0, 23, 3)) +
+  labs(x = "Hora", y = "MAE")
+```
+
+Una métrica global puede ocultar franjas horarias con errores sistemáticamente mayores.
+
+# Evaluación responsable {.inverse .center .middle}
+
+## Las mismas herramientas, apuestas distintas
+
+Durante tres clases usamos un solo caso —demanda de bicicletas— a propósito: para dominar bien un problema en vez de recorrer superficialmente muchos.
+
+. . .
+
+Pero Ridge/LASSO, Random Forest, Gradient Boosting y esta misma red neuronal son, matemáticamente, **las mismas herramientas** que hoy deciden aprobación de crédito, riesgo de reincidencia o preselección de currículums. Cambia el dato de entrada; no cambia el algoritmo.
+
+. . .
+
+Lo que sí debe cambiar con las apuestas es el **estándar de evaluación**: la disciplina de validación, calibración, error por subgrupo y honestidad sobre qué es y qué no es causal —que practicamos aquí con un outcome inofensivo— es exactamente la que hay que exigir cuando el error recae sobre una persona, no sobre una bicicleta.
+
+## Qué aprende una red
+
+Una red puede capturar:
+
+- peaks no lineales por hora;
+- interacción entre hora y día hábil;
+- efectos conjuntos de temperatura y humedad;
+- estacionalidad distribuida entre varias unidades.
+
+La representación es útil para predecir, pero sus pesos no tienen la interpretación directa de un coeficiente GLM.
+
+## Fuentes de inestabilidad
+
+- inicialización aleatoria de pesos;
+- mínimos locales y mesetas;
+- arquitectura elegida;
+- escala y codificación de entradas;
+- tamaño de la muestra;
+- regularización insuficiente.
+
+Por eso fijamos semillas, validamos y comparamos varias ejecuciones cuando el riesgo lo justifica.
+
+## Otros casos de uso
+
+La misma arquitectura —capas de transformaciones aprendidas, entrenadas por descenso de gradiente— es la base de aplicaciones muy distintas entre sí:
+
+| Dominio | Uso típico |
+|---|---|
+| Salud | diagnóstico por imágenes médicas (radiografías, resonancias) |
+| Lenguaje | traducción automática, chatbots, resúmenes de texto |
+| Finanzas | detección de fraude en tiempo real sobre transacciones |
+| Marketing | sistemas de recomendación (qué producto o contenido mostrar) |
+| Ciencias | predicción de estructura de proteínas (AlphaFold), modelos climáticos |
+| Transporte | percepción visual en vehículos autónomos |
+
+Lo que vimos hoy —un perceptrón multicapa pequeño— es la unidad conceptual detrás de todos estos casos; lo que cambia es la arquitectura (capas convolucionales para imágenes, atención para lenguaje) y la escala.
+
+## Dónde queda esto en el mapa más amplio
+
+Lo que vimos hoy —un perceptrón multicapa (*MLP*) con una capa oculta— es una familia entre varias:
+
+| Arquitectura | Para qué se usa |
+|---|---|
+| **MLP** (hoy) | datos tabulares, entradas de tamaño fijo |
+| CNN (convolucional) | imágenes |
+| RNN / LSTM | secuencias, series de tiempo largas |
+| Transformer | lenguaje y secuencias largas con atención |
+
+No cubrimos estas arquitecturas porque nuestro problema —predecir con datos tabulares de bicicletas— es exactamente el caso de uso del MLP. La lógica de fondo (capas, pesos, backpropagation) es la misma en todas.
+
+## Cuándo una red no es la mejor opción
+
+- **Datos tabulares y medianos**: boosting suele igualar o superar a la red, con menos ajuste.
+- **Pocos datos**: la red sobreajusta y su varianza domina.
+- **Se necesita interpretación**: un GLM da odds ratios; la red, no.
+- **Sensibilidad a escala y semilla**: exige más cuidado de preprocesamiento y reproducibilidad.
+
+Una red se justifica cuando la estructura no lineal es fuerte y hay datos suficientes para estimarla.
+
+## Frente a GLM y ensambles
+
+| | GLM (+ regularización) | Ensambles de árboles | Red neuronal |
+|---|---|---|---|
+| No linealidad | manual | automática (cortes) | automática (suave) |
+| Interpretación | alta | media | baja |
+| Datos pequeños | robusto | medio | frágil |
+| Ajuste requerido | poco | medio | alto |
+
+La red extiende la lógica del GLM con transformaciones aprendidas; el costo es interpretabilidad y estabilidad.
+
+## Comparar justamente
+
+| Elemento | Debe ser igual entre modelos |
+|---|---|
+| Outcome | definición de demanda alta o `bikers` |
+| Partición | mismas filas en train/valid/test |
+| Métrica | misma fórmula y escala |
+| Información | ningún acceso anticipado al test |
+
+Cambiar estas condiciones confunde diferencias metodológicas con diferencias de evaluación.
+
+## Interpretación y uso
+
+- Use curvas de calibración y errores por subgrupo.
+- Compare con GLM, regularización y ensembles.
+- Documente transformaciones y semillas.
+- No convierta importancia predictiva en argumento causal.
+- Prefiera el modelo más simple cuando el desempeño sea equivalente.
+
+## Ejercicio
+
+1. Agregue una interacción explícita al baseline logístico.
+2. Pruebe `size = 12` sin cambiar el test.
+3. Compare `decay = 0` y `decay = 0.1`.
+4. Grafique calibración por tipo de día.
+5. Decida si la ganancia justifica la menor interpretabilidad.
+
+## En resumen
+
+- Una red neuronal extiende la lógica de la regresión logística.
+- La capa oculta aprende transformaciones no lineales.
+- Escalamiento, regularización y validación son parte del modelo.
+- Clasificación y regresión requieren salidas y pérdidas distintas.
+- Una red debe superar baselines simples bajo una comparación justa.
+
+## Mapa conceptual del módulo (clases 19–22)
+
+Tres clases, una sola pregunta de fondo —¿cómo controlar la complejidad de un modelo sin decidirla arbitrariamente?— respondida cada vez de forma distinta:
+
+| Clase | Pregunta que resuelve | Pregunta que deja abierta |
+|---|---|---|
+| **19. Regularización** | ¿cuánta complejidad usar, dado un conjunto de predictores fijado por nosotros? | ¿y si no sabemos qué interacciones importan? |
+| **20. Árboles y ensambles** | ¿puede el modelo descubrir interacciones y no linealidades por sí solo? | ¿puede esa función ser suave, no escalonada? |
+| **21. Redes neuronales** | ¿puede aprender transformaciones suaves y no lineales, capa por capa? | (ver evaluación responsable: el costo es interpretabilidad y estabilidad) |
+
+$$
+\text{logit lineal}
+\;\longrightarrow\;
+\text{coeficientes penalizados}
+\;\longrightarrow\;
+\text{reglas y ensambles}
+\;\longrightarrow\;
+\text{transformaciones neuronales}.
+$$
+
+En cada etapa, la *forma* del modelo se vuelve más flexible — pero la disciplina no cambió ni una vez: mismo outcome, misma partición train/valid/test, misma métrica, mismo test intocado hasta el final. Esa disciplina, no la técnica de moda, es lo que distingue una predicción confiable de una casualidad de la muestra.
+
+## Gracias {.inverse .center .middle .closing}
+
+**Hasta la próxima clase**
+
+Mauricio Bucca

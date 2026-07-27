@@ -1,0 +1,478 @@
+/* SOC3070 — shared RevealJS and notebook design system.
+   All football palettes live here; a document activates exactly one theme-* class. */
+:root {
+  --course-primary: #004d98;
+  --course-secondary: #a50044;
+  --course-accent: #edbb00;
+  --course-series-1: #004d98;
+  --course-series-2: #a50044;
+  --course-series-3: #edbb00;
+  --course-series-4: #00a6d6;
+  --course-series-5: #6f2da8;
+  --course-series-6: #e85d3f;
+  --course-heading: var(--course-primary);
+  --course-on-primary: #ffffff;
+  --course-on-secondary: #ffffff;
+  --course-title-text: #ffffff;
+  --course-ink: #20242a;
+  --course-muted: #606873;
+  --course-paper: #ffffff;
+  --course-code: #f6f8fa;
+  --course-line: #d8dee4;
+  /* Matplotlib/Jupyter defaults: DejaVu for prose and its mono companion for code. */
+  --r-heading-font: "DejaVu Sans", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --r-body-font: "DejaVu Sans", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --r-code-font: "DejaVu Sans Mono", "SFMono-Regular", "Cascadia Code", Consolas, monospace;
+}
+
+/* Team-inspired palettes. Series colours are deliberately separated in hue and
+   luminance so categories remain distinguishable on a white projector surface. */
+body.theme-barcelona { --course-primary:#004D98; --course-secondary:#A50044; --course-accent:#EDBB00; --course-heading:#004D98; --course-on-primary:#FFFFFF; --course-on-secondary:#FFFFFF; --course-title-text:#FFFFFF; --course-series-1:#004D98; --course-series-2:#A50044; --course-series-3:#D49A00; --course-series-4:#00A6D6; --course-series-5:#6F2DA8; --course-series-6:#E85D3F; }
+body.theme-dortmund { --course-primary:#FDE100; --course-secondary:#C1121F; --course-accent:#D5007F; --course-heading:#111111; --course-on-primary:#111111; --course-on-secondary:#FFFFFF; --course-title-text:#111111; --course-series-1:#C1121F; --course-series-2:#E6B800; --course-series-3:#D5007F; --course-series-4:#0072B2; --course-series-5:#009E73; --course-series-6:#D55E00; }
+body.theme-real-madrid { --course-primary:#5B2C83; --course-secondary:#00529F; --course-accent:#C69214; --course-heading:#5B2C83; --course-on-primary:#FFFFFF; --course-title-text:#FFFFFF; --course-series-1:#5B2C83; --course-series-2:#00529F; --course-series-3:#C69214; --course-series-4:#008C95; --course-series-5:#C23B7A; --course-series-6:#E36A19; }
+body.theme-man-city { --course-primary:#6CABDD; --course-secondary:#1C2C5B; --course-accent:#A51D3D; --course-heading:#1C2C5B; --course-on-primary:#111111; --course-title-text:#111111; --course-series-1:#3D9BC9; --course-series-2:#A51D3D; --course-series-3:#1C2C5B; --course-series-4:#D49A00; --course-series-5:#00876C; --course-series-6:#7B4AB5; }
+body.theme-arsenal { --course-primary:#D71920; --course-secondary:#063672; --course-accent:#C99700; --course-heading:#A80F15; --course-on-primary:#FFFFFF; --course-title-text:#FFFFFF; --course-series-1:#D71920; --course-series-2:#063672; --course-series-3:#C99700; --course-series-4:#008C95; --course-series-5:#7B3FA1; --course-series-6:#E87500; }
+body.theme-boca { --course-primary:#003B7A; --course-secondary:#E6A700; --course-accent:#00A6D6; --course-heading:#003B7A; --course-on-primary:#FFFFFF; --course-on-secondary:#111111; --course-title-text:#FFFFFF; --course-series-1:#003B7A; --course-series-2:#D99B00; --course-series-3:#00A6D6; --course-series-4:#A50044; --course-series-5:#009E73; --course-series-6:#7B4AB5; }
+body.theme-river { --course-primary:#C4162A; --course-secondary:#1D3461; --course-accent:#4C9BD6; --course-heading:#A81022; --course-on-primary:#FFFFFF; --course-title-text:#FFFFFF; --course-series-1:#C4162A; --course-series-2:#1D3461; --course-series-3:#4C9BD6; --course-series-4:#D49A00; --course-series-5:#00876C; --course-series-6:#7A45A8; }
+body.theme-liverpool { --course-primary:#007A75; --course-secondary:#C8102E; --course-accent:#D4A900; --course-heading:#006661; --course-on-primary:#FFFFFF; --course-title-text:#FFFFFF; --course-series-1:#007A75; --course-series-2:#C8102E; --course-series-3:#D4A900; --course-series-4:#0057A8; --course-series-5:#7C3AA8; --course-series-6:#E66A22; }
+body.theme-juventus { --course-primary:#6B2D5C; --course-secondary:#C69214; --course-accent:#D61C75; --course-heading:#6B2D5C; --course-on-primary:#FFFFFF; --course-on-secondary:#111111; --course-title-text:#FFFFFF; --course-series-1:#6B2D5C; --course-series-2:#D61C75; --course-series-3:#C69214; --course-series-4:#0072B2; --course-series-5:#D55E00; --course-series-6:#009E73; }
+body.theme-inter { --course-primary:#0050B5; --course-secondary:#5B2C6B; --course-accent:#00A8A8; --course-heading:#00469E; --course-on-primary:#FFFFFF; --course-title-text:#FFFFFF; --course-series-1:#0050B5; --course-series-2:#5B2C6B; --course-series-3:#00A8A8; --course-series-4:#B23A78; --course-series-5:#E45D22; --course-series-6:#D49A00; }
+body.theme-milan { --course-primary:#8B1E2D; --course-secondary:#4A1942; --course-accent:#B7A99A; --course-heading:#8B1E2D; --course-on-primary:#FFFFFF; --course-title-text:#FFFFFF; --course-series-1:#4A1942; --course-series-2:#8B1E2D; --course-series-3:#B58A00; --course-series-4:#008C95; --course-series-5:#5D6DBE; --course-series-6:#E06B19; }
+body.theme-celtic { --course-primary:#087E4B; --course-secondary:#D19F00; --course-accent:#30363D; --course-heading:#087044; --course-on-primary:#FFFFFF; --course-on-secondary:#111111; --course-title-text:#FFFFFF; --course-series-1:#087E4B; --course-series-2:#D19F00; --course-series-3:#30363D; --course-series-4:#0072B2; --course-series-5:#C23B75; --course-series-6:#E06B19; }
+body.theme-ajax { --course-primary:#E0642B; --course-secondary:#C1122F; --course-accent:#1B365D; --course-heading:#B43D0E; --course-on-primary:#111111; --course-title-text:#111111; --course-series-1:#E0642B; --course-series-2:#1B365D; --course-series-3:#C1122F; --course-series-4:#008C95; --course-series-5:#6A45A8; --course-series-6:#B58A00; }
+body.theme-psg { --course-primary:#101B3F; --course-secondary:#D71920; --course-accent:#D946A6; --course-heading:#101B3F; --course-on-primary:#FFFFFF; --course-title-text:#FFFFFF; --course-series-1:#101B3F; --course-series-2:#D946A6; --course-series-3:#D71920; --course-series-4:#20A6D2; --course-series-5:#C79A00; --course-series-6:#00876C; }
+body.theme-napoli { --course-primary:#007CC3; --course-secondary:#003C82; --course-accent:#C43A55; --course-heading:#003C82; --course-on-primary:#FFFFFF; --course-title-text:#FFFFFF; --course-series-1:#003C82; --course-series-2:#20A6D2; --course-series-3:#C43A55; --course-series-4:#D49A00; --course-series-5:#00876C; --course-series-6:#7B4AB5; }
+body.theme-benfica { --course-primary:#D3A000; --course-secondary:#C7192D; --course-accent:#173B67; --course-heading:#9E3F00; --course-on-primary:#111111; --course-title-text:#111111; --course-series-1:#D3A000; --course-series-2:#C7192D; --course-series-3:#173B67; --course-series-4:#008C95; --course-series-5:#7B3FA1; --course-series-6:#E36A19; }
+body.theme-valencia { --course-primary:#E87500; --course-secondary:#1B4B5A; --course-accent:#0072B2; --course-heading:#B84E00; --course-on-primary:#111111; --course-title-text:#111111; --course-series-1:#E87500; --course-series-2:#1B4B5A; --course-series-3:#0072B2; --course-series-4:#009E73; --course-series-5:#B23A78; --course-series-6:#D4A900; }
+body.theme-bayern { --course-primary:#0066B2; --course-secondary:#C5143A; --course-accent:#00A1A7; --course-heading:#005596; --course-on-primary:#FFFFFF; --course-title-text:#FFFFFF; --course-series-1:#0066B2; --course-series-2:#C5143A; --course-series-3:#00A1A7; --course-series-4:#D49A00; --course-series-5:#7B3FA1; --course-series-6:#E36A19; }
+body.theme-flamengo { --course-primary:#1B5E3F; --course-secondary:#C3281E; --course-accent:#D4A900; --course-heading:#1B5E3F; --course-on-primary:#FFFFFF; --course-title-text:#FFFFFF; --course-series-1:#1B5E3F; --course-series-2:#C3281E; --course-series-3:#D4A900; --course-series-4:#0072B2; --course-series-5:#009E73; --course-series-6:#8A3FA0; }
+body.theme-atletico-madrid { --course-primary:#CE3524; --course-secondary:#1B2A5B; --course-accent:#F2A900; --course-heading:#A82C1E; --course-on-primary:#FFFFFF; --course-title-text:#FFFFFF; --course-series-1:#CE3524; --course-series-2:#1B2A5B; --course-series-3:#F2A900; --course-series-4:#4C9BD6; --course-series-5:#6F2DA8; --course-series-6:#E85D3F; }
+body.theme-tottenham { --course-primary:#132257; --course-secondary:#C8102E; --course-accent:#D9A400; --course-heading:#0E1A42; --course-on-primary:#FFFFFF; --course-title-text:#FFFFFF; --course-series-1:#132257; --course-series-2:#C8102E; --course-series-3:#D9A400; --course-series-4:#4C9BD6; --course-series-5:#7B4AB5; --course-series-6:#E06B19; }
+body.theme-roma { --course-primary:#8E1B3D; --course-secondary:#F0B323; --course-accent:#0072B2; --course-heading:#6E1530; --course-on-primary:#FFFFFF; --course-on-secondary:#111111; --course-title-text:#FFFFFF; --course-series-1:#8E1B3D; --course-series-2:#F0B323; --course-series-3:#0072B2; --course-series-4:#4C9BD6; --course-series-5:#7B4AB5; --course-series-6:#E06B19; }
+body.theme-chelsea { --course-primary:#034694; --course-secondary:#FFC20E; --course-accent:#00A6D6; --course-heading:#023A7A; --course-on-primary:#FFFFFF; --course-on-secondary:#111111; --course-title-text:#FFFFFF; --course-series-1:#034694; --course-series-2:#FFC20E; --course-series-3:#00A6D6; --course-series-4:#A50044; --course-series-5:#6F2DA8; --course-series-6:#E85D3F; }
+
+html,
+body,
+.reveal-viewport,
+.reveal,
+.reveal .slides,
+.reveal .slide-background,
+.reveal .slide-background-content {
+  margin: 0;
+  border: 0;
+  box-shadow: none;
+}
+
+html,
+body,
+.reveal-viewport,
+.reveal {
+  background: var(--course-paper) !important;
+}
+
+.reveal {
+  color: var(--course-ink);
+  font-family: var(--r-body-font);
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: -0.008em;
+}
+
+.reveal .slides section {
+  box-sizing: border-box;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  text-align: left;
+}
+
+.reveal h1,
+.reveal h2,
+.reveal h3 {
+  color: var(--course-heading);
+  font-family: var(--r-heading-font);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  text-transform: none;
+}
+
+.reveal h1 { font-weight: 750; }
+.reveal h2,
+.reveal h3 { font-weight: 700; }
+
+.reveal h1 { font-size: 2.05em; }
+.reveal h2 { font-size: 1.45em; margin-bottom: 0.45em; }
+.reveal h3 { font-size: 1.10em; }
+
+.reveal strong,
+.reveal .bold,
+.reveal .primary,
+.reveal code:not(pre code) {
+  color: var(--course-primary);
+}
+
+.reveal a {
+  color: var(--course-secondary);
+  text-decoration-thickness: 0.07em;
+  text-underline-offset: 0.12em;
+}
+
+.reveal p,
+.reveal li { line-height: 1.34; }
+.reveal li + li { margin-top: 0.18em; }
+.reveal ul ul,
+.reveal ol ol,
+.reveal ul ol,
+.reveal ol ul { font-size: 0.92em; }
+
+/* --- Slide-type backgrounds --------------------------------------------------
+   Three background roles, all driven by the active theme palette:
+     · Cover (Quarto title slide)  -> PRIMARY   background
+     · Closing (## ... {.closing}) -> PRIMARY   background (matches the cover)
+     · Section dividers (.inverse) -> SECONDARY background
+     · Content slides              -> white notebook canvas (unchanged)
+   _shared/course.lua resolves the active theme's real hex colours from this
+   file and hands them to RevealJS directly as `data-background-color`, so no
+   deck defines a colour locally. These rules handle only text contrast/layout. */
+
+/* Cover — primary background, light/dark title text per palette. */
+.reveal #title-slide { color: var(--course-title-text); }
+.reveal #title-slide h1,
+.reveal #title-slide h2,
+.reveal #title-slide h3,
+.reveal #title-slide .subtitle,
+.reveal #title-slide .quarto-title-authors,
+.reveal #title-slide .quarto-title-author-name,
+.reveal #title-slide .date,
+.reveal #title-slide strong,
+.reveal #title-slide a,
+.reveal #title-slide code:not(pre code) {
+  color: var(--course-title-text) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative;
+  z-index: 1;
+}
+.reveal #title-slide .quarto-title-authors { margin-top: 1.15em; }
+.reveal #title-slide .date { margin-top: 0.55em; }
+
+/* Closing — same primary background as the cover. */
+.reveal section.closing { color: var(--course-title-text); }
+.reveal section.closing h1,
+.reveal section.closing h2,
+.reveal section.closing h3,
+.reveal section.closing strong,
+.reveal section.closing a,
+.reveal section.closing code:not(pre code) {
+  color: var(--course-title-text) !important;
+}
+
+/* Section dividers — secondary background, contrast text per palette. */
+.reveal section.inverse:not(.closing) { color: var(--course-on-secondary); }
+.reveal section.inverse:not(.closing) h1,
+.reveal section.inverse:not(.closing) h2,
+.reveal section.inverse:not(.closing) h3,
+.reveal section.inverse:not(.closing) strong,
+.reveal section.inverse:not(.closing) code:not(pre code) {
+  color: var(--course-on-secondary) !important;
+}
+.reveal section.inverse:not(.closing) a {
+  color: var(--course-on-secondary);
+  text-decoration-thickness: 0.08em;
+}
+
+/* Some decks place code/output on an .inverse section (a colour-filled slide).
+   Keep those elements on their own light surface with dark text so they stay
+   legible regardless of the slide background. Headings and prose still use the
+   on-colour text set above. */
+.reveal #title-slide .cell-output pre,
+.reveal #title-slide .cell-output-display pre,
+.reveal section.inverse .cell-output pre,
+.reveal section.inverse .cell-output-display pre {
+  background: var(--course-code) !important;
+  color: #24292f !important;
+  border-radius: 0.15em;
+  padding: 0.2em 0.5em;
+}
+.reveal section.inverse table { background: #fff; }
+.reveal section.inverse table td { color: var(--course-ink); }
+
+.reveal .center,
+.reveal section.center { text-align: center !important; }
+.reveal section.center > * { margin-left: auto; margin-right: auto; }
+
+/* Repeated opening ritual: three equal columns with a predictable visual rhythm. */
+.reveal .class-rhythm {
+  font-size: 0.86em;
+}
+.reveal .class-rhythm .full-width {
+  align-items: stretch;
+}
+.reveal .class-rhythm .content-box,
+.reveal .class-rhythm .content-box-primary,
+.reveal .class-rhythm .content-box-secondary {
+  flex: 1 1 0;
+  min-height: 5.2em;
+  margin: 0;
+}
+
+/* Native Quarto/R code: clean, readable and borderless. */
+.reveal div.sourceCode,
+.reveal pre.sourceCode,
+.reveal pre.sourceCode code,
+.reveal .cell-code,
+.reveal .cell-code pre,
+.reveal .cell-code code {
+  background: var(--course-code) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Python notebook cells: a quiet input gutter and a distinct output surface. */
+.reveal div.sourceCode,
+.reveal .cell-code {
+  border-left: 0.22em solid var(--course-secondary) !important;
+  background: var(--course-code) !important;
+}
+
+.reveal .cell-output,
+.reveal .cell-output-display {
+  border-left: 0.22em solid color-mix(in srgb, var(--course-primary) 42%, white) !important;
+  padding-left: 0.28em;
+}
+
+.reveal div.sourceCode {
+  margin: 0.4em 0 0.55em;
+  padding: 0.18em 0.34em;
+  overflow: visible;
+}
+
+.reveal pre.sourceCode {
+  margin: 0;
+  padding: 0.42em 0.52em;
+  overflow-x: auto;
+}
+
+.reveal pre code,
+.reveal code {
+  font-family: var(--r-code-font);
+}
+
+.reveal pre code {
+  color: #24292f;
+  font-size: 0.80em;
+  line-height: 1.34;
+  white-space: pre;
+}
+
+.reveal .cell-code::before {
+  content: "In [ ]:";
+  display: block;
+  color: var(--course-secondary);
+  font-family: var(--r-code-font);
+  font-size: 0.62em;
+  font-weight: 700;
+  margin: 0 0.2em 0.15em;
+}
+
+.reveal .cell-output,
+.reveal .cell-output-display { margin: 0.2em 0 0.5em; }
+
+.reveal .cell-output pre,
+.reveal .cell-output-display pre {
+  background: transparent !important;
+  color: #24292f;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: 0;
+  padding: 0.12em 0.52em;
+  font-size: 0.74em;
+  line-height: 1.28;
+}
+
+.reveal .code-copy-button { border: 0 !important; color: var(--course-muted); }
+.reveal .code-copy-button:hover { color: var(--course-primary); }
+
+/* Tables resemble a clean tibble/pandas display: horizontal rules only. */
+.reveal table {
+  width: auto;
+  max-width: 100%;
+  margin: 0.55em auto;
+  border: 0 !important;
+  border-collapse: collapse;
+  font-size: 0.78em;
+  line-height: 1.22;
+  background: #fff;
+  box-shadow: none;
+}
+
+.reveal table th,
+.reveal table td {
+  border: 0 !important;
+  border-bottom: 1px solid var(--course-line) !important;
+  padding: 0.38em 0.65em;
+  vertical-align: middle;
+}
+
+.reveal table thead th {
+  background: var(--course-primary);
+  color: var(--course-on-primary);
+  font-weight: 700;
+  border-bottom: 2px solid var(--course-primary) !important;
+}
+
+.reveal table tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--course-primary) 6%, white);
+}
+
+.reveal table caption {
+  color: var(--course-muted);
+  caption-side: bottom;
+  padding-top: 0.35em;
+  font-size: 0.84em;
+}
+
+/* KaTeX is allowed to use the slide width without clipping. */
+.reveal .math.display,
+.reveal .katex-display {
+  width: 100%;
+  max-width: 100%;
+  margin: 0.55em auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.08em 0;
+  text-align: center;
+}
+
+.reveal .katex { font-size: 1.02em; }
+.reveal .katex-display > .katex { max-width: none; }
+
+/* Shared Quarto layout helpers retained from the old xaringan files. */
+.reveal .pull-left,
+.reveal .left-code,
+.reveal .left-column { float: left; }
+.reveal .pull-right,
+.reveal .right-plot,
+.reveal .right-column { float: right; }
+.reveal .pull-left,
+.reveal .pull-right { width: 48%; }
+.reveal .left-code { width: 39%; }
+.reveal .right-plot { width: 59%; }
+.reveal .left-column { width: 22%; }
+.reveal .right-column { width: 74%; }
+.reveal .pull-right + *,
+.reveal .right-column + * { clear: both; }
+.reveal .full-width { display: flex; width: 100%; gap: 1em; }
+
+.reveal .content-box,
+.reveal .content-box-primary,
+.reveal .content-box-secondary,
+.reveal .content-box-blue,
+.reveal .content-box-gray,
+.reveal .content-box-grey,
+.reveal .content-box-green,
+.reveal .content-box-purple,
+.reveal .content-box-red,
+.reveal .content-box-yellow {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0.45em 0;
+  padding: 0.55em 0.75em;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.reveal .content-box-primary { background: var(--course-primary); color: var(--course-on-primary); }
+.reveal .content-box-secondary { background: var(--course-secondary); color: var(--course-on-secondary); }
+.reveal .content-box-blue,
+.reveal .content-box-gray,
+.reveal .content-box-grey,
+.reveal .content-box-green,
+.reveal .content-box-purple,
+.reveal .content-box-red,
+.reveal .content-box-yellow,
+.reveal .content-box { background: color-mix(in srgb, var(--course-primary) 9%, white); }
+.reveal .content-box-primary strong { color: var(--course-on-primary); }
+.reveal .content-box-secondary strong { color: var(--course-on-secondary); }
+
+.reveal blockquote {
+  width: auto;
+  margin: 0.7em 0;
+  padding: 0.15em 0 0.15em 0.75em;
+  border-left: 0.16em solid var(--course-secondary);
+  box-shadow: none;
+  color: var(--course-muted);
+}
+
+.reveal img,
+.reveal video,
+.reveal iframe { max-width: 100%; max-height: 650px; }
+.reveal figure { margin: 0.35em auto; }
+/* Keep image alt text for accessibility but never display technical filenames
+   or chunk labels as captions in a projected deck. */
+.reveal figcaption,
+.reveal .quarto-float-caption,
+.reveal .quarto-float-caption-prefix { display: none !important; }
+
+.reveal .footnote { position: absolute; bottom: 0.7em; font-size: 0.58em; }
+.reveal .huge { font-size: 1.8em; }
+.reveal .Large { font-size: 1.42em; }
+.reveal .large { font-size: 1.2em; }
+.reveal .small { font-size: 0.86em; }
+.reveal .footnotesize { font-size: 0.76em; }
+.reveal .scriptsize { font-size: 0.68em; }
+.reveal .tiny { font-size: 0.58em; }
+.reveal .text-white { color: #fff; }
+.reveal .text-black { color: var(--course-ink); }
+.reveal .secondary { color: var(--course-secondary); }
+.reveal .accent { color: var(--course-accent); }
+.reveal .opacity { opacity: 0.55; }
+
+@media (max-width: 900px) {
+  .reveal .pull-left,
+  .reveal .pull-right,
+  .reveal .left-code,
+  .reveal .right-plot { float: none; width: 100%; }
+}
+
+@media print {
+  html, body, .reveal-viewport, .reveal { background: #fff !important; }
+  .reveal .slides section { box-shadow: none !important; }
+}
+
+/* Regular Quarto notebooks use the same typography and cell language. */
+body:not(.reveal-viewport),
+body:not(.reveal-viewport) .quarto-title-block,
+body:not(.reveal-viewport) .navbar,
+body:not(.reveal-viewport) .content {
+  color: var(--course-ink);
+  font-family: var(--r-body-font);
+}
+
+body:not(.reveal-viewport) pre,
+body:not(.reveal-viewport) code,
+body:not(.reveal-viewport) .sourceCode,
+body:not(.reveal-viewport) .cell-output {
+  font-family: var(--r-code-font) !important;
+}
+
+body:not(.reveal-viewport) div.sourceCode,
+body:not(.reveal-viewport) pre.sourceCode {
+  background: var(--course-code) !important;
+  border: 0 !important;
+  border-left: 4px solid var(--course-secondary) !important;
+  border-radius: 0 !important;
+  padding: 0.75rem 1rem !important;
+}
+
+body:not(.reveal-viewport) .cell-output pre {
+  background: #fff !important;
+  border: 0 !important;
+  border-left: 4px solid color-mix(in srgb, var(--course-primary) 42%, white) !important;
+  padding-left: 1rem !important;
+}
+
+body:not(.reveal-viewport) table { font-size: 0.92rem; }

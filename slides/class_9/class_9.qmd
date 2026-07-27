@@ -1,0 +1,522 @@
+---
+title: "Análisis de Datos Categóricos (SOC3070)"
+subtitle: "GLM, Regresión Logística & MLE"
+author: "Mauricio Bucca · Sociología UC"
+date: today
+body-classes: theme-liverpool
+course-team: liverpool
+filters: ["../_shared/course.lua"]
+format:
+  revealjs:
+    css: "../_shared/course.css"
+    slide-number: false
+    theme: default
+    highlight-style: github
+    code-block-font-size: 0.9em
+    width: 1600
+    height: 900
+    html-math-method: katex
+---
+
+```{r course-style, include=FALSE}
+source("../_shared/bikeshare.R")
+course_palette <- use_course_style("liverpool")
+```
+
+## Antes · Hoy · Después {.class-rhythm}
+
+::: {.full-width}
+
+::: {.content-box}
+**Antes**
+
+componentes de un GLM y funciones de enlace.
+:::
+
+::: {.content-box-primary}
+**Hoy**
+
+regresión logística y máxima verosimilitud.
+:::
+
+::: {.content-box-secondary}
+**Después**
+
+regresión logística: interpretación de parámetros.
+:::
+
+:::
+
+
+
+# Modelos Lineales Generalizados (GLM) {.inverse .center .middle}
+
+## Recordando: ¿qué es un GLM?
+
+La clase anterior definimos un GLM por tres piezas — repasemos antes de usarlas hoy con un caso concreto:
+
+::: {.pull-left}
+
+- **Componente aleatorio**: distribución de $y_i$ (familia exponencial).
+- **Componente sistemático**: $\eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$.
+- **Función de enlace**: $g(\mu_{i}) = \eta_{i}$.
+
+:::
+
+::: {.pull-right}
+
+![nelder](nelder.png)
+
+:::
+
+. . .
+
+$$
+GLM:
+\begin{cases}
+&y_{i} \sim f(\mu_{i},\sigma_{i}) \\ \\
+& g(\mu_{i}) = \eta_{i}
+\end{cases}
+$$
+
+Hoy fijamos $y_{i} \sim \text{Bernoulli}(p_{i})$ y $g(\cdot) = \text{logit}(\cdot)$: la regresión logística es exactamente un GLM con esa combinación particular.
+
+# Regresión Logística {.inverse .center .middle}
+
+## Estructura de un modelo de regresión logística
+Podemos pensar en un modelo de regresión logística de la siguiente forma:
+
+. . .
+
+[Configuración]{.bold}
+
+- Tenemos $n$ observaciones (individuos) independientes: $i = 1, \dots, n$
+
+. . .
+
+- Para cada observación observamos datos $y_{i}, \dots , y_{n}$ que actuan como variable dependiente, donde $y_{i} \in \{0,1\}$
+
+. . .
+
+- Asumimos que estos datos son realizaciones de $n$ variables aleatorias Bernoulli con probabilidades desconocidas: $Y_{i} \sim \text{Bernoulli}(p_{i})$
+  - Alternativamente, recuento de éxitos puede tratarse como una variable Binomial.
+
+. . .
+
+- Asumimos que dichas probabilidades pueden variar de individuo en individuo.
+  - Un modelo con un $p_{i}$ para cada observación $i$ es un modelo "just-identified" (o saturado). Posible, pero no es un "modelo".
+
+## Estructura de un modelo de regresión logística
+Formalmente,
+$$Y_{i} \sim \text{Bernoulli}(p_{i})$$
+es decir
+$$\quad \mathbb{P}(Y_{i}= y) = p_{i}^{y}(1-p_{i})^{1-y} \quad \text{ donde } \quad y \in \{0,1\}$$
+
+. . .
+
+La pregunta es: ¿como estimamos $p_{i}$ de tal manera que ... ?
+
+. . .
+
+- Describamos $p_{i}$ con un número de parámetros $k<n$
+
+. . .
+
+- $\hat{p}_{i} \in [0,1]$
+
+## Estructura de un modelo de regresión logística
+El modelo de regresión logística aborda este problema de la siguiente manera:
+
+::: {.content-box-blue}
+
+$$p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}} \quad \quad  \text{donde} \quad \quad \eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$$
+
+:::
+
+. . .
+
+[Importante]{.bold} notar que:
+
+. . .
+
+- Esta función (llamada *sigmoide*) tiene la propiedad clave de estar restringida al intervalo $[0, 1]$.
+  - $e^{\eta_{i}} > 0$, de tal manera que el numerador es siempre menor que el denominador. Por lo tanto,  $0 < p_{i} <1$.
+
+. . .
+
+- $x_{1} \dots x_{k}$ son predictores o variables independientes
+
+. . .
+
+- $\beta_{1} \dots \beta_{k}$ son los respectivos "efectos" de los predictores sobre $\eta_{i}$
+
+. . .
+
+- $p_{i}$ [no está relacionado linealmente]{.bold} con sus predictores 
+
+## Estructura de un modelo de regresión logística
+Sin embargo, $\eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$ si es una función lineal de los predictores.
+
+. . .
+
+Por tanto, es conveniente expresar $\eta$ en función de $p$ ...
+
+. . .
+
+ Paso a paso:
+
+::: {.img-right}
+
+![mostaza](mostaza-merlo.jpg)
+
+:::
+
+. . .
+
+$p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}} = \frac{1}{e^{- \eta_{i}} + 1}$
+
+. . .
+
+$e^{-\eta_{i}} + 1 = \frac{1}{p_{i}}$
+
+. . .
+
+$e^{- \eta_{i}} = \frac{1}{p_{i}} - 1 =  \frac{1 - p_{i}}{p_{i}}$
+
+. . .
+
+$e^{\eta_{i}} = \frac{p_{i}}{1 - p_{i}}$
+
+. . .
+
+$\eta_{i} = \ln \frac{p_{i}}{1 - p_{i}} \quad \quad$
+
+. . .
+
+es decir, el log de las odds o log-odds
+
+. . .
+
+::: {.content-box-yellow}
+
+$$\text{Por tanto} \quad \quad  \ln \frac{p_{i}}{1 - p_{i}} = \eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$$
+
+:::
+
+## Estructura de un modelo de regresión logística
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=8, fig.width=12}
+library(pacman)
+p_load("tidyverse")
+p_load("cowplot")
+
+theme_set(theme_julia())
+
+units <- tibble(p = seq(from=0, to=1, by=0.01)) %>% mutate(odd = p/(1-p)) %>%
+          mutate(log_odd = log(odd))
+
+# p to odds 
+
+p = 0.75
+o = p/(1-p)
+
+q = 1-p
+inv_o = q/(1-q)
+
+log_o <- log(o)
+log_inv_o <- log(inv_o)
+
+# p to log odds
+
+positions_v1 <- data.frame(x1 =log_o, x2 =log_o, y1 =0 , y2=p )    
+positions_h1 <- data.frame(x1 =-Inf,  x2 =log_o, y1=p , y2=p )    
+positions_v2 <- data.frame(x1 =log_inv_o , x2 =log_inv_o , y1 =0 , y2=q )    
+positions_h2 <- data.frame(x1 =-Inf , x2 =log_inv_o , y1 =q , y2=q )    
+
+logodd_p <- units %>% ggplot(aes(x=log_odd, y=p, colour="p = logit^-1(log-odd)")) + geom_line(size=1.5) +
+    scale_color_manual(values=c("p = logit^-1(log-odd)"=course_palette[["primary"]], "líneas guía"=course_palette[["secondary"]])) +
+    xlim(-8,8) +
+    geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2, colour="líneas guía"), data = positions_v1, size=1.5) +
+    geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2, colour="líneas guía"), data = positions_h1, size=1.5) +
+    geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2, colour="líneas guía"), data = positions_v2, size=1.5) +
+    geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2, colour="líneas guía"), data = positions_h2, size=1.5) +
+    annotate(geom="text", x=-3.8, y=0.28, label='bold("(log-odd=-1.1,p=0.25)")', color="black", parse=TRUE, size=8) +
+    annotate(geom="text", x=4, y=0.78, label='bold("(log-odd=1.1,p=0.75)")', color="black", parse=TRUE, size=8) +
+    labs(title =  "Log-odd a probability", y="p", x="ln p/(1-p)", color=NULL) +
+    theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+    axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
+    legend.text = element_text(size = 18), legend.position="bottom")
+
+print(logodd_p)
+
+```
+
+## Regresión Logística es un tipo de GLM
+Regresión Logística es un GLM con componente aleatorio [Bernoulli/Binomial]{.bold} y función de enlace [logit]{.bold}. 
+
+. . .
+
+- Componente aleatorio: $y_{1}, \dots y_{n}$ son $n$ variables independientes con distribución $\text{Bernoulli}(p_{i})$
+  - donde $p_{i} \equiv \mu_{i}$
+
+. . .
+
+- Función de enlace: $\text{logit}(x) = \ln \frac{x}{1 - x}$
+
+. . .
+
+- Componente sistemático: $\ln \frac{p_{i}}{1 - p_{i}} = \eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$
+
+. . .
+
+- Función media: $p_{i} = \text{logit}^{-1}(\eta_{i}) = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}}$
+
+## Regresión Logística es un tipo de GLM
+
+- Varianza $\operatorname{Var}(y_{i}) = \phi V(p_{i}), \quad$
+
+. . .
+
+  $\text{donde} \quad V(p_{i})= \frac{dp_{i}}{d\eta_{i}}$.
+
+. . .
+
+- $\eta_{i} = \ln \frac{p_{i}}{1 - p_{i}}  =  \ln(p_{i}) - \ln(1 - p_{i})$
+
+. . .
+
+- $\frac{d \eta_{i}}{d p_{i}} = \frac{1}{p_{i}} + \frac{1}{1 - p_{i}} = \frac{1}{p_{i}(1 - p_{i})}$
+
+. . .
+
+- $\frac{d p_{i}}{d \eta_{i}} = p_{i}(1 - p_{i})$
+
+. . .
+
+Por tanto, $\operatorname{Var}(y_{i}) = \phi V(p_{i}) = \phi p_{i}(1 - p_{i})$, con $\phi=1$
+
+En resumen, en un modelo de regresión logística
+
+::: {.content-box-blue}
+
+$$y_{i} \sim \text{Bernoulli}\Bigg(p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}}\Bigg)$$
+
+:::
+
+## Regresión Logística en la práctica
+Para ejemplificar el uso de regresión logística trabajaremos con los datos de demanda de bicicletas de _Capital Bikeshare_.
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+
+# datos de Capital Bikeshare (arriendos horarios de bicicletas), paquete "ISLR2"
+p_load("ISLR2")
+p_load("viridis")
+p_load("modelr")
+
+bikedata <- Bikeshare %>% as_tibble()
+
+# umbral de "alta demanda": top 25% de las horas (percentil 75 de bikers)
+p75 <- quantile(bikedata$bikers, 0.75)
+
+bikedata <- bikedata %>%
+  mutate(demand = if_else(bikers > p75, "alta", "baja")) %>%
+  # map into 0/1 code
+  mutate(high_demand = if_else(bikers > p75, 1, 0))
+
+# display the data as a tibble
+bikedata %>% select(bikers, high_demand, demand, temp, hum, weathersit) %>% tail(15)
+```
+
+## Regresión Logística en la práctica
+Ajustaremos el siguiente modelo: $\text{logit(alta demanda}_{i}) = \beta_{0} + \beta_{1}*\text{temp}_{i}$, que modela el log de la odd de que una hora sea de alta demanda como función de la temperatura (normalizada).
+```{r}
+logit_demand_temp <- glm(high_demand ~ temp, family=binomial(link="logit"), data=bikedata); summary(logit_demand_temp)
+```
+
+## Regresión Logística en la práctica
+
+::: {.pull-left}
+
+```{r, echo=FALSE}
+p_mu <- bikedata %>% with(mean(high_demand,na.rm=TRUE))
+b0 <- logit_demand_temp$coefficients[1]
+b1 <- logit_demand_temp$coefficients[2]
+
+# plot the result
+
+grid <- bikedata  %>% data_grid(temp,.model=logit_demand_temp)
+predictions <- cbind(grid,logit_hat = predict(logit_demand_temp, newdata = grid)) %>%
+  mutate(p_hat= 1/(1 + exp(-logit_hat)))
+
+bikedata %>% ggplot(aes(x=temp, y=high_demand, group=1)) +
+  stat_function(fun = function(.x) b0 + b1*.x, aes(colour="Recta ajustada"), alpha = 0.5, size=1.5) +
+  geom_hline(yintercept = b0 + b1*0, linetype="dotted", color = course_palette[["primary"]], alpha=0.5, size=1.5) +
+  geom_hline(yintercept = b0 + b1*1, linetype="dotted", color = course_palette[["primary"]], alpha=0.5, size=1.5) +
+  geom_line(data=predictions, aes(x=temp, y=logit_hat, colour="Predicción del modelo"), size=2, alpha = 1) +
+  xlim(-2,3) +
+  scale_color_manual(values=c("Recta ajustada"=course_palette[["accent"]], "Predicción del modelo"=course_palette[["primary"]])) +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
+  legend.text = element_text(size = 18), legend.position="bottom") +
+  labs(x="temperatura (normalizada)", y="logit(Alta demanda)", color=NULL) +
+  annotate('text', x = -1, y = 2, label = paste0("beta[1]==", course_number(b1)), parse = TRUE, size=8)
+```
+
+:::
+
+. . .
+
+::: {.pull-right}
+
+```{r, echo=FALSE}
+
+bikedata %>% ggplot(aes(x=temp, y=high_demand, group=1)) +
+  stat_function(fun = function(.x) 1/(1 + exp(-(b0 + b1*.x))), aes(colour="Curva ajustada"), alpha = 0.5, size=1.5) +
+  geom_hline(yintercept = 1/(1 + exp(-(b0 + b1*0))), linetype="dotted", color = course_palette[["primary"]], alpha=0.5, size=1.5) +
+  geom_hline(yintercept = 1/(1 + exp(-(b0 + b1*1))), linetype="dotted", color = course_palette[["primary"]], alpha=0.5, size=1.5) +
+  geom_line(data=predictions, aes(x=temp, y=p_hat, colour="Predicción del modelo"), size=2, alpha = 1) +
+  xlim(-2,3) +
+  scale_color_manual(values=c("Curva ajustada"=course_palette[["accent"]], "Predicción del modelo"=course_palette[["primary"]])) +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
+  legend.text = element_text(size = 18), legend.position="bottom") +
+  labs(x="temperatura (normalizada)", y="P(Alta demanda)", color=NULL)
+```
+
+:::
+
+## Estimación (MLE) {.inverse .center .middle}
+
+## Estimación (MLE)
+Retomando  nuestro ejemplo anterior,
+
+::: {.pull-left}
+
+```{r, echo=FALSE}
+logit_demand_temp <- glm(high_demand ~ temp, family=binomial(link="logit"), data=bikedata); summary(logit_demand_temp)
+```
+
+:::
+
+. . .
+
+::: {.pull-right}
+
+[¿De donde vienen estos números?]{.bold}
+
+:::
+
+## Estimación (MLE)
+Recordar que cada observación es una manifestación de una variable Bernoulli:
+
+. . .
+
+$Y_{i} \sim \text{Bernoulli}(p_{i}) \quad \text{ es decir } \quad \mathbb{P}(Y_{i}= y) = p_{i}^{y}(1-p_{i})^{1-y} \quad \text{ donde } \quad y \in \{0,1\}$
+
+. . .
+
+Por tanto, la probabilidad de observar estos datos es descrita por la siguiente función:
+$$\mathbb{P}(y_{1}, \dots, y_{n}) = \prod_{i=1}^{n} p_{i}^{y_{i}}(1-p_{i})^{1-y_{i}}$$
+
+. . .
+
+En consecuencia, la [likelihood function]{.bold} de $p_{i}$ es:
+$$\mathcal{L}(\boldsymbol{p} \mid y_{1}, \dots, y_{n}) = \prod_{i=1}^{n} p_{i}^{y_{i}}(1-p_{i})^{1-y_{i}}$$
+
+. . .
+
+y la [log likelihood function]{.bold} de $p_{i}$ es:
+$$\ell(\boldsymbol{p} \mid y_{1}, \dots, y_{n}) = \sum_{i=1}^{n} \bigg( y_{i} \ln p_{i} + (1-y_{i}) \ln(1-p_{i}) \bigg)$$
+
+## Estimación (MLE)
+La [log likelihood function]{.bold} de $p$ es:
+$$\ell(\boldsymbol{p} \mid y_{1}, \dots, y_{n}) = \sum_{i=1}^{n} \bigg( y_{i} \ln p_{i} + (1-y_{i}) \ln(1-p_{i}) \bigg)$$
+
+. . .
+
+Pero no estamos estimando $p_{i}$ directamente, sino que lo modelamos como un función de otros predictores.
+
+. . .
+
+específicamente: $p_{i} =\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}$
+
+. . .
+
+por tanto, 
+$$\ell(\beta_{0},\beta_{1} \mid y_{1}, \dots, y_{n}) = \sum_{i=1}^{n} \bigg( y_{i} \ln \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}} + (1-y_{i}) \ln(1-\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}) \bigg)$$
+En definitiva, nuestros MLE son:
+$$\hat{\beta_{0}},\hat{\beta_{1}} = \underset{\beta_{0},\beta_{1}}{\arg\max\ } \sum_{i=1}^{n} \bigg( y_{i} \ln \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}} + (1-y_{i}) \ln(1-\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}) \bigg)$$
+
+## Estimación (MLE)
+
+- No hay solución analítica (en general) para esta maximización. Típicamente se usa Fisher’s Scoring Method  (un algoritmo de búsqueda) para obtener los MLE. 
+-  Para ejemplificar  podemos implementar una optimización numérica simple e ineficiente para buscar los MLE.
+
+. . .
+
+ Para acelerar la búsqueda usaremos valores en la proximidad de las estimaciones reportadas arriba (que normalmente no conoceríamos):
+[Implentación en]{.bold} `R`:
+```{r, include=TRUE, echo=TRUE, warning=FALSE, message=FALSE}
+
+ll <- function(b0,b1) {
+  y = bikedata$high_demand
+  eta = b0 + b1*bikedata$temp
+  ell = sum( y*log(1/(1 + exp(-eta))) +  (1-y)*log(1 - (1/(1 + exp(-eta)))))
+  return(ll = ell)
+}
+```
+
+. . .
+
+```{r}
+ll(b0=0,b1=0); ll(b0=-1,b1=2)
+```
+
+## Estimación (MLE)
+[Implentación en]{.bold} `R`:
+```{r, include=TRUE, echo=TRUE, warning=FALSE, message=FALSE}
+
+# Evaluar la log-likelihood function  para muchas combinaciones de posibles valores de  b0 y b1
+# centramos la grilla en torno a las estimaciones del modelo
+b0_hat <- coef(logit_demand_temp)[1]
+b1_hat <- coef(logit_demand_temp)[2]
+parameter_space <- expand.grid(beta0 = seq(b0_hat-1, b0_hat+1, length.out=500), beta1 = seq(b1_hat-1, b1_hat+1, length.out=500)) %>%
+  rowwise() %>% mutate(loglik = ll(beta0,beta1))
+
+# Encuentra el par de valores b0,b1 que dan el mayor valor para la log-likelihood function
+
+m <- parameter_space %>% as.matrix()
+m[which.max(m[,3]),]
+```
+
+## Estimación (MLE)
+
+::: {.pull-left}
+
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+
+# Plot all LL values
+parameter_space %>% as.data.frame() %>% ggplot(aes(x=beta0, y=beta1,  z = loglik)) + geom_contour(bins = 700) + geom_contour_filled(bins = 500, alpha=0.75) +
+geom_point(aes(x=m[which.max(m[,3]),1], m[which.max(m[,3]),2]), size=1.5) +
+guides(fill=FALSE, color=FALSE) + labs(x=quote(beta[0]), y=quote(beta[1])) +
+annotate(geom="text", x=b0_hat, y=b1_hat-0.4, label=paste0('bold("(', course_number(b0_hat), ',', course_number(b1_hat), ')")'), color="black", parse=TRUE, size=6)  +
+theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+legend.text = element_text(size = 18), legend.position="none")
+```
+
+:::
+
+. . .
+
+::: {.pull-right}
+
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+summary(logit_demand_temp)
+```
+
+:::
+
+## Gracias {.inverse .center .middle .closing}
+
+**Hasta la próxima clase**
+
+Mauricio Bucca
