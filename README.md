@@ -26,7 +26,7 @@ Clases los días Lunes, bloques 12:20-13:30 (B1) y 14:50-16:00 (B2). Calendario 
 | 10  | Agosto | B1     | Presentación del curso                             | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_3/class_3#0) [`[Code]`](slides/class_3/class_3.qmd) |
 | 10  | Agosto | B2     | Variables Aleatorias y Distribuciones Discretas    | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_4/class_4#0) [`[Code]`](slides/class_4/class_4.qmd) |
 | 17  | Agosto | B1     | Momentos                                           | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_5/class_5#0) [`[Code]`](slides/class_5/class_5.qmd) |
-| 17  | Agosto | B2     | Estimación y MLE                                   | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_6/class_6#0) [`[Code]`](slides/class_6/class_6.qmd) |
+| 17  | Agosto | B2     | Estimación, MLE y Funciones de Pérdida             | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_6/class_6#0) [`[Code]`](slides/class_6/class_6.qmd) |
 
 ### Modelos para datos categóricos — uso explicativo
 
