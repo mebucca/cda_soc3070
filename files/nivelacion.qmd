@@ -2,10 +2,11 @@
 title: "Nivelación matemática"
 subtitle: "Pre-cálculo, cálculo y fundamentos de probabilidad"
 author: "Mauricio Bucca"
+lang: es
 format:
   html:
     toc: true
-    toc-depth: 2
+    toc-depth: 3
     code-fold: true
     theme: cosmo
     embed-resources: true
@@ -27,9 +28,15 @@ circle_df <- function(cx, cy, r, n = 100) {
 }
 ```
 
-Este documento reúne, en un solo lugar, el material de nivelación matemática del curso: **pre-cálculo** (funciones, exponenciales, logaritmos, sumatorias), **cálculo** (derivadas, gradiente, integrales) y una **introducción a probabilidad**. No es un curso de matemáticas — la meta es instalar el vocabulario mínimo para que estas herramientas no sean un obstáculo cuando aparezcan más adelante en el curso.
+Este documento reúne la nivelación matemática necesaria para comenzar el curso. Está diseñado para leerse **en orden, de principio a fin**: cada sección usa solamente conceptos definidos en las secciones anteriores.
 
-::: {.panel-tabset}
+La ruta es la siguiente:
+
+1. **Pre-cálculo:** funciones, exponenciales, logaritmos y sumatorias.
+2. **Cálculo:** límites, derivadas de una variable, derivadas parciales, gradiente e integrales.
+3. **Probabilidad:** experimentos aleatorios, eventos, reglas básicas, probabilidad condicional, Bayes, probabilidad total, independencia y simulación.
+
+La meta no es reemplazar un curso completo de matemáticas, sino desarrollar con detalle el vocabulario, la notación y los procedimientos que se utilizarán después. Todos los conceptos necesarios para resolver los ejemplos se introducen antes de usarlos.
 
 ## 1. Pre-cálculo
 
@@ -101,7 +108,7 @@ tibble(x = x_values, y = 2 * x_values + 1) %>%
   labs(x = "x", y = "f(x)")
 ```
 
-**Funciones comunes.** Muchas de las funciones que vamos a usar en el curso son casos particulares de unas pocas familias:
+**Funciones comunes.** Muchas de las funciones que aparecen en los ejemplos siguientes son casos particulares de unas pocas familias:
 
 - **Lineal**: $f(x) = mx + b$.
 - **Cuadrática / cúbica** (casos de **potencia**, $f(x) = x^n$): capturan curvatura y asimetría.
@@ -152,7 +159,11 @@ tibble(x = x_values, `2^x` = 2^x_values, `e^x` = exp(x_values), `3^x` = 3^x_valu
   labs(x = "x", y = "f(x)", color = NULL)
 ```
 
-La base más importante en cálculo es el número $e \approx 2.718281828$: es la única base para la cual la recta tangente a $y=a^x$ tiene pendiente exactamente 1 en $x=0$. Esto simplifica enormemente el trabajo con derivadas (ver sección de Cálculo), y es la base que usamos, por ejemplo, para pasar de log-odds a probabilidades en regresión logística.
+Una base especialmente importante es el número
+
+$$e \approx 2.718281828.$$
+
+En este material basta entenderlo como una constante, igual que $\pi$: se puede elevar a cualquier potencia y define la función $\exp(x)=e^x$. Su utilidad aparece naturalmente en procesos cuyo cambio es continuo, como el interés compuesto continuamente.
 
 **Crecimiento exponencial, paso a paso.** ¿De dónde sale la fórmula $y=y_0e^{kx}$? Pensemos en $\$100$ invertidos al 5.5% de interés anual, compuesto una vez al año.
 
@@ -221,10 +232,11 @@ log(2) / log(1.055)
 
 Es decir, la inversión tarda unos 13 años en duplicarse. Este patrón — "aplicar $\ln$, bajar el exponente con la regla de la potencia, despejar" — es el mismo que se usa para resolver cualquier ecuación donde la incógnita está en el exponente.
 
-Dos usos concretos que aparecen más adelante en el curso:
+Dos consecuencias inmediatas de las reglas anteriores:
 
-- **Log-verosimilitud**: aplicar $\ln$ a un producto de probabilidades lo convierte en una suma, mucho más fácil de derivar (clave para máxima verosimilitud).
-- **Función de enlace logarítmica**: $\ln(\mu_i) = \eta_i$ garantiza que una cantidad esperada positiva (un conteo) nunca sea negativa, sin importar qué valores tome $\eta_i$.
+- El logaritmo permite **despejar exponentes**, como en el ejemplo de la inversión.
+- El logaritmo convierte productos en sumas. Por ejemplo,
+  $\ln(2\cdot3\cdot5)=\ln 2+\ln 3+\ln 5$. Esto puede simplificar cálculos con muchos factores positivos.
 
 ### Sumatorias
 
@@ -284,9 +296,42 @@ El total semanal es, literalmente, $\sum_{i=1}^{7} \text{ventas}_i$.
 
 ## 2. Cálculo
 
-### Derivadas
+### Límites
 
-Para una introducción visual e intuitiva a las derivadas, antes de leer las fórmulas: [mathsisfun.com — Derivatives Introduction](https://www.mathsisfun.com/calculus/derivatives-introduction.html).
+Un **límite** describe el valor al que se acerca una función cuando su entrada se aproxima a un punto. La notación
+
+$$\lim_{x\to a} f(x)=L$$
+
+se lee: “el límite de $f(x)$ cuando $x$ tiende a $a$ es $L$”. Significa que podemos hacer que $f(x)$ quede tan cerca de $L$ como queramos tomando valores de $x$ suficientemente cercanos a $a$.
+
+Por ejemplo, si $f(x)=2x+1$, entonces
+
+$$\lim_{x\to 3}(2x+1)=7,$$
+
+porque al acercar $x$ a $3$, el valor $2x+1$ se acerca a $7$:
+
+| $x$ | $2x+1$ |
+|---:|---:|
+| 2.9 | 6.8 |
+| 2.99 | 6.98 |
+| 3.01 | 7.02 |
+| 3.1 | 7.2 |
+
+En este ejemplo también se puede evaluar directamente $f(3)=7$. Sin embargo, el límite se refiere a lo que ocurre **cerca** del punto, no necesariamente en el punto. Por ejemplo,
+
+$$g(x)=\frac{x^2-1}{x-1}$$
+
+no está definida en $x=1$, porque allí se divide por cero. Para $x\neq1$ podemos factorizar $x^2-1=(x-1)(x+1)$ y simplificar:
+
+$$g(x)=\frac{(x-1)(x+1)}{x-1}=x+1.$$
+
+Por eso, aunque $g(1)$ no exista,
+
+$$\lim_{x\to1}\frac{x^2-1}{x-1}=2.$$
+
+Esta idea permite definir una pendiente en un solo punto: calculamos pendientes entre dos puntos y hacemos que la distancia entre ellos tienda a cero.
+
+### Derivadas de una variable
 
 La derivada de $f$ en un punto $x_0$ mide **cuánto y en qué dirección** cambia $f$ ante un cambio infinitesimal de $x$: es la pendiente de la recta tangente en ese punto.
 
@@ -372,11 +417,17 @@ Reglas básicas:
 
 | Regla | Fórmula |
 |---|---|
+| Constante | $\dfrac{d}{dx}c=0$ |
 | Potencia | $\dfrac{d}{dx} x^n = n x^{n-1}$ |
 | Exponencial | $\dfrac{d}{dx} e^x = e^x$ |
 | Logaritmo | $\dfrac{d}{dx} \ln x = \dfrac{1}{x}$ |
+| Múltiplo constante | $\dfrac{d}{dx}\big(cg(x)\big)=c\,g'(x)$ |
 | Suma | $\dfrac{d}{dx}\big(g(x)+h(x)\big) = g'(x) + h'(x)$ |
+| Producto | $\dfrac{d}{dx}\big(g(x)h(x)\big)=g'(x)h(x)+g(x)h'(x)$ |
+| Cociente | $\dfrac{d}{dx}\dfrac{g(x)}{h(x)}=\dfrac{g'(x)h(x)-g(x)h'(x)}{[h(x)]^2}$ |
 | Regla de la cadena | $\dfrac{d}{dx} f(g(x)) = f'(g(x))\cdot g'(x)$ |
+
+Aquí $c$ representa una constante y, en la regla del cociente, se requiere $h(x)\neq0$.
 
 **Regla de la cadena, paso a paso.** Sirve para derivar una función compuesta: una función "de afuera" aplicada a una función "de adentro". Ejemplo: derivar $h(x) = (3x+1)^2$.
 
@@ -385,7 +436,7 @@ Reglas básicas:
 3. Derivamos la de adentro: $g'(x) = 3$.
 4. Multiplicamos: $h'(x) = f'(g(x))\cdot g'(x) = 2(3x+1)\cdot 3 = 6(3x+1) = 18x+6$.
 
-La misma receta —derivar de afuera hacia adentro, multiplicando— es la que se usa, por ejemplo, para derivar la sigmoide $\sigma(z) = \frac{1}{1+e^{-z}}$ cuando $z=\beta_0+\beta_1x$ (clase de regresión logística): la de afuera es $\sigma$, la de adentro es la parte lineal.
+La idea esencial es siempre la misma: derivar la capa exterior, conservar la capa interior en su lugar y multiplicar por la derivada de la capa interior.
 
 Ejemplo de la regla de la suma: si $f(x) = 2x^2 + 3x^3$, entonces $f'(x) = 4x + 9x^2$ (se deriva cada término por separado y se suman los resultados).
 
@@ -414,7 +465,11 @@ P_prime(10)
 
 En $t=10$, la población crece a razón de 400 personas por año.
 
-**El punto más importante: dónde la derivada es cero.** Si $f$ tiene un máximo (o mínimo) en $x^*$, la tangente ahí es horizontal: $f'(x^*) = 0$.
+**Puntos críticos.** Si una función derivable tiene un máximo o un mínimo en un punto interior $x^*$, la tangente allí es horizontal:
+
+$$f'(x^*)=0.$$
+
+La condición es necesaria, pero no suficiente: que $f'(x^*)=0$ identifica un **punto crítico**, que luego hay que examinar para decidir si es un máximo, un mínimo o ninguno de los dos. Por ejemplo, $f(x)=x^3$ tiene $f'(0)=0$, pero sigue creciendo a ambos lados de $0$.
 
 ```{r deriv-maximo}
 #| fig-cap: "Máximo de f: la tangente es horizontal"
@@ -429,40 +484,167 @@ tibble(x = x_values, y = f(x_values)) %>%
   labs(x = "x", y = "f(x)")
 ```
 
-Esta observación —"buscar el máximo es buscar dónde la pendiente es cero"— es exactamente el mecanismo detrás de la estimación por **máxima verosimilitud (MLE)**: se deriva una log-verosimilitud, se iguala a cero, y se resuelve.
+Esta observación permite resolver problemas de **optimización**, es decir, problemas en los que se busca el valor de $x$ que hace a una función lo más grande o lo más pequeña posible: se encuentran sus puntos críticos y luego se comparan sus valores y su comportamiento.
+
+### Derivadas parciales
+
+Hasta ahora estudiamos funciones con una entrada, $y=f(x)$. Una función de **dos variables** recibe dos entradas y produce una salida:
+
+$$z=f(x,y).$$
+
+Por ejemplo,
+
+$$f(x,y)=x^2+2y^2$$
+
+asigna un número a cada par $(x,y)$. En el punto $(1,1)$, su valor es
+
+$$f(1,1)=1^2+2(1)^2=3.$$
+
+Como hay dos entradas que pueden cambiar, hay dos preguntas distintas:
+
+- ¿Cómo cambia $f$ si cambia $x$ y mantenemos $y$ fija?
+- ¿Cómo cambia $f$ si cambia $y$ y mantenemos $x$ fija?
+
+Cada respuesta es una **derivada parcial**. Su definición usa el mismo límite que una derivada ordinaria, pero mantiene fija la otra variable:
+
+$$
+\frac{\partial f}{\partial x}(x_0,y_0)
+=
+\lim_{h\to0}
+\frac{f(x_0+h,y_0)-f(x_0,y_0)}{h},
+$$
+
+$$
+\frac{\partial f}{\partial y}(x_0,y_0)
+=
+\lim_{h\to0}
+\frac{f(x_0,y_0+h)-f(x_0,y_0)}{h}.
+$$
+
+Calculemos ambas para $f(x,y)=x^2+2y^2$.
+
+1. **Respecto a $x$:** tratamos $y$ como una constante. La derivada de $x^2$ es $2x$ y la de $2y^2$ respecto a $x$ es $0$:
+
+   $$\frac{\partial f}{\partial x}(x,y)=2x.$$
+
+2. **Respecto a $y$:** ahora tratamos $x$ como una constante. La derivada de $x^2$ respecto a $y$ es $0$ y la de $2y^2$ es $4y$:
+
+   $$\frac{\partial f}{\partial y}(x,y)=4y.$$
+
+3. En $(1,1)$:
+
+   $$\frac{\partial f}{\partial x}(1,1)=2,
+   \qquad
+   \frac{\partial f}{\partial y}(1,1)=4.$$
+
+La primera pendiente se ve al cortar la superficie fijando $y=1$; la segunda, al fijar $x=1$. Los dos paneles siguientes representan **la misma función y el mismo punto** del ejemplo:
+
+```{r derivadas-parciales-plot}
+#| fig-cap: "Derivadas parciales de f(x,y) = x² + 2y² en (1,1): cada panel fija una variable y cambia la otra"
+f_dos <- function(x, y) x^2 + 2 * y^2
+u <- seq(-1, 3, length.out = 300)
+
+cortes <- bind_rows(
+  tibble(
+    variable = "Variar x; fijar y = 1",
+    u = u,
+    z = f_dos(u, 1),
+    tangente = 3 + 2 * (u - 1)
+  ),
+  tibble(
+    variable = "Variar y; fijar x = 1",
+    u = u,
+    z = f_dos(1, u),
+    tangente = 3 + 4 * (u - 1)
+  )
+)
+
+puntos_corte <- tibble(
+  variable = c("Variar x; fijar y = 1", "Variar y; fijar x = 1"),
+  u = 1,
+  z = 3
+)
+
+ggplot(cortes, aes(u, z)) +
+  geom_line(color = palette_curso[1], linewidth = 1.2) +
+  geom_line(aes(y = tangente), color = palette_curso[2],
+            linewidth = 1, linetype = "dashed") +
+  geom_point(data = puntos_corte, size = 3) +
+  facet_wrap(~variable) +
+  coord_cartesian(ylim = c(0, 18)) +
+  labs(x = "Variable que cambia", y = "f(x,y)")
+```
+
+En ambos paneles, la curva azul es el corte de $f(x,y)=x^2+2y^2$ y la recta naranja es la tangente en $(1,1)$. La pendiente es $2$ cuando cambia $x$ y $4$ cuando cambia $y$. Por eso, cerca de ese punto, un cambio pequeño en $y$ produce aproximadamente el doble de cambio en $f$ que un cambio del mismo tamaño en $x$.
 
 ### Gradiente
 
-Cuando $f$ depende de **varias variables**, $f(x_1,\dots,x_p)$, tiene una derivada respecto a cada una — una **derivada parcial**, $\dfrac{\partial f}{\partial x_j}$, que trata a las demás variables como constantes. El vector de todas las derivadas parciales es el **gradiente**:
+El **gradiente** reúne todas las derivadas parciales en un vector, es decir, en una lista ordenada de números. Para una función de dos variables,
 
-$$\nabla f(x) = \left(\frac{\partial f}{\partial x_1}, \dots, \frac{\partial f}{\partial x_p}\right)$$
+$$
+\nabla f(x,y)
+=
+\left(
+\frac{\partial f}{\partial x}(x,y),
+\frac{\partial f}{\partial y}(x,y)
+\right).
+$$
 
-**Calculemos uno, paso a paso.** Sea $f(x,y) = x^2+y^2$, y evaluemos el gradiente en el punto $(1, 0.5)$.
+Continuemos con la misma función:
 
-1. Derivada parcial respecto a $x$ (tratamos $y$ como constante): $\dfrac{\partial f}{\partial x} = 2x$.
-2. Derivada parcial respecto a $y$ (tratamos $x$ como constante): $\dfrac{\partial f}{\partial y} = 2y$.
-3. El gradiente como función es $\nabla f(x,y) = (2x,\, 2y)$.
-4. Evaluado en $(1, 0.5)$: $\nabla f(1,0.5) = (2\times 1,\; 2\times 0.5) = (2,\,1)$.
+$$f(x,y)=x^2+2y^2.$$
 
-Ese vector $(2,1)$ es exactamente la flecha blanca del gráfico de abajo: parada en $(1,0.5)$, apuntando en la dirección $(2,1)$ — la dirección en la que $f$ crece más rápido desde ese punto.
+Como ya calculamos sus dos derivadas parciales,
+
+$$\nabla f(x,y)=(2x,4y).$$
+
+En el punto $(1,1)$,
+
+$$\nabla f(1,1)=(2,4).$$
+
+El primer componente, $2$, describe el cambio en la dirección de $x$; el segundo, $4$, describe el cambio en la dirección de $y$. Juntos forman una flecha que apunta en la dirección en la que $f$ aumenta más rápidamente.
 
 ```{r gradiente-plot}
-#| fig-cap: "f(x,y) = x² + y²: el gradiente en un punto apunta hacia donde f crece más rápido"
-grid <- expand_grid(x = seq(-3, 3, 0.15), y = seq(-3, 3, 0.15)) %>%
-  mutate(z = x^2 + y^2)
-punto <- tibble(x = 1, y = 0.5)
+#| fig-cap: "La misma función f(x,y) = x² + 2y²: el gradiente ∇f(1,1) = (2,4) apunta hacia el crecimiento más rápido"
+grid <- expand_grid(x = seq(-3, 3, 0.12), y = seq(-3, 3, 0.12)) %>%
+  mutate(z = x^2 + 2 * y^2)
+punto <- tibble(x = 1, y = 1)
 
 ggplot(grid, aes(x, y, z = z)) +
-  geom_contour_filled(alpha = 0.7, bins = 10, show.legend = FALSE) +
-  geom_point(data = punto, aes(z = NULL), size = 3, color = "white") +
-  geom_segment(aes(x = 1, y = 0.5, xend = 1 + 2 * 1 * 0.15, yend = 0.5 + 2 * 0.5 * 0.15, z = NULL),
-               arrow = arrow(length = unit(0.25, "cm")), color = "white", linewidth = 1) +
+  geom_contour_filled(alpha = 0.75, bins = 10, show.legend = FALSE) +
+  geom_point(data = punto, aes(x, y), inherit.aes = FALSE,
+             size = 3, color = "white") +
+  geom_segment(
+    data = punto,
+    aes(x = x, y = y, xend = x + 2 * 0.18, yend = y + 4 * 0.18),
+    inherit.aes = FALSE,
+    arrow = arrow(length = unit(0.25, "cm")),
+    color = "white",
+    linewidth = 1.1
+  ) +
   coord_equal() +
   labs(x = "x", y = "y")
 ```
 
-- El gradiente apunta en la dirección en que $f$ crece más rápido.
-- "Moverse en la dirección **contraria** al gradiente" (descenso de gradiente) es, literalmente, cómo se entrenan la mayoría de los modelos de las últimas clases del curso (regularización, gradient boosting, redes neuronales).
+Las curvas de color unen puntos donde $f$ tiene el mismo valor. La flecha blanca parte de $(1,1)$ y tiene la dirección de $(2,4)$; cruza esas curvas hacia valores cada vez mayores.
+
+Para **reducir** una función, se avanza en la dirección contraria al gradiente. Este procedimiento se llama **descenso de gradiente**. Con un tamaño de paso $\alpha>0$, la actualización es
+
+$$
+(x_{\text{nuevo}},y_{\text{nuevo}})
+=
+(x,y)-\alpha\nabla f(x,y),
+$$
+
+donde la resta se hace componente a componente. Desde $(1,1)$, con $\alpha=0.1$:
+
+$$
+(x_{\text{nuevo}},y_{\text{nuevo}})
+=(1,1)-0.1(2,4)
+=(0.8,0.6).
+$$
+
+En efecto, $f(1,1)=3$ y $f(0.8,0.6)=0.8^2+2(0.6)^2=1.36$: el valor disminuyó.
 
 ### Integrales
 
@@ -547,11 +729,11 @@ La población aumentó en 27 mil personas en esos 3 años — y `integrate()` (i
 
 ### Experimentos aleatorios y espacio muestral
 
-Un **experimento aleatorio** es un experimento — real o hipotético — en el que todos los posibles resultados son conocidos *a priori*.
+Un **experimento aleatorio** es un proceso —real o hipotético— cuyo resultado concreto no se conoce antes de realizarlo, aunque sí se conocen sus posibles resultados.
 
 > Experimento: tirar un dado. Posibles resultados: números enteros entre 1 y 6.
 
-El conjunto de todos los posibles resultados se llama **espacio muestral**, $\Omega$:
+Cada posible resultado individual se llama **resultado elemental**. El conjunto de todos ellos se llama **espacio muestral**, $\Omega$:
 
 $$\Omega = \{1,2,3,4,5,6\}$$
 
@@ -559,7 +741,7 @@ $$\Omega = \{1,2,3,4,5,6\}$$
 
 Un **evento** es un subconjunto bien definido de los posibles resultados de un experimento.
 
-> $A$: "obtener un 1 o un 5" $\to A = \{\text{dado}=1 \text{ o } \text{dado}=5\}$
+> $A$: “obtener un 1 o un 5” $\to A=\{1,5\}$.
 
 ```{r prob-esquema-evento}
 #| fig-cap: "Un evento A es un subconjunto del espacio muestral Ω"
@@ -574,20 +756,50 @@ ggplot() +
   coord_equal() + theme_void()
 ```
 
+### Operaciones con eventos
+
+Sean $A$ y $B$ dos eventos:
+
+- La **intersección**, $A\cap B$, contiene los resultados que pertenecen a $A$ **y** a $B$.
+- La **unión**, $A\cup B$, contiene los resultados que pertenecen a $A$, a $B$ o a ambos. Este “o” es inclusivo.
+- El **complemento**, $A^c$, contiene los resultados del espacio muestral que no pertenecen a $A$.
+- El conjunto vacío, $\varnothing$, representa un evento imposible.
+
+Dos eventos son **mutuamente excluyentes** si no pueden ocurrir al mismo tiempo, es decir, si $A\cap B=\varnothing$. Una colección de eventos forma una **partición** de $\Omega$ si sus eventos son mutuamente excluyentes y, al unirlos, cubren todo el espacio muestral.
+
+Ejemplo con un dado:
+
+$$A=\{1,3,5\}\quad\text{(resultado impar)},\qquad
+B=\{4,5,6\}\quad\text{(resultado mayor que 3)}.$$
+
+Entonces,
+
+$$A\cap B=\{5\},\qquad
+A\cup B=\{1,3,4,5,6\},\qquad
+A^c=\{2,4,6\}.$$
+
 ### Probabilidad y reglas básicas
 
 A cada evento se le asocia un número que cuantifica su probabilidad de ocurrencia: $\mathbb{P}(A) \in [0,1]$.
 
-Con un dado justo (todos los valores igual de probables): $\mathbb{P}(\text{cada valor}) = 1/6$, y $\mathbb{P}(A) = \mathbb{P}(\text{dado}=1 \text{ o } 5) = 2/6$.
+Cuando los resultados elementales son igualmente probables,
+
+$$
+\mathbb{P}(A)
+=
+\frac{\text{número de resultados favorables a }A}
+{\text{número total de resultados}}.
+$$
+
+Con un dado justo, los seis resultados son igualmente probables. Si $A=\{1,5\}$, entonces $\mathbb{P}(A)=2/6=1/3$.
 
 Reglas básicas:
 
 1. **Rango**: $0 \le \mathbb{P}(A) \le 1$.
-2. **Eventos mutuamente excluyentes**: si $A$ y $B$ no pueden ocurrir juntos, $\mathbb{P}(A \text{ y } B) = 0$.
-3. **Unión**: $\mathbb{P}(A \text{ o } B) = \mathbb{P}(A) + \mathbb{P}(B) - \mathbb{P}(A \text{ y } B)$.
-4. Si $A$ y $B$ son mutuamente excluyentes, la regla 3 se simplifica a $\mathbb{P}(A \text{ o } B) = \mathbb{P}(A) + \mathbb{P}(B)$.
-5. **Probabilidad total**: $\mathbb{P}(\Omega) = \sum_i \mathbb{P}(A_i) = 1$, sumando sobre todos los resultados posibles.
-6. **Complemento**: si $A$ y $B$ particionan $\Omega$ (mutuamente excluyentes y exhaustivos), $\mathbb{P}(A) = 1 - \mathbb{P}(B)$.
+2. **Evento seguro e imposible**: $\mathbb{P}(\Omega)=1$ y $\mathbb{P}(\varnothing)=0$.
+3. **Complemento**: $\mathbb{P}(A^c)=1-\mathbb{P}(A)$.
+4. **Unión**: $\mathbb{P}(A\cup B)=\mathbb{P}(A)+\mathbb{P}(B)-\mathbb{P}(A\cap B)$.
+5. **Unión de eventos mutuamente excluyentes**: si $A\cap B=\varnothing$, entonces $\mathbb{P}(A\cup B)=\mathbb{P}(A)+\mathbb{P}(B)$.
 
 ```{r prob-esquema-union}
 #| fig-cap: "P(A o B) = P(A) + P(B) − P(A y B): la zona de traslape (A y B) no se cuenta dos veces"
@@ -606,43 +818,54 @@ ggplot() +
   coord_equal() + theme_void()
 ```
 
-> Ejemplo (regla 3): con $A=\{1,5\}$ y $B=\{5,6\}$, $\mathbb{P}(A \text{ o } B) = \tfrac{1}{6}+\tfrac{1}{6}+\tfrac{1}{6} - \tfrac{1}{6} = \tfrac{2}{6}$ (sin doble-contar el 5).
+> Ejemplo (regla 4): con $A=\{1,5\}$ y $B=\{5,6\}$, tenemos $\mathbb{P}(A)=2/6$, $\mathbb{P}(B)=2/6$ y $\mathbb{P}(A\cap B)=1/6$. Por lo tanto, $\mathbb{P}(A\cup B)=2/6+2/6-1/6=3/6$. Restamos una vez la probabilidad del resultado $5$ porque había sido contado en ambos eventos.
 
 ### Probabilidad condicional
 
 La probabilidad de $A$ **una vez que sabemos** que ocurrió $B$ es la probabilidad condicional de $A$ dado $B$:
 
-$$\mathbb{P}(A \mid B) = \frac{\mathbb{P}(A,B)}{\mathbb{P}(B)}$$
+$$\mathbb{P}(A \mid B) = \frac{\mathbb{P}(A\cap B)}{\mathbb{P}(B)},\qquad \mathbb{P}(B)>0.$$
 
-> Ejemplo: dado justo, $A=\{4,5,6\}$ ("cuatro o más"), $B=\{2,4,6\}$ ("par"). $\mathbb{P}(A \mid B) = \dfrac{\mathbb{P}(\{4,6\})}{\mathbb{P}(\{2,4,6\})} = \dfrac{2/6}{3/6} = \dfrac{2}{3} \approx 0.66$.
+Condicionar en $B$ significa restringir el espacio de resultados posibles a $B$ y preguntar qué fracción de ese nuevo espacio también pertenece a $A$.
 
-**Ejercicio.** Un 5% de la población son mujeres (M) con estudios universitarios completos (U); las mujeres son 55% de la población; 20% de la población tiene estudios universitarios completos.
+> Ejemplo: dado justo, $A=\{4,5,6\}$ (“cuatro o más”) y $B=\{2,4,6\}$ (“par”). Una vez que sabemos que el resultado es par, los únicos resultados posibles son $\{2,4,6\}$; dos de ellos, $\{4,6\}$, también pertenecen a $A$. Por eso, $\mathbb{P}(A\mid B)=\dfrac{2/6}{3/6}=\dfrac{2}{3}$.
+
+Al despejar el numerador se obtiene la **regla del producto**:
+
+$$\mathbb{P}(A\cap B)=\mathbb{P}(A\mid B)\,\mathbb{P}(B).$$
+
+**Ejemplo resuelto.** En una población simplificada en dos grupos exhaustivos, $M$ (mujeres) y $H$ (hombres), un 5% son mujeres con estudios universitarios completos ($U$); las mujeres son 55% de la población y 20% de la población tiene estudios universitarios completos.
 
 - $\mathbb{P}(U \mid M) = 0.05 / 0.55 \approx 0.09$
 - $\mathbb{P}(M \mid U) = 0.05 / 0.20 = 0.25$
 - $\mathbb{P}(H \mid U) = 1 - \mathbb{P}(M \mid U) = 0.75$ (H = hombre)
 
-Pero, en general, $\mathbb{P}(A\mid B) \neq \mathbb{P}(B\mid A)$ — para invertir el condicionamiento (¿$\mathbb{P}(U \mid H)$?) necesitamos el **Teorema de Bayes**.
+En general, $\mathbb{P}(A\mid B)\neq\mathbb{P}(B\mid A)$. El **teorema de Bayes** entrega una forma sistemática de pasar de un orden de condicionamiento al otro.
 
 ### Teorema de Bayes
 
-![Thomas Bayes (1701–1761)](../slides/class_2/tbayes.png){width="160"}
-
-La idea: ya sabemos calcular $\mathbb{P}(A\mid B)$ a partir de $\mathbb{P}(A,B)$. Bayes usa exactamente esa misma definición, escrita dos veces (una para cada orden), para armar un puente entre $\mathbb{P}(A\mid B)$ y $\mathbb{P}(B\mid A)$.
+La idea: ya sabemos calcular $\mathbb{P}(A\mid B)$ a partir de $\mathbb{P}(A\cap B)$. Bayes usa la misma intersección escrita mediante la regla del producto en los dos órdenes posibles.
 
 **Derivación, paso a paso:**
 
-1. Por definición de probabilidad condicional: $\mathbb{P}(A \mid B) = \dfrac{\mathbb{P}(A,B)}{\mathbb{P}(B)}$.
-2. Por la misma definición, en el otro orden: $\mathbb{P}(B \mid A) = \dfrac{\mathbb{P}(A,B)}{\mathbb{P}(A)}$.
-3. Despejamos $\mathbb{P}(A,B)$ de la ecuación (2): $\mathbb{P}(A,B) = \mathbb{P}(B\mid A)\,\mathbb{P}(A)$.
-4. Sustituimos ese $\mathbb{P}(A,B)$ en la ecuación (1): $\mathbb{P}(A \mid B) = \dfrac{\mathbb{P}(B\mid A)\,\mathbb{P}(A)}{\mathbb{P}(B)}$.
-5. Intercambiando los nombres $A$ y $B$ (la relación es simétrica), obtenemos el **teorema de Bayes**:
+1. Por la regla del producto:
+   $\mathbb{P}(A\cap B)=\mathbb{P}(A\mid B)\mathbb{P}(B)$.
+2. Como $A\cap B=B\cap A$, también:
+   $\mathbb{P}(A\cap B)=\mathbb{P}(B\mid A)\mathbb{P}(A)$.
+3. Igualamos ambas expresiones:
+   $\mathbb{P}(A\mid B)\mathbb{P}(B)=\mathbb{P}(B\mid A)\mathbb{P}(A)$.
+4. Dividimos por $\mathbb{P}(B)$, suponiendo $\mathbb{P}(B)>0$:
 
-$$\mathbb{P}(B \mid A) = \frac{\mathbb{P}(A \mid B)\,\mathbb{P}(B)}{\mathbb{P}(A)}$$
+$$
+\mathbb{P}(A\mid B)
+=
+\frac{\mathbb{P}(B\mid A)\,\mathbb{P}(A)}
+{\mathbb{P}(B)}.
+$$
 
 **Aplicado al ejemplo anterior, paso a paso** (queremos $\mathbb{P}(U\mid H)$, y ya conocemos $\mathbb{P}(H\mid U)=0.75$, $\mathbb{P}(U)=0.2$, $\mathbb{P}(H)=1-0.55=0.45$):
 
-1. Identificamos qué juega el rol de $A$ y de $B$ en la fórmula: aquí $A=H$, $B=U$, así que buscamos $\mathbb{P}(U\mid H)$.
+1. En la fórmula usamos $A=U$ y $B=H$.
 2. Reemplazamos en la fórmula: $\mathbb{P}(U \mid H) = \dfrac{\mathbb{P}(H \mid U)\,\mathbb{P}(U)}{\mathbb{P}(H)}$.
 3. Sustituimos los números: $= \dfrac{0.75 \times 0.2}{0.45}$.
 4. Calculamos: $= \dfrac{0.15}{0.45} \approx 0.33$.
@@ -659,28 +882,30 @@ $$\mathbb{P}(A) = \sum_{i=1}^n \mathbb{P}(A \mid B_i)\,\mathbb{P}(B_i)$$
 
 La intuición: si queremos $\mathbb{P}(A)$ pero no la conocemos directamente, la separamos según cada posible "camino" hacia $A$ (uno por cada $B_i$), calculamos la probabilidad de cada camino por separado, y las sumamos.
 
-**Ejemplo, paso a paso.** Mujeres son 55% de la población ($\mathbb{P}(M)=0.55$, y por lo tanto $\mathbb{P}(H)=0.45$); 20% de los hombres tiene estudios universitarios ($\mathbb{P}(U\mid H)=0.2$); 25% de las mujeres los tiene ($\mathbb{P}(U\mid M)=0.25$). Queremos $\mathbb{P}(U)$, la probabilidad de que una persona cualquiera tenga estudios universitarios.
+**Continuación del mismo ejemplo.** Podemos recuperar $\mathbb{P}(U)=0.20$ separando la población en los grupos $H$ y $M$.
 
-1. $H$ y $M$ particionan a toda la población (todos son hombre o mujer, mutuamente excluyentes) — son los $B_i$ de la fórmula.
-2. Camino 1 ("es hombre y tiene estudios"): $\mathbb{P}(U\mid H)\,\mathbb{P}(H) = 0.2 \times 0.45 = 0.09$.
-3. Camino 2 ("es mujer y tiene estudios"): $\mathbb{P}(U\mid M)\,\mathbb{P}(M) = 0.25 \times 0.55 = 0.1375$.
-4. Sumamos ambos caminos: $\mathbb{P}(U) = 0.09 + 0.1375 = 0.2275$.
+1. $H$ y $M$ forman una partición de la población.
+2. Del ejemplo anterior, $\mathbb{P}(U\mid H)=1/3$ y $\mathbb{P}(H)=0.45$. Este camino aporta $(1/3)(0.45)=0.15$.
+3. También calculamos $\mathbb{P}(U\mid M)=0.05/0.55=1/11$, y sabemos que $\mathbb{P}(M)=0.55$. Este camino aporta $(1/11)(0.55)=0.05$.
+4. Sumamos ambos caminos: $\mathbb{P}(U)=0.15+0.05=0.20$.
 
 ```{r probabilidad-total}
-0.2 * 0.45 + 0.25 * 0.55
+(1 / 3) * 0.45 + (1 / 11) * 0.55
 ```
 
 ### Independencia estadística
 
-Dos eventos $A$ y $B$ son **independientes** si la ocurrencia de uno no afecta la probabilidad del otro:
+Dos eventos $A$ y $B$ son **independientes** si la ocurrencia de uno no afecta la probabilidad del otro. Si $\mathbb{P}(B)>0$:
 
-$$\mathbb{P}(A \mid B) = \mathbb{P}(A) \quad\iff\quad \mathbb{P}(A,B) = \mathbb{P}(A)\,\mathbb{P}(B)$$
+$$\mathbb{P}(A \mid B) = \mathbb{P}(A) \quad\iff\quad \mathbb{P}(A\cap B) = \mathbb{P}(A)\,\mathbb{P}(B)$$
 
-> Ejemplo: dos monedas justas, $A$ = "cara en la 1ª", $B$ = "sello en la 2ª". $\mathbb{P}(A)=\mathbb{P}(B)=1/2$, $\mathbb{P}(A,B) = 1/4 = \mathbb{P}(A)\mathbb{P}(B)$ — independientes.
+> Ejemplo: dos monedas justas, $A$ = “cara en la primera” y $B$ = “sello en la segunda”. Entonces $\mathbb{P}(A)=\mathbb{P}(B)=1/2$ y $\mathbb{P}(A\cap B)=1/4=\mathbb{P}(A)\mathbb{P}(B)$; por lo tanto, son independientes.
 
 ### Simulación Monte Carlo
 
-Tiramos dos monedas simultáneamente: una justa y una cargada (90% probabilidad de cara). Si los lanzamientos son independientes, $\mathbb{P}(\text{Cara}_1,\text{Cara}_2) = 0.5 \times 0.9 = 0.45$. Lo verificamos simulando:
+Tiramos dos monedas simultáneamente: una justa y una cargada (90% probabilidad de cara). Si los lanzamientos son independientes, $\mathbb{P}(\text{Cara}_1\cap\text{Cara}_2) = 0.5 \times 0.9 = 0.45$. Lo verificamos simulando:
+
+En el código, `rbinom(n, 1, prob = p)` genera $n$ resultados codificados como $1$ (cara) o $0$ (sello), con probabilidad $p$ de obtener $1$. `set.seed(1)` permite reproducir exactamente la misma simulación.
 
 ```{r montecarlo}
 set.seed(1)
@@ -695,5 +920,3 @@ prop.table(table(datos_monedas$cc))
 ```
 
 La proporción simulada de "Cara-Cara" se acerca a 0.45, confirmando el cálculo teórico.
-
-:::
