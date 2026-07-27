@@ -1,0 +1,367 @@
+---
+title: "Análisis de Datos Categóricos (SOC3070)"
+subtitle: "Un \"Flavor\" de LLMs (usando Regresión Logística)"
+author: "Mauricio Bucca · Sociología UC"
+date: today
+body-classes: theme-chelsea
+course-team: chelsea
+filters: ["../_shared/course.lua"]
+format:
+  revealjs:
+    css: "../_shared/course.css"
+    slide-number: false
+    theme: default
+    highlight-style: github
+    code-block-font-size: 0.9em
+    width: 1600
+    height: 900
+    html-math-method: katex
+execute:
+  warning: false
+  message: false
+---
+
+```{r course-style, include=FALSE}
+library(pacman)
+p_load(tidyverse)
+p_load(nnet)
+source("../_shared/bikeshare.R")
+course_palette <- use_course_style("chelsea")
+```
+
+## Antes · Hoy · Después {.class-rhythm}
+
+::: {.full-width}
+
+::: {.content-box}
+**Antes**
+
+redes neuronales para clasificación y regresión.
+:::
+
+::: {.content-box-primary}
+**Hoy**
+
+un "flavor" de LLMs, usando regresión logística.
+:::
+
+::: {.content-box-secondary}
+**Después**
+
+cierre del curso.
+:::
+
+:::
+
+# Un "flavor" de LLMs {.inverse .center .middle}
+
+## Una advertencia antes de empezar
+
+Lo que vamos a construir hoy **no es un LLM pequeño**. Es un modelo estadístico bien conocido —regresión logística multinomial, de la clase 12— aplicado a texto.
+
+. . .
+
+Lo que sí es cierto, y es la razón de esta clase: **un LLM moderno resuelve, en su capa final, exactamente el mismo problema de clasificación multinomial que ya sabemos resolver.** La diferencia es la escala y cómo se construyen los predictores — no la formulación estadística del problema.
+
+## Ruta de la clase
+
+1. El lenguaje como variable categórica.
+2. Un caso simple: predicción binaria.
+3. El caso general: predicción multinomial.
+4. Cómo representar el contexto.
+5. Ajustar el modelo e interpretar sus probabilidades.
+6. Generación secuencial de texto.
+7. Qué le falta a esto para ser un LLM de verdad.
+
+# El lenguaje como variable categórica {.inverse .center .middle}
+
+## Qué hace, en el fondo, un LLM
+
+Cuando un modelo de lenguaje "escribe", en cada paso hace exactamente una cosa: dado el texto visto hasta ahora, **predice cuál es la siguiente palabra**, entre todas las palabras posibles de su vocabulario.
+
+. . .
+
+Eso es, formalmente, un problema que ya conocemos:
+
+$$
+\mathbb{P}(Y = j \mid X) = \text{softmax}(X\beta)_j, \qquad j = 1, \dots, J
+$$
+
+donde $Y$ es la próxima palabra (una categoría entre $J$ posibles) y $X$ es alguna representación de las palabras anteriores. **Esta es exactamente la regresión logística multinomial de la clase 12.**
+
+## Nuestro corpus de juguete
+
+Vamos a trabajar con oraciones de la forma "el SUJETO VERBO los OBJETO", generadas a partir de un vocabulario pequeño:
+
+```{r corpus, echo=TRUE}
+set.seed(3070)
+
+sujetos <- c("estudiante", "investigador", "modelo", "algoritmo")
+verbos  <- c("analiza", "estima", "predice", "explica")
+objetos <- c("datos", "resultados", "modelos", "problemas")
+```
+
+- Vocabulario total: $4+4+4=12$ palabras de contenido (más "el"/"los").
+- No es un corpus real: lo construimos con una estructura conocida, para poder verificar que el modelo efectivamente la aprende.
+
+## Construyendo el corpus
+
+Para que el ejercicio tenga sentido, el sujeto influye en qué verbo es más probable, y el verbo influye en qué objeto es más probable — igual que en el lenguaje real, donde el contexto restringe (sin determinar) la palabra que sigue.
+
+```{r corpus-probs, echo=TRUE}
+p_verbo_dado_sujeto <- matrix(c(
+  .50, .20, .20, .10,   # estudiante
+  .20, .50, .10, .20,   # investigador
+  .10, .10, .60, .20,   # modelo
+  .10, .10, .20, .60    # algoritmo
+), nrow = 4, byrow = TRUE, dimnames = list(sujetos, verbos))
+
+p_objeto_dado_verbo <- matrix(c(
+  .60, .20, .10, .10,   # analiza
+  .20, .20, .50, .10,   # estima
+  .10, .60, .10, .20,   # predice
+  .10, .10, .20, .60    # explica
+), nrow = 4, byrow = TRUE, dimnames = list(verbos, objetos))
+```
+
+## Generando 300 oraciones
+
+```{r generar-corpus, echo=TRUE}
+n_oraciones <- 300
+corpus <- tibble(id = 1:n_oraciones) %>%
+  mutate(
+    sujeto  = sample(sujetos, n(), replace = TRUE),
+    verbo   = map_chr(sujeto, ~ sample(verbos, 1, prob = p_verbo_dado_sujeto[.x, ])),
+    objeto  = map_chr(verbo,  ~ sample(objetos, 1, prob = p_objeto_dado_verbo[.x, ])),
+    oracion = paste("el", sujeto, verbo, "los", objeto)
+  )
+
+corpus %>% select(sujeto, verbo, objeto, oracion) %>% head(6)
+```
+
+Cada fila es una "oración". `sujeto`, `verbo` y `objeto` son las palabras de contenido; `oracion` es el texto completo.
+
+# Predicción binaria {.inverse .center .middle}
+
+## El caso más simple: ¿la próxima palabra es "datos"?
+
+Antes del caso general, empecemos con una pregunta binaria: dado el verbo, **¿el objeto va a ser "datos" o no?**
+
+```{r bin-setup, echo=TRUE}
+corpus <- corpus %>% mutate(es_datos = as.integer(objeto == "datos"))
+
+m_bin <- glm(es_datos ~ verbo, data = corpus, family = binomial)
+summary(m_bin)$coefficients
+```
+
+- Esto es exactamente un `glm(family=binomial)`, como en la clase 9 — solo que el predictor es una palabra (categórica) y no una variable numérica como `temp`.
+- El coeficiente de `verboanaliza` (ausente = categoría de referencia) es más alto que el resto, reflejando que `analiza` predice "datos" con más frecuencia — así lo construimos en `p_objeto_dado_verbo`.
+
+## De binario a multinomial
+
+Reducir "cuál es la próxima palabra" a una sola pregunta binaria descarta información: en un vocabulario de $J$ palabras hay $J$ posibles respuestas, no 2.
+
+. . .
+
+La generalización natural —y la que de verdad se usa— es la regresión logística **multinomial**, que ya vimos en la clase 12:
+
+$$
+\mathbb{P}(Y=j \mid X) = \frac{e^{X\beta_j}}{\sum_{k=1}^{J} e^{X\beta_k}}, \qquad j=1,\dots,J.
+$$
+
+Esta fórmula —**softmax**— es, literalmente, la capa final de un LLM: convierte $J$ puntajes reales en una distribución de probabilidad sobre el vocabulario.
+
+# Predicción multinomial {.inverse .center .middle}
+
+## El softmax, término a término
+
+| Símbolo | Significado |
+|---|---|
+| $J$ | tamaño del vocabulario (número de palabras posibles) |
+| $X\beta_j$ | puntaje (logit) de la palabra $j$, dado el contexto $X$ |
+| $e^{X\beta_j}$ | ese puntaje, convertido a un número positivo |
+| $\sum_k e^{X\beta_k}$ | normalización: hace que las $J$ probabilidades sumen 1 |
+
+Con $J=2$, el softmax se reduce exactamente a la sigmoide de la regresión logística binaria — el mismo resultado que vimos en la clase 12 para el caso multinomial en general.
+
+## Ajustemos el modelo multinomial
+
+```{r multinom-fit, echo=TRUE}
+m_objeto <- multinom(objeto ~ verbo, data = corpus, trace = FALSE)
+
+predict(m_objeto, newdata = tibble(verbo = "predice"), type = "probs")
+```
+
+Dado el verbo "predice", el modelo asigna la mayor probabilidad a "resultados" — exactamente el patrón que construimos en `p_objeto_dado_verbo`. El modelo **aprendió la estructura del corpus a partir de los datos**, sin que se la diéramos explícitamente.
+
+# Representación del contexto {.inverse .center .middle}
+
+## ¿Qué es "el contexto", en términos de $X$?
+
+Para que el softmax funcione necesitamos convertir palabras en números. La forma más simple: variables **dummy**, una por cada palabra posible del contexto — exactamente como codificamos `factor(weathersit)` en clases anteriores.
+
+. . .
+
+Un LLM real reemplaza estas dummies por **embeddings**: vectores densos aprendidos que representan cada palabra. La lógica de "convertir una palabra en un vector de números" es la misma; lo que cambia es qué tan compacta y aprendida es esa representación.
+
+## Tres formas de representar el contexto
+
+Comparemos tres representaciones, todas prediciendo el `objeto`:
+
+```{r contexto-comparacion, echo=TRUE}
+m0 <- multinom(objeto ~ 1, data = corpus, trace = FALSE)                # sin contexto
+m1 <- multinom(objeto ~ verbo, data = corpus, trace = FALSE)            # 1 palabra de contexto
+m2 <- multinom(objeto ~ verbo * sujeto, data = corpus, trace = FALSE)   # 2 palabras de contexto
+
+log_loss_multinom <- function(modelo, data, target) {
+  probs <- predict(modelo, newdata = data, type = "probs")
+  y <- data[[target]]
+  idx <- cbind(seq_along(y), match(y, colnames(probs)))
+  -mean(log(pmax(probs[idx], 1e-8)))
+}
+
+tibble(
+  modelo = c("Sin contexto", "1 palabra (verbo)", "2 palabras (verbo + sujeto)"),
+  log_loss = c(
+    log_loss_multinom(m0, corpus, "objeto"),
+    log_loss_multinom(m1, corpus, "objeto"),
+    log_loss_multinom(m2, corpus, "objeto")
+  ),
+  parámetros = c(length(coef(m0)), length(coef(m1)), length(coef(m2)))
+)
+```
+
+## Leer esta tabla
+
+- El log-loss —la misma métrica de la clase 6 y la clase 18— **baja** a medida que agregamos contexto: más contexto, mejor predicción.
+- El número de parámetros **sube** rápido: de 3, a 12, a 48. Con dos palabras de contexto ya necesitamos una interacción completa `verbo × sujeto`.
+- En un LLM real el contexto son cientos o miles de palabras anteriores. Modelar eso con dummies e interacciones completas —como acabamos de hacer— es completamente inviable: el número de parámetros explota. Los embeddings y la arquitectura Transformer existen, en gran medida, para resolver este mismo problema de forma escalable.
+
+# Ajuste e interpretación {.inverse .center .middle}
+
+## Interpretando el modelo elegido
+
+```{r objeto-final, echo=TRUE}
+predict(m1, newdata = tibble(verbo = verbos), type = "probs") %>%
+  as_tibble() %>%
+  mutate(verbo = verbos, .before = 1)
+```
+
+Cada fila es una distribución de probabilidad completa sobre el vocabulario de objetos, condicional en el verbo — exactamente lo que un LLM produce en cada paso, solo que aquí el "contexto" es una sola palabra categórica en vez de cientos de tokens representados con embeddings.
+
+## Esto ya es "entrenar un modelo de lenguaje"
+
+- **Estimar** `m1` (vía `multinom`, que maximiza verosimilitud) es, conceptualmente, lo mismo que "entrenar" una red que predice el siguiente token: ambos minimizan cross-entropy / log-loss (clase 6) sobre ejemplos de contexto → palabra siguiente.
+- La diferencia no es el objetivo de entrenamiento — es **la familia de funciones** que se usa para pasar del contexto a los puntajes $X\beta_j$: aquí, una combinación lineal de dummies; en un LLM, muchas capas de una red neuronal (clase 21) operando sobre embeddings.
+
+# Generación secuencial {.inverse .center .middle}
+
+## El ciclo de generación
+
+Generar texto, token a token, es un ciclo de cuatro pasos que se repite:
+
+1. Tomar el contexto actual.
+2. Calcular la distribución de probabilidad sobre la siguiente palabra (softmax).
+3. **Muestrear** una palabra de esa distribución (no necesariamente la más probable).
+4. Agregar la palabra elegida al contexto, y volver a 1.
+
+## Generando oraciones con nuestro modelo
+
+```{r generar-modelo-verbo, echo=TRUE}
+m_verbo <- multinom(verbo ~ sujeto, data = corpus, trace = FALSE)
+```
+
+```{r generar-oraciones, echo=TRUE}
+generar_oracion <- function() {
+  sujeto <- sample(sujetos, 1)
+
+  p_verbo <- predict(m_verbo, newdata = tibble(sujeto = sujeto), type = "probs")
+  verbo <- sample(names(p_verbo), 1, prob = p_verbo)
+
+  p_objeto <- predict(m1, newdata = tibble(verbo = verbo), type = "probs")
+  objeto <- sample(names(p_objeto), 1, prob = p_objeto)
+
+  paste("el", sujeto, verbo, "los", objeto)
+}
+
+set.seed(1)
+map_chr(1:5, ~ generar_oracion())
+```
+
+En cada llamada, el modelo: (1) elige un sujeto, (2) predice un verbo condicional en ese sujeto y **muestrea** uno, (3) predice un objeto condicional en ese verbo y muestrea uno. Es exactamente el ciclo de la lámina anterior, aplicado dos veces.
+
+## Temperatura: controlando qué tan "arriesgada" es la generación
+
+Antes de muestrear, un LLM suele reescalar los puntajes con un parámetro de **temperatura** $T$:
+
+$$
+\mathbb{P}(Y=j) = \frac{e^{X\beta_j / T}}{\sum_k e^{X\beta_k/T}}.
+$$
+
+- $T \to 0$: la distribución se concentra en la palabra más probable (generación "conservadora", casi determinística).
+- $T = 1$: las probabilidades originales del softmax, sin modificar.
+- $T$ grande: la distribución se aplana — todas las palabras se vuelven casi igual de probables (generación "creativa", más ruidosa).
+
+Muestrear en vez de tomar siempre el máximo —y ajustar $T$— es lo que hace que la generación de texto no sea siempre la misma oración, exactamente como en nuestro generador de arriba.
+
+# Conexión con los LLM {.inverse .center .middle}
+
+## Tabla comparativa: nuestro modelo vs. un LLM
+
+| Elemento | Nuestro modelo de juguete | Un LLM |
+|---|---|---|
+| Vocabulario | 12 palabras | decenas de miles de *tokens* |
+| Representación de entrada | variables dummy | *embeddings* (vectores densos aprendidos) |
+| Contexto usado | 1–2 palabras anteriores | cientos o miles de tokens anteriores |
+| Función de contexto → puntajes | combinación lineal (logit multinomial) | red profunda tipo Transformer (atención) |
+| Capa de salida | softmax sobre `objeto` | softmax sobre todo el vocabulario |
+| Función de pérdida al entrenar | log-loss / cross-entropy | log-loss / cross-entropy (la misma) |
+| Número de parámetros | decenas | miles de millones |
+
+## Qué comparten, y qué no
+
+**Comparten**: la formulación del problema (predecir el siguiente token es clasificación multinomial), la función de pérdida (cross-entropy), y el ciclo de generación (contexto → probabilidad → muestreo → repetir).
+
+. . .
+
+**No comparten**: la forma de representar el contexto (dummies vs. embeddings aprendidos), la función que va de contexto a puntajes (lineal vs. Transformer con atención), y, sobre todo, la escala.
+
+. . .
+
+Por eso la advertencia del comienzo: esto **no es un LLM pequeño**. Es la misma pregunta estadística, resuelta con las herramientas más simples posibles, para que la pregunta —no la ingeniería— quede clara.
+
+## Ejercicio
+
+1. Cambie las matrices `p_verbo_dado_sujeto` / `p_objeto_dado_verbo` para crear una estructura distinta y verifique que `multinom` la recupera.
+2. Ajuste un modelo `objeto ~ verbo + sujeto` (sin interacción) y compare su log-loss y número de parámetros contra `m1` y `m2`.
+3. Modifique `generar_oracion()` para que, en vez de muestrear, siempre elija la palabra más probable (`which.max`). Compare la diversidad de oraciones generadas.
+4. Implemente el reescalamiento por temperatura en `generar_oracion()` y observe qué pasa con $T=0.1$ y $T=5$.
+
+## En resumen
+
+- Predecir la siguiente palabra es un problema de clasificación multinomial — el mismo que vimos en la clase 12.
+- Softmax convierte puntajes en probabilidades sobre un vocabulario; con dos categorías, se reduce a la regresión logística binaria.
+- Más contexto mejora la predicción (menor log-loss) pero aumenta rápidamente el número de parámetros — el problema que los embeddings y los Transformers resuelven a escala.
+- Generar texto es muestrear, repetidamente, de la distribución que el modelo predice — el mismo ciclo, ya sea con un logit multinomial o con un LLM de miles de millones de parámetros.
+
+## Mapa conceptual del curso
+
+$$
+\text{probabilidad y GLM}
+\;\longrightarrow\;
+\text{logit, multinomial, Poisson}
+\;\longrightarrow\;
+\text{causalidad}
+\;\longrightarrow\;
+\text{predicción y regularización}
+\;\longrightarrow\;
+\text{árboles, redes, LLMs}.
+$$
+
+En cada clase preguntamos lo mismo: ¿qué outcome predecimos o explicamos, qué distribución supone el modelo, cómo se estima, y qué podemos —y no podemos— concluir de él?
+
+## Gracias {.inverse .center .middle .closing}
+
+**Fin del curso**
+
+Mauricio Bucca

@@ -1,0 +1,229 @@
+---
+title: "Análisis de Datos Categóricos (SOC3070)"
+subtitle: "Causalidad"
+author: "Mauricio Bucca · Sociología UC"
+date: today
+body-classes: theme-roma
+course-team: roma
+filters: ["../_shared/course.lua"]
+format:
+  revealjs:
+    css: "../_shared/course.css"
+    slide-number: false
+    theme: default
+    highlight-style: github
+    code-block-font-size: 0.9em
+    width: 1600
+    height: 900
+    html-math-method: katex
+execute:
+  warning: false
+  message: false
+---
+
+```{r course-style, include=FALSE}
+library(pacman)
+p_load(tidyverse)
+source("../_shared/bikeshare.R")
+course <- use_course_data("roma")
+bikedata <- course$data %>% mutate(month = as.integer(mnth))
+course_palette <- course$palette
+```
+
+## Antes · Hoy · Después {.class-rhythm}
+
+::: {.full-width}
+
+::: {.content-box}
+**Antes**
+
+sobre-dispersión y quasi-Poisson.
+:::
+
+::: {.content-box-primary}
+**Hoy**
+
+causalidad.
+:::
+
+::: {.content-box-secondary}
+**Después**
+
+predicción, overfitting y validación cruzada.
+:::
+
+:::
+
+# Causalidad {.inverse .center .middle}
+
+## La pregunta que quedó pendiente
+
+Durante nueve clases ajustamos LPM, GLM, logit, logit multinomial y Poisson, y en cada una interpretamos un coeficiente $\beta_j$ como "el efecto de $x_j$ sobre $y$".
+
+. . .
+
+Nunca preguntamos, con cuidado, **qué se necesita para que esa interpretación sea causal** y no solo una asociación estadística. Esa es la pregunta de hoy.
+
+## Ruta de la clase
+
+1. Por qué asociación no es lo mismo que causalidad.
+2. El marco de resultados potenciales.
+3. Confusión (*confounding*): la razón más común por la que fallan las interpretaciones causales.
+4. Cómo pensar el problema con un diagrama causal (DAG).
+5. Qué hace —y qué no hace— "controlar por" una variable en una regresión.
+
+# Asociación vs. causalidad {.inverse .center .middle}
+
+## Un ejemplo con nuestros propios datos
+
+```{r assoc-demo, echo=FALSE, fig.height=4.6}
+bikedata %>%
+  ggplot(aes(temp, bikers, color = factor(month))) +
+  geom_jitter(alpha = 0.15, width = 0.01) +
+  geom_smooth(aes(group = 1), method = "lm", se = FALSE, color = "black", linewidth = 1.2) +
+  scale_color_course() +
+  labs(x = "Temperatura (normalizada)", y = "Bikers", color = "Mes")
+```
+
+`temp` y `bikers` están claramente asociadas. Pero, ¿la temperatura **causa** que la gente arriende más bicicletas, o hay algo más de fondo?
+
+. . .
+
+Los colores muestran el mes: los meses cálidos (verano) también tienen más horas de luz, vacaciones escolares distintas, más eventos al aire libre. El **mes** podría estar afectando tanto `temp` como `bikers` — y parte de la asociación cruda podría deberse a eso, no a la temperatura en sí.
+
+## Definición: efecto causal
+
+Para una unidad $i$ (una hora, una persona), y un tratamiento binario $D_i\in\{0,1\}$, definimos dos **resultados potenciales**:
+
+$$Y_i(1): \text{lo que pasaría si } D_i=1, \qquad Y_i(0): \text{lo que pasaría si } D_i=0.$$
+
+| Símbolo | Significado |
+|---|---|
+| $Y_i(1)$ | resultado de la unidad $i$ **si** recibiera el tratamiento |
+| $Y_i(0)$ | resultado de la misma unidad $i$ **si no** lo recibiera |
+| $Y_i(1)-Y_i(0)$ | efecto causal individual |
+
+. . .
+
+El **problema fundamental de la inferencia causal**: para cada unidad $i$ solo observamos *uno* de los dos resultados potenciales — nunca ambos. El otro es, por definición, contrafactual.
+
+## De efectos individuales a un efecto promedio
+
+Como no podemos observar $Y_i(1)-Y_i(0)$ para ninguna unidad, apuntamos a un promedio poblacional, el **efecto promedio del tratamiento (ATE)**:
+
+$$\text{ATE} = \mathbb{E}[Y_i(1)] - \mathbb{E}[Y_i(0)].$$
+
+. . .
+
+Lo que sí podemos calcular con datos observacionales es la diferencia de medias **entre los grupos que efectivamente recibieron cada tratamiento**:
+
+$$\mathbb{E}[Y_i \mid D_i=1] - \mathbb{E}[Y_i \mid D_i=0].$$
+
+. . .
+
+La pregunta de toda esta clase es: **¿cuándo esta diferencia observada es igual al ATE?**
+
+## Confusión (*confounding*)
+
+La diferencia observada y el ATE **no coinciden** cuando existe una variable $X$ que afecta tanto a $D$ (quién recibe el tratamiento) como a $Y$ (el resultado) — un **confusor**.
+
+```{r dag-confound, echo=FALSE, fig.height=4}
+nodes <- tibble(
+  x = c(1, 2, 3), y = c(1, 2.4, 1),
+  label = c("D (tratamiento)", "X (confusor)", "Y (resultado)")
+)
+edges <- tibble(
+  x = c(2, 2, 1), y = c(2.4, 2.4, 1),
+  xend = c(1, 3, 3), yend = c(1, 1, 1)
+)
+
+ggplot() +
+  geom_segment(data = edges, aes(x, y, xend = xend, yend = yend),
+               arrow = arrow(length = unit(0.25, "cm")),
+               color = course_palette[["secondary"]], linewidth = 1) +
+  geom_point(data = nodes, aes(x, y), size = 22, shape = 21,
+             fill = course_palette[["primary"]], color = "white") +
+  geom_text(data = nodes, aes(x, y, label = label), color = "white", size = 3.6) +
+  coord_cartesian(xlim = c(0.5, 3.5), ylim = c(0.5, 3)) +
+  theme_void()
+```
+
+En nuestro ejemplo: `month` (estación del año) afecta tanto la temperatura como la demanda por razones ajenas al clima (vacaciones, luz solar) — es un candidato a confusor de la relación `temp` → `bikers`.
+
+## Diagramas causales (DAGs), en una frase
+
+Un **DAG** (*directed acyclic graph*) representa, con flechas, nuestros supuestos sobre qué variable causa a cuál. No se estima de los datos — es una hipótesis que traemos de la teoría.
+
+- **Confusor**: afecta tanto al tratamiento como al resultado. Si no se controla, contamina la asociación.
+- **Mediador**: está en el camino causal entre tratamiento y resultado ($D \to M \to Y$). Controlar por él **bloquea** parte del efecto que queremos medir.
+- **Colisionador (*collider*)**: es afectado *por ambos*, tratamiento y resultado ($D \to C \leftarrow Y$). Controlar por un colisionador **crea** una asociación espuria que no existía.
+
+. . .
+
+El DAG no es un adorno: nos dice exactamente **qué variables hay que controlar** (los confusores) y **cuáles no** (mediadores, colisionadores).
+
+## Qué hace "controlar por X" en una regresión
+
+Controlar por un confusor observado, en la práctica, es simplemente **incluirlo como predictor** — exactamente lo que hicimos, sin llamarlo así, en cada GLM de este curso.
+
+```{r control-demo}
+sin_control <- lm(bikers ~ temp, data = bikedata)
+con_control <- lm(bikers ~ temp + factor(month), data = bikedata)
+
+tibble(
+  modelo = c("Sin controlar por mes", "Controlando por mes"),
+  coef_temp = c(coef(sin_control)["temp"], coef(con_control)["temp"])
+)
+```
+
+El coeficiente de `temp` cambia al agregar `month` — parte de la asociación cruda sí correspondía a la estacionalidad, no a la temperatura por sí sola.
+
+## El supuesto que no podemos probar con datos
+
+Controlar por los confusores que **medimos** no es suficiente. La interpretación causal de una regresión requiere el supuesto de **no-confusión** (*unconfoundedness* / *ignorability*):
+
+$$\{Y_i(1), Y_i(0)\} \perp D_i \mid X_i.$$
+
+- En palabras: una vez que controlamos por $X$, no queda ningún otro factor —no medido— que afecte simultáneamente al tratamiento y al resultado.
+- Este supuesto **no se puede verificar con los datos que tenemos**: es una afirmación sustantiva sobre el mundo, que debe justificarse con teoría y conocimiento del contexto, no con un test estadístico.
+- Es, casi siempre, el eslabón más frágil de cualquier afirmación causal con datos observacionales.
+
+## Cuándo "más controles" no es la solución
+
+- Agregar controles **no** garantiza una interpretación causal — solo ayuda si el confusor específico que agregamos era, en efecto, un confusor.
+- Controlar por un **mediador** destruye parte del efecto que queremos medir.
+- Controlar por un **colisionador** introduce sesgo que no existía antes de controlar.
+- Por eso el DAG debe pensarse **antes** de decidir qué incluir en el modelo — no se elige la lista de controles solo porque "estaban disponibles en los datos".
+
+## Cómo leer, de ahora en adelante, los coeficientes de este curso
+
+Todos los modelos de las clases anteriores producen coeficientes válidos como **descripciones de asociación condicional**, sin necesidad de ningún supuesto causal adicional.
+
+. . .
+
+Para leerlos como **efectos causales**, hace falta además:
+
+1. Un DAG explícito de qué variables afectan a qué.
+2. Controlar por los confusores identificados en ese DAG (y no por mediadores ni colisionadores).
+3. Estar dispuesto a defender el supuesto de no-confusión con argumentos sustantivos, no solo con significancia estadística.
+
+## Ejercicio
+
+1. Dibuje un DAG para la relación entre `workingday` (día hábil) y `bikers`, incluyendo al menos un confusor plausible.
+2. Ajuste un modelo sin ese confusor y otro controlando por él. Compare los coeficientes.
+3. Proponga una variable que sería un **mediador** de esa relación (no un confusor) y explique por qué no debería incluirse como control.
+4. Evalúe si el supuesto de no-confusión es defendible en este ejemplo, y qué confusor no observado podría seguir siendo un problema.
+
+## En resumen
+
+- Un efecto causal compara resultados potenciales de la misma unidad; nunca observamos ambos a la vez.
+- La asociación observada coincide con el efecto causal solo bajo el supuesto de no-confusión.
+- Un DAG distingue confusores (hay que controlar), mediadores y colisionadores (no hay que controlar).
+- "Controlar por X" en una regresión es incluir X como predictor — útil solo si X es, efectivamente, un confusor identificado a priori.
+- Ningún test estadístico prueba el supuesto de no-confusión: es un argumento sustantivo, no un resultado del modelo.
+
+## Gracias {.inverse .center .middle .closing}
+
+**Hasta la próxima clase**
+
+Mauricio Bucca

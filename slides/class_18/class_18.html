@@ -1,1369 +1,1365 @@
 <!DOCTYPE html>
-<html lang="" xml:lang="">
-  <head>
-    <title>Análisis de Datos Categóricos (SOC3070)</title>
-    <meta charset="utf-8" />
-    <meta name="author" content="  Mauricio Bucca  Profesor Asistente, Sociología UC" />
-    <script src="libs/header-attrs-2.29/header-attrs.js"></script>
-    <link rel="stylesheet" href="gentle-r.css" type="text/css" />
-    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
-  </head>
-  <body>
-    <textarea id="source">
-class: center, middle, inverse, title-slide
-
-.title[
-# Análisis de Datos Categóricos (SOC3070)
-]
-.author[
-### <br> Mauricio Bucca<br> Profesor Asistente, Sociología UC
-]
-
----
-
-class: inverse, center, middle
-
-
-
-# Análisis de datos categóricos 
-## visión panorámica 
-
-
----
-## Tipos de datos categóricos
-
-Distintas miradas a los datos de infidelidad:
-
-.center[
-
-
-![](class_18_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
-]
-
----
-class: inverse, center, middle
-
-## Datos dicotómicos
-### Linear Probability Model y Regresión Logística
-
----
-## Linear Probability Model
-
-
-``` r
-lpm_1 &lt;- lm(affairs_binary ~ ym,  data=affairsdata)
-lpm_2 &lt;- lm(affairs_binary ~ ym + rate,  data=affairsdata)
-```
-
-&lt;br&gt;
---
-.pull-left[
-&lt;table style="border-collapse:collapse; border:none;"&gt;
-&lt;tr&gt;
-&lt;th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; "&gt;&amp;nbsp;&lt;/th&gt;
-&lt;th colspan="1" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; "&gt;affairs binary&lt;/th&gt;
-&lt;th colspan="1" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; "&gt;affairs binary&lt;/th&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; "&gt;Predictors&lt;/td&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Estimates&lt;/td&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Estimates&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;(Intercept)&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.16 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.56 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;ym&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.01 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.01 &lt;sup&gt;*&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;rate&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;0.09 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;"&gt;Observations&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="1"&gt;601&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="1"&gt;601&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;"&gt;R&lt;sup&gt;2&lt;/sup&gt; / R&lt;sup&gt;2&lt;/sup&gt; adjusted&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1"&gt;0.020 / 0.018&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1"&gt;0.071 / 0.068&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td colspan="3" style="font-style:italic; border-top:double black; text-align:right;"&gt;* p&amp;lt;0.05&amp;nbsp;&amp;nbsp;&amp;nbsp;** p&amp;lt;0.01&amp;nbsp;&amp;nbsp;&amp;nbsp;*** p&amp;lt;0.001&lt;/td&gt;
-&lt;/tr&gt;
-
-&lt;/table&gt;
-]
-
---
-
-.pull-right[
-- En un modelo lineal estándar al agregar una variable:
-
- - cambio en coeficientes reflejan correlación entre predictores (ej. "confounding")
- 
- - reducción de varianza residual
- 
-]
-
----
-## Regresión Logística
-
-
-``` r
-logistic_1 &lt;- glm(affairs_binary ~ ym,  family="binomial", data=affairsdata)
-logistic_2 &lt;- glm(affairs_binary ~ ym + rate, family="binomial",  data=affairsdata)
-```
-
-
-&lt;br&gt;
---
-.pull-left[
-&lt;table style="border-collapse:collapse; border:none;"&gt;
-&lt;tr&gt;
-&lt;th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; "&gt;&amp;nbsp;&lt;/th&gt;
-&lt;th colspan="1" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; "&gt;affairs binary&lt;/th&gt;
-&lt;th colspan="1" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; "&gt;affairs binary&lt;/th&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; "&gt;Predictors&lt;/td&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Log-Odds&lt;/td&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Log-Odds&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;(Intercept)&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;1.61 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.35 &lt;sup&gt;&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;ym&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.06 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.04 &lt;sup&gt;*&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;rate&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;0.47 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;"&gt;Observations&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="1"&gt;601&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="1"&gt;601&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;"&gt;R&lt;sup&gt;2&lt;/sup&gt; Tjur&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1"&gt;0.019&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1"&gt;0.071&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td colspan="3" style="font-style:italic; border-top:double black; text-align:right;"&gt;* p&amp;lt;0.05&amp;nbsp;&amp;nbsp;&amp;nbsp;** p&amp;lt;0.01&amp;nbsp;&amp;nbsp;&amp;nbsp;*** p&amp;lt;0.001&lt;/td&gt;
-&lt;/tr&gt;
-
-&lt;/table&gt;
-]
-
---
-
-.pull-right[
-
-En un modelo de regresión logística .bold[NO ES POSIBLE] sacar conclusiones sustantivas de cambios en coeficientes en modelos anidados!
- 
-]
-
-&lt;br&gt;
---
-
-¿Por que?
-
----
-## Regresión Logística: varianza no identificables
-
-&lt;br&gt;
-
-Existe una formulación alternariva de la regresión logística en términos de variable latente, donde la variable dependiente `\(y\)`  es una .bold[manifestación dicotómica] de una .bold[variable latente] (inobservada) continua, `\(y^{*}\)`.
-
-.pull-left[
-
-`$$\begin{align}
-y_{i} = \begin{cases}
-1 \quad \text{si} \quad y^{*}_{i} &gt; 0 \\
-0 \quad \text{si} \quad y^{*}_{i} &lt; 0
-\end{cases}
-\end{align}$$`
-
-]
-
-.pull-right[
-`\(y^{*}_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki} + \epsilon_{i}\)`
-]
-
-&lt;br&gt;
-
-- donde `\(e_{i}\)` sigue una distribución logística.
-
---
-
-- En este modelo no es posible estimar los coeficientes y la varianza conjuntamente. Es necesario fijar uno para estima el otro. 
-
---
-
-- Para estimar los coeficientes del modelo es necesario fijar el valor de la varianza.
-
---
-
--  Usualmente: `\(\epsilon_{i} \sim \text{logistic}(\mu=0,\sigma=\pi/\sqrt{3})\)`
-
-
----
-## Regresión Logística: efectos no comparables entre modelos anidados
-
-En consequencia ....
-
-&lt;br&gt;
---
-
-
-|                     |   Varianza variable dependiente   |             Varianza residual             |
-|---------------------|:---------------------------------:|:-----------------------------------------:|
-| Regresión lineal    |     `\(\sigma^{2}_{y}\)` es observado     | `\(\sigma^{2}_{\epsilon}\)` dependende del modelo |
-| Regresión logística |  `\(\sigma^{2}_{y*}\)` depende del modelo |        `\(\sigma^{2}_{\epsilon}\)` es fijo        |
-
-
-&lt;br&gt;
---
-
-.bold[Efecto de agregar un predictor adicional:]
-
-|                     |   Varianza variable dependiente   |             Varianza residual             |
-|---------------------|:---------------------------------:|:-----------------------------------------:|
-| Regresión lineal    |     `\(\sigma^{2}_{y}\)` no cambia    | `\(\sigma^{2}_{\epsilon}\)` disminuye |
-| Regresión logística |  `\(\sigma^{2}_{y*}\)` aumenta |        `\(\sigma^{2}_{\epsilon}\)` no cambia        |
-
-
-&lt;br&gt;
---
-
-Esencialmente, `\(y^{*}\)` es .bold[re-escalado], y por tanto también los coeficientes son re-escalados.
-
-
----
-## Regresión Logística: efectos no comparables entre modelos anidados
-
-
-.pull-left[
-&lt;table style="border-collapse:collapse; border:none;"&gt;
-&lt;tr&gt;
-&lt;th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; "&gt;&amp;nbsp;&lt;/th&gt;
-&lt;th colspan="1" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; "&gt;affairs binary&lt;/th&gt;
-&lt;th colspan="1" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; "&gt;affairs binary&lt;/th&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; "&gt;Predictors&lt;/td&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Log-Odds&lt;/td&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Log-Odds&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;(Intercept)&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;1.61 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.35 &lt;sup&gt;&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;ym&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.06 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.04 &lt;sup&gt;*&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;rate&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;0.47 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;"&gt;Observations&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="1"&gt;601&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="1"&gt;601&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;"&gt;R&lt;sup&gt;2&lt;/sup&gt; Tjur&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1"&gt;0.019&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1"&gt;0.071&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td colspan="3" style="font-style:italic; border-top:double black; text-align:right;"&gt;* p&amp;lt;0.05&amp;nbsp;&amp;nbsp;&amp;nbsp;** p&amp;lt;0.01&amp;nbsp;&amp;nbsp;&amp;nbsp;*** p&amp;lt;0.001&lt;/td&gt;
-&lt;/tr&gt;
-
-&lt;/table&gt;
-]
-
-.pull-right[
-En un modelo de regresión logística cambios en los coeficientes al agregar una variable pueden deberse a:
-
- - correlación entre predictores (ej. "confounding")
- 
- - re-escalamiento de la variable dependiente
- 
- - .bold[ambos!]
- 
-]
-
-&lt;br&gt;
---
-
-- Este problema es usualmente desconocido o ignorado. 
-
---
-
-- Cientos de artículos científicos extren interpretaciones erróneas de cambio en coeficientes a través de modelos.
-
---
-
-- Seriedad del problema varía caso a caso
-
----
-## Regresión Logística: efectos no comparables entre modelos anidados
-
---
-
-Una posible solución: .bold[KHB method]
-
---
-
-.pull-left[
-![kristan](kristian.png)
-- Paquete disponible en `Stata` y `R`
-
-
-]
-.pull-right[
-![khb](khb.png)
-
-]
-
-
----
-class: inverse, center, middle
-
-## Datos politómicos
-###  Regresión Logística Multinomial y Ordenada
-
-
----
-## Regresión Logística Multinomial
-
-
-``` r
-mlogistic_1 &lt;- multinom(affairs_order ~ ym,  trace=F, data=affairsdata)
-mlogistic_2 &lt;- multinom(affairs_order ~ ym + rate, trace=F,  data=affairsdata)
-```
-
-.pull-left[
-&lt;table style="border-collapse:collapse; border:none;"&gt;
-&lt;tr&gt;
-&lt;th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; "&gt;&amp;nbsp;&lt;/th&gt;
-&lt;th colspan="2" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; "&gt;affairs order&lt;/th&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; "&gt;Predictors&lt;/td&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Log-Odds&lt;/td&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Response&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;(Intercept)&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;2.01 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;ocasional&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;ym&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.02 &lt;sup&gt;&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;ocasional&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;(Intercept)&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;2.62 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;compulsivo&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;ym&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.10 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;compulsivo&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;"&gt;Observations&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="2"&gt;601&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;"&gt;R&lt;sup&gt;2&lt;/sup&gt; / R&lt;sup&gt;2&lt;/sup&gt; adjusted&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="2"&gt;0.021 / 0.019&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td colspan="3" style="font-style:italic; border-top:double black; text-align:right;"&gt;* p&amp;lt;0.05&amp;nbsp;&amp;nbsp;&amp;nbsp;** p&amp;lt;0.01&amp;nbsp;&amp;nbsp;&amp;nbsp;*** p&amp;lt;0.001&lt;/td&gt;
-&lt;/tr&gt;
-
-&lt;/table&gt;
-]
-
-.pull-right[
-&lt;table style="border-collapse:collapse; border:none;"&gt;
-&lt;tr&gt;
-&lt;th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; "&gt;&amp;nbsp;&lt;/th&gt;
-&lt;th colspan="2" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; "&gt;affairs order&lt;/th&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; "&gt;Predictors&lt;/td&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Log-Odds&lt;/td&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Response&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;(Intercept)&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;0.54 &lt;sup&gt;&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;ocasional&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;ym&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.00 &lt;sup&gt;&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;ocasional&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;rate&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;0.35 &lt;sup&gt;**&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;ocasional&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;(Intercept)&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;0.27 &lt;sup&gt;&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;compulsivo&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;ym&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.07 &lt;sup&gt;**&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;compulsivo&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;rate&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;0.57 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;compulsivo&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;"&gt;Observations&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="2"&gt;601&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;"&gt;R&lt;sup&gt;2&lt;/sup&gt; / R&lt;sup&gt;2&lt;/sup&gt; adjusted&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="2"&gt;0.058 / 0.055&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td colspan="3" style="font-style:italic; border-top:double black; text-align:right;"&gt;* p&amp;lt;0.05&amp;nbsp;&amp;nbsp;&amp;nbsp;** p&amp;lt;0.01&amp;nbsp;&amp;nbsp;&amp;nbsp;*** p&amp;lt;0.001&lt;/td&gt;
-&lt;/tr&gt;
-
-&lt;/table&gt;
-]
-
----
-## Regresión Logística Ordenada
-
-
-``` r
-ologistic_1 &lt;- polr(affairs_order ~ ym, data=affairsdata)
-ologistic_2 &lt;- polr(affairs_order ~ ym + rate, data=affairsdata)
-```
-
-&lt;br&gt;
-
-.pull-left[
-&lt;table style="border-collapse:collapse; border:none;"&gt;
-&lt;tr&gt;
-&lt;th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; "&gt;&amp;nbsp;&lt;/th&gt;
-&lt;th colspan="1" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; "&gt;affairs order&lt;/th&gt;
-&lt;th colspan="1" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; "&gt;affairs order&lt;/th&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; "&gt;Predictors&lt;/td&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Log-Odds&lt;/td&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Log-Odds&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;fiel|ocasional&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;1.65 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;0.35 &lt;sup&gt;&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;ocasional|compulsivo&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;2.43 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.48 &lt;sup&gt;&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;ym&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.06 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.04 &lt;sup&gt;*&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;rate&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;0.48 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;"&gt;Observations&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="1"&gt;601&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="1"&gt;601&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;"&gt;R&lt;sup&gt;2&lt;/sup&gt; Nagelkerke&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1"&gt;0.030&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1"&gt;0.098&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td colspan="3" style="font-style:italic; border-top:double black; text-align:right;"&gt;* p&amp;lt;0.05&amp;nbsp;&amp;nbsp;&amp;nbsp;** p&amp;lt;0.01&amp;nbsp;&amp;nbsp;&amp;nbsp;*** p&amp;lt;0.001&lt;/td&gt;
-&lt;/tr&gt;
-
-&lt;/table&gt;
-]
-
---
-
-.pull-right[
-
-- Menos parámetros pero más supuestos.
-
-- "Parallel regression assumption" (o proportional odds): predictores tienen los mismos efectos para cualquier "transición" entre una categoría y otra. 
-
-
-]
-
----
-## Regresión Logística Ordenada
-
-Podemos testear este supuesto usando el "Brant test". 
-
-
-``` r
-library("brant")
-```
-
-.pull-left[
-
-``` r
-brant(ologistic_1)
-```
-
-```
-## -------------------------------------------- 
-## Test for	X2	df	probability 
-## -------------------------------------------- 
-## Omnibus		3.99	1	0.05
-## ym		3.99	1	0.05
-## -------------------------------------------- 
-## 
-## H0: Parallel Regression Assumption holds
-```
-]
-
-.pull-right[
-
-``` r
-brant(ologistic_2)
-```
-
-```
-## -------------------------------------------- 
-## Test for	X2	df	probability 
-## -------------------------------------------- 
-## Omnibus		3.89	2	0.14
-## ym		3.16	1	0.08
-## rate		0.3	1	0.58
-## -------------------------------------------- 
-## 
-## H0: Parallel Regression Assumption holds
-```
-]
-
---
-
-- Evalua si los coeficientes son iguales al estimarlos en regresiones separadas.
-
-- p-values grandes indican que la "parallel regression assumption" se cumple.
-
-
----
-class: inverse, center, middle
-
-## Datos de recuento
-###  Regresión Poisson y Quasi-Poisson
-
----
-## Regresión Poisson
-
-
-``` r
-poisson_1 &lt;- glm(affairs_count ~ ym, family=poisson(link="log"), data=affairsdata)
-poisson_2 &lt;- glm(affairs_count ~ ym + rate, family=poisson(link="log"), data=affairsdata)
-```
-
-&lt;br&gt;
-
-&lt;table style="border-collapse:collapse; border:none;"&gt;
-&lt;tr&gt;
-&lt;th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; "&gt;&amp;nbsp;&lt;/th&gt;
-&lt;th colspan="1" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; "&gt;affairs count&lt;/th&gt;
-&lt;th colspan="1" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; "&gt;affairs count&lt;/th&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; "&gt;Predictors&lt;/td&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Log-Mean&lt;/td&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Log-Mean&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;(Intercept)&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;0.36 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;1.37 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;ym&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.08 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.06 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;rate&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;0.42 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;"&gt;Observations&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="1"&gt;601&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="1"&gt;601&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;"&gt;R&lt;sup&gt;2&lt;/sup&gt; Nagelkerke&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1"&gt;0.234&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1"&gt;0.474&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td colspan="3" style="font-style:italic; border-top:double black; text-align:right;"&gt;* p&amp;lt;0.05&amp;nbsp;&amp;nbsp;&amp;nbsp;** p&amp;lt;0.01&amp;nbsp;&amp;nbsp;&amp;nbsp;*** p&amp;lt;0.001&lt;/td&gt;
-&lt;/tr&gt;
-
-&lt;/table&gt;
-
-
----
-## Regressión Quasi-Poisson 
-
-La regressión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferencia del modelo.
-
---
-
-`$$y_{i} \sim \text{quasi-Poisson}(\mu_{i} = e^{X_{i}\beta}, \sigma= \sqrt{\omega \cdot  e^{X_{i}\beta}})$$`
-
-&lt;br&gt;
-donde `\(\omega\)` es el factor de dispersion.
-
---
-
-  - Regressión Poisson es un caso especial de quasi-Poisson ( `\(\omega=1\)` ).
-  
-&lt;br&gt;
---
-
-Implementación en `R`:
-
-
-``` r
-qpoisson_2 &lt;- glm(affairs_count ~ ym + rate, family=quasipoisson(link="log"), data=affairsdata)
-```
-
-
-```
-##                Estimate Std. Error   t value     Pr(&gt;|t|)
-## (Intercept)  1.36592517 0.34532278  3.955503 8.553030e-05
-## ym           0.05575781 0.01757849  3.171935 1.591856e-03
-## rate        -0.42036507 0.07268757 -5.783177 1.181990e-08
-```
-
-```
-## dispersion =  6.977591
-```
-
----
-## Quasi-Poisson
-
-
-``` r
-qpoisson_2 &lt;- glm(affairs_count ~ ym + rate, family=quasipoisson(link="log"), data=affairsdata)
-```
-
-&lt;br&gt;
-
-&lt;table style="border-collapse:collapse; border:none;"&gt;
-&lt;tr&gt;
-&lt;th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; "&gt;&amp;nbsp;&lt;/th&gt;
-&lt;th colspan="1" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; "&gt;affairs count&lt;/th&gt;
-&lt;th colspan="1" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; "&gt;affairs count&lt;/th&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; "&gt;Predictors&lt;/td&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Log-Mean&lt;/td&gt;
-&lt;td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  "&gt;Log-Mean&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;(Intercept)&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;1.37 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;1.37 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;ym&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.06 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;0.06 &lt;sup&gt;**&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; "&gt;rate&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;0.42 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  "&gt;&amp;#45;0.42 &lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;"&gt;Observations&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="1"&gt;601&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="1"&gt;601&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;"&gt;R&lt;sup&gt;2&lt;/sup&gt; Nagelkerke&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1"&gt;0.474&lt;/td&gt;
-&lt;td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="1"&gt;0.474&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td colspan="3" style="font-style:italic; border-top:double black; text-align:right;"&gt;* p&amp;lt;0.05&amp;nbsp;&amp;nbsp;&amp;nbsp;** p&amp;lt;0.01&amp;nbsp;&amp;nbsp;&amp;nbsp;*** p&amp;lt;0.001&lt;/td&gt;
-&lt;/tr&gt;
-
-&lt;/table&gt;
-
----
-class: inverse, center, middle
-
-## Inferencia
-
----
-## Inferencia para los coeficientes
-
-- Los coeficientes de los modelos cubiertos son estimados via MLE.
-
---
-
-- `\(\hat{\beta} \sim \mathcal{N}(\beta, \frac{\sigma_{\beta}}{\sqrt{n}})\)`, donde `\(\frac{\sigma_{\beta}}{\sqrt{n}}\)` es el "standard error" (SE) de `\(\beta\)`.
-
-
---
-
-
-- Es posible construir un intervalo de confianza para los coeficientes. Por ejemplo, un IC para `\(\beta\)` al 95% de confianza está dado por:
-
-`$$95\% \text{ CI}_{\hat{\beta}} = \hat{\beta} \pm 1.96 \cdot  \text{SE}$$`
---
-
-Por ejemplo, en el modelo Poisson más complejo:
-
-.pull-left[
-
-```
-##                Estimate  Std. Error
-## (Intercept)  1.36592517 0.130729157
-## ym           0.05575781 0.006654703
-## rate        -0.42036507 0.027517398
-```
-]
-
-.pull-right[
-
-``` r
-ic = -0.42 + c(-1.96,1.96)*0.028
-cat("95% IC rate: (",ic[1],",",ic[2],")")
-```
-
-```
-## 95% IC rate: ( -0.47488 , -0.36512 )
-```
-]
-
-
----
-## Inferencia para funciones de los coeficientes de un modelo
-
-En muchas situaciones nos interesa realizar inferencia para cantidad de interés derivadas de un modelo. 
-
---
-
-.bold[Ejemplo]: predicciones sobre "probabilidad de ser infiel" arrojadas por diferentes modelos
-
-.pull-left[
-
-``` r
-grid &lt;- affairsdata %&gt;% data_grid(ym=median(ym),rate)
-grid &lt;- grid %&gt;% mutate(lpm = predict(lpm_2, newdata=grid),
-                logistic = predict(logistic_2, newdata=grid, type="response"),
-                mlogistic = 1- predict(mlogistic_2,newdata=grid, type="probs")[,1],
-                ologistic = 1- predict(ologistic_2,newdata=grid, type="probs")[,1]
-                )
-```
-]
-
-
-
-
-
-.pull-right[
-![](class_18_files/figure-html/plot1-out-1.png)&lt;!-- --&gt;
-]
-
----
-## Inferencia para funciones de los coeficientes de un modelo: Bootstrap
-
-Cuando cantidades de interés son funciones complejas de los coeficientes los métodos de simulación y re-sampling pueden ser de gran utilidad.
-
---
-
-
-``` r
-bs  &lt;- function(x) {
-  grid &lt;- affairsdata %&gt;% data_grid(ym=median(ym),rate)
-  
-  #data_b   &lt;- sample_n(affairsdata,size=nrow(affairsdata),replace=TRUE)
-
-  lpm_2_b &lt;- lm(affairs_binary ~ ym + rate,  data=x)
-  logistic_2_b &lt;- glm(affairs_binary ~ ym + rate, family="binomial",  data=x)
-  mlogistic_2_b &lt;- multinom(affairs_order ~ ym + rate, trace=F,  data=x)
-  ologistic_2_b &lt;- polr(affairs_order ~ ym + rate, data=x)
-
-  
-  grid &lt;- grid %&gt;% mutate(lpm = predict(lpm_2_b, newdata=grid),
-                logistic = predict(logistic_2_b, newdata=grid, type="response"),
-                mlogistic = 1- predict(mlogistic_2_b,newdata=grid, type="probs")[,1],
-                ologistic = 1- predict(ologistic_2_b,newdata=grid, type="probs")[,1]
-                )
-}
-```
-
----
-## Inferencia para funciones de los coeficientes de un modelo: Bootstrap
-
-
-
-``` r
-# aplica función bootstrap
-grid &lt;- affairsdata %&gt;% bootstrap(500) %&gt;% mutate(pred = map(strap, ~ bs(.x))) %&gt;% 
-  dplyr::select(.id,pred) %&gt;% unnest()
-```
-
-
-![](class_18_files/figure-html/unnamed-chunk-27-1.png)&lt;!-- --&gt;
-
----
-class: inverse, center, middle
-
-## Comparación entre modelos
-###  Bondad de ajuste y predicción
-
-
----
-## Bondad de ajuste
-
-Medidas de bondad de ajusto para modelos no anidados y con penalización por cantidad de parámetros:
-
-.pull-left[
-
-``` r
-AIC(lpm_1, lpm_2, 
-    logistic_1,logistic_2, 
-    mlogistic_1,mlogistic_2,
-    ologistic_1,ologistic_2, 
-    poisson_1, poisson_2)
-```
-
-```
-##             df       AIC
-## lpm_1        3  692.8884
-## lpm_2        4  662.5836
-## logistic_1   2  667.5002
-## logistic_2   3  639.8786
-## mlogistic_1  4  872.0740
-## mlogistic_2  6  843.8824
-## ologistic_1  3  874.3844
-## ologistic_2  4  843.6135
-## poisson_1    2 3264.8188
-## poisson_2    3 3043.9881
-```
-]
-
-.pull-right[
-
-``` r
-BIC(lpm_1, lpm_2, 
-    logistic_1,logistic_2, 
-    mlogistic_1,mlogistic_2,
-    ologistic_1,ologistic_2, 
-    poisson_1, poisson_2)
-```
-
-```
-##             df       BIC
-## lpm_1        3  706.0841
-## lpm_2        4  680.1780
-## logistic_1   2  676.2974
-## logistic_2   3  653.0744
-## mlogistic_1  4  889.6684
-## mlogistic_2  6  870.2740
-## ologistic_1  3  887.5802
-## ologistic_2  4  861.2079
-## poisson_1    2 3273.6160
-## poisson_2    3 3057.1839
-```
-]
-
----
-## Capacidad predictiva "out-of-sample"
-
---
-
-- Principio básico: estimar el modelo en un dataset (training set) y  evalúarlo en un dataset distinto (test set)
-
---
-
-- .bold[K-fold Cross-validation:]
-
-.img-right-top[
-![kfold](kfold_cv.gif)
-
-]
-
-&lt;br&gt;
-&lt;br&gt;
-&lt;br&gt;
-
---
-
-
-``` r
-library("caret")
-# especifica tipo de cross-validation
-ctrl &lt;- trainControl(method = "repeatedcv", number = 10, savePredictions = TRUE)
-
-cv_mlogistic2 &lt;- train(affairs_order ~ ym + rate,  data=affairsdata, 
-      method=c("multinom"),
-      trControl = ctrl)
-```
-
-```
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 373.809255
-## iter  20 value 373.260025
-## final  value 373.260020 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 373.848519
-## iter  20 value 373.327081
-## final  value 373.327048 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 373.809284
-## iter  20 value 373.260093
-## final  value 373.260088 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 376.050437
-## iter  20 value 375.592643
-## final  value 375.592632 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 376.072097
-## iter  20 value 375.663208
-## final  value 375.663184 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 376.050460
-## iter  20 value 375.592715
-## final  value 375.592704 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 374.311516
-## iter  20 value 373.812769
-## iter  20 value 373.812765
-## iter  20 value 373.812764
-## final  value 373.812764 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 374.406382
-## iter  20 value 373.870603
-## iter  20 value 373.870603
-## iter  20 value 373.870603
-## final  value 373.870603 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 374.311394
-## iter  20 value 373.812827
-## iter  20 value 373.812823
-## iter  20 value 373.812822
-## final  value 373.812822 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 372.508433
-## iter  20 value 371.306366
-## final  value 371.306153 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 372.066242
-## iter  20 value 371.384491
-## final  value 371.384460 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 372.509011
-## iter  20 value 371.306446
-## final  value 371.306233 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 377.385078
-## final  value 376.955325 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 377.478601
-## iter  20 value 377.075754
-## final  value 377.075726 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 377.385168
-## final  value 376.955450 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 593.250636 
-## iter  10 value 378.865673
-## final  value 375.292083 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 593.250636 
-## iter  10 value 378.674891
-## iter  20 value 375.403685
-## final  value 375.403663 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 593.250636 
-## iter  10 value 378.865587
-## final  value 375.292199 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 373.190686
-## final  value 372.689438 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 373.425412
-## final  value 372.804534 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 373.190898
-## final  value 372.689557 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 376.732973
-## final  value 376.304225 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 376.794790
-## iter  20 value 376.394531
-## final  value 376.394365 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 376.733030
-## final  value 376.304318 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 373.727461
-## iter  20 value 373.196335
-## final  value 373.196304 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 373.728043
-## final  value 373.263120 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 373.727470
-## iter  20 value 373.196403
-## final  value 373.196372 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 373.886537
-## iter  20 value 373.600259
-## final  value 373.600252 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 373.914101
-## final  value 373.671972 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 594.349248 
-## iter  10 value 373.886570
-## iter  20 value 373.600331
-## final  value 373.600325 
-## converged
-## # weights:  12 (6 variable)
-## initial  value 660.265985 
-## iter  10 value 417.057097
-## iter  20 value 416.021385
-## final  value 416.021290 
-## converged
-```
-
-``` r
-cv_ologistic2 &lt;- train(affairs_order ~ ym + rate,  data=affairsdata, 
-      method=c("polr"),
-      trControl = ctrl)
-```
-
----
-## Capacidad predictiva "out-of-sample"
-
-
-.pull-left[
-
-``` r
-confusionMatrix(cv_mlogistic2)
-```
-
-```
-## Cross-Validated (10 fold, repeated 1 times) Confusion Matrix 
-## 
-## (entries are percentual average cell counts across resamples)
-##  
-##             Reference
-## Prediction   fiel ocasional compulsivo
-##   fiel       74.0      11.3       12.6
-##   ocasional   0.0       0.0        0.0
-##   compulsivo  1.0       0.3        0.7
-##                             
-##  Accuracy (average) : 0.7471
-```
-]
-
---
-
-.pull-right[
-
-``` r
-confusionMatrix(cv_ologistic2)
-```
-
-```
-## Cross-Validated (10 fold, repeated 1 times) Confusion Matrix 
-## 
-## (entries are percentual average cell counts across resamples)
-##  
-##             Reference
-## Prediction   fiel ocasional compulsivo
-##   fiel       74.0      11.3       12.6
-##   ocasional   0.0       0.0        0.0
-##   compulsivo  1.0       0.3        0.7
-##                             
-##  Accuracy (average) : 0.7471
-```
-]
-
----
-## En el tintero ..
-
-.pull-left[
-![tintero](tintero)
-]
-
---
-
-.pull-right[
-
-- Probit
-
-- Choice models: e.g., conditional logit
-
-- Zero-inflated Poisson 
-
-- Log-linear models para tablas de contingencia
-
--  etc
-]
-
-
-
----
-class: inverse, center, middle
-
-.huge[
-**FIN. Gracias!**
-]
-
-&lt;br&gt;
-Mauricio Bucca &lt;br&gt;
-https://mebucca.github.io/ &lt;br&gt;
-github.com/mebucca
-
-
-
-
-    </textarea>
-<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
-<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
-<script>var slideshow = remark.create({
-  "ratio": "16:9",
-  "highlightStyle": "github",
-  "highlightLines": true,
-  "countIncrementalSlides": true,
-  "slideNumberFormat": "%current%"
-});
-if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
-  window.dispatchEvent(new Event('resize'));
-});
-(function(d) {
-  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
-  if (!r) return;
-  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
-  d.head.appendChild(s);
-})(document);
-
-(function(d) {
-  var el = d.getElementsByClassName("remark-slides-area");
-  if (!el) return;
-  var slide, slides = slideshow.getSlides(), els = el[0].children;
-  for (var i = 1; i < slides.length; i++) {
-    slide = slides[i];
-    if (slide.properties.continued === "true" || slide.properties.count === "false") {
-      els[i - 1].className += ' has-continuation';
+<html lang="en"><head>
+<script src="class_18_files/libs/clipboard/clipboard.min.js"></script>
+<script src="class_18_files/libs/quarto-html/tabby.min.js"></script>
+<script src="class_18_files/libs/quarto-html/popper.min.js"></script>
+<script src="class_18_files/libs/quarto-html/tippy.umd.min.js"></script>
+<link href="class_18_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="class_18_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="class_18_files/libs/quarto-html/quarto-syntax-highlighting-de63f62b328812d8e578a4d74e282472.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.9.38">
+
+  <meta name="author" content="Mauricio Bucca · Sociología UC">
+  <meta name="dcterms.date" content="2026-07-23">
+  <title>Análisis de Datos Categóricos (SOC3070)</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="class_18_files/libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="class_18_files/libs/revealjs/dist/reveal.css">
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
     }
-  }
-  var s = d.createElement("style");
-  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
-  d.head.appendChild(s);
-})(document);
-// delete the temporary CSS (for displaying all slides initially) when the user
-// starts to view slides
-(function() {
-  var deleted = false;
-  slideshow.on('beforeShowSlide', function(slide) {
-    if (deleted) return;
-    var sheets = document.styleSheets, node;
-    for (var i = 0; i < sheets.length; i++) {
-      node = sheets[i].ownerNode;
-      if (node.dataset["target"] !== "print-only") continue;
-      node.parentNode.removeChild(node);
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
     }
-    deleted = true;
-  });
-})();
-// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
-// screen reader (see PR #262)
-(function(d) {
-  let res = {};
-  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
-    const t = tr.querySelector('td:nth-child(2)').innerText;
-    tr.querySelectorAll('td:first-child .key').forEach(key => {
-      const k = key.innerText;
-      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
-    });
-  });
-  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
-})(document);
-(function() {
-  "use strict"
-  // Replace <script> tags in slides area to make them executable
-  var scripts = document.querySelectorAll(
-    '.remark-slides-area .remark-slide-container script'
-  );
-  if (!scripts.length) return;
-  for (var i = 0; i < scripts.length; i++) {
-    var s = document.createElement('script');
-    var code = document.createTextNode(scripts[i].textContent);
-    s.appendChild(code);
-    var scriptAttrs = scripts[i].attributes;
-    for (var j = 0; j < scriptAttrs.length; j++) {
-      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
     }
-    scripts[i].parentElement.replaceChild(s, scripts[i]);
-  }
-})();
-(function() {
-  var links = document.getElementsByTagName('a');
-  for (var i = 0; i < links.length; i++) {
-    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
-      links[i].target = '_blank';
-    }
-  }
-})();
-// adds .remark-code-has-line-highlighted class to <pre> parent elements
-// of code chunks containing highlighted lines with class .remark-code-line-highlighted
-(function(d) {
-  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
-  const preParents = [];
-  const findPreParent = function(line, p = 0) {
-    if (p > 1) return null; // traverse up no further than grandparent
-    const el = line.parentElement;
-    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
-  };
-
-  for (let line of hlines) {
-    let pre = findPreParent(line);
-    if (pre && !preParents.includes(pre)) preParents.push(pre);
-  }
-  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
-})(document);</script>
-
-<script>
-slideshow._releaseMath = function(el) {
-  var i, text, code, codes = el.getElementsByTagName('code');
-  for (i = 0; i < codes.length;) {
-    code = codes[i];
-    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
-      text = code.textContent;
-      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
-          /^\$\$(.|\s)+\$\$$/.test(text) ||
-          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
-        code.outerHTML = code.innerHTML;  // remove <code></code>
-        continue;
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
       }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      { color: #24292e;  }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
     }
-    i++;
-  }
-};
-slideshow._releaseMath(document);
-</script>
-<!-- dynamically load mathjax for compatibility with self-contained -->
-<script>
-(function () {
-  var script = document.createElement('script');
-  script.type = 'text/javascript';
-  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
-  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
-    script.src  = script.src.replace(/^https?:/, '');
-  document.getElementsByTagName('head')[0].appendChild(script);
-})();
-</script>
-  </body>
-</html>
+    code span { color: #24292e; } /* Normal */
+    code span.al { color: #ff5555; font-weight: bold; } /* Alert */
+    code span.an { color: #6a737d; } /* Annotation */
+    code span.at { color: #d73a49; } /* Attribute */
+    code span.bn { color: #005cc5; } /* BaseN */
+    code span.bu { color: #d73a49; } /* BuiltIn */
+    code span.cf { color: #d73a49; } /* ControlFlow */
+    code span.ch { color: #032f62; } /* Char */
+    code span.cn { color: #005cc5; } /* Constant */
+    code span.co { color: #6a737d; } /* Comment */
+    code span.cv { color: #6a737d; } /* CommentVar */
+    code span.do { color: #6a737d; } /* Documentation */
+    code span.dt { color: #d73a49; } /* DataType */
+    code span.dv { color: #005cc5; } /* DecVal */
+    code span.er { color: #ff5555; text-decoration: underline; } /* Error */
+    code span.ex { color: #d73a49; font-weight: bold; } /* Extension */
+    code span.fl { color: #005cc5; } /* Float */
+    code span.fu { color: #6f42c1; } /* Function */
+    code span.im { color: #032f62; } /* Import */
+    code span.in { color: #6a737d; } /* Information */
+    code span.kw { color: #d73a49; } /* Keyword */
+    code span.op { color: #24292e; } /* Operator */
+    code span.ot { color: #6f42c1; } /* Other */
+    code span.pp { color: #d73a49; } /* Preprocessor */
+    code span.re { color: #6a737d; } /* RegionMarker */
+    code span.sc { color: #005cc5; } /* SpecialChar */
+    code span.ss { color: #032f62; } /* SpecialString */
+    code span.st { color: #032f62; } /* String */
+    code span.va { color: #e36209; } /* Variable */
+    code span.vs { color: #032f62; } /* VerbatimString */
+    code span.wa { color: #ff5555; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="class_18_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
+  <link rel="stylesheet" href="../_shared/course.css">
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+  <link href="class_18_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="class_18_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="class_18_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="class_18_files/libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+</head>
+<body class="theme-milan quarto-light">
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" data-background-color="#8B1E2D" class="quarto-title-block center">
+  <h1 class="title">Análisis de Datos Categóricos (SOC3070)</h1>
+  <p class="subtitle">Clasificador Logístico (Binomial y Multinomial)</p>
+
+<div class="quarto-title-authors">
+<div class="quarto-title-author">
+<div class="quarto-title-author-name">
+Mauricio Bucca · Sociología UC 
+</div>
+</div>
+</div>
+
+  <p class="date">2026-07-23</p>
+</section>
+<section id="antes-hoy-después" class="slide level2 class-rhythm">
+<h2>Antes · Hoy · Después</h2>
+<div class="full-width">
+<div class="content-box">
+<p><strong>Antes</strong></p>
+<p>predicción, overfitting y validación cruzada.</p>
+</div>
+<div class="content-box-primary">
+<p><strong>Hoy</strong></p>
+<p>clasificador logístico: métricas, umbrales y el caso multinomial.</p>
+</div>
+<div class="content-box-secondary">
+<p><strong>Después</strong></p>
+<p>regularización: Ridge y LASSO.</p>
+</div>
+</div>
+</section>
+<section>
+<section id="evaluación-de-modelos-predictivos" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
+<h1>Evaluación de Modelos Predictivos</h1>
+
+</section>
+<section id="hatbeta-problems-vs.-haty-problems" class="slide level2">
+<h2><span class="math inline">\hat{\beta}</span>-problems vs.&nbsp;<span class="math inline">\hat{y}</span>-problems</h2>
+<p>(Mullainathan &amp; Spiess, 2017)</p>
+<div class="fragment">
+<div class="pull-left">
+<p><strong><span class="math inline">\hat{\beta}</span>-problems</strong></p>
+<ul>
+<li>Foco en <strong>parámetros</strong> y su interpretación.<br>
+</li>
+<li>Preguntas:
+<ul>
+<li>¿Cuál es el efecto de <span class="math inline">X</span> sobre <span class="math inline">Y</span>?<br>
+</li>
+<li>¿Es significativo / causal?</li>
+</ul></li>
+<li>Objetivo: <strong>explicación e inferencia</strong>.<br>
+</li>
+<li>Modelos suelen ser <strong>transparentes</strong> (fácil interpretar).</li>
+</ul>
+</div>
+<div class="pull-right">
+<p><strong><span class="math inline">\hat{y}</span>-problems</strong></p>
+<ul>
+<li>Foco en <strong>predicciones</strong> para nuevos casos.<br>
+</li>
+<li>Preguntas:
+<ul>
+<li>¿Qué tan bien predice el modelo en datos futuros?<br>
+</li>
+<li>¿Qué modelo predice mejor?</li>
+</ul></li>
+<li>Objetivo: <strong>desempeño y utilidad práctica</strong>.<br>
+</li>
+<li>Modelos pueden ser tratados como <strong>black-box</strong> (no importa cómo, mientras prediga bien).</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="regresión-logística-como-machine-learning" class="slide level2 inverse center middle" data-background-color="#4A1942">
+<h2>Regresión Logística como Machine Learning</h2>
+</section>
+<section id="regresión-logística-como-machine-learning-1" class="slide level2">
+<h2>Regresión Logística como Machine Learning</h2>
+<p><br><br></p>
+<div class="middle">
+<div class="center">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Énfasis inferencial</th>
+<th>Énfasis predictivo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>parámetros e incertidumbre</td>
+<td>desempeño fuera de muestra</td>
+</tr>
+<tr class="even">
+<td>interpretación del mecanismo</td>
+<td>generalización a casos nuevos</td>
+</tr>
+<tr class="odd">
+<td>supuestos explícitos</td>
+<td>validación y calibración</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section></section>
+<section>
+<section id="regresión-logística-el-hello-world-de-ml" class="title-slide slide level1 center">
+<h1>Regresión Logística: el <strong>“hello world”</strong> de ML</h1>
+<ul>
+<li><strong>Qué resuelve:</strong>
+<ul>
+<li>Estima la probabilidad de un evento binario (<span class="math inline">Y=0/1</span>).<br>
+</li>
+<li>Ejemplos: ¿un mail es spam? ¿una hora tendrá alta demanda de bicicletas?</li>
+</ul></li>
+<li><strong>Cómo funciona:</strong>
+<ul>
+<li>Ajusta una combinación lineal de predictores <span class="math inline">X\beta</span>.<br>
+</li>
+<li>Pasa ese valor por la <strong>curva sigmoide</strong> → convierte log-odds en probabilidades (0–1).<br>
+</li>
+<li>Aprende de los datos para <strong>generalizar</strong> a casos no observados (nuevos datos, futuro, etc.).</li>
+</ul></li>
+<li><strong>Por qué es importante:</strong>
+<ul>
+<li>Interpretable: cada predictor tiene un rol claro en la probabilidad.<br>
+</li>
+<li>Eficiente: funciona bien incluso con muestras pequeñas.<br>
+</li>
+<li>Fundacional: es la base sobre la cual se construyen modelos más complejos en ML.</li>
+</ul></li>
+</ul>
+</section>
+<section id="ejemplo-empírico" class="slide level2">
+<h2>Ejemplo empírico</h2>
+<p>Continuando con el ejemplo de clases anteriores, ajustamos el siguiente modelo: <span class="math display">\ln \frac{p_{i}}{1-p_{i}} = \beta_{0} + \beta_{1}\text{temp}_{i} + \beta_{2}\text{workingday}_{i} + \beta_{3}\text{hum}_{i} + \beta_{4}\text{hum}^{2}_{i}</span> Llamemos a este modelo, modelo <span class="math inline">M</span>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href=""></a>logit_demand <span class="ot">&lt;-</span>  <span class="fu">glm</span>(high_demand <span class="sc">~</span> temp <span class="sc">+</span> <span class="fu">factor</span>(workingday) <span class="sc">+</span> hum <span class="sc">+</span> <span class="fu">I</span>(hum<span class="sc">^</span><span class="dv">2</span>) ,<span class="at">family=</span><span class="fu">binomial</span>(<span class="at">link=</span><span class="st">"logit"</span>), <span class="at">data=</span>bikedata)</span>
+<span id="cb1-2"><a href=""></a><span class="fu">summary</span>(logit_demand)<span class="sc">$</span>coefficients</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                    Estimate Std. Error z value
+(Intercept)          -3.303    0.259 -12.736
+temp                  4.612    0.153  30.211
+factor(workingday)1  -0.344    0.058  -5.882
+hum                   3.107    0.850   3.655
+I(hum^2)             -4.607    0.700  -6.584
+                                                                                                                                                                                                                         Pr(&gt;|z|)
+(Intercept)         0.000
+temp                0.000
+factor(workingday)1 0.000
+hum                 0.000
+I(hum^2)            0.000</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href=""></a><span class="fu">print</span>(<span class="fu">paste0</span>(<span class="st">"log-likelihood: "</span>,<span class="fu">round</span>(<span class="fu">logLik</span>(logit_demand),<span class="dv">3</span>),</span>
+<span id="cb3-2"><a href=""></a>             <span class="st">" Deviance: "</span>, <span class="fu">round</span>(<span class="fu">summary</span>(logit_demand)<span class="sc">$</span>deviance,<span class="dv">3</span>) ))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "log-likelihood: -4068.340 Deviance: 8136.679"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href=""></a><span class="fu">print</span>(<span class="fu">paste0</span>(<span class="st">"AIC: "</span>, <span class="fu">round</span>(<span class="fu">summary</span>(logit_demand)<span class="sc">$</span>aic,<span class="dv">3</span>),</span>
+<span id="cb5-2"><a href=""></a>             <span class="st">" BIC: "</span>, <span class="fu">round</span>(<span class="fu">BIC</span>(logit_demand),<span class="dv">3</span>) ))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "AIC: 8146.679 BIC: 8182.003"</code></pre>
+</div>
+</div>
+</section>
+<section id="likelihood-como-función-de-pérdida" class="slide level2">
+<h2>Likelihood como función de pérdida</h2>
+<ul>
+<li>En ML, entrenar un modelo = encontrar parámetros que <strong>maximicen la verosimilitud</strong><br>
+(o equivalentemente <strong>minimicen la pérdida</strong>).</li>
+</ul>
+<div class="fragment">
+<ul>
+<li>En regresión logística, cada <span class="math inline">y_i</span> es Bernoulli con probabilidad <span class="math inline">p_i</span>:</li>
+</ul>
+<p><span class="math display">
+P(y_i \mid p_i) = p_i^{y_i}(1-p_i)^{1-y_i}
+</span></p>
+</div>
+<div class="fragment">
+<ul>
+<li>La probabilidad conjunta de todos los datos:</li>
+</ul>
+<p><span class="math display">
+\mathcal{L}(\beta) = \prod_{i=1}^{n} p_i^{y_i}(1-p_i)^{1-y_i}
+</span></p>
+</div>
+<div class="fragment">
+<ul>
+<li>Tomando logaritmos:</li>
+</ul>
+<p><span class="math display">
+\ell(\beta) = \sum_{i=1}^{n} \big[ y_i \ln p_i + (1-y_i) \ln(1-p_i) \big]
+</span></p>
+</div>
+<div class="fragment">
+<ul>
+<li>En ML a esto le llamamos <strong>log-loss</strong> o <strong>cross-entropy loss</strong>:</li>
+</ul>
+<p><span class="math display">
+\text{LogLoss} = -\ell(\beta)
+</span></p>
+</div>
+</section>
+<section id="likelihood-como-función-de-pérdida-1" class="slide level2">
+<h2>Likelihood como función de pérdida</h2>
+<ul>
+<li>Si las predicciones del modelo son correctas (<span class="math inline">y=1</span> y <span class="math inline">p</span> cercano a 1) → log-loss bajo.</li>
+<li>Si se equivocan (<span class="math inline">y=1</span> pero <span class="math inline">p</span> cercano a 0) → log-loss alto.</li>
+<li>Entrenar = <strong>ajustar <span class="math inline">\beta</span> para minimizar log-loss</strong> (= maximizar likelihood). Likelihood maximizada en nuestro ejemplo:</li>
+</ul>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>    Likelihood log_likelihood 
+             0          -4068 </code></pre>
+</div>
+</div>
+<div class="fragment">
+<p><span class="bold">Versión ML: Log-loss promedio</span> En machine learning se suele trabajar con la <strong>log-loss promedio</strong> para obtener una pérdida por observación (comparable entre datasets de distinto tamaño).</p>
+<p><span class="math display">
+\text{LogLoss} = -\frac{1}{n}\,\ell(\beta)
+</span></p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.471</code></pre>
+</div>
+</div>
+</div>
+</section>
+<section id="modelos-de-referencia-baselines" class="slide level2">
+<h2>Modelos de referencia (baselines)</h2>
+<p>En ML y estadística es común usar <strong>modelos de referencia</strong> para poner en contexto el desempeño de un modelo más complejo. Dos extremos:</p>
+<div class="fragment">
+<p><br><br></p>
+<ul>
+<li><strong>Modelo nulo (<span class="math inline">M_N</span>)</strong>
+<ul>
+<li>El más simple posible: siempre predice la probabilidad promedio global.<br>
+</li>
+<li>Ventaja: parsimonioso y fácil de interpretar.<br>
+</li>
+<li>Desventaja: genera las peores predicciones posibleså, ignora covariables.</li>
+</ul></li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href=""></a><span class="co"># modelo nulo</span></span>
+<span id="cb9-2"><a href=""></a>logit_demand_null <span class="ot">&lt;-</span> <span class="fu">glm</span>(high_demand <span class="sc">~</span> <span class="dv">1</span>,<span class="at">family=</span><span class="fu">binomial</span>(<span class="at">link=</span><span class="st">"logit"</span>), <span class="at">data=</span>bikedata)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<div class="fragment">
+<ul>
+<li><strong>Modelo saturado (<span class="math inline">M_S</span>)</strong>
+<ul>
+<li>El más complejo posible: ajusta un parámetro distinto para cada observación.<br>
+</li>
+<li>Ventaja: fit perfecto (cero perdida).<br>
+</li>
+<li>Desventaja: no generaliza → memoriza los datos.</li>
+</ul></li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href=""></a><span class="co"># En Bernoulli, el modelo saturado reproduce cada observación y su log-likelihood es 0.</span></span>
+<span id="cb10-2"><a href=""></a><span class="co"># Evitamos ajustar miles de indicadores, que sería computacionalmente innecesario.</span></span>
+<span id="cb10-3"><a href=""></a>ll_saturated <span class="ot">&lt;-</span> <span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</section>
+<section id="baselines-vs-modelo-de-interés" class="slide level2">
+<h2>Baselines vs Modelo de Interés</h2>
+<div class="center">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="models.png"></p>
+<figcaption>dev</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="residual-deviance-y-null-deviance" class="slide level2">
+<h2>Residual Deviance y Null Deviance</h2>
+<p>En modelos logísticos, el <strong>log-likelihood ratio</strong> puede re-expresarse como <strong>Deviance</strong>, que es esencialmente una medida de <strong>pérdida (loss)</strong>. Dos tipos de deviance:</p>
+<ul>
+<li><strong>Residual Deviance:</strong> <span class="math inline">D = -2 \cdot (\log\mathcal{L}_{M} - \log \mathcal{L}_{S})</span>
+<ul>
+<li>Evalúa el ajuste de <span class="math inline">M</span> respecto al modelo saturado (fit perfecto).</li>
+</ul></li>
+<li><strong>Null Deviance:</strong> <span class="math inline">D_N = -2 \cdot (\log\mathcal{L}_{0} - \log \mathcal{L}_{S})</span>
+<ul>
+<li>Equivale al “total explicable”, similar a la varianza total en OLS.</li>
+</ul></li>
+</ul>
+<div class="fragment">
+<ul>
+<li><strong>Distribución muestral:</strong> <span class="math inline">D \sim \chi^{2}(df = n-k), \quad  \text{donde k es el número de parámetros en M}</span></li>
+</ul>
+<p>Interpretación:</p>
+<ul>
+<li><span class="math inline">D</span> alto (p-value bajo) → “mal ajuste” (alto error, modelo se queda corto).<br>
+</li>
+<li><span class="math inline">D</span> bajo (p-value alto) → “buen ajuste” (más parámetros no agregan valor.</li>
+</ul>
+</div>
+</section>
+<section id="residual-deviance-y-null-deviance-1" class="slide level2">
+<h2>Residual Deviance y Null Deviance</h2>
+<div class="center">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="deviances.png"></p>
+<figcaption>dev</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="residual-deviance-y-log-loss-promedio" class="slide level2">
+<h2>Residual Deviance y Log-loss promedio</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>                    Estimate Std. Error z value
+(Intercept)          -3.303    0.259 -12.736
+temp                  4.612    0.153  30.211
+factor(workingday)1  -0.344    0.058  -5.882
+hum                   3.107    0.850   3.655
+I(hum^2)             -4.607    0.700  -6.584
+                                                                                                                                                                                                                         Pr(&gt;|z|)
+(Intercept)         0.000
+temp                0.000
+factor(workingday)1 0.000
+hum                 0.000
+I(hum^2)            0.000</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Null Deviance: 9711.222 | Residual Deviance: 8136.679"</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href=""></a><span class="co"># Cálculo manual de la Residual Deviance</span></span>
+<span id="cb13-2"><a href=""></a>D <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">2</span> <span class="sc">*</span> (<span class="fu">logLik</span>(logit_demand)[<span class="dv">1</span>] <span class="sc">-</span> ll_saturated)</span>
+<span id="cb13-3"><a href=""></a></span>
+<span id="cb13-4"><a href=""></a><span class="co"># Relación con log-loss promedio</span></span>
+<span id="cb13-5"><a href=""></a>log_likelihood <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(<span class="fu">logLik</span>(logit_demand))</span>
+<span id="cb13-6"><a href=""></a>log_loss <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">1</span><span class="sc">/</span><span class="fu">length</span>(bikedata<span class="sc">$</span>high_demand) <span class="sc">*</span> log_likelihood</span>
+<span id="cb13-7"><a href=""></a><span class="fu">print</span>(<span class="fu">paste0</span>(<span class="st">"Log-loss promedio: "</span>, <span class="fu">round</span>(log_loss, <span class="dv">3</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Log-loss promedio: 0.471"</code></pre>
+</div>
+</div>
+</section>
+<section id="pseudo---r2" class="slide level2">
+<h2>Pseudo - <span class="math inline">R^2</span></h2>
+<div class="fragment">
+<ul>
+<li>En modelos OLS es común medir ajuste usando el coeficiente <span class="math inline">R^2</span>, es decir, % de varianza explicada por el modelo.</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>En GLM’s la varianza no es separable de la media, por tanto no se puede descomponer.</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Existe una variedad de alternativas al <span class="math inline">R^2</span>, llamadas genéricamente pseudo - <span class="math inline">R^2</span>. Uno de los más comunes es:</li>
+</ul>
+</div>
+<div class="fragment">
+<p><span class="math display">\text{McFadden’s } R^{2} = 1 - \frac{D}{D_{0}} = 1 - \frac{(\log\mathcal{L}_{S} - \log \mathcal{L}_{M})}{ (\log\mathcal{L}_{S} - \log \mathcal{L}_{N})}</span></p>
+</div>
+<div class="fragment">
+<p><span class="bold">Intuición:</span> fracción del total del “explicable” del likelihood que es explicado por el modelo <span class="math inline">M</span>. - <span class="math inline">R^{2} \in [0,1]</span>, donde 0 indica el peor fit posible y 1 indica el mejor fit posible.</p>
+</div>
+</section>
+<section id="pseudo---r2-1" class="slide level2">
+<h2>Pseudo - <span class="math inline">R^2</span></h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>                    Estimate Std. Error z value
+(Intercept)          -3.303    0.259 -12.736
+temp                  4.612    0.153  30.211
+factor(workingday)1  -0.344    0.058  -5.882
+hum                   3.107    0.850   3.655
+I(hum^2)             -4.607    0.700  -6.584
+                                                                                                                                                                                                                         Pr(&gt;|z|)
+(Intercept)         0.000
+temp                0.000
+factor(workingday)1 0.000
+hum                 0.000
+I(hum^2)            0.000</code></pre>
+</div>
+</div>
+<div class="fragment">
+<p><span class="bold">Residual deviance</span>:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.162</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>McFadden 
+  0.162 </code></pre>
+</div>
+</div>
+</div>
+</section></section>
+<section>
+<section id="regresión-logística-como-clasificador" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
+<h1>Regresión Logística como clasificador</h1>
+
+</section>
+<section id="de-probabilidades-a-clases" class="slide level2">
+<h2>De Probabilidades a clases</h2>
+<ul>
+<li>La regresión logística entrega <strong>scores probabilísticos</strong>: <span class="math inline">\hat{p}_i = \Pr(Y_i=1\mid X_i,\hat\beta)</span></li>
+</ul>
+<div class="fragment">
+<ul>
+<li>Para convertir un score en decisión usamos un <strong>umbral de corte</strong> <span class="math inline">\tau</span>:</li>
+</ul>
+<p><span class="math display">
+\hat{y}_i =
+\begin{cases}
+1 &amp; \text{si } \hat{p}_i &gt; \tau \\
+0 &amp; \text{si } \hat{p}_i \leq \tau
+\end{cases}
+</span></p>
+</div>
+<div class="fragment">
+<ul>
+<li>Por defecto: <span class="math inline">\tau=0.5</span><br>
+</li>
+<li>En ML, el umbral se ajusta al problema:
+<ul>
+<li>Spam: es peor que se cuele spam → corte bajo.<br>
+</li>
+<li>Subsidio: es peor dejar fuera a quien lo necesita → corte bajo.<br>
+</li>
+<li>Examen de enfermedad peligrosa:
+<ul>
+<li>Detección temprana: es peor no encontrar la enfermedad → corte bajo.<br>
+</li>
+<li>Confirmación: es peor asustar a alguien sano → corte alto. <span class="bold">👉 Un clasificador es un modelo + una regla de decisión.</span></li>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+</section>
+<section id="matriz-de-confusión" class="slide level2">
+<h2>Matriz de Confusión</h2>
+<div class="center">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="https://miro.medium.com/v2/resize:fit:4800/format:webp/1*mL-nYY6MFhiG0uoR5kJaCA.jpeg" class="quarto-figure quarto-figure-center" style="width:55.0%"></p>
+</figure>
+</div>
+</div>
+<div class="footnote">
+<p>Fuente: <a href="https://towardsdatascience.com/understanding-confusion-matrix-a9ad42dcfd62">Understanding Confusion Matrix — Towards Data Science</a></p>
+</div>
+</section>
+<section id="matriz-de-confusión-1" class="slide level2">
+<h2>Matriz de Confusión</h2>
+<div class="pull-left">
+<p><img data-src="conf_mat.png"></p>
+</div>
+<div class="pull-right">
+<ul>
+<li><p><strong>Accuracy</strong>: <span class="math inline">(TP+TN)/N</span><br>
+% de clasificaciones correctas</p></li>
+<li><p><strong>Misclassification Rate</strong>: <span class="math inline">(FP+FN)/N</span><br>
+% de clasificaciones incorrectas</p></li>
+<li><p><strong>True Positive Rate (Recall / Sensitivity)</strong>:<br>
+<span class="math inline">TP/(TP+FN)</span></p></li>
+<li><p><strong>True Negative Rate (Specificity)</strong>:<br>
+<span class="math inline">TN/(TN+FP)</span></p></li>
+<li><p><strong>Precision (PPV)</strong>:<br>
+<span class="math inline">TP/(TP+FP)</span></p></li>
+<li><p><strong>Prevalence</strong>:<br>
+<span class="math inline">(TP+FN)/N</span></p></li>
+</ul>
+</div>
+<div class="fragment">
+<p>📌 Estas métricas capturan distintos aspectos del desempeño de un clasificador.<br>
+En ML es clave elegir métricas alineadas con el problema (ej: medicina ≠ marketing).</p>
+</div>
+</section>
+<section id="ejemplo-empírico-demanda-de-bicicletas" class="slide level2">
+<h2>Ejemplo empírico: demanda de bicicletas</h2>
+<p>Clasificamos como “baja demanda” a todas las horas cuya probabilidad predicha sea menor o igual a 0.5, y como “alta demanda” a aquellas cuya probabilidad predicha supere dicho umbral.</p>
+<p><span class="math display">
+\hat{y}_i =
+\begin{cases}
+1 &amp; \text{si } \hat{p}_i &gt; 0.5 \quad (\text{Alta demanda}) \\\\
+0 &amp; \text{si } \hat{p}_i \leq 0.5 \quad (\text{Baja demanda})
+\end{cases}
+</span></p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>        Real
+Predicho    0    1
+       0 5984 1463
+       1  505  693</code></pre>
+</div>
+</div>
+</section>
+<section id="ejemplo-empírico-demanda-de-bicicletas-1" class="slide level2">
+<h2>Ejemplo empírico: demanda de bicicletas</h2>
+<div class="pull-left">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_18_files/figure-revealjs/unnamed-chunk-12-1.png" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div class="pull-right">
+<p><strong>Métricas principales del clasificador logístico</strong></p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>            Métrica  Valor
+1       Sensitivity 0.321
+2       Specificity 0.922
+3         Precision 0.579
+4                F1 0.413
+5 Balanced Accuracy 0.622</code></pre>
+</div>
+</div>
+</div>
+</section>
+<section id="umbral-y-predicción" class="slide level2">
+<h2>Umbral y predicción</h2>
+<ul>
+<li>Cada umbral <span class="math inline">\tau</span> genera un nivel de Especificidad y Sensibilidad: <span class="math inline">:\{\text{Specificity}(\tau), \text{Sensitivity}(\tau)\}</span> para <span class="math inline">\tau \in [0,1]</span>.</li>
+</ul>
+<div class="pull-left">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_18_files/figure-revealjs/plot_scores-1.png" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div class="pull-right">
+<ul>
+<li>Umbrales bajos → más predicciones positivas</li>
+<li>Umbrales altos → más predicciones negativas</li>
+</ul>
+</div>
+</section>
+<section id="curva-roc" class="slide level2">
+<h2>Curva ROC</h2>
+<ul>
+<li>La <strong>curva ROC</strong> conecta todos los puntos <span class="math inline">:\{1 - \text{Specificity}(\tau), \quad \text{Sensitivity}(\tau)\}</span> para <span class="math inline">\tau \in [0,1]</span>.</li>
+<li>La diagonal corresponde a un clasificador aleatorio.</li>
+<li>Mejor desempeño = curva más arriba a la izquierda.</li>
+</ul>
+<div class="pull-left">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_18_files/figure-revealjs/plot_scores2-1.png" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div class="pull-right">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_18_files/figure-revealjs/plot_roc-1.png" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="auc-área-bajo-la-curva" class="slide level2">
+<h2>AUC: Área bajo la curva</h2>
+<ul>
+<li>El <strong>AUC</strong> resume el desempeño en un solo número: <span class="math inline">AUC = \int_{0}^{1}\text{Sensibilidad}(\tau)\, d(1-\text{Especificidad}(\tau))</span></li>
+<li><strong>Interpretación</strong>: probabilidad de que el modelo asigne mayor score a un positivo que a un negativo (elegidos al azar).</li>
+</ul>
+<div class="pull-left">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_18_files/figure-revealjs/plot_auc-1.png" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div class="pull-right">
+<p><strong>Interpretación del AUC:</strong></p>
+<ul>
+<li><strong>AUC ≈ 0.5</strong>: Sin poder discriminatorio (como azar)</li>
+<li><strong>AUC ≈ 0.7-0.8</strong>: Discriminación aceptable</li>
+<li><strong>AUC &gt; 0.9</strong>: Discriminación excelente</li>
+<li><strong>AUC = 1</strong>: Clasificador perfecto 👉 Nuestro modelo tiene AUC = 0.776; ubíquelo en la escala anterior para juzgar su poder discriminatorio.</li>
+</ul>
+</div>
+</section>
+<section id="selección-del-umbral-óptimo" class="slide level2">
+<h2>Selección del umbral óptimo</h2>
+<ul>
+<li>No existe un único “mejor” umbral: depende del contexto y los costos de errar.</li>
+<li>Criterios comunes: <strong>Youden</strong>, <strong>punto más cercano a (0,1)</strong>, etc. Cómo extraer umbrales en R:</li>
+</ul>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>  threshold specificity sensitivity
+1    0.230      0.683      0.747</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  threshold specificity sensitivity
+1    0.230      0.683      0.747</code></pre>
+</div>
+</div>
+</section>
+<section id="selección-del-umbral-óptimo-1" class="slide level2">
+<h2>Selección del umbral óptimo</h2>
+<ul>
+<li>No existe un único “mejor” umbral: depende del contexto y los costos de errar.</li>
+<li>Criterios comunes: <strong>Youden</strong>, <strong>punto más cercano a (0,1)</strong>, etc. Cómo extraer umbrales en R:</li>
+</ul>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>   threshold specificity sensitivity
+1       -Inf   0.000      1.000
+2    0.013   0.000      1.000
+3    0.015   0.000      1.000
+4    0.015   0.000      1.000
+5    0.016   0.001      1.000
+6    0.017   0.001      1.000
+7    0.018   0.001      1.000
+8    0.018   0.003      1.000
+9    0.019   0.003      1.000
+10   0.020   0.004      1.000
+11   0.020   0.005      1.000
+12   0.021   0.005      1.000
+13   0.021   0.005      1.000</code></pre>
+</div>
+</div>
+</section></section>
+<section>
+<section id="clasificador-multinomial" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
+<h1>Clasificador multinomial</h1>
+
+</section>
+<section id="más-de-dos-clases" class="slide level2">
+<h2>Más de dos clases</h2>
+<p>Todo lo anterior asumió un outcome binario. Muchas veces el clasificador debe elegir entre <strong>más de dos categorías</strong> — por ejemplo, demanda “baja”, “media” o “alta”, en vez de solo “alta/baja”.</p>
+<div class="fragment">
+<p>El modelo detrás ya lo conocemos: la regresión logística <strong>multinomial</strong> de la clase 12, ahora evaluada como clasificador en vez de interpretada como modelo explicativo.</p>
+</div>
+</section>
+<section id="un-outcome-de-tres-categorías" class="slide level2">
+<h2>Un outcome de tres categorías</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href=""></a><span class="fu">p_load</span>(nnet)</span>
+<span id="cb23-2"><a href=""></a></span>
+<span id="cb23-3"><a href=""></a>terciles <span class="ot">&lt;-</span> <span class="fu">quantile</span>(bikedata<span class="sc">$</span>bikers, <span class="at">probs =</span> <span class="fu">c</span>(<span class="dv">1</span><span class="sc">/</span><span class="dv">3</span>, <span class="dv">2</span><span class="sc">/</span><span class="dv">3</span>))</span>
+<span id="cb23-4"><a href=""></a>bikedata <span class="ot">&lt;-</span> bikedata <span class="sc">%&gt;%</span></span>
+<span id="cb23-5"><a href=""></a>  <span class="fu">mutate</span>(<span class="at">demand_level =</span> <span class="fu">cut</span>(</span>
+<span id="cb23-6"><a href=""></a>    bikers, <span class="at">breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, terciles, <span class="cn">Inf</span>),</span>
+<span id="cb23-7"><a href=""></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"baja"</span>, <span class="st">"media"</span>, <span class="st">"alta"</span>)</span>
+<span id="cb23-8"><a href=""></a>  ))</span>
+<span id="cb23-9"><a href=""></a></span>
+<span id="cb23-10"><a href=""></a>logit_multi <span class="ot">&lt;-</span> <span class="fu">multinom</span>(demand_level <span class="sc">~</span> temp <span class="sc">+</span> <span class="fu">factor</span>(workingday) <span class="sc">+</span> hum <span class="sc">+</span> <span class="fu">I</span>(hum<span class="sc">^</span><span class="dv">2</span>),</span>
+<span id="cb23-11"><a href=""></a>                        <span class="at">data =</span> bikedata, <span class="at">trace =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="la-matriz-de-confusión-se-generaliza" class="slide level2">
+<h2>La matriz de confusión se generaliza</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href=""></a>pred_clase <span class="ot">&lt;-</span> <span class="fu">predict</span>(logit_multi, <span class="at">type =</span> <span class="st">"class"</span>)</span>
+<span id="cb24-2"><a href=""></a></span>
+<span id="cb24-3"><a href=""></a>conf_mat_multi <span class="ot">&lt;-</span> <span class="fu">confusionMatrix</span>(pred_clase, bikedata<span class="sc">$</span>demand_level)</span>
+<span id="cb24-4"><a href=""></a>conf_mat_multi<span class="sc">$</span>table</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          Reference
+Prediction baja media alta
+     baja  1907  1071  422
+     media  529   927  552
+     alta   453   898 1886</code></pre>
+</div>
+</div>
+<p>La matriz sigue siendo “predicho × real”, pero ahora es <span class="math inline">3\times 3</span> (en general, <span class="math inline">J\times J</span>): la diagonal son aciertos, todo lo demás son errores de clasificación entre pares de categorías.</p>
+</section>
+<section id="métricas-promediar-sobre-las-clases" class="slide level2">
+<h2>Métricas: promediar sobre las clases</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href=""></a>conf_mat_multi<span class="sc">$</span>overall[<span class="st">"Accuracy"</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Accuracy 
+   0.546 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href=""></a>conf_mat_multi<span class="sc">$</span>byClass[, <span class="fu">c</span>(<span class="st">"Sensitivity"</span>, <span class="st">"Specificity"</span>, <span class="st">"Precision"</span>)]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>             Sensitivity Specificity Precision
+Class: baja       0.660      0.741    0.561
+Class: media      0.320      0.812    0.462
+Class: alta       0.659      0.766    0.583</code></pre>
+</div>
+</div>
+<ul>
+<li><strong>Accuracy</strong> sigue siendo “% de aciertos totales” — una sola cifra, igual que en el caso binario.</li>
+<li>Sensibilidad, especificidad y precisión ahora se calculan <strong>una vez por clase</strong> (cada clase “vs.&nbsp;el resto”) y típicamente se resumen promediándolas — el enfoque <strong>one-vs-rest</strong>.</li>
+</ul>
+</section>
+<section id="y-la-curva-roc" class="slide level2">
+<h2>¿Y la curva ROC?</h2>
+<p>La curva ROC y el AUC, tal como los definimos, son conceptos binarios. La generalización estándar es <strong>one-vs-rest</strong>: tratar cada clase, por turno, como “positivo” contra las demás como “negativo”, y calcular una curva ROC por clase.</p>
+<ul>
+<li>Ninguna curva única resume el desempeño multinomial completo — se reportan <span class="math inline">J</span> curvas, o un promedio (macro-AUC).</li>
+<li>Log-loss (clase 6), en cambio, se generaliza de forma inmediata al caso multinomial — es la misma cross-entropy que usamos para ajustar <code>logit_multi</code>, y sigue siendo una sola cifra comparable entre modelos.</li>
+</ul>
+</section>
+<section id="en-el-próximo-episodio" class="slide level2 middle">
+<h2>en el próximo episodio …</h2>
+<div class="center">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="kfold_cv.gif"></p>
+<figcaption>Esquema de validación cruzada</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#8B1E2D">
+<h2>Gracias</h2>
+<p><strong>Hasta la próxima clase</strong></p>
+<p>Mauricio Bucca</p>
+
+</section></section>
+    </div>
+  <div class="quarto-auto-generated-content" style="display: none;">
+<div class="footer footer-default">
+
+</div>
+</div></div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="class_18_files/libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="class_18_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="class_18_files/libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="class_18_files/libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="class_18_files/libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="class_18_files/libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="class_18_files/libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="class_18_files/libs/revealjs/plugin/search/search.js"></script>
+  <script src="class_18_files/libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': true,
+'previewLinksAuto': false,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'jumpToSlide': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'smaller': false,
+ 
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: false,
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'none',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1600,
+
+        height: 900,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 0.1,
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    
+    <script>
+      // htmlwidgets need to know to resize themselves when slides are shown/hidden.
+      // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
+      // slide changes (different for each slide format).
+      (function () {
+        // dispatch for htmlwidgets
+        function fireSlideEnter() {
+          const event = window.document.createEvent("Event");
+          event.initEvent("slideenter", true, true);
+          window.document.dispatchEvent(event);
+        }
+
+        function fireSlideChanged(previousSlide, currentSlide) {
+          fireSlideEnter();
+
+          // dispatch for shiny
+          if (window.jQuery) {
+            if (previousSlide) {
+              window.jQuery(previousSlide).trigger("hidden");
+            }
+            if (currentSlide) {
+              window.jQuery(currentSlide).trigger("shown");
+            }
+          }
+        }
+
+        // hookup for slidy
+        if (window.w3c_slidy) {
+          window.w3c_slidy.add_observer(function (slide_num) {
+            // slide_num starts at position 1
+            fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
+          });
+        }
+
+      })();
+    </script>
+
+    <script id="quarto-html-after-body" type="application/javascript">
+      window.document.addEventListener("DOMContentLoaded", function (event) {
+        const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+        tabsets.forEach(function(tabset) {
+          const tabby = new Tabby('#' + tabset.id);
+        });
+        const isCodeAnnotation = (el) => {
+          for (const clz of el.classList) {
+            if (clz.startsWith('code-annotation-')) {                     
+              return true;
+            }
+          }
+          return false;
+        }
+        const onCopySuccess = function(e) {
+          // button target
+          const button = e.trigger;
+          // don't keep focus
+          button.blur();
+          // flash "checked"
+          button.classList.add('code-copy-button-checked');
+          var currentTitle = button.getAttribute("title");
+          button.setAttribute("title", "Copied!");
+          let tooltip;
+          if (window.bootstrap) {
+            button.setAttribute("data-bs-toggle", "tooltip");
+            button.setAttribute("data-bs-placement", "left");
+            button.setAttribute("data-bs-title", "Copied!");
+            tooltip = new bootstrap.Tooltip(button, 
+              { trigger: "manual", 
+                customClass: "code-copy-button-tooltip",
+                offset: [0, -8]});
+            tooltip.show();    
+          }
+          setTimeout(function() {
+            if (tooltip) {
+              tooltip.hide();
+              button.removeAttribute("data-bs-title");
+              button.removeAttribute("data-bs-toggle");
+              button.removeAttribute("data-bs-placement");
+            }
+            button.setAttribute("title", currentTitle);
+            button.classList.remove('code-copy-button-checked');
+          }, 1000);
+          // clear code selection
+          e.clearSelection();
+        }
+        const getTextToCopy = function(trigger) {
+          const outerScaffold = trigger.parentElement.cloneNode(true);
+          const codeEl = outerScaffold.querySelector('code');
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+        }
+        const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+          text: getTextToCopy
+        });
+        clipboard.on('success', onCopySuccess);
+        if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+          const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+            text: getTextToCopy,
+            container: window.document.getElementById('quarto-embedded-source-code-modal')
+          });
+          clipboardModal.on('success', onCopySuccess);
+        }
+          var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+          var mailtoRegex = new RegExp(/^mailto:/);
+            var filterRegex = new RegExp('/' + window.location.host + '/');
+          var isInternal = (href) => {
+              return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+          }
+          // Inspect non-navigation links and adorn them if external
+         var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+          for (var i=0; i<links.length; i++) {
+            const link = links[i];
+            if (!isInternal(link.href)) {
+              // undo the damage that might have been done by quarto-nav.js in the case of
+              // links that we want to consider external
+              if (link.dataset.originalHref !== undefined) {
+                link.href = link.dataset.originalHref;
+              }
+            }
+          }
+        function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+          const config = {
+            allowHTML: true,
+            maxWidth: 500,
+            delay: 100,
+            arrow: false,
+            appendTo: function(el) {
+                return el.closest('section.slide') || el.parentElement;
+            },
+            interactive: true,
+            interactiveBorder: 10,
+            theme: 'light-border',
+            placement: 'bottom-start',
+          };
+          if (contentFn) {
+            config.content = contentFn;
+          }
+          if (onTriggerFn) {
+            config.onTrigger = onTriggerFn;
+          }
+          if (onUntriggerFn) {
+            config.onUntrigger = onUntriggerFn;
+          }
+            config['offset'] = [0,0];
+            config['maxWidth'] = 700;
+          window.tippy(el, config); 
+        }
+        const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+        for (var i=0; i<noterefs.length; i++) {
+          const ref = noterefs[i];
+          tippyHover(ref, function() {
+            // use id or data attribute instead here
+            let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+            try { href = new URL(href).hash; } catch {}
+            const id = href.replace(/^#\/?/, "");
+            const note = window.document.getElementById(id);
+            if (note) {
+              return note.innerHTML;
+            } else {
+              return "";
+            }
+          });
+        }
+        const findCites = (el) => {
+          const parentEl = el.parentElement;
+          if (parentEl) {
+            const cites = parentEl.dataset.cites;
+            if (cites) {
+              return {
+                el,
+                cites: cites.split(' ')
+              };
+            } else {
+              return findCites(el.parentElement)
+            }
+          } else {
+            return undefined;
+          }
+        };
+        var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+        for (var i=0; i<bibliorefs.length; i++) {
+          const ref = bibliorefs[i];
+          const citeInfo = findCites(ref);
+          if (citeInfo) {
+            tippyHover(citeInfo.el, function() {
+              var popup = window.document.createElement('div');
+              citeInfo.cites.forEach(function(cite) {
+                var citeDiv = window.document.createElement('div');
+                citeDiv.classList.add('hanging-indent');
+                citeDiv.classList.add('csl-entry');
+                var biblioDiv = window.document.getElementById('ref-' + cite);
+                if (biblioDiv) {
+                  citeDiv.innerHTML = biblioDiv.innerHTML;
+                }
+                popup.appendChild(citeDiv);
+              });
+              return popup.innerHTML;
+            });
+          }
+        }
+      });
+      </script>
+    
+
+</body></html>

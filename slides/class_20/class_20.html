@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<script src="class_20_files/libs/clipboard/clipboard.min.js"></script>
+<script src="class_20_files/libs/quarto-html/tabby.min.js"></script>
+<script src="class_20_files/libs/quarto-html/popper.min.js"></script>
+<script src="class_20_files/libs/quarto-html/tippy.umd.min.js"></script>
+<link href="class_20_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="class_20_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="class_20_files/libs/quarto-html/quarto-syntax-highlighting-de63f62b328812d8e578a4d74e282472.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.9.38">
+
+  <meta name="author" content="Mauricio Bucca · Sociología UC">
+  <meta name="dcterms.date" content="2026-07-23">
+  <title>Análisis de Datos Categóricos (SOC3070)</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="class_20_files/libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="class_20_files/libs/revealjs/dist/reveal.css">
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="class_20_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
+  <link rel="stylesheet" href="../_shared/course.css">
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+  <link href="class_20_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="class_20_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="class_20_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="class_20_files/libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+</head>
+<body class="theme-bayern quarto-light">
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" data-background-color="#0066B2" class="quarto-title-block center">
+  <h1 class="title">Análisis de Datos Categóricos (SOC3070)</h1>
+  <p class="subtitle">Árboles, Random Forest y Gradient Boosting</p>
+
+<div class="quarto-title-authors">
+<div class="quarto-title-author">
+<div class="quarto-title-author-name">
+Mauricio Bucca · Sociología UC 
+</div>
+</div>
+</div>
+
+  <p class="date">2026-07-23</p>
+</section>
+<section id="antes-hoy-después" class="slide level2 class-rhythm">
+<h2>Antes · Hoy · Después</h2>
+<div class="full-width">
+<div class="content-box">
+<p><strong>Antes</strong></p>
+<p>regularización y selección de hiperparámetros.</p>
+</div>
+<div class="content-box-primary">
+<p><strong>Hoy</strong></p>
+<p>árboles, Random Forest y Gradient Boosting.</p>
+</div>
+<div class="content-box-secondary">
+<p><strong>Después</strong></p>
+<p>redes neuronales.</p>
+</div>
+</div>
+</section>
+<section>
+<section id="modelos-basados-en-árboles" class="title-slide slide level1 inverse center middle" data-background-color="#C5143A">
+<h1>Modelos basados en árboles</h1>
+
+</section>
+<section id="ruta-de-la-clase" class="slide level2">
+<h2>Ruta de la clase</h2>
+<ol type="1">
+<li>Construir y podar árboles.</li>
+<li>Usarlos para regresión y clasificación.</li>
+<li>Reducir varianza con Random Forest.</li>
+<li>Reducir sesgo con Gradient Boosting.</li>
+<li>Comparar desempeño e interpretación.</li>
+</ol>
+<p>Referencia principal: James et al.&nbsp;(2021), <em>An Introduction to Statistical Learning</em>, 2ª ed., capítulo 8 (<a href="https://www.statlearning.com/">sitio oficial</a>).</p>
+</section>
+<section id="retomando-la-pregunta-de-la-clase-pasada" class="slide level2">
+<h2>Retomando la pregunta de la clase pasada</h2>
+<p>La clase 19 terminó con una pregunta sin responder: regularización controla <strong>cuánta</strong> complejidad usar, pero seguimos siendo nosotros quienes escribimos a mano qué interacciones probar (<code>I(temp^2)</code>, <code>factor(hr)*workingday</code>…). Cuando agregamos la interacción completa hora×mes, no sabíamos de antemano cuáles de esas variables eran señal y cuáles ruido.</p>
+<div class="fragment">
+<p>Hoy cambiamos de estrategia por completo: <strong>¿puede el propio modelo aprender qué preguntas de sí/no —y en qué orden— separan mejor las horas de demanda alta?</strong></p>
+<p>En vez de una ecuación con términos que nosotros elegimos, construiremos reglas: <em>“¿es hora punta? → ¿hace calor? → ¿es día hábil?”</em>. Las interacciones emergen de los datos, no de nuestras hipótesis.</p>
+</div>
+</section>
+<section id="configuración-outcome-y-partición" class="slide level2">
+<h2>Configuración: outcome y partición</h2>
+<p>Mantenemos el mismo outcome y la misma partición cronológica del módulo:</p>
+</section>
+<section id="configuración-predictores-y-fórmulas" class="slide level2">
+<h2>Configuración: predictores y fórmulas</h2>
+<p>A diferencia de la regresión regularizada, los árboles usan las variables <strong>directamente</strong>, sin expandirlas en una matriz de diseño:</p>
+<p>Sin <code>I(temp^2)</code> ni interacciones escritas a mano: el árbol las descubrirá solo.</p>
+</section>
+<section id="diseño-de-evaluación" class="slide level2">
+<h2>Diseño de evaluación</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 4
+  conjunto       días horas período
+  &lt;chr&gt;         &lt;int&gt; &lt;int&gt; &lt;chr&gt;  
+1 Entrenamiento   219  5162 1–219  
+2 Validación       73  1735 220–292
+3 Test             73  1748 293–365</code></pre>
+</div>
+</div>
+<p>La partición cronológica exige predecir períodos futuros. Además, el umbral de demanda alta se aprende sólo con entrenamiento.</p>
+</section>
+<section id="un-árbol-en-una-frase" class="slide level2">
+<h2>Un árbol, en una frase</h2>
+<p>Un árbol de decisión funciona como un <strong>diagrama de flujo</strong>: una secuencia de preguntas de sí/no que termina en una respuesta.</p>
+
+<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20260221123946485692/decision_tree.webp" style="width:55.0%" class="r-stretch quarto-figure-center"><p class="caption">Diagrama de un árbol de decisión: nodo raíz, nodos internos, ramas y hojas.</p><div class="footnote">
+<p>Fuente: <a href="https://www.geeksforgeeks.org/machine-learning/decision-tree-introduction-example/">GeeksforGeeks — Decision Tree in Machine Learning</a></p>
+</div>
+</section>
+<section id="vocabulario-del-árbol" class="slide level2">
+<h2>Vocabulario del árbol</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Término</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Nodo raíz</strong></td>
+<td>la primera pregunta; contiene todos los datos de entrenamiento</td>
+</tr>
+<tr class="even">
+<td><strong>Nodo interno</strong></td>
+<td>una pregunta intermedia sobre un predictor (p.&nbsp;ej. ¿<code>temp</code> &lt; 20°C?)</td>
+</tr>
+<tr class="odd">
+<td><strong>Rama</strong></td>
+<td>el camino que se sigue según la respuesta (sí/no)</td>
+</tr>
+<tr class="even">
+<td><strong>Hoja</strong></td>
+<td>el nodo final: ahí vive la predicción</td>
+</tr>
+</tbody>
+</table>
+<p>Cada palabra técnica que sigue en esta clase (partición, poda, impureza) describe <strong>cómo se eligen estas preguntas y dónde se detiene el árbol</strong>.</p>
+</section>
+<section id="la-idea" class="slide level2">
+<h2>La idea</h2>
+<p>Un árbol divide recursivamente el espacio de predictores en regiones simples.</p>
+<ul>
+<li>Cada nodo formula una pregunta binaria.</li>
+<li>Cada rama representa una respuesta.</li>
+<li>Cada hoja contiene una predicción.</li>
+<li>Las interacciones aparecen sin escribirlas manualmente.</li>
+</ul>
+</section>
+<section id="el-modelo-de-un-árbol" class="slide level2">
+<h2>El modelo de un árbol</h2>
+<p>Un árbol parte el espacio de predictores en regiones <span class="math inline">R_1,\dots,R_M</span> y predice una constante en cada una:</p>
+<p><span class="math display">\hat f(x)=\sum_{m=1}^{M}c_m\,\mathbb{1}(x\in R_m).</span></p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Símbolo</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">R_1,\dots,R_M</span></td>
+<td>las <span class="math inline">M</span> regiones (hojas) en que queda partido el espacio de predictores</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\mathbb{1}(x\in R_m)</span></td>
+<td>1 si la observación <span class="math inline">x</span> cae en la región <span class="math inline">m</span>; 0 en caso contrario</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">c_m</span></td>
+<td>la predicción constante asignada a la región <span class="math inline">R_m</span></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Las regiones son <strong>rectángulos</strong>: cada corte es perpendicular a un eje (una pregunta sobre <strong>una</strong> variable a la vez).</li>
+<li>Regresión: <span class="math inline">c_m=</span> media de <span class="math inline">y</span> en <span class="math inline">R_m</span>. Clasificación: proporción/clase mayoritaria en <span class="math inline">R_m</span>.</li>
+<li>Hallar la partición óptima (qué <span class="math inline">R_m</span> minimizan el error total) es NP-difícil, así que se construye de forma <strong>greedy</strong>: se elige la mejor pregunta <em>ahora</em>, sin planear varios pasos adelante.</li>
+</ul>
+</section>
+<section id="una-partición" class="slide level2">
+<h2>Una partición</h2>
+<p>Una división candidata tiene la forma <span class="math inline">X_j &lt; s</span>. Para regresión buscamos <span class="math inline">j</span> y <span class="math inline">s</span> que reduzcan:</p>
+<p><span class="math display">
+\sum_{i:x_{ij}&lt;s}(y_i-\bar y_L)^2+
+\sum_{i:x_{ij}\ge s}(y_i-\bar y_R)^2.
+</span></p>
+<p>El algoritmo es <strong>greedy</strong>: elige la mejor división actual, sin garantizar el árbol globalmente óptimo.</p>
+</section>
+<section id="regresión-versus-clasificación" class="slide level2">
+<h2>Regresión versus clasificación</h2>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Tarea</th>
+<th>Predicción en la hoja</th>
+<th>Criterio frecuente</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Regresión</td>
+<td>media de <code>bikers</code></td>
+<td>suma de errores cuadrados</td>
+</tr>
+<tr class="even">
+<td>Clasificación</td>
+<td>proporción de demanda alta</td>
+<td>Gini o entropía</td>
+</tr>
+</tbody>
+</table>
+<p>Para dos clases, la impureza de Gini es:</p>
+<p><span class="math display">G=1-\left[p^2+(1-p)^2\right].</span></p>
+</section>
+<section id="tres-medidas-de-impureza" class="slide level2">
+<h2>Tres medidas de impureza</h2>
+<p>Intuición: si un nodo tiene 3 horas de demanda “alta” y 3 de “baja”, no sabemos casi nada sobre qué esperar ahí — <strong>impureza alta</strong>. Si tiene 6 “altas” y 0 “bajas”, el nodo es homogéneo — <strong>impureza cero</strong>. Las tres medidas de abajo formalizan esa misma idea.</p>
+<p>Para dos clases con proporción <span class="math inline">p</span> de “alta” en un nodo:</p>
+<p><span class="math display">
+E=1-\max(p,1-p),\quad
+G=2p(1-p),\quad
+D=-p\log p-(1-p)\log(1-p).
+</span></p>
+
+<img data-src="class_20_files/figure-revealjs/impurity-curves-1.png" width="960" class="r-stretch"></section>
+<section id="por-qué-gini-o-entropía-no-el-error" class="slide level2">
+<h2>Por qué Gini o entropía, no el error</h2>
+<ul>
+<li>Las tres se minimizan en nodos <strong>puros</strong> (<span class="math inline">p=0</span> o <span class="math inline">p=1</span>) y se maximizan en <span class="math inline">p=0.5</span>.</li>
+<li>El error de clasificación es <strong>plano por tramos</strong>: no distingue un nodo con <span class="math inline">p=0.3</span> de uno con <span class="math inline">p=0.1</span>.</li>
+<li>Gini y entropía son <strong>suaves y cóncavas</strong>: premian empujar <span class="math inline">p</span> hacia los extremos, así que guían mejor la búsqueda de cortes.</li>
+<li>Gini <span class="math inline">=2p(1-p)</span> es también la <strong>varianza de un Bernoulli</strong>: mide la “mezcla” del nodo.</li>
+</ul>
+<p>Para <em>podar</em> sí se puede usar el error de clasificación; para <em>crecer</em>, Gini o entropía funcionan mejor.</p>
+</section></section>
+<section>
+<section id="árboles" class="title-slide slide level1 inverse center middle" data-background-color="#C5143A">
+<h1>Árboles</h1>
+
+</section>
+<section id="árbol-de-regresión-ejemplo-empírico" class="slide level2">
+<h2>Árbol de regresión: ejemplo empírico</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>n= 5162 
+
+node), split, n, deviance, yval
+      * denotes terminal node
+
+  1) root 5162 87560000 134.900  
+    2) hour&lt; 6.500 1459  1290000  23.840  
+      4) hour&lt; 5.500 1243   729300  18.960  
+        8) hour&gt;=1.500 811   148500  11.370 *
+        9) hour&lt; 1.500 432   446300  33.220  
+         18) workingday&gt;=0.500 294   105900  20.710 *
+         19) workingday&lt; 0.500 138   196400  59.860  
+           38) month&lt; 4.500 76    22110  31.390 *
+           39) month&gt;=4.500 62    37220  94.760 *
+      5) hour&gt;=5.500 216   361800  51.880  
+       10) workingday&lt; 0.500 68     8980  13.720 *
+       11) workingday&gt;=0.500 148   208200  69.420  
+         22) month&lt; 4.500 80    23640  39.490 *
+         23) month&gt;=4.500 68    28600 104.600 *
+    3) hour&gt;=6.500 3703 61200000 178.600  
+      6) temp&lt; 0.470 1703  8002000  98.300  
+       12) hour&gt;=19.500 428   532700  57.140  
+         24) temp&lt; 0.410 366   261100  50.150 *
+         25) temp&gt;=0.410 62   148200  98.390 *
+       13) hour&lt; 19.500 1275  6500000 112.100  
+         26) temp&lt; 0.310 678  1988000  91.670  
+           52) workingday&lt; 0.500 196   303500  64.980  
+            104) hour&lt; 9.500 67    34370  28.240 *
+            105) hour&gt;=9.500 129   131700  84.070 *
+           53) workingday&gt;=0.500 482  1488000 102.500  
+            106) hour&gt;=9.500 336   703400  86.430  
+              212) hour&lt; 16.500 233    73700  62.210 *
+              213) hour&gt;=16.500 103   183900 141.200 *
+            107) hour&lt; 9.500 146   496700 139.600  
+              214) hour&lt; 7.500 51    32700  90.220 *
+              215) hour&gt;=7.500 95   273000 166.100  
+                430) hour&gt;=8.500 46    24450 126.100 *
+                431) hour&lt; 8.500 49   106300 203.600 *
+         27) temp&gt;=0.310 597  3907000 135.300  
+           54) weather=light rain/snow 82   304300  71.910 *
+           55) weather=clear,cloudy/misty 515  3221000 145.400  
+            110) hour&lt; 16.500 391  2342000 133.100  
+              220) temp&lt; 0.410 277  1159000 118.600 *
+              221) temp&gt;=0.410 114   983900 168.300  
+                442) month&lt; 3.500 61   299500 140.300 *
+                443) month&gt;=3.500 53   582000 200.400 *
+            111) hour&gt;=16.500 124   632200 184.300  
+              222) workingday&lt; 0.500 51   177300 140.600 *
+              223) workingday&gt;=0.500 73   289600 214.800 *
+      7) temp&gt;=0.470 2000 32860000 247.000  
+       14) hour&gt;=20.500 329  1151000 148.000  
+         28) hour&gt;=22.500 105   135500  99.370 *
+         29) hour&lt; 22.500 224   651100 170.800  
+           58) hour&gt;=21.500 112   193300 147.500 *
+           59) hour&lt; 21.500 112   336700 194.000 *
+       15) hour&lt; 20.500 1671 27840000 266.500  
+         30) hour&lt; 16.500 1187 14440000 228.700  
+           60) workingday&gt;=0.500 834  7556000 206.700  
+            120) hour&gt;=8.500 689  2394000 175.700  
+              240) hour&lt; 15.500 598  1296000 163.100  
+                480) hour&gt;=9.500 523  1097000 157.200  
+                  960) hour&lt; 11.500 164   177800 130.100 *
+                  961) hour&gt;=11.500 359   742900 169.600 *
+                481) hour&lt; 9.500 75    56540 203.900 *
+              241) hour&gt;=15.500 91   375300 258.700  
+                482) month&lt; 4.500 23    71790 202.500 *
+                483) month&gt;=4.500 68   206200 277.700 *
+            121) hour&lt; 8.500 145  1359000 353.900  
+              242) hour&lt; 7.500 71   238600 275.700 *
+              243) hour&gt;=7.500 74   269700 428.900 *
+           61) workingday&lt; 0.500 353  5522000 280.700  
+            122) hour&lt; 9.500 93   354200 114.100  
+              244) hour&lt; 8.500 61    81430  77.640 *
+              245) hour&gt;=8.500 32    36530 183.700 *
+            123) hour&gt;=9.500 260  1664000 340.300  
+              246) temp&lt; 0.550 45   377200 261.900 *
+              247) temp&gt;=0.550 215   952100 356.700  
+                494) hour&lt; 10.500 30    30170 273.800 *
+                495) hour&gt;=10.500 185   682300 370.200  
+                  990) temp&gt;=0.850 31    69710 293.300 *
+                  991) temp&lt; 0.850 154   392800 385.600 *
+         31) hour&gt;=16.500 484  7551000 359.200  
+           62) hour&gt;=18.500 233  1453000 286.400  
+            124) hour&gt;=19.500 115   463100 249.100  
+              248) temp&lt; 0.630 33    97900 201.600 *
+              249) temp&gt;=0.630 82   260700 268.200 *
+            125) hour&lt; 19.500 118   674500 322.700  
+              250) workingday&lt; 0.500 36   185800 270.200 *
+              251) workingday&gt;=0.500 82   346000 345.700 *
+           63) hour&lt; 18.500 251  3713000 426.800  
+            126) workingday&lt; 0.500 77   619900 313.800  
+              252) hum&gt;=0.585 27   259700 258.100 *
+              253) hum&lt; 0.585 50   230900 344.000 *
+            127) workingday&gt;=0.500 174  1675000 476.800  
+              254) month&lt; 4.500 40   301700 387.200 *
+              255) month&gt;=4.500 134   956200 503.600  
+                510) hum&gt;=0.695 23   251600 444.900 *
+                511) hum&lt; 0.695 111   608900 515.800 *</code></pre>
+</div>
+</div>
+</section>
+<section id="visualizar-las-reglas" class="slide level2">
+<h2>Visualizar las reglas</h2>
+
+<img data-src="class_20_files/figure-revealjs/tree-plot-1.png" width="960" class="r-stretch"><p>La figura representa una secuencia de decisiones, no una relación lineal promedio.</p>
+</section>
+<section id="complejidad-y-poda" class="slide level2">
+<h2>Complejidad y poda</h2>
+<p>Un árbol profundo suele tener bajo error de entrenamiento y alta varianza. La poda minimiza:</p>
+<p><span class="math display">R_\alpha(T)=R(T)+\alpha|T|,</span></p>
+<p>donde <span class="math inline">R(T)</span> es el error del árbol y <span class="math inline">|T|</span> su número de hojas.</p>
+<p><code>cp</code> controla el costo de agregar complejidad.</p>
+</section>
+<section id="poda-por-el-eslabón-más-débil" class="slide level2">
+<h2>Poda por el eslabón más débil</h2>
+<p>Variar <span class="math inline">\alpha</span> de <span class="math inline">0</span> a <span class="math inline">\infty</span> <strong>no</strong> genera todos los árboles posibles, sino una <strong>secuencia anidada</strong> única:</p>
+<p><span class="math display">T_0 \supset T_1 \supset \cdots \supset \{\text{raíz}\}.</span></p>
+<ul>
+<li>En cada paso se colapsa el nodo interno con menor aumento de error por hoja (el “eslabón más débil”).</li>
+<li>Cada árbol de la secuencia es óptimo para un rango de <span class="math inline">\alpha</span>.</li>
+<li>Elegimos <span class="math inline">\alpha</span> (o <code>cp</code>) por <strong>validación cruzada</strong>, con la regla de 1 error estándar: el árbol más pequeño dentro de 1 SE del mínimo.</li>
+<li>En <code>rpart</code>, <code>cp</code> es <span class="math inline">\alpha</span> reescalado por el error de la raíz; por eso es comparable entre problemas.</li>
+</ul>
+</section>
+<section id="elegir-cp" class="slide level2">
+<h2>Elegir <code>cp</code></h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 39 × 5
+        cp splits relative_error cv_error   cv_se
+     &lt;dbl&gt;  &lt;dbl&gt;          &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;
+ 1 0.286        0          1        1.000  0.024 
+ 2 0.232        1          0.714    0.714 0.019 
+ 3 0.056       2          0.481    0.483 0.013 
+ 4 0.033       4          0.370    0.374 0.010
+ 5 0.027       7          0.271    0.275 0.008
+ 6 0.016       8          0.244    0.252 0.007
+ 7 0.011       9          0.228    0.238 0.007
+ 8 0.010     10          0.217    0.225 0.006
+ 9 0.008     11          0.207    0.210 0.006
+10 0.007     12          0.199    0.205 0.006
+# ℹ 29 more rows</code></pre>
+</div>
+</div>
+</section>
+<section id="curva-de-poda" class="slide level2">
+<h2>Curva de poda</h2>
+
+<img data-src="class_20_files/figure-revealjs/cp-plot-1.png" width="960" class="r-stretch"></section>
+<section id="desempeño-de-regresión" class="slide level2">
+<h2>Desempeño de regresión</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  modelo        RMSE   MAE
+  &lt;chr&gt;        &lt;dbl&gt; &lt;dbl&gt;
+1 Árbol podado  82.400  55.300</code></pre>
+</div>
+</div>
+</section>
+<section id="árbol-de-clasificación-ejemplo-empírico" class="slide level2">
+<h2>Árbol de clasificación: ejemplo empírico</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>         predicho
+observado baja alta
+     baja 1245   42
+     alta  267  194</code></pre>
+</div>
+</div>
+</section>
+<section id="métricas-de-clasificación" class="slide level2">
+<h2>Métricas de clasificación</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 4
+  accuracy sensitivity specificity log_loss
+     &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;    &lt;dbl&gt;
+1    0.823       0.421       0.967    0.545</code></pre>
+</div>
+</div>
+<p>Las probabilidades de un árbol son constantes dentro de cada hoja.</p>
+</section>
+<section id="una-familia-con-nombres-propios" class="slide level2">
+<h2>Una familia con nombres propios</h2>
+<p><code>rpart</code> implementa una variante de <strong>CART</strong> (<em>Classification and Regression Trees</em>), el algoritmo que usamos hoy. No es el único:</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Algoritmo</th>
+<th>Idea distintiva</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>ID3</strong> (1986)</td>
+<td>elige cortes solo por ganancia de información (entropía)</td>
+</tr>
+<tr class="even">
+<td><strong>C4.5 / C5.0</strong></td>
+<td>extiende ID3: variables continuas, datos faltantes, poda integrada</td>
+</tr>
+<tr class="odd">
+<td><strong>CART</strong> (1984)</td>
+<td>Gini o SSE; produce árboles binarios; base de <code>rpart</code> y de Random Forest/Boosting</td>
+</tr>
+</tbody>
+</table>
+<p>Distintos nombres, misma lógica de fondo: particionar recursivamente para reducir impureza.</p>
+</section>
+<section id="ventajas-y-límites" class="slide level2">
+<h2>Ventajas y límites</h2>
+<div class="pull-left">
+<p><strong>Ventajas</strong></p>
+<ul>
+<li>reglas fáciles de comunicar;</li>
+<li>no linealidades;</li>
+<li>interacciones automáticas;</li>
+<li>poca preparación de datos.</li>
+</ul>
+</div>
+<div class="pull-right">
+<p><strong>Límites</strong></p>
+<ul>
+<li>divisiones inestables;</li>
+<li>predicción escalonada;</li>
+<li>alta varianza;</li>
+<li>un solo árbol suele predecir peor.</li>
+</ul>
+</div>
+</section>
+<section id="por-qué-un-árbol-tiene-alta-varianza" class="slide level2">
+<h2>Por qué un árbol tiene alta varianza</h2>
+<ul>
+<li>Los cortes son <strong>jerárquicos</strong>: cambiar el corte raíz reconfigura todo lo de abajo.</li>
+<li>La predicción es <strong>escalonada</strong>: constante por región, con saltos en los bordes.</li>
+<li>Muestras parecidas producen árboles distintos.</li>
+</ul>
+<p>Esta inestabilidad es exactamente lo que atacan los ensambles: promediando (Random Forest) o corrigiendo por etapas (Boosting).</p>
+</section></section>
+<section>
+<section id="random-forest" class="title-slide slide level1 inverse center middle" data-background-color="#C5143A">
+<h1>Random Forest</h1>
+
+</section>
+<section id="la-intuición-un-comité-de-árboles" class="slide level2">
+<h2>La intuición: un comité de árboles</h2>
+<p>Un solo árbol es inestable: cambia mucho si cambia la muestra. La solución, propuesta por Leo Breiman (2001), es simple: <strong>en vez de confiar en un árbol, preguntarle a muchos y promediar</strong>.</p>
+
+<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20260221153154405165/random_forest_algorithm.webp" style="width:55.0%" class="r-stretch quarto-figure-center"><p class="caption">Muchos árboles entrenados con datos ligeramente distintos “votan” y el bosque combina sus respuestas.</p><div class="footnote">
+<p>Fuente: <a href="https://www.geeksforgeeks.org/machine-learning/random-forest-algorithm-in-machine-learning/">GeeksforGeeks — Random Forest Algorithm</a></p>
+</div>
+<p>Es la misma lógica que consultar a varios expertos independientes en vez de a uno solo: los errores individuales tienden a cancelarse.</p>
+</section>
+<section id="de-un-árbol-a-un-bosque" class="slide level2">
+<h2>De un árbol a un bosque</h2>
+<p>Random Forest combina dos fuentes de aleatoriedad:</p>
+<ol type="1">
+<li>Cada árbol recibe una muestra bootstrap.</li>
+<li>Cada nodo considera solo <code>mtry</code> predictores candidatos.</li>
+</ol>
+<p>Promediar árboles poco correlacionados reduce varianza.</p>
+</section>
+<section id="algoritmo" class="slide level2">
+<h2>Algoritmo</h2>
+<p>Para <span class="math inline">b=1,\ldots,B</span>:</p>
+<ol type="1">
+<li>extraer una muestra bootstrap;</li>
+<li>crecer un árbol sin podar;</li>
+<li>sortear <code>mtry</code> variables en cada nodo;</li>
+<li>guardar la predicción.</li>
+</ol>
+<p>La probabilidad final es <span class="math inline">\hat p(x)=B^{-1}\sum_b\hat p_b(x)</span>.</p>
+</section>
+<section id="por-qué-promediar-reduce-la-varianza" class="slide level2">
+<h2>Por qué promediar reduce la varianza</h2>
+<p>El promedio de <span class="math inline">B</span> predicciones, cada una con varianza <span class="math inline">\sigma^2</span> y correlación media <span class="math inline">\rho</span> entre pares, tiene varianza:</p>
+<p><span class="math display">
+\mathrm{Var}\!\left(\frac1B\sum_{b}\widehat f_b\right)
+=\rho\,\sigma^2+\frac{1-\rho}{B}\,\sigma^2.
+</span></p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Símbolo</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">B</span></td>
+<td>número de árboles en el bosque</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\sigma^2</span></td>
+<td>varianza de un árbol individual</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\rho</span></td>
+<td>correlación promedio entre pares de árboles</td>
+</tr>
+</tbody>
+</table>
+
+<img data-src="class_20_files/figure-revealjs/bagging-variance-1.png" width="960" class="r-stretch"><ul>
+<li>El segundo término <span class="math inline">\to 0</span> al crecer <span class="math inline">B</span>: promediar ayuda.</li>
+<li>El primero, <span class="math inline">\rho\sigma^2</span>, es un <strong>piso</strong>: si los árboles están muy correlacionados, promediar rinde poco.</li>
+</ul>
+</section>
+<section id="random-forest-bagging-decorrelación" class="slide level2">
+<h2>Random Forest = bagging + decorrelación</h2>
+<p>Bagging usa bootstrap, que baja algo <span class="math inline">\rho</span>. Random Forest <strong>además</strong> sortea <code>mtry</code> variables candidatas por nodo, lo que baja <span class="math inline">\rho</span> mucho más.</p>
+<ul>
+<li><code>mtry</code> chico → árboles menos correlacionados (piso más bajo), pero cada árbol algo más débil.</li>
+<li><code>mtry</code> grande → árboles más fuertes pero más parecidos (piso más alto).</li>
+<li>Es el dial que equilibra <strong>decorrelación</strong> y <strong>fuerza individual</strong>: por eso se elige con validación.</li>
+</ul>
+</section>
+<section id="tuning-de-mtry" class="slide level2">
+<h2>Tuning de <code>mtry</code></h2>
+<div class="cell">
+<div class="cell-output-display">
+<table class="course-table">
+<thead>
+<tr>
+<th style="text-align:right;">
+mtry
+</th>
+<th style="text-align:right;">
+validation_loss
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+0.324
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+0.252
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:right;">
+0.234
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+0.283
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="curva-de-validación" class="slide level2">
+<h2>Curva de validación</h2>
+
+<img data-src="class_20_files/figure-revealjs/rf-tuning-plot-1.png" width="960" class="r-stretch"></section>
+<section id="random-forest-ejemplo-empírico" class="slide level2">
+<h2>Random Forest: ejemplo empírico</h2>
+<div class="cell">
+<div class="cell-output-display">
+<table class="course-table">
+<thead>
+<tr>
+<th style="text-align:left;">
+modelo
+</th>
+<th style="text-align:right;">
+accuracy
+</th>
+<th style="text-align:right;">
+log_loss
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Árbol
+</td>
+<td style="text-align:right;">
+0.823
+</td>
+<td style="text-align:right;">
+0.545
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Random Forest
+</td>
+<td style="text-align:right;">
+0.870
+</td>
+<td style="text-align:right;">
+0.294
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="error-out-of-bag" class="slide level2">
+<h2>Error out-of-bag</h2>
+
+<img data-src="class_20_files/figure-revealjs/rf-oob-1.png" width="960" class="r-stretch"><p>Cada observación queda fuera de aproximadamente un tercio de los bootstrap. El error OOB permite verificar si agregar árboles todavía estabiliza el bosque; no reemplaza el test final.</p>
+</section>
+<section id="de-dónde-sale-el-36.8" class="slide level2">
+<h2>De dónde sale el 36.8 %</h2>
+<p>La probabilidad de que una observación <strong>no</strong> entre en una muestra bootstrap de tamaño <span class="math inline">n</span> es:</p>
+<p><span class="math display">
+\left(1-\frac1n\right)^{n}\;\xrightarrow[n\to\infty]{}\;e^{-1}\approx 0.368.
+</span></p>
+
+<img data-src="class_20_files/figure-revealjs/oob-fraction-1.png" width="960" class="r-stretch"><p>Predecir cada observación con los árboles que <strong>no</strong> la vieron da el error OOB: una validación incorporada, casi gratis.</p>
+</section>
+<section id="importancia-por-permutación" class="slide level2">
+<h2>Importancia por permutación</h2>
+
+<img data-src="class_20_files/figure-revealjs/rf-importance-1.png" width="960" class="r-stretch"></section>
+<section id="dos-formas-de-medir-importancia" class="slide level2">
+<h2>Dos formas de medir importancia</h2>
+<p><strong>Por impureza (Gini)</strong>: suma, sobre los nodos que usan <span class="math inline">X_j</span>, la reducción de impureza que produce. Rápida, pero <strong>sesgada</strong> hacia variables con muchos cortes posibles (continuas, alta cardinalidad).</p>
+<p><strong>Por permutación</strong>: permuta <span class="math inline">X_j</span> en los datos OOB y mide cuánto <strong>cae la accuracy</strong>. Más fiel, más costosa:</p>
+<p><span class="math display">\text{Imp}_j=\text{Acc}_{\text{OOB}}-\text{Acc}_{\text{OOB},\,X_j\ \text{permutada}}.</span></p>
+<p>Usamos permutación (type = 1) precisamente para evitar el sesgo de la versión Gini.</p>
+</section>
+<section id="la-importancia-no-es-causal" class="slide level2">
+<h2>La importancia no es causal</h2>
+<ul>
+<li>Variables correlacionadas pueden compartir importancia.</li>
+<li>Una variable con muchos puntos de corte puede resultar favorecida.</li>
+<li>La importancia mide aporte predictivo dentro de este modelo.</li>
+<li>No identifica el efecto de intervenir sobre una variable.</li>
+</ul>
+<p>Use la importancia para diagnosticar el predictor, no para reemplazar teoría.</p>
+</section>
+<section id="perfil-de-demanda-alta-por-hora" class="slide level2">
+<h2>Perfil de demanda alta por hora</h2>
+
+<img data-src="class_20_files/figure-revealjs/rf-profile-1.png" width="960" class="r-stretch"><p>Es una descripción del modelo; supone que podemos fijar la hora manteniendo el resto de las filas.</p>
+</section>
+<section id="dependencia-parcial-formalmente" class="slide level2">
+<h2>Dependencia parcial, formalmente</h2>
+<p>El perfil por hora es una <strong>función de dependencia parcial</strong>: promediamos la predicción sobre el resto de los predictores mientras fijamos <span class="math inline">X_S</span>:</p>
+<p><span class="math display">
+\bar f_S(x_S)=\frac1n\sum_{i=1}^{n}\widehat f\big(x_S,\,x_{iC}\big).
+</span></p>
+<ul>
+<li><span class="math inline">x_S</span> = variable de interés (hora); <span class="math inline">x_{iC}</span> = resto de la fila <span class="math inline">i</span>, tal como se observó.</li>
+<li>Muestra el efecto <strong>marginal</strong> aprendido por el modelo, promediando interacciones.</li>
+<li>Las curvas <strong>ICE</strong> (una por observación, sin promediar) revelan heterogeneidad que la PDP oculta.</li>
+<li>Si <code>hora</code> está correlacionada con otras variables, fijarla crea combinaciones poco realistas: interpretar con cautela.</li>
+</ul>
+</section>
+<section id="dos-formas-de-combinar-árboles" class="slide level2">
+<h2>Dos formas de combinar árboles</h2>
+<p>Random Forest no es la única manera de construir un ensamble. <strong>AdaBoost</strong> (Freund &amp; Schapire, 1997) combina árboles muy pequeños (“stumps”: una sola pregunta) de otra manera:</p>
+
+<img data-src="https://media.geeksforgeeks.org/wp-content/cdn-uploads/20220518180116/random-forest-vs-adaboost.jpg" style="width:65.0%" class="r-stretch quarto-figure-center"><p class="caption">Random Forest promedia árboles completos con voto igualitario; AdaBoost combina stumps con voto ponderado, entrenados en secuencia.</p><div class="footnote">
+<p>Fuente: <a href="https://www.geeksforgeeks.org/differences-between-random-forest-and-adaboost/">GeeksforGeeks — Differences Between Random Forest and AdaBoost</a></p>
+</div>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th></th>
+<th>Random Forest</th>
+<th>AdaBoost</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Árboles</td>
+<td>profundos</td>
+<td><em>stumps</em> (1 corte)</td>
+</tr>
+<tr class="even">
+<td>Entrenamiento</td>
+<td>en paralelo, independiente</td>
+<td>en secuencia</td>
+</tr>
+<tr class="odd">
+<td>Voto final</td>
+<td>igualitario</td>
+<td>ponderado (mejores árboles pesan más)</td>
+</tr>
+<tr class="even">
+<td>Ataca principalmente</td>
+<td>varianza</td>
+<td>sesgo</td>
+</tr>
+</tbody>
+</table>
+<p><code>gbm</code> (que usaremos a continuación) generaliza esta misma idea de “corregir secuencialmente” a cualquier función de pérdida, no solo clasificación.</p>
+</section></section>
+<section>
+<section id="gradient-boosting" class="title-slide slide level1 inverse center middle" data-background-color="#C5143A">
+<h1>Gradient Boosting</h1>
+
+</section>
+<section id="aprender-secuencialmente" class="slide level2">
+<h2>Aprender secuencialmente</h2>
+<p>La intuición de boosting es la de <strong>aprender de los propios errores</strong>: en vez de promediar árboles independientes, entrenamos uno a la vez y cada nuevo árbol se concentra en lo que el ensamble actual todavía predice mal.</p>
+<p>Formalmente, agrega árboles pequeños, cada uno concentrado en los errores del ensamble actual:</p>
+<p><span class="math display">\widehat f_M(x)=\widehat f_{M-1}(x)+\nu h_M(x).</span></p>
+<ul>
+<li><span class="math inline">h_M</span>: árbol débil.</li>
+<li><span class="math inline">\nu</span>: tasa de aprendizaje.</li>
+<li><span class="math inline">M</span>: número de árboles.</li>
+</ul>
+</section>
+<section id="qué-es-un-gradiente" class="slide level2">
+<h2>¿Qué es un gradiente?</h2>
+<p>El <strong>gradiente</strong> de una función <span class="math inline">f</span> es el vector de sus derivadas parciales, <span class="math inline">\nabla f(x) = \left(\frac{\partial f}{\partial x_1}, \dots, \frac{\partial f}{\partial x_p}\right)</span>. En una sola dimensión, es simplemente la pendiente de la tangente: <span class="math inline">f'(x)</span>.</p>
+
+<img data-src="class_20_files/figure-revealjs/gradient-intuition-1.png" width="960" class="r-stretch"><ul>
+<li>La pendiente (el gradiente) indica <strong>cuánto y en qué dirección</strong> cambia <span class="math inline">f</span> en ese punto.</li>
+<li>Apunta hacia donde <span class="math inline">f</span> <strong>crece</strong> más rápido; su negativo, <span class="math inline">-\nabla f</span>, apunta hacia donde <span class="math inline">f</span> <strong>decrece</strong> más rápido — hacia el mínimo.</li>
+<li>“Descender por el gradiente” es, literalmente, dar pasos pequeños en la dirección <span class="math inline">-\nabla f</span> hasta acercarse a un mínimo de <span class="math inline">f</span>.</li>
+</ul>
+<p>Esta idea reaparecerá hoy (boosting) y en la próxima clase (redes neuronales) — cada vez que se mencione, un recordatorio breve como este acompañará la lámina.</p>
+</section>
+<section id="boosting-como-descenso-de-gradiente" class="slide level2">
+<h2>Boosting como descenso de gradiente</h2>
+<p>En la etapa <span class="math inline">m</span>, boosting ajusta un árbol al <strong>gradiente negativo</strong> de la pérdida y da un paso:</p>
+<p><span class="math display">
+\widehat f_m(x)=\widehat f_{m-1}(x)+\nu\, h_m(x),
+\qquad
+h_m \approx -\left[\frac{\partial L}{\partial f}\right]_{f=\widehat f_{m-1}}.
+</span></p>
+<p>Es descenso de gradiente en el <strong>espacio de funciones</strong>: cada árbol es un paso que corrige el error actual.</p>
+</section>
+<section id="el-gradiente-es-el-residuo" class="slide level2">
+<h2>El gradiente es el residuo</h2>
+<div class="footnote">
+<p>Recordatorio: el gradiente de la pérdida indica cuánto y hacia dónde hay que mover la predicción para reducir el error; boosting da un paso en la dirección de su negativo.</p>
+</div>
+<p>Con pérdida cuadrática <span class="math inline">L=\tfrac12\sum_i (y_i-f(x_i))^2</span>:</p>
+<p><span class="math display">
+-\frac{\partial L}{\partial f(x_i)}=y_i-f(x_i)=r_i.
+</span></p>
+<ul>
+<li>Cada árbol se ajusta a los <strong>residuos</strong> del ensamble actual.</li>
+<li>Con pérdida de Poisson (la que usamos para <code>bikers</code>) el gradiente es <span class="math inline">y_i-e^{f(x_i)}</span>: mismo principio, distinta pérdida.</li>
+<li>Por eso boosting reduce <strong>sesgo</strong>: corrige sistemáticamente lo que el modelo aún no captura.</li>
+</ul>
+</section>
+<section id="la-tasa-de-aprendizaje-regulariza" class="slide level2">
+<h2>La tasa de aprendizaje regulariza</h2>
+<p><span class="math display">\widehat f_m=\widehat f_{m-1}+\nu\,h_m,\qquad 0&lt;\nu\le 1.</span></p>
+<ul>
+<li><span class="math inline">\nu</span> pequeño = pasos cortos: menos sobreajuste, pero se necesitan <strong>más árboles</strong> <span class="math inline">M</span> — la combinación se elige junto, no cada parámetro por separado.</li>
+<li>La <strong>profundidad</strong> de cada árbol fija el orden de interacción (stumps = modelo aditivo, sin interacciones).</li>
+<li><code>bag.fraction &lt; 1</code> (submuestreo) añade aleatoriedad y baja varianza: <em>stochastic gradient boosting</em>.</li>
+<li>Demasiados árboles, con <span class="math inline">\nu</span> alto, sí puede sobreajustar — a diferencia de Random Forest.</li>
+</ul>
+</section>
+<section id="bagging-versus-boosting" class="slide level2">
+<h2>Bagging versus boosting</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Dimensión</th>
+<th>Random Forest</th>
+<th>Gradient Boosting</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Ajuste</td>
+<td>árboles en paralelo</td>
+<td>árboles secuenciales</td>
+</tr>
+<tr class="even">
+<td>Objetivo principal</td>
+<td>reducir varianza</td>
+<td>reducir sesgo</td>
+</tr>
+<tr class="odd">
+<td>Árbol típico</td>
+<td>profundo</td>
+<td>pequeño</td>
+</tr>
+<tr class="even">
+<td>Regularización</td>
+<td><code>mtry</code>, tamaño de hoja</td>
+<td>profundidad, <span class="math inline">\nu</span>, <span class="math inline">M</span></td>
+</tr>
+<tr class="odd">
+<td>Sensibilidad a outliers</td>
+<td>baja (el promedio los diluye)</td>
+<td>alta (cada etapa persigue el error anterior)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="sesgo-y-varianza-en-los-ensambles" class="slide level2">
+<h2>Sesgo y varianza en los ensambles</h2>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th></th>
+<th>Árbol profundo</th>
+<th>Random Forest</th>
+<th>Boosting</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sesgo</td>
+<td>bajo</td>
+<td>bajo</td>
+<td>se reduce por etapas</td>
+</tr>
+<tr class="even">
+<td>Varianza</td>
+<td>alta</td>
+<td>baja (promedio)</td>
+<td>controlada por <span class="math inline">\nu,M</span></td>
+</tr>
+<tr class="odd">
+<td>Ataca sobre todo</td>
+<td>—</td>
+<td>varianza</td>
+<td>sesgo</td>
+</tr>
+<tr class="even">
+<td>Riesgo principal</td>
+<td>sobreajuste</td>
+<td>escaso</td>
+<td>sobreajuste si <span class="math inline">M</span> alto</td>
+</tr>
+</tbody>
+</table>
+<p>Random Forest raramente sobreajusta al agregar árboles; boosting <strong>sí</strong> puede, porque cada árbol nuevo reduce el error de entrenamiento.</p>
+</section>
+<section id="tuning-del-boosting" class="slide level2">
+<h2>Tuning del boosting</h2>
+<div class="cell">
+<div class="cell-output-display">
+<table class="course-table">
+<thead>
+<tr>
+<th style="text-align:right;">
+depth
+</th>
+<th style="text-align:right;">
+shrinkage
+</th>
+<th style="text-align:right;">
+validation_rmse
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+0.080
+</td>
+<td style="text-align:right;">
+53.212
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+0.080
+</td>
+<td style="text-align:right;">
+66.937
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+0.030
+</td>
+<td style="text-align:right;">
+70.510
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+0.030
+</td>
+<td style="text-align:right;">
+83.501
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.080
+</td>
+<td style="text-align:right;">
+84.175
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.030
+</td>
+<td style="text-align:right;">
+96.508
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="gradient-boosting-ejemplo-empírico" class="slide level2">
+<h2>Gradient Boosting: ejemplo empírico</h2>
+<div class="cell">
+<div class="cell-output-display">
+<table class="course-table">
+<thead>
+<tr>
+<th style="text-align:left;">
+modelo
+</th>
+<th style="text-align:right;">
+RMSE
+</th>
+<th style="text-align:right;">
+MAE
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Poisson
+</td>
+<td style="text-align:right;">
+105.860
+</td>
+<td style="text-align:right;">
+81.192
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Árbol podado
+</td>
+<td style="text-align:right;">
+82.404
+</td>
+<td style="text-align:right;">
+55.299
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gradient Boosting
+</td>
+<td style="text-align:right;">
+60.499
+</td>
+<td style="text-align:right;">
+40.976
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="observado-versus-predicho" class="slide level2">
+<h2>Observado versus predicho</h2>
+
+<img data-src="class_20_files/figure-revealjs/boost-fit-plot-1.png" width="960" class="r-stretch"></section>
+<section id="diagnóstico-residual" class="slide level2">
+<h2>Diagnóstico residual</h2>
+
+<img data-src="class_20_files/figure-revealjs/boost-residuals-1.png" width="960" class="r-stretch"><p>Patrones persistentes indican estructura que el ensamble todavía no captura.</p>
+</section>
+<section id="más-allá-de-gbm" class="slide level2">
+<h2>Más allá de <code>gbm</code></h2>
+<p><code>gbm</code> es pedagógico: implementa la idea de boosting con claridad, pero en la práctica se usan versiones optimizadas:</p>
+<ul>
+<li><strong>XGBoost</strong>: gradient boosting con regularización explícita sobre los árboles y paralelización — el estándar de facto en competencias y producción con datos tabulares.</li>
+<li><strong>LightGBM</strong>: variante orientada a velocidad en datasets grandes.</li>
+<li><strong>Stacking</strong>: una tercera familia de ensambles, distinta de bagging y boosting — entrena varios modelos distintos (p.&nbsp;ej. logit, Random Forest, boosting) y un <strong>meta-modelo</strong> aprende a combinar sus predicciones.</li>
+</ul>
+<p>La lógica de fondo —combinar modelos simples para predecir mejor que cualquiera por separado— no cambia; cambia la implementación.</p>
+</section>
+<section id="otros-casos-de-uso" class="slide level2">
+<h2>Otros casos de uso</h2>
+<p>Árboles y ensambles son, junto con los GLM, el caballo de batalla de datos tabulares en la práctica:</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Dominio</th>
+<th>Uso típico</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Salud</td>
+<td>árboles de decisión clínica (reglas de diagnóstico interpretables)</td>
+</tr>
+<tr class="even">
+<td>Finanzas</td>
+<td>detección de fraude y scoring de crédito con Gradient Boosting</td>
+</tr>
+<tr class="odd">
+<td>Marketing</td>
+<td>segmentación de clientes y predicción de <em>churn</em> con Random Forest</td>
+</tr>
+<tr class="even">
+<td>Biología</td>
+<td>clasificación de especies e identificación de genes relevantes</td>
+</tr>
+<tr class="odd">
+<td>Búsqueda / <em>ranking</em></td>
+<td>los motores de búsqueda usan variantes de boosting para ordenar resultados</td>
+</tr>
+</tbody>
+</table>
+<p>En todos los casos, el atractivo es el mismo que motivó la clase de hoy: capturar no linealidades e interacciones sin tener que especificarlas a mano.</p>
+</section></section>
+<section>
+<section id="comparación" class="title-slide slide level1 inverse center middle" data-background-color="#C5143A">
+<h1>Comparación</h1>
+
+</section>
+<section id="qué-método-usar" class="slide level2">
+<h2>Qué método usar</h2>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Prioridad</th>
+<th>Candidato inicial</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Reglas comunicables</td>
+<td>árbol podado</td>
+</tr>
+<tr class="even">
+<td>Clasificación robusta</td>
+<td>Random Forest</td>
+</tr>
+<tr class="odd">
+<td>Máximo desempeño tabular</td>
+<td>boosting</td>
+</tr>
+<tr class="even">
+<td>Coeficientes interpretables</td>
+<td>GLM regularizado</td>
+</tr>
+</tbody>
+</table>
+<p>La elección depende de la tarea y del costo de errores, no de una jerarquía universal.</p>
+</section>
+<section id="cuándo-fallan-árboles-y-ensambles" class="slide level2">
+<h2>Cuándo fallan árboles y ensambles</h2>
+<ul>
+<li><strong>Relaciones suaves o lineales</strong>: los escalones aproximan mal; un GLM las capta con menos parámetros.</li>
+<li><strong>Extrapolación</strong>: no predicen fuera del rango observado (hojas constantes).</li>
+<li><strong>Fronteras oblicuas</strong>: los cortes perpendiculares necesitan muchas divisiones para una diagonal.</li>
+<li><strong>Alta cardinalidad</strong>: la importancia por impureza favorece variables con muchos cortes.</li>
+<li><strong>Interpretación causal</strong>: importancia y PDP describen el modelo, no efectos de intervenir.</li>
+</ul>
+</section>
+<section id="frente-a-un-glm-regularizado" class="slide level2">
+<h2>Frente a un GLM regularizado</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Criterio</th>
+<th>GLM regularizado</th>
+<th>Ensamble de árboles</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Forma funcional</td>
+<td>lineal en log-odds</td>
+<td>no lineal, interacciones automáticas</td>
+</tr>
+<tr class="even">
+<td>Interpretación</td>
+<td>coeficientes / odds ratios</td>
+<td>importancia, PDP</td>
+</tr>
+<tr class="odd">
+<td>Datos pequeños</td>
+<td>robusto</td>
+<td>puede sobreajustar</td>
+</tr>
+<tr class="even">
+<td>Estructura tabular compleja</td>
+<td>limitado</td>
+<td>suele ganar</td>
+</tr>
+<tr class="odd">
+<td>Extrapolación</td>
+<td>razonable</td>
+<td>pobre</td>
+</tr>
+</tbody>
+</table>
+<p>Los ensambles suelen ganar en desempeño tabular; el GLM gana en interpretabilidad y parsimonia.</p>
+</section>
+<section id="síntesis-conceptual" class="slide level2">
+<h2>Síntesis conceptual</h2>
+<ul>
+<li>Un árbol traduce los datos en <strong>reglas</strong>: no linealidades e interacciones sin especificarlas.</li>
+<li>Su debilidad es la <strong>varianza</strong>; los ensambles la atacan de dos maneras.</li>
+<li><strong>Random Forest</strong>: promedia árboles decorrelacionados → baja varianza.</li>
+<li><strong>Boosting</strong>: suma árboles pequeños que corrigen errores → baja sesgo.</li>
+<li>Cambia el modelo, no la disciplina: tuning, test y diagnóstico siguen separados.</li>
+</ul>
+</section>
+<section id="ejercicio" class="slide level2">
+<h2>Ejercicio</h2>
+<ol type="1">
+<li>Cambie <code>mtry</code> y <code>nodesize</code> sin mirar el test.</li>
+<li>Compare importancia Gini y permutación.</li>
+<li>Pruebe una profundidad mayor en boosting.</li>
+<li>Grafique errores por hora y tipo de día.</li>
+<li>Explique qué modelo usaría para planificación operativa.</li>
+</ol>
+</section>
+<section id="la-pregunta-que-queda-abierta" class="slide level2">
+<h2>La pregunta que queda abierta</h2>
+<p>Resolvimos el problema de la clase 19 —ya no elegimos interacciones a mano—, pero a cambio heredamos una limitación nueva: la predicción de un árbol (o de un ensamble de árboles) es <strong>escalonada</strong>, constante dentro de cada región, con saltos en los bordes. No puede aproximar suavemente una relación continua, ni extrapolar más allá de los datos observados.</p>
+<div class="fragment">
+<p><strong>¿Se puede aprender una función no lineal de los datos —interacciones incluidas— pero que sea suave en vez de escalonada?</strong> Esa es la pregunta que abre la próxima clase: redes neuronales, que representan la predicción como capas de transformaciones continuas en vez de particiones. La disciplina de evaluación —baseline, validación, test, diagnóstico— no cambia; cambia solo la forma que puede tomar <span class="math inline">\hat f</span>.</p>
+<p>El mismo Random Forest o Gradient Boosting que hoy predijo demanda de bicicletas es, en su forma, idéntico al que hoy decide límites de crédito o prioriza casos en un sistema judicial. La importancia de variables, la validación temporal, la desconfianza en la “importancia como causalidad” — todo eso que practicamos con datos inofensivos es exactamente lo que hay que exigir cuando el modelo decide sobre personas.</p>
+</div>
+</section>
+<section id="en-resumen" class="slide level2">
+<h2>En resumen</h2>
+<ul>
+<li>Los árboles capturan no linealidades e interacciones mediante reglas.</li>
+<li>La poda controla la complejidad de un árbol.</li>
+<li>Random Forest promedia árboles para reducir varianza.</li>
+<li>Boosting aprende secuencialmente para reducir sesgo.</li>
+<li>Tuning, test y diagnóstico deben permanecer separados.</li>
+</ul>
+</section>
+<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#0066B2">
+<h2>Gracias</h2>
+<p><strong>Hasta la próxima clase</strong></p>
+<p>Mauricio Bucca</p>
+
+</section></section>
+    </div>
+  <div class="quarto-auto-generated-content" style="display: none;">
+<div class="footer footer-default">
+
+</div>
+</div></div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="class_20_files/libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="class_20_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="class_20_files/libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="class_20_files/libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="class_20_files/libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="class_20_files/libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="class_20_files/libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="class_20_files/libs/revealjs/plugin/search/search.js"></script>
+  <script src="class_20_files/libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': true,
+'previewLinksAuto': false,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'jumpToSlide': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'smaller': false,
+ 
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: false,
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'none',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1600,
+
+        height: 900,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 0.1,
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    
+    <script>
+      // htmlwidgets need to know to resize themselves when slides are shown/hidden.
+      // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
+      // slide changes (different for each slide format).
+      (function () {
+        // dispatch for htmlwidgets
+        function fireSlideEnter() {
+          const event = window.document.createEvent("Event");
+          event.initEvent("slideenter", true, true);
+          window.document.dispatchEvent(event);
+        }
+
+        function fireSlideChanged(previousSlide, currentSlide) {
+          fireSlideEnter();
+
+          // dispatch for shiny
+          if (window.jQuery) {
+            if (previousSlide) {
+              window.jQuery(previousSlide).trigger("hidden");
+            }
+            if (currentSlide) {
+              window.jQuery(currentSlide).trigger("shown");
+            }
+          }
+        }
+
+        // hookup for slidy
+        if (window.w3c_slidy) {
+          window.w3c_slidy.add_observer(function (slide_num) {
+            // slide_num starts at position 1
+            fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
+          });
+        }
+
+      })();
+    </script>
+
+    <script id="quarto-html-after-body" type="application/javascript">
+      window.document.addEventListener("DOMContentLoaded", function (event) {
+        const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+        tabsets.forEach(function(tabset) {
+          const tabby = new Tabby('#' + tabset.id);
+        });
+        const isCodeAnnotation = (el) => {
+          for (const clz of el.classList) {
+            if (clz.startsWith('code-annotation-')) {                     
+              return true;
+            }
+          }
+          return false;
+        }
+        const onCopySuccess = function(e) {
+          // button target
+          const button = e.trigger;
+          // don't keep focus
+          button.blur();
+          // flash "checked"
+          button.classList.add('code-copy-button-checked');
+          var currentTitle = button.getAttribute("title");
+          button.setAttribute("title", "Copied!");
+          let tooltip;
+          if (window.bootstrap) {
+            button.setAttribute("data-bs-toggle", "tooltip");
+            button.setAttribute("data-bs-placement", "left");
+            button.setAttribute("data-bs-title", "Copied!");
+            tooltip = new bootstrap.Tooltip(button, 
+              { trigger: "manual", 
+                customClass: "code-copy-button-tooltip",
+                offset: [0, -8]});
+            tooltip.show();    
+          }
+          setTimeout(function() {
+            if (tooltip) {
+              tooltip.hide();
+              button.removeAttribute("data-bs-title");
+              button.removeAttribute("data-bs-toggle");
+              button.removeAttribute("data-bs-placement");
+            }
+            button.setAttribute("title", currentTitle);
+            button.classList.remove('code-copy-button-checked');
+          }, 1000);
+          // clear code selection
+          e.clearSelection();
+        }
+        const getTextToCopy = function(trigger) {
+          const outerScaffold = trigger.parentElement.cloneNode(true);
+          const codeEl = outerScaffold.querySelector('code');
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+        }
+        const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+          text: getTextToCopy
+        });
+        clipboard.on('success', onCopySuccess);
+        if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+          const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+            text: getTextToCopy,
+            container: window.document.getElementById('quarto-embedded-source-code-modal')
+          });
+          clipboardModal.on('success', onCopySuccess);
+        }
+          var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+          var mailtoRegex = new RegExp(/^mailto:/);
+            var filterRegex = new RegExp('/' + window.location.host + '/');
+          var isInternal = (href) => {
+              return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+          }
+          // Inspect non-navigation links and adorn them if external
+         var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+          for (var i=0; i<links.length; i++) {
+            const link = links[i];
+            if (!isInternal(link.href)) {
+              // undo the damage that might have been done by quarto-nav.js in the case of
+              // links that we want to consider external
+              if (link.dataset.originalHref !== undefined) {
+                link.href = link.dataset.originalHref;
+              }
+            }
+          }
+        function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+          const config = {
+            allowHTML: true,
+            maxWidth: 500,
+            delay: 100,
+            arrow: false,
+            appendTo: function(el) {
+                return el.closest('section.slide') || el.parentElement;
+            },
+            interactive: true,
+            interactiveBorder: 10,
+            theme: 'light-border',
+            placement: 'bottom-start',
+          };
+          if (contentFn) {
+            config.content = contentFn;
+          }
+          if (onTriggerFn) {
+            config.onTrigger = onTriggerFn;
+          }
+          if (onUntriggerFn) {
+            config.onUntrigger = onUntriggerFn;
+          }
+            config['offset'] = [0,0];
+            config['maxWidth'] = 700;
+          window.tippy(el, config); 
+        }
+        const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+        for (var i=0; i<noterefs.length; i++) {
+          const ref = noterefs[i];
+          tippyHover(ref, function() {
+            // use id or data attribute instead here
+            let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+            try { href = new URL(href).hash; } catch {}
+            const id = href.replace(/^#\/?/, "");
+            const note = window.document.getElementById(id);
+            if (note) {
+              return note.innerHTML;
+            } else {
+              return "";
+            }
+          });
+        }
+        const findCites = (el) => {
+          const parentEl = el.parentElement;
+          if (parentEl) {
+            const cites = parentEl.dataset.cites;
+            if (cites) {
+              return {
+                el,
+                cites: cites.split(' ')
+              };
+            } else {
+              return findCites(el.parentElement)
+            }
+          } else {
+            return undefined;
+          }
+        };
+        var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+        for (var i=0; i<bibliorefs.length; i++) {
+          const ref = bibliorefs[i];
+          const citeInfo = findCites(ref);
+          if (citeInfo) {
+            tippyHover(citeInfo.el, function() {
+              var popup = window.document.createElement('div');
+              citeInfo.cites.forEach(function(cite) {
+                var citeDiv = window.document.createElement('div');
+                citeDiv.classList.add('hanging-indent');
+                citeDiv.classList.add('csl-entry');
+                var biblioDiv = window.document.getElementById('ref-' + cite);
+                if (biblioDiv) {
+                  citeDiv.innerHTML = biblioDiv.innerHTML;
+                }
+                popup.appendChild(citeDiv);
+              });
+              return popup.innerHTML;
+            });
+          }
+        }
+      });
+      </script>
+    
+
+</body></html>
