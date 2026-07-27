@@ -1,6 +1,6 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Regresión Logística, Cross-Validation"
+subtitle: "Predicción, overfitting y validación cruzada"
 author: "Mauricio Bucca · Sociología UC"
 date: today
 body-classes: theme-celtic
@@ -16,11 +16,23 @@ format:
     width: 1600
     height: 900
     html-math-method: katex
+execute:
+  warning: false
+  message: false
 ---
 
 ```{r course-style, include=FALSE}
+library(pacman)
+p_load(tidyverse, rsample)
+
 source("../_shared/bikeshare.R")
-course_palette <- use_course_style("celtic")
+course <- use_course_data("celtic")
+course_palette <- course$palette
+bikedata <- course$data
+
+rmse <- function(truth, estimate) {
+  sqrt(mean((truth - estimate)^2))
+}
 ```
 
 ## Antes · Hoy · Después {.class-rhythm}
@@ -30,475 +42,565 @@ course_palette <- use_course_style("celtic")
 ::: {.content-box}
 **Antes**
 
-causalidad.
+asociación y causalidad.
 :::
 
 ::: {.content-box-primary}
 **Hoy**
 
-validación cruzada y sobreajuste.
+generalización, overfitting y validación cruzada.
 :::
 
 ::: {.content-box-secondary}
 **Después**
 
-clasificador logístico (binomial y multinomial).
+clasificador logístico: métricas y umbrales.
 :::
 
 :::
 
+# Predecir es generalizar {.inverse .center .middle}
 
-
-```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
-
-# load data on Capital Bikeshare from package "ISLR2"
-library(pacman)
-p_load("ISLR2")
-p_load("viridis")
-p_load("tidyverse")
-p_load("modelr")
-p_load("cowplot")
-p_load("margins")
-p_load("rsample")
-p_load("arm")
-p_load("DescTools")
-p_load("caret")
-
-theme_set(theme_julia())
-
-bikedata <- Bikeshare %>% as_tibble()
-
-# outcome binario: alta demanda = top 25% de las horas (percentil 75 de bikers)
-p75 <- quantile(bikedata$bikers, 0.75)
-bikedata <- bikedata %>%
-  mutate(demand = if_else(bikers > p75, "alta", "baja")) %>%
-  # map into 0/1 code
-  mutate(high_demand = if_else(bikers > p75, 1, 0))
-```
-
-# Predicción y "overfitting" 
-
-## En el capítulo anterior: matriz de confusión
-
-| | Real: demanda baja | Real: demanda alta |
-|---|---:|---:|
-| **Predicción: baja** | verdadero negativo | falso negativo |
-| **Predicción: alta** | falso positivo | verdadero positivo |
-
-La matriz separa dos preguntas: ¿cuánto acierta el clasificador y **qué tipo de error** comete?
-
-## Overfitting
-[Desafíos para el desarrollo de un modelo predictivo]{.bold}
-
-. . .
-
-- El modelo debe predecir adecuadamente los datos (bajo sesgo)
-
-. . .
-
-- El modelo debe ser parsimonioso (pocos parámetros)
-
-. . .
-
-- Debe tener un desempeño consistente en diferentes muestras (baja varianza)
-
-. . .
-
-[Problema: trade-off entre sesgo y varianza]{.bold}
-
-::: {.center}
-
-![overfitting](underfit_right_overfit.png)
-
-:::
-
-## Trade-off entre sesgo y varianza
-
-::: {.center}
-
-![overfitting](underfit_right_overfit.png)
-
-:::
-
-- Modelos muy complejos ajustan incluso el ruido idiosincrático de los datos con que fueron entrenados, lo que deteriora su desempeño en nuevos datos.
-- Modelos demasiado simples ignoran patrones reales, generando errores sistemáticos tanto dentro como fuera de la muestra.
-
-## Information Criteria
-
-. . .
-
-- Information Criteria fueron desarrollados con el fin de prevenir problemas de over-fitting y maximizar desempeño fuera de la muestra.
-
-. . .
-
-- Information Criteria miden la capacidad predictiva de un modelo pero incluyen una [penalty]{.bold} por el número de parámetros.
-
-. . .
-
-- [Intuición]{.bold}: entre dos modelos con "similar" capacidad preferimos el más parsimonioso (menos parámetros).
-
-. . .
-
-- Ventaja sobre [Deviance]{.bold} y [LRT]{.bold}: Information Criteria pueden comparar modelos no-anidados. 
-
-. . .
+## Dos preguntas, dos criterios de éxito
 
 ::: {.pull-left}
 
-::: {.center}
+**Problemas de $\hat{\beta}$**
 
-Forma general,
+- ¿Cómo se relaciona $X$ con $Y$?
+- ¿Qué parámetro resume esa relación?
+- ¿Qué incertidumbre tiene la estimación?
+- ¿Es defendible una interpretación causal?
 
-:::
+El foco está en **explicación e inferencia**.
 
 :::
 
 ::: {.pull-right}
 
-$IC: \overbrace{-2 \log \mathcal{L}_{M}}^{\text{fit}} + \underbrace{k \cdot q}_{\text{parsimonia}}$
+**Problemas de $\hat{y}$**
+
+- ¿Qué valor tendrá $Y$ para un caso nuevo?
+- ¿Cuánto nos equivocaremos?
+- ¿Qué especificación predice mejor?
+- ¿El desempeño se mantiene en otros datos?
+
+El foco está en **generalización**.
 
 :::
 
-. . .
-
-- $\mathcal{L}_{M}$ es la likelihood maximizada del modelo $M$
-- $k$ es el número de parámetros del modelo $M$
-- $q$ es una constante que "penaliza" la cantidad de parámetros
-
-## Information Criteria: AIC y BIC
-Dos Information Criteria son especialmente relevantes:
-
-. . .
-
-[Akaike Information Criterion (AIC)]{.bold}
-
-::: {.content-box-blue}
-
-$$\text{AIC} =  -2\log \mathcal{L}_{M} + 2k$$
-
+::: {.footnote}
+Distinción inspirada en Mullainathan y Spiess (2017).
 :::
 
+## El examen ocurre en datos nuevos
+
+Un modelo recibe predictores $X$ y construye una regla:
+
+$$
+\widehat{f}:X\longrightarrow \widehat{Y}.
+$$
+
+El objetivo predictivo no es reproducir los datos que ya vimos, sino minimizar el error esperado en una nueva observación:
+
+$$
+\mathbb{E}\left[L\{Y_{\text{nuevo}},\widehat f(X_{\text{nuevo}})\}\right].
+$$
+
 . . .
 
-[Bayesian Information Criterion (BIC)]{.bold} 
+La función de pérdida $L$ depende de la tarea: error cuadrático, error absoluto, log-loss, error de clasificación, etc.
 
-::: {.content-box-blue}
+## Nuestro problema de hoy
 
-$$\text{BIC} =  -2\log \mathcal{L}_{M} +  \log(n)k$$
+Usaremos `bikers` como outcome:
 
-:::
+> ¿Cuántos arriendos habrá en una hora que el modelo no usó para aprender?
 
-. . .
-
-- Un número más bajo en AIC y BIC indica mejor ajuste
+Los predictores disponibles describen clima, calendario y hora del día.
 
 . . .
 
-- Por lo general $2 < \log(n)$, por tanto BIC tiende a preferir modelos más simples comparado con AIC
+No necesitamos comprometernos con una familia de modelos: la lógica de evaluación es la misma para una regresión, un árbol, una red neuronal o cualquier otra regla de predicción.
 
-## Information Criteria, AIC y BIC: ejemplo empírico
+## Ajustar y evaluar son operaciones distintas
 
 ::: {.pull-left}
 
-[M0]{.bold}
-```{r,echo=FALSE}
-logit_demand0 <-  glm(high_demand ~ temp + factor(holiday) + hum ,family=binomial(link="logit"), data=bikedata)
-summary(logit_demand0)$coefficients[,1:2]
-```
+**Ajustar**
+
+Usar datos para aprender:
+
+$$
+\text{datos de entrenamiento}
+\longrightarrow \widehat f
+$$
 
 :::
 
 ::: {.pull-right}
 
-[M1]{.bold}
-```{r,echo=FALSE}
-logit_demand1 <-  glm(high_demand ~ temp*hum + I(temp^2)*hum, family=binomial(link="logit"), data=bikedata)
-summary(logit_demand1)$coefficients[,1:2]
-```
+**Evaluar**
+
+Aplicar la regla sin reestimarla:
+
+$$
+\widehat f(X_{\text{nuevo}})
+\longrightarrow \text{pérdida}
+$$
 
 :::
 
-¿Más [complejo]{.bold} mejor?
+. . .
+
+Si ajustamos y evaluamos con los mismos casos, el modelo ya conoce las respuestas del examen.
+
+# Overfitting {.inverse .center .middle}
+
+## Buen ajuste no implica buena predicción
+
+Un modelo flexible puede capturar:
+
+- patrones estables que volverán a aparecer;
+- ruido idiosincrático de la muestra de entrenamiento.
 
 . . .
 
-```{r}
-inf_crit <- function(m) { aic = -2*logLik(m)[1] + 2*m$rank
-  bic = -2*logLik(m)[1] + log(length(m$fitted.values))*m$rank
-  return(c(AIC=aic,BIC=bic))
+El segundo componente reduce el error de entrenamiento, pero deteriora la predicción en casos nuevos. Eso es **overfitting** o sobreajuste.
+
+## Tres regímenes de complejidad
+
+::: {.center}
+
+![Subajuste, ajuste adecuado y sobreajuste](underfit_right_overfit.png){width="78%"}
+
+:::
+
+- **Subajuste:** la regla es demasiado rígida y omite señal.
+- **Buen balance:** captura patrones reproducibles.
+- **Sobreajuste:** persigue fluctuaciones que no se repiten.
+
+## Sesgo y varianza describen errores distintos
+
+::: {.pull-left}
+
+**Sesgo alto**
+
+El modelo aprende una regla sistemáticamente equivocada.
+
+- poca flexibilidad;
+- errores parecidos en distintas muestras;
+- riesgo de subajuste.
+
+:::
+
+::: {.pull-right}
+
+**Varianza alta**
+
+Pequeños cambios en la muestra producen reglas muy diferentes.
+
+- mucha flexibilidad;
+- predicciones inestables;
+- riesgo de sobreajuste.
+
+:::
+
+. . .
+
+Reducir uno suele aumentar el otro: ese es el **trade-off sesgo–varianza**.
+
+## La descomposición del error
+
+En predicción con pérdida cuadrática:
+
+$$
+\underbrace{\mathbb{E}\left[(Y-\widehat f(X))^2\right]}_{\text{error esperado}}
+=
+\underbrace{\text{Sesgo}^2}_{\text{rigidez}}
++
+\underbrace{\text{Varianza}}_{\text{inestabilidad}}
++
+\underbrace{\sigma^2}_{\text{ruido irreducible}}.
+$$
+
+. . .
+
+La complejidad óptima no elimina todo error. Busca el punto donde agregar flexibilidad deja de recuperar señal y empieza a perseguir ruido.
+
+## El error de entrenamiento siempre sonríe
+
+```{r complexity-demo, echo=FALSE, fig.height=4.5}
+set.seed(3070)
+demo_id <- sample(seq_len(nrow(bikedata)), 600)
+demo_train <- bikedata[demo_id[1:300], ]
+demo_test <- bikedata[demo_id[301:600], ]
+
+complexity_results <- map_dfr(1:16, function(degree) {
+  model <- lm(bikers ~ poly(temp, degree, raw = TRUE), data = demo_train)
+  tibble(
+    complejidad = degree,
+    Entrenamiento = rmse(
+      demo_train$bikers,
+      predict(model, newdata = demo_train)
+    ),
+    Evaluación = rmse(
+      demo_test$bikers,
+      predict(model, newdata = demo_test)
+    )
+  )
+}) %>%
+  pivot_longer(
+    c(Entrenamiento, Evaluación),
+    names_to = "muestra",
+    values_to = "RMSE"
+  )
+
+ggplot(complexity_results, aes(complejidad, RMSE, color = muestra)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2.5) +
+  scale_color_course(name = NULL) +
+  labs(x = "Flexibilidad de la regla", y = "RMSE")
+```
+
+En esta demostración con `bikers`, el error de entrenamiento cae al aumentar flexibilidad; el error en datos separados puede subir.
+
+## El error relevante es fuera de muestra
+
+- **Error de entrenamiento:** mide qué tan bien la regla reproduce los casos usados para ajustarla.
+- **Error de generalización:** mide qué tan bien predice casos generados por el mismo proceso, pero no usados para aprender.
+
+. . .
+
+El overfitting es la brecha:
+
+$$
+\text{error fuera de muestra}
+-
+\text{error de entrenamiento}.
+$$
+
+No podemos diagnosticarla mirando solo el ajuste in-sample.
+
+# Separar para aprender {.inverse .center .middle}
+
+## La regla básica: no usar dos veces la respuesta
+
+::: {.center}
+
+![Separación entre entrenamiento y evaluación](train_test.png){width="72%"}
+
+:::
+
+1. Ajustamos el modelo en el **training set**.
+2. Congelamos la regla aprendida.
+3. Predecimos el **test set**.
+4. Comparamos predicción y resultado con una pérdida.
+
+## Un único split es frágil
+
+Separar una vez training y test evita el doble uso, pero:
+
+- el resultado depende de qué casos quedaron en cada lado;
+- una partición difícil puede hacer parecer malo a un buen modelo;
+- una partición fácil puede producir optimismo;
+- en muestras pequeñas reservamos demasiada información solo para evaluar.
+
+. . .
+
+Queremos repetir el examen con distintas particiones sin evaluar sobre casos usados para entrenar.
+
+# Validación cruzada {.inverse .center .middle}
+
+## Cada observación rinde examen una vez
+
+::: {.center}
+
+![Esquema de validación cruzada](kfold_cv.gif){width="70%"}
+
+:::
+
+En $k$-fold cross-validation, dividimos los datos en $k$ grupos. Cada fold actúa una vez como evaluación y $k-1$ veces como parte del entrenamiento.
+
+## El algoritmo es una envoltura genérica
+
+Para $j=1,\ldots,k$:
+
+1. reserve el fold $j$;
+2. ajuste la regla con los otros $k-1$ folds;
+3. prediga los casos del fold reservado;
+4. calcule la pérdida $E_j$.
+
+. . .
+
+Luego promediamos:
+
+$$
+\widehat E_{\text{CV}}=\frac{1}{k}\sum_{j=1}^{k}E_j.
+$$
+
+El interior de “ajuste la regla” puede ser cualquier algoritmo predictivo.
+
+## El resultado es una distribución, no solo un promedio
+
+Los $k$ errores $\{E_1,\ldots,E_k\}$ permiten estudiar:
+
+- desempeño promedio;
+- dispersión entre folds;
+- folds especialmente difíciles;
+- sensibilidad de la conclusión a la partición.
+
+. . .
+
+Dos modelos con el mismo error promedio pueden diferir mucho en estabilidad.
+
+## ¿Cuántos folds?
+
+::: {.pull-left}
+
+**$k$ pequeño**
+
+- entrenamientos más pequeños;
+- menor costo computacional;
+- estimación más sesgada del desempeño final.
+
+:::
+
+::: {.pull-right}
+
+**$k$ grande**
+
+- entrenamientos parecidos al dataset completo;
+- mayor costo;
+- errores entre folds más correlacionados.
+
+:::
+
+. . .
+
+$k=5$ o $k=10$ suele ofrecer un balance razonable.
+
+## LOOCV es el caso extremo
+
+Si $k=n$, cada fold contiene una sola observación:
+
+$$
+\text{LOOCV}=\text{Leave-One-Out Cross-Validation}.
+$$
+
+- Entrena $n$ veces con $n-1$ casos.
+- Usa casi todos los datos en cada ajuste.
+- Puede ser costoso y producir una estimación de error con alta varianza.
+
+. . .
+
+Usar más folds no garantiza una mejor decisión.
+
+# Cross-validation con `bikers` {.inverse .center .middle}
+
+## La partición debe parecerse al uso futuro
+
+Los datos contienen 24 horas dentro de cada día. Si repartimos horas al azar, el training set puede contener otras horas del mismo día que estamos evaluando.
+
+. . .
+
+Para predecir demanda en **días nuevos**, dejamos días completos fuera:
+
+```{r make-folds, echo=TRUE}
+set.seed(3070)
+folds <- group_vfold_cv(
+  bikedata,
+  group = day,
+  v = 10
+)
+
+folds %>%
+  select(id) %>%
+  slice_head(n = 3)
+```
+
+Mostramos tres de los diez folds. La unidad de partición es parte del estimando predictivo.
+
+## Dos reglas candidatas
+
+Para hacer visible el procedimiento, usamos dos reglas reproducibles:
+
+```{r candidate-formulas, echo=TRUE}
+simple_formula <- bikers ~
+  temp + hum + workingday + factor(hr)
+
+flexible_formula <- bikers ~
+  poly(temp, 5, raw = TRUE) +
+  poly(hum, 5, raw = TRUE) +
+  factor(mnth) +
+  factor(hr) * workingday +
+  factor(weekday) +
+  windspeed
+```
+
+El objetivo no es enseñar estas especificaciones. Son dos objetos `fit/predict` que la misma validación cruzada puede comparar.
+
+## Una función evalúa cualquier fórmula
+
+```{r cv-function, echo=TRUE}
+evaluate_fold <- function(split, formula) {
+  train_data <- analysis(split)
+  test_data <- assessment(split)
+  fit <- lm(formula, data = train_data)
+
+  tibble(
+    RMSE_train = rmse(
+      train_data$bikers, predict(fit, train_data)
+    ),
+    RMSE_test = rmse(
+      test_data$bikers, predict(fit, test_data)
+    )
+  )
 }
 ```
 
-. . .
+Cada ajuste conoce solo el training set de su fold.
 
-::: {.pull-left}
+## Repetimos el examen diez veces
 
-```{r,echo=FALSE}
-inf_crit(logit_demand0)
+```{r run-cv, echo=TRUE, results='hide'}
+candidate_models <- list(
+  Simple = simple_formula,
+  Flexible = flexible_formula
+)
+
+cv_results <- imap_dfr(
+  candidate_models,
+  function(formula, model_name) {
+    map_dfr(folds$splits, evaluate_fold, formula) %>%
+      mutate(modelo = model_name, .before = 1)
+  }
+)
 ```
 
-:::
+El resultado contiene veinte evaluaciones: diez por regla. `RMSE_test` se calcula siempre fuera de muestra.
 
-::: {.pull-right}
+## El promedio importa; la variación también
 
-```{r,echo=FALSE}
-inf_crit(logit_demand1)
+```{r cv-plot, echo=FALSE, fig.height=4.5}
+ggplot(cv_results, aes(modelo, RMSE_test, color = modelo)) +
+  geom_boxplot(width = 0.45, outlier.shape = NA, alpha = 0.15) +
+  geom_jitter(width = 0.08, size = 3) +
+  stat_summary(
+    fun = mean, geom = "point", shape = 21, size = 4.5,
+    fill = "white", color = "black"
+  ) +
+  scale_color_course(guide = "none") +
+  labs(x = NULL, y = "RMSE en días reservados")
 ```
 
-:::
-
-[Respuesta:]{.bold} preferimos el modelo con menor AIC/BIC (según los valores de arriba).
-
-. . .
-
- *(nota: pueden usar funciones `AIC()` y `BIC()` en `R`)
-```{css, echo=FALSE}
-.pull-right ~ * { clear: unset; }
-.pull-right + * { clear: both; }
-``` 
-
-## In-sample vs out-of-sample
-
-. . .
-
-- Information criteria penaliza la complejidad del modelo para prevenir "over-fitting".
-
-. . .
-
- Todavía hay un problema ...
-
-. . .
-
-- Todos los estadísticos que hemos visto (incluyendo AIC y BIC) evalúan los modelos en la [misma muestra]{.bold} en que son estimados
-  - No conocemos el desempeño del modelo [fuera de la muestra]{.bold}. Riesgo de "over-fitting".
-
-. . .
-
-- Evaluación de un modelo fuera de muestra se conoce como [cross-validación]{.bold}.
- - Herramienta estándar para evaluación de modelos predictivos.
-
-## In-sample vs out-of-sample
-
-::: {.center}
-
-![Esquema de validación cruzada](kfold_cv.gif)
-
-:::
-
-## Cross-Validation
-
-. . .
-
-::: {.img-right}
-
-![churros](churros.png)
-
-:::
-
-- Principio básico de cross-validation: ["no double dipping!"]{.bold}
-
-. . .
-
-  - estima el modelo en un dataset (training set)
-
-. . .
-
-  - evalúa el modelo en un dataset distinto (test set)
-
-::: {.pull-left}
-
-![train_test](train_test.png)
-
-:::
-
-## Limitaciones del split único
-
-- Separar los datos en un solo [training set]{.bold} y [test set]{.bold} es útil, pero tiene problemas prácticos:
-
-. . .
-
-  - Los resultados dependen del azar: distintos splits pueden producir [errores muy distintos]{.bold}.  
-  - En muestras pequeñas, usar parte de los datos solo para test reduce la [precisión de la estimación]{.bold}.  
-  - No aprovechamos toda la información disponible.
-
-. . .
-
-[Idea:]{.bold}  Usar *todos* los datos, pero nunca al mismo tiempo para estimar y evaluar.
-
-- Así nace la [k-fold cross-validation]{.bold}: una forma más estable y eficiente de medir el error predictivo.
-
-## k-fold cross-Validation
-
-::: {.pull-left}
-
-![kfold](kfold_cv.gif)
-
-:::
-
-. . .
-
-::: {.pull-right}
-
-[Algoritmo:]{.bold}
-
-- (1) Divide los datos en $k$ grupos (folds) del mismo tamaño. 
-  - (1.1) Reserva la $i$-fold como test set.
-  - (1.2) Ajusta el modelo en las restantes $k-1$ folds (training set). 
-
-:::
-
-. . .
-
-- (2) Usa el modelo ajustado en el training set $i$ (1.2) para predecir el outcome de interés en el test set (1.1)
-  - (2.1) Calcula una medida de error predictivo ("test error"), $E_{i}$
-
-. . .
-
-- (3) Repite (1) y (2) $k$-veces, produciendo $\{E_{1}, E_{2}, \dots , E_{k}\}$
-
-. . .
-
-- (4) Calcula el [k-fold cross-validation error]{.bold} promediando el error a través de las $k$-folds.:
-$$\text{CV-error} =  \frac{1}{k} \sum_{i=1}^{k} E_{i}$$
-
-## Un caso límite: LOOCV
-
-¿Qué pasa si $k=n$ (tantos folds como observaciones)? Cada fold deja **una sola observación** afuera para testear, y entrena con las $n-1$ restantes.
-
-. . .
-
-- Se llama **Leave-One-Out Cross-Validation (LOOCV)**.
-- Ventaja: usa casi todos los datos para entrenar → estimación de error casi insesgada.
-- Desventaja: hay que ajustar el modelo $n$ veces → costoso; además, los $n$ training sets se superponen casi por completo, por lo que los $E_i$ quedan muy correlacionados entre sí (mayor varianza del promedio).
-- En la práctica, $k=5$ o $k=10$ suele ser un mejor balance costo/varianza que $k=n$.
-
-## k-fold Cross-Validation: ejemplo empírico
-
-. . .
-
- - [Contexto:]{.bold} Queremos evaluar la capacidad predictiva donde modelos, uno más simple y otro más complejo. 
- - Usamos datos de _Capital Bikeshare_ (variable binaria `high_demand`), con predictores `temp` (temperatura), `hum` (humedad), y `holiday` (feriado sí/no).
-
-. . .
-
-::: {.pull-left}
-
-[Modelo simple (M0)]{.bold}
-```{r,echo=FALSE, message=FALSE, warning=FALSE}
-logit_demand0 <- glm(high_demand ~ temp + factor(holiday) + hum,
-                      family = binomial(link="logit"),
-                      data = bikedata)
-summary(logit_demand0)$coefficients[,1:2]
-```
-
-:::
-
-::: {.pull-right}
-
-[Modelo complejo (M1)]{.bold}
-```{r,echo=FALSE, message=FALSE, warning=FALSE}
-logit_demand1 <- glm(high_demand ~ temp*hum + I(temp^2)*hum,
-                      family = binomial(link="logit"),
-                      data = bikedata)
-summary(logit_demand1)$coefficients[,1:2]
-```
-
-:::
-
-¿Más [complejo]{.bold} = mejor predicción?
-
-## k-fold Cross-Validation: ejemplo empírico
-[Evaluemos usando k-fold Cross-Validation]{.bold}
-
-```{r, message=FALSE, warning=FALSE}
-p_load(caret)
-
-# definimos control de validación cruzada (10 folds, repetida)
-ctrl <- trainControl(method = "repeatedcv", number = 10, savePredictions = TRUE)
-
-# cross-valida M0
-cv_logit_demand0 <- train(factor(high_demand) ~ temp + factor(holiday) + hum,
-                           data = bikedata, method = "glm", family = "binomial", trControl = ctrl)
-
-# cross-valida M1
-cv_logit_demand1 <- train(factor(high_demand) ~ temp*hum + I(temp^2)*hum,
-                           data = bikedata, method = "glm", family = "binomial", trControl = ctrl)
-```
-
-## k-fold Cross-Validation: ejemplo empírico
-
-. . .
-
-::: {.pull-left}
-
-```{r, message=FALSE, warning=FALSE}
-cv_logit_demand0$resample %>% head()
-```
-
-:::
-
-::: {.pull-right}
-
-```{r, message=FALSE, warning=FALSE}
-cv_logit_demand1$resample %>% head()
-```
-
-:::
-
-## k-fold Cross-Validation: ejemplo empírico
-
-[Error promedio de cross-validation]{.bold}
-```{r, message=FALSE, warning=FALSE}
-cv_logit_demand1
-```
-
-## Desempeño promedio en términos de clasificación
-```{r, message=FALSE, warning=FALSE}
-
-bikedata <- bikedata %>%
-  mutate(
-    high_demand = factor(
-      high_demand,
-      levels = c(0, 1),        # or whatever your original coding is
-      labels = c("no", "yes")  # valid names for caret
-    )
+Cada punto es un fold; el punto blanco es el promedio.
+
+## Resumimos desempeño y estabilidad
+
+```{r cv-summary, echo=FALSE}
+cv_summary <- cv_results %>%
+  group_by(modelo) %>%
+  summarise(
+    RMSE_promedio = mean(RMSE_test),
+    SD_entre_folds = sd(RMSE_test),
+    brecha_generalización = mean(RMSE_test - RMSE_train),
+    .groups = "drop"
   )
 
-ctrl <- trainControl(method = "repeatedcv", number = 10,
-                     savePredictions = TRUE,
-                     classProbs = TRUE,
-                     summaryFunction = twoClassSummary)
-
-# cross-valida M0
-cv_logit_demand0 <- train(high_demand ~ temp + factor(holiday) + hum,
-                           data = bikedata, method = "glm", family = "binomial", trControl = ctrl)
-
-# cross-valida M1
-cv_logit_demand1 <- train(high_demand ~ temp*hum + I(temp^2)*hum,
-                           data = bikedata, method = "glm", family = "binomial", trControl = ctrl)
-
+cv_summary
 ```
 
-## Desempeño promedio en términos de clasificación
-[Modelo M0]{.bold}
-```{r, message=FALSE, warning=FALSE}
-confusionMatrix(cv_logit_demand0)
-cv_logit_demand0$results
-```
+En este ejercicio, la regla flexible predice mejor días nuevos. La brecha y la dispersión recuerdan que un único número no resume toda la incertidumbre predictiva.
 
-## Desempeño promedio en términos de clasificación
-[Modelo M1]{.bold}
-```{r, message=FALSE, warning=FALSE}
-confusionMatrix(cv_logit_demand1)
-cv_logit_demand1$results
-```
+## Cross-validation no está casada con RMSE
 
-## Decisión de modelado
+Podemos conservar los mismos folds y cambiar la pérdida:
 
-- El error de entrenamiento siempre favorece modelos más flexibles.
-- La validación cruzada estima desempeño fuera de muestra.
-- La métrica debe representar el costo sustantivo de falsos positivos y falsos negativos.
-- El conjunto de test se consulta una sola vez, al final.
+| Tipo de outcome | Pérdidas posibles |
+|---|---|
+| continuo (`bikers`) | RMSE, MAE |
+| binario (`high_demand`) | log-loss, error de clasificación |
+| multinomial (`demand_level`) | cross-entropy, accuracy |
+| conteo | deviance, MAE, RMSE |
+
+. . .
+
+La métrica debe reflejar el uso sustantivo de la predicción y el costo de equivocarse.
+
+## Cross-validation también sirve para elegir
+
+La usamos para comparar:
+
+- algoritmos;
+- predictores;
+- transformaciones;
+- niveles de regularización;
+- hiperparámetros;
+- reglas de decisión.
+
+. . .
+
+Pero toda elección guiada por CV convierte esos folds en parte del entrenamiento del procedimiento completo.
+
+## El test final se toca una sola vez
+
+Un flujo limpio separa tres funciones:
+
+1. **Training folds:** ajustar parámetros.
+2. **Validation folds:** comparar alternativas y elegir.
+3. **Test final:** estimar desempeño del procedimiento elegido.
+
+. . .
+
+Si miramos repetidamente el test para modificar el modelo, terminamos sobreajustando el test.
+
+## Fugas de información
+
+Hay *data leakage* cuando información del fold reservado influye en el ajuste:
+
+- estandarizar con media y desviación de todo el dataset;
+- imputar usando también los casos de evaluación;
+- seleccionar predictores antes de crear folds;
+- ajustar umbrales con las respuestas del test;
+- repartir observaciones relacionadas entre training y test.
+
+. . .
+
+Toda operación que “aprende” de los datos debe ocurrir dentro de cada fold.
+
+## Series de tiempo requieren otra partición
+
+Si el objetivo fuera predecir el futuro, folds aleatorios podrían dejar observaciones futuras en training y pasadas en evaluación.
+
+. . .
+
+En ese caso usaríamos validación temporal:
+
+$$
+\text{pasado}\longrightarrow\text{futuro},
+$$
+
+con ventanas móviles o acumulativas. La validación debe imitar las restricciones reales de despliegue.
+
+## Ejercicio
+
+Con los mismos folds por `day`:
+
+1. proponga una tercera regla de predicción;
+2. evalúela con MAE y RMSE;
+3. compare promedio y dispersión entre folds;
+4. identifique una posible fuga de información;
+5. explique cómo cambiaría los folds si el objetivo fuera predecir el mes siguiente.
+
+## En resumen
+
+- Predecir significa generalizar a casos nuevos.
+- El error de entrenamiento es optimista por construcción.
+- El overfitting surge cuando la flexibilidad captura ruido.
+- Validación cruzada repite evaluaciones fuera de muestra.
+- Folds y pérdidas deben imitar la tarea predictiva real.
+- El test final se reserva para una sola evaluación.
 
 ## Gracias {.inverse .center .middle .closing}
 

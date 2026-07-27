@@ -49,41 +49,6 @@ regularización: Ridge y LASSO.
 
 
 
-# Evaluación de Modelos Predictivos {.inverse .center .middle}
-
-## $\hat{\beta}$-problems vs. $\hat{y}$-problems
-(Mullainathan & Spiess, 2017)
-
-. . .
-
-::: {.pull-left}
-
-**$\hat{\beta}$-problems**
-
-- Foco en **parámetros** y su interpretación.  
-- Preguntas:  
-  - ¿Cuál es el efecto de $X$ sobre $Y$?  
-  - ¿Es significativo / causal?  
-
-- Objetivo: **explicación e inferencia**.  
-- Modelos suelen ser **transparentes** (fácil interpretar).  
-
-:::
-
-::: {.pull-right}
-
-**$\hat{y}$-problems**
-
-- Foco en **predicciones** para nuevos casos.  
-- Preguntas:  
-  - ¿Qué tan bien predice el modelo en datos futuros?  
-  - ¿Qué modelo predice mejor?  
-
-- Objetivo: **desempeño y utilidad práctica**.  
-- Modelos pueden ser tratados como **black-box** (no importa cómo, mientras prediga bien).  
-
-:::
-
 ## Regresión Logística como Machine Learning {.inverse .center .middle}
 
 ## Regresión Logística como Machine Learning
@@ -760,14 +725,6 @@ La curva ROC y el AUC, tal como los definimos, son conceptos binarios. La genera
 
 - Ninguna curva única resume el desempeño multinomial completo — se reportan $J$ curvas, o un promedio (macro-AUC).
 - Log-loss (clase 6), en cambio, se generaliza de forma inmediata al caso multinomial — es la misma cross-entropy que usamos para ajustar `logit_multi`, y sigue siendo una sola cifra comparable entre modelos.
-
-## en el próximo episodio ... {.middle}
-
-::: {.center}
-
-![Esquema de validación cruzada](kfold_cv.gif)
-
-:::
 
 ## Gracias {.inverse .center .middle .closing}
 
