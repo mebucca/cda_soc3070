@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-23">
+  <meta name="dcterms.date" content="2026-07-27">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -32,6 +32,72 @@
       margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
       vertical-align: middle;
     }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      { color: #24292e;  }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #24292e; } /* Normal */
+    code span.al { color: #ff5555; font-weight: bold; } /* Alert */
+    code span.an { color: #6a737d; } /* Annotation */
+    code span.at { color: #d73a49; } /* Attribute */
+    code span.bn { color: #005cc5; } /* BaseN */
+    code span.bu { color: #d73a49; } /* BuiltIn */
+    code span.cf { color: #d73a49; } /* ControlFlow */
+    code span.ch { color: #032f62; } /* Char */
+    code span.cn { color: #005cc5; } /* Constant */
+    code span.co { color: #6a737d; } /* Comment */
+    code span.cv { color: #6a737d; } /* CommentVar */
+    code span.do { color: #6a737d; } /* Documentation */
+    code span.dt { color: #d73a49; } /* DataType */
+    code span.dv { color: #005cc5; } /* DecVal */
+    code span.er { color: #ff5555; text-decoration: underline; } /* Error */
+    code span.ex { color: #d73a49; font-weight: bold; } /* Extension */
+    code span.fl { color: #005cc5; } /* Float */
+    code span.fu { color: #6f42c1; } /* Function */
+    code span.im { color: #032f62; } /* Import */
+    code span.in { color: #6a737d; } /* Information */
+    code span.kw { color: #d73a49; } /* Keyword */
+    code span.op { color: #24292e; } /* Operator */
+    code span.ot { color: #6f42c1; } /* Other */
+    code span.pp { color: #d73a49; } /* Preprocessor */
+    code span.re { color: #6a737d; } /* RegionMarker */
+    code span.sc { color: #005cc5; } /* SpecialChar */
+    code span.ss { color: #032f62; } /* SpecialString */
+    code span.st { color: #032f62; } /* String */
+    code span.va { color: #e36209; } /* Variable */
+    code span.vs { color: #032f62; } /* VerbatimString */
+    code span.wa { color: #ff5555; } /* Warning */
   </style>
   <link rel="stylesheet" href="class_16_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
   <link rel="stylesheet" href="../_shared/course.css">
@@ -149,7 +215,7 @@
 
 <section id="title-slide" data-background-color="#8E1B3D" class="quarto-title-block center">
   <h1 class="title">Análisis de Datos Categóricos (SOC3070)</h1>
-  <p class="subtitle">Causalidad</p>
+  <p class="subtitle">Causalidad y asociación</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -159,7 +225,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-23</p>
+  <p class="date">2026-07-27</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -170,7 +236,7 @@ Mauricio Bucca · Sociología UC
 </div>
 <div class="content-box-primary">
 <p><strong>Hoy</strong></p>
-<p>causalidad.</p>
+<p>asociación, contrafactuales y causalidad.</p>
 </div>
 <div class="content-box-secondary">
 <p><strong>Después</strong></p>
@@ -183,162 +249,428 @@ Mauricio Bucca · Sociología UC
 <h1>Causalidad</h1>
 
 </section>
-<section id="la-pregunta-que-quedó-pendiente" class="slide level2">
-<h2>La pregunta que quedó pendiente</h2>
-<p>Durante nueve clases ajustamos LPM, GLM, logit, logit multinomial y Poisson, y en cada una interpretamos un coeficiente <span class="math inline">\beta_j</span> como “el efecto de <span class="math inline">x_j</span> sobre <span class="math inline">y</span>”.</p>
+<section id="las-preguntas-causales-comparan-mundos" class="slide level2">
+<h2>Las preguntas causales comparan mundos</h2>
+<p>Las ciencias sociales están llenas de preguntas aparentemente sencillas:</p>
 <div class="fragment">
-<p>Nunca preguntamos, con cuidado, <strong>qué se necesita para que esa interpretación sea causal</strong> y no solo una asociación estadística. Esa es la pregunta de hoy.</p>
+<ul>
+<li>¿Una política de transporte cambia el uso de bicicletas?</li>
+<li>¿Un día despejado hace que más personas arrienden una bicicleta?</li>
+<li>¿Trabajar desde casa reduce los viajes en hora punta?</li>
+</ul>
+</div>
+<div class="fragment">
+<p>Todas preguntan qué <strong>cambiaría</strong> en un resultado si interviniéramos sobre una causa.</p>
 </div>
 </section>
-<section id="ruta-de-la-clase" class="slide level2">
-<h2>Ruta de la clase</h2>
-<ol type="1">
-<li>Por qué asociación no es lo mismo que causalidad.</li>
-<li>El marco de resultados potenciales.</li>
-<li>Confusión (<em>confounding</em>): la razón más común por la que fallan las interpretaciones causales.</li>
-<li>Cómo pensar el problema con un diagrama causal (DAG).</li>
-<li>Qué hace —y qué no hace— “controlar por” una variable en una regresión.</li>
-</ol>
+<section id="nuestro-caso-clima-despejado-y-demanda" class="slide level2">
+<h2>Nuestro caso: clima despejado y demanda</h2>
+<p>Vamos a estudiar una hipótesis concreta:</p>
+<blockquote>
+<p>Un cielo despejado aumenta la probabilidad de demanda alta.</p>
+</blockquote>
+<p>Definimos un predictor binario:</p>
+<p><span class="math display">
+D_i =
+\begin{cases}
+1 &amp; \text{si el clima de la hora } i \text{ está despejado}\\
+0 &amp; \text{si hay nubes, lluvia o nieve}
+\end{cases}
+</span></p>
+<p>El resultado también es binario:</p>
+<p><span class="math display">
+Y_i =
+\begin{cases}
+1 &amp; \text{si la hora tiene demanda alta}\\
+0 &amp; \text{si la hora no tiene demanda alta}
+\end{cases}
+</span></p>
+<p><code>high_demand = 1</code> identifica las horas sobre el percentil 75 de <code>bikers</code>.</p>
+</section>
+<section id="primero-vemos-una-asociación" class="slide level2">
+<h2>Primero vemos una asociación</h2>
+
+<img data-src="class_16_files/figure-revealjs/observed-association-1.png" width="960" class="r-stretch"><p>Las horas despejadas tienen mayor probabilidad de demanda alta. Eso es un hecho descriptivo; todavía no es una conclusión causal.</p>
+</section>
+<section id="la-diferencia-observada" class="slide level2">
+<h2>La diferencia observada</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  weather_label horas prob_demanda_alta
+  &lt;fct&gt;         &lt;int&gt;             &lt;dbl&gt;
+1 Otro clima     3000             0.189
+2 Despejado      5645             0.282</code></pre>
+</div>
+</div>
+<p>La diferencia observada es de 9,3 puntos porcentuales.</p>
+<div class="fragment">
+<p><strong>Pregunta:</strong> ¿cuánto de esa diferencia se debe al clima y cuánto a que las horas despejadas son distintas en otros aspectos?</p>
+</div>
+</section>
+<section id="el-coeficiente-del-logit-resume-la-asociación" class="slide level2">
+<h2>El coeficiente del logit resume la asociación</h2>
+<p>Ajustamos:</p>
+<p><span class="math display">
+\operatorname{logit}\{\Pr(Y_i=1\mid D_i)\}
+=\beta_0+\beta_1D_i.
+</span></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href=""></a>logit_crudo <span class="ot">&lt;-</span> <span class="fu">glm</span>(</span>
+<span id="cb2-2"><a href=""></a>  high_demand <span class="sc">~</span> clear_weather,</span>
+<span id="cb2-3"><a href=""></a>  <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>),</span>
+<span id="cb2-4"><a href=""></a>  <span class="at">data =</span> bikedata</span>
+<span id="cb2-5"><a href=""></a>)</span>
+<span id="cb2-6"><a href=""></a></span>
+<span id="cb2-7"><a href=""></a><span class="fu">coef</span>(logit_crudo)[[<span class="st">"clear_weather"</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.522</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a><span class="fu">exp</span>(<span class="fu">coef</span>(logit_crudo)[[<span class="st">"clear_weather"</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1.686</code></pre>
+</div>
+</div>
+<p>En estos datos, <span class="math inline">\hat\beta_1=0,522</span> y <span class="math inline">e^{\hat\beta_1}=1,69</span>.</p>
+<div class="fragment">
+<p>Las <em>odds</em> de demanda alta son aproximadamente 69% mayores bajo clima despejado. Por ahora, esta es una <strong>asociación</strong>.</p>
+</div>
+</section>
+<section id="predicciones-del-logit" class="slide level2">
+<h2>Predicciones del logit</h2>
+
+<img data-src="class_16_files/figure-revealjs/logit-predictions-1.png" width="960" class="r-stretch"><p>Con un único predictor binario, el logit produce dos probabilidades predichas: una para <span class="math inline">D=0</span> y otra para <span class="math inline">D=1</span>.</p>
 </section></section>
 <section>
-<section id="asociación-vs.-causalidad" class="title-slide slide level1 inverse center middle" data-background-color="#F0B323">
-<h1>Asociación vs.&nbsp;causalidad</h1>
+<section id="mundos-paralelos" class="title-slide slide level1 inverse center middle" data-background-color="#F0B323">
+<h1>Mundos paralelos</h1>
 
 </section>
-<section id="un-ejemplo-con-nuestros-propios-datos" class="slide level2">
-<h2>Un ejemplo con nuestros propios datos</h2>
-
-<img data-src="class_16_files/figure-revealjs/assoc-demo-1.png" width="960" class="r-stretch"><p><code>temp</code> y <code>bikers</code> están claramente asociadas. Pero, ¿la temperatura <strong>causa</strong> que la gente arriende más bicicletas, o hay algo más de fondo?</p>
-<div class="fragment">
-<p>Los colores muestran el mes: los meses cálidos (verano) también tienen más horas de luz, vacaciones escolares distintas, más eventos al aire libre. El <strong>mes</strong> podría estar afectando tanto <code>temp</code> como <code>bikers</code> — y parte de la asociación cruda podría deberse a eso, no a la temperatura en sí.</p>
-</div>
+<section id="dos-resultados-potenciales-para-cada-hora" class="slide level2">
+<h2>Dos resultados potenciales para cada hora</h2>
+<p>Para cada hora <span class="math inline">i</span> imaginamos dos resultados:</p>
+<p><span class="math display">
+Y_i(1): \text{demanda alta o no si esa hora estuviera despejada}
+</span></p>
+<p><span class="math display">
+Y_i(0): \text{demanda alta o no si esa misma hora tuviera otro clima}
+</span></p>
+<p>El efecto causal individual es:</p>
+<p><span class="math display">\tau_i = Y_i(1)-Y_i(0)\in\{-1,0,1\}.</span></p>
+<p>Esta comparación mantiene fija la unidad y cambia solo el tratamiento.</p>
 </section>
-<section id="definición-efecto-causal" class="slide level2">
-<h2>Definición: efecto causal</h2>
-<p>Para una unidad <span class="math inline">i</span> (una hora, una persona), y un tratamiento binario <span class="math inline">D_i\in\{0,1\}</span>, definimos dos <strong>resultados potenciales</strong>:</p>
-<p><span class="math display">Y_i(1): \text{lo que pasaría si } D_i=1, \qquad Y_i(0): \text{lo que pasaría si } D_i=0.</span></p>
+<section id="en-el-multiverso-veríamos-ambas-columnas" class="slide level2">
+<h2>En el multiverso veríamos ambas columnas</h2>
 <table class="caption-top">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
 <thead>
 <tr class="header">
-<th>Símbolo</th>
-<th>Significado</th>
+<th>Hora</th>
+<th style="text-align: right;"><span class="math inline">Y_i(1)</span>: despejado</th>
+<th style="text-align: right;"><span class="math inline">Y_i(0)</span>: otro clima</th>
+<th style="text-align: right;">Efecto</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><span class="math inline">Y_i(1)</span></td>
-<td>resultado de la unidad <span class="math inline">i</span> <strong>si</strong> recibiera el tratamiento</td>
+<td>Lunes, 08:00</td>
+<td style="text-align: right;">Alta (1)</td>
+<td style="text-align: right;">No alta (0)</td>
+<td style="text-align: right;">+1</td>
 </tr>
 <tr class="even">
-<td><span class="math inline">Y_i(0)</span></td>
-<td>resultado de la misma unidad <span class="math inline">i</span> <strong>si no</strong> lo recibiera</td>
+<td>Martes, 14:00</td>
+<td style="text-align: right;">No alta (0)</td>
+<td style="text-align: right;">No alta (0)</td>
+<td style="text-align: right;">0</td>
 </tr>
 <tr class="odd">
-<td><span class="math inline">Y_i(1)-Y_i(0)</span></td>
-<td>efecto causal individual</td>
+<td>Viernes, 18:00</td>
+<td style="text-align: right;">Alta (1)</td>
+<td style="text-align: right;">Alta (1)</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td>Domingo, 11:00</td>
+<td style="text-align: right;">No alta (0)</td>
+<td style="text-align: right;">Alta (1)</td>
+<td style="text-align: right;">−1</td>
 </tr>
 </tbody>
 </table>
+<p>Si pudiéramos observar ambas columnas, calcular el efecto causal sería trivial.</p>
 <div class="fragment">
-<p>El <strong>problema fundamental de la inferencia causal</strong>: para cada unidad <span class="math inline">i</span> solo observamos <em>uno</em> de los dos resultados potenciales — nunca ambos. El otro es, por definición, contrafactual.</p>
+<p>Pero estos valores son una <strong>ilustración</strong>: en los datos reales nunca vemos las dos columnas para la misma hora.</p>
 </div>
 </section>
-<section id="de-efectos-individuales-a-un-efecto-promedio" class="slide level2">
-<h2>De efectos individuales a un efecto promedio</h2>
-<p>Como no podemos observar <span class="math inline">Y_i(1)-Y_i(0)</span> para ninguna unidad, apuntamos a un promedio poblacional, el <strong>efecto promedio del tratamiento (ATE)</strong>:</p>
-<p><span class="math display">\text{ATE} = \mathbb{E}[Y_i(1)] - \mathbb{E}[Y_i(0)].</span></p>
+<section id="en-el-mundo-observado-falta-un-contrafactual" class="slide level2">
+<h2>En el mundo observado falta un contrafactual</h2>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Hora</th>
+<th>Clima observado</th>
+<th style="text-align: right;"><span class="math inline">Y_i(1)</span></th>
+<th style="text-align: right;"><span class="math inline">Y_i(0)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Lunes, 08:00</td>
+<td>despejado</td>
+<td style="text-align: right;">Alta (1)</td>
+<td style="text-align: right;"><strong>?</strong></td>
+</tr>
+<tr class="even">
+<td>Martes, 14:00</td>
+<td>otro clima</td>
+<td style="text-align: right;"><strong>?</strong></td>
+<td style="text-align: right;">No alta (0)</td>
+</tr>
+<tr class="odd">
+<td>Viernes, 18:00</td>
+<td>despejado</td>
+<td style="text-align: right;">Alta (1)</td>
+<td style="text-align: right;"><strong>?</strong></td>
+</tr>
+<tr class="even">
+<td>Domingo, 11:00</td>
+<td>otro clima</td>
+<td style="text-align: right;"><strong>?</strong></td>
+<td style="text-align: right;">Alta (1)</td>
+</tr>
+</tbody>
+</table>
+<p>Para cada unidad observamos:</p>
+<p><span class="math display">Y_i = D_iY_i(1)+(1-D_i)Y_i(0).</span></p>
+<p>El otro resultado potencial es contrafactual. Este es el <strong>problema fundamental de la inferencia causal</strong>.</p>
+</section>
+<section id="del-efecto-individual-al-efecto-promedio" class="slide level2">
+<h2>Del efecto individual al efecto promedio</h2>
+<p>Como no observamos <span class="math inline">\tau_i</span> para ninguna hora, apuntamos al <strong>efecto promedio del tratamiento</strong>:</p>
+<p><span class="math display">
+\text{ATE}=\mathbb{E}[Y_i(1)-Y_i(0)]
+=\mathbb{E}[Y_i(1)]-\mathbb{E}[Y_i(0)].
+</span></p>
 <div class="fragment">
-<p>Lo que sí podemos calcular con datos observacionales es la diferencia de medias <strong>entre los grupos que efectivamente recibieron cada tratamiento</strong>:</p>
-<p><span class="math display">\mathbb{E}[Y_i \mid D_i=1] - \mathbb{E}[Y_i \mid D_i=0].</span></p>
-</div>
-<div class="fragment">
-<p>La pregunta de toda esta clase es: <strong>¿cuándo esta diferencia observada es igual al ATE?</strong></p>
+<p>En cambio, los datos entregan la diferencia entre dos grupos de horas:</p>
+<p><span class="math display">
+\mathbb{E}[Y_i\mid D_i=1]-\mathbb{E}[Y_i\mid D_i=0].
+</span></p>
+<p>Una comparación es entre <strong>mundos posibles para las mismas unidades</strong>; la otra es entre <strong>unidades diferentes en el mundo observado</strong>.</p>
+<p>Como <span class="math inline">Y</span> es binario, ambas expresiones son diferencias de probabilidades. El ATE es un efecto causal promedio medido en puntos porcentuales.</p>
 </div>
 </section>
-<section id="confusión-confounding" class="slide level2">
-<h2>Confusión (<em>confounding</em>)</h2>
-<p>La diferencia observada y el ATE <strong>no coinciden</strong> cuando existe una variable <span class="math inline">X</span> que afecta tanto a <span class="math inline">D</span> (quién recibe el tratamiento) como a <span class="math inline">Y</span> (el resultado) — un <strong>confusor</strong>.</p>
+<section id="asociación-no-es-causalidad" class="slide level2">
+<h2>Asociación no es causalidad</h2>
+<div class="pull-left">
+<p><strong>Asociación observada</strong></p>
+<p><span class="math display">
+\mathbb{E}[Y\mid D=1]-
+\mathbb{E}[Y\mid D=0]
+</span></p>
+<p>Compara horas despejadas con horas no despejadas.</p>
+</div>
+<div class="pull-right">
+<p><strong>Efecto causal</strong></p>
+<p><span class="math display">
+\mathbb{E}[Y(1)-Y(0)]
+</span></p>
+<p>Compara cada hora consigo misma bajo dos climas posibles.</p>
+</div>
+<div class="fragment">
+<p>La asociación identifica el efecto causal solo bajo supuestos adicionales.</p>
+</div>
+</section></section>
+<section>
+<section id="por-qué-pueden-diferir" class="title-slide slide level1 inverse center middle" data-background-color="#F0B323">
+<h1>¿Por qué pueden diferir?</h1>
 
-<img data-src="class_16_files/figure-revealjs/dag-confound-1.png" width="960" class="r-stretch"><p>En nuestro ejemplo: <code>month</code> (estación del año) afecta tanto la temperatura como la demanda por razones ajenas al clima (vacaciones, luz solar) — es un candidato a confusor de la relación <code>temp</code> → <code>bikers</code>.</p>
 </section>
-<section id="diagramas-causales-dags-en-una-frase" class="slide level2">
-<h2>Diagramas causales (DAGs), en una frase</h2>
-<p>Un <strong>DAG</strong> (<em>directed acyclic graph</em>) representa, con flechas, nuestros supuestos sobre qué variable causa a cuál. No se estima de los datos — es una hipótesis que traemos de la teoría.</p>
-<ul>
-<li><strong>Confusor</strong>: afecta tanto al tratamiento como al resultado. Si no se controla, contamina la asociación.</li>
-<li><strong>Mediador</strong>: está en el camino causal entre tratamiento y resultado (<span class="math inline">D \to M \to Y</span>). Controlar por él <strong>bloquea</strong> parte del efecto que queremos medir.</li>
-<li><strong>Colisionador (<em>collider</em>)</strong>: es afectado <em>por ambos</em>, tratamiento y resultado (<span class="math inline">D \to C \leftarrow Y</span>). Controlar por un colisionador <strong>crea</strong> una asociación espuria que no existía.</li>
-</ul>
-<div class="fragment">
-<p>El DAG no es un adorno: nos dice exactamente <strong>qué variables hay que controlar</strong> (los confusores) y <strong>cuáles no</strong> (mediadores, colisionadores).</p>
-</div>
+<section id="el-mes-cambia-el-clima-y-también-la-demanda" class="slide level2">
+<h2>El mes cambia el clima y también la demanda</h2>
+
+<img data-src="class_16_files/figure-revealjs/clear-by-month-1.png" width="960" class="r-stretch"><p>Los meses no tienen la misma probabilidad de estar despejados. Además, estación, vacaciones y horas de luz afectan la probabilidad de demanda alta.</p>
 </section>
-<section id="qué-hace-controlar-por-x-en-una-regresión" class="slide level2">
-<h2>Qué hace “controlar por X” en una regresión</h2>
-<p>Controlar por un confusor observado, en la práctica, es simplemente <strong>incluirlo como predictor</strong> — exactamente lo que hicimos, sin llamarlo así, en cada GLM de este curso.</p>
+<section id="confusión-una-causa-común-abre-un-camino-alternativo" class="slide level2">
+<h2>Confusión: una causa común abre un camino alternativo</h2>
+
+<img data-src="class_16_files/figure-revealjs/dag-confound-1.png" width="960" class="r-stretch"><p>El camino <span class="math inline">D \leftarrow X \rightarrow Y</span> mezcla el efecto del clima con diferencias estacionales.</p>
+</section>
+<section id="ajustar-por-el-confusor-cambia-el-coeficiente" class="slide level2">
+<h2>Ajustar por el confusor cambia el coeficiente</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2 × 2
-  modelo                coef_temp
-  &lt;chr&gt;                     &lt;dbl&gt;
-1 Sin controlar por mes      305.
-2 Controlando por mes        501.</code></pre>
+<pre><code># A tibble: 2 × 3
+  modelo                 beta_clima odds_ratio
+  &lt;chr&gt;                       &lt;dbl&gt;      &lt;dbl&gt;
+1 Logit crudo                 0.522       1.690
+2 Logit ajustado por mes      0.443       1.560</code></pre>
 </div>
 </div>
-<p>El coeficiente de <code>temp</code> cambia al agregar <code>month</code> — parte de la asociación cruda sí correspondía a la estacionalidad, no a la temperatura por sí sola.</p>
-</section>
-<section id="el-supuesto-que-no-podemos-probar-con-datos" class="slide level2">
-<h2>El supuesto que no podemos probar con datos</h2>
-<p>Controlar por los confusores que <strong>medimos</strong> no es suficiente. La interpretación causal de una regresión requiere el supuesto de <strong>no-confusión</strong> (<em>unconfoundedness</em> / <em>ignorability</em>):</p>
-<p><span class="math display">\{Y_i(1), Y_i(0)\} \perp D_i \mid X_i.</span></p>
-<ul>
-<li>En palabras: una vez que controlamos por <span class="math inline">X</span>, no queda ningún otro factor —no medido— que afecte simultáneamente al tratamiento y al resultado.</li>
-<li>Este supuesto <strong>no se puede verificar con los datos que tenemos</strong>: es una afirmación sustantiva sobre el mundo, que debe justificarse con teoría y conocimiento del contexto, no con un test estadístico.</li>
-<li>Es, casi siempre, el eslabón más frágil de cualquier afirmación causal con datos observacionales.</li>
-</ul>
-</section>
-<section id="cuándo-más-controles-no-es-la-solución" class="slide level2">
-<h2>Cuándo “más controles” no es la solución</h2>
-<ul>
-<li>Agregar controles <strong>no</strong> garantiza una interpretación causal — solo ayuda si el confusor específico que agregamos era, en efecto, un confusor.</li>
-<li>Controlar por un <strong>mediador</strong> destruye parte del efecto que queremos medir.</li>
-<li>Controlar por un <strong>colisionador</strong> introduce sesgo que no existía antes de controlar.</li>
-<li>Por eso el DAG debe pensarse <strong>antes</strong> de decidir qué incluir en el modelo — no se elige la lista de controles solo porque “estaban disponibles en los datos”.</li>
-</ul>
-</section>
-<section id="cómo-leer-de-ahora-en-adelante-los-coeficientes-de-este-curso" class="slide level2">
-<h2>Cómo leer, de ahora en adelante, los coeficientes de este curso</h2>
-<p>Todos los modelos de las clases anteriores producen coeficientes válidos como <strong>descripciones de asociación condicional</strong>, sin necesidad de ningún supuesto causal adicional.</p>
+<p>El coeficiente cambia al comparar horas dentro del mismo mes: parte de la asociación cruda reflejaba composición estacional.</p>
 <div class="fragment">
-<p>Para leerlos como <strong>efectos causales</strong>, hace falta además:</p>
+<p>Esto <strong>no prueba</strong> que el coeficiente ajustado sea causal. Solo elimina la confusión explicada por <code>month</code> bajo la forma funcional elegida.</p>
+</div>
+</section>
+<section id="el-mismo-coeficiente-admite-dos-lecturas" class="slide level2">
+<h2>El mismo coeficiente admite dos lecturas</h2>
+<div class="pull-left">
+<p><strong>Lectura asociacional</strong></p>
+<p><span class="math display">
+\beta_1=
+\log\frac{\operatorname{odds}(Y=1\mid D=1,X)}
+{\operatorname{odds}(Y=1\mid D=0,X)}
+</span></p>
+<p>Describe una comparación condicional en los datos observados.</p>
+</div>
+<div class="pull-right">
+<p><strong>Lectura causal</strong></p>
+<p><span class="math display">
+\beta_1=
+\log\frac{\operatorname{odds}\{Y(1)=1\mid X\}}
+{\operatorname{odds}\{Y(0)=1\mid X\}}
+</span></p>
+<p>Compara resultados potenciales bajo dos intervenciones.</p>
+</div>
+<div class="fragment">
+<p>La segunda lectura necesita diseño y supuestos causales. La ecuación logística, por sí sola, solo garantiza la primera.</p>
+</div>
+</section>
+<section id="la-causalidad-no-está-en-la-complejidad" class="slide level2">
+<h2>La causalidad no está en la complejidad</h2>
+<p>El mismo logit puede ser:</p>
+<ul>
+<li><strong>asociacional</strong>, si el tratamiento está confundido;</li>
+<li><strong>causal</strong>, si el diseño hace creíble la comparación contrafactual.</li>
+</ul>
+<div class="fragment">
+<p>Un modelo más complejo puede ajustar mejor la asociación, pero no fabrica el contrafactual faltante.</p>
+</div>
+<div class="fragment">
+<p>Una muestra más grande reduce el error estándar:</p>
+<p><span class="math display">
+n\uparrow \quad\Longrightarrow\quad SE(\hat\beta_1)\downarrow
+</span></p>
+<p>pero no elimina el sesgo por confusión. Podemos estimar una asociación no causal con enorme precisión.</p>
+</div>
+</section>
+<section id="el-supuesto-decisivo-no-viene-de-la-regresión" class="slide level2">
+<h2>El supuesto decisivo no viene de la regresión</h2>
+<p>La <strong>intercambiabilidad condicional</strong> o no-confusión exige:</p>
+<p><span class="math display">
+\{Y_i(1),Y_i(0)\}\perp D_i\mid X_i.
+</span></p>
+<p>En palabras: dentro de grupos con igual <span class="math inline">X</span>, recibir <span class="math inline">D=1</span> o <span class="math inline">D=0</span> es “como si” fuera aleatorio respecto de los resultados potenciales.</p>
+<div class="fragment">
+<p>Este supuesto:</p>
+<ul>
+<li>no se demuestra con un <span class="math inline">p</span>-value;</li>
+<li>no aparece automáticamente al aumentar <span class="math inline">n</span>;</li>
+<li>requiere teoría, conocimiento del proceso y un buen diseño.</li>
+</ul>
+</div>
+</section>
+<section id="también-necesitamos-comparaciones-posibles" class="slide level2">
+<h2>También necesitamos comparaciones posibles</h2>
+<p>Para cada combinación de confusores debe existir alguna posibilidad de observar ambos tratamientos:</p>
+<p><span class="math display">
+0&lt;\Pr(D_i=1\mid X_i=x)&lt;1.
+</span></p>
+<p>Este supuesto se llama <strong>positividad</strong> u <strong>overlap</strong>.</p>
+<div class="fragment">
+<p>Si en cierto mes nunca hubiera horas despejadas, los datos no permitirían estimar qué ocurriría bajo clima despejado para ese mes: el contrafactual requeriría extrapolación.</p>
+</div>
+</section>
+<section id="consistencia-el-tratamiento-debe-estar-bien-definido" class="slide level2">
+<h2>Consistencia: el tratamiento debe estar bien definido</h2>
+<p>La <strong>consistencia</strong> conecta el resultado observado con el potencial:</p>
+<p><span class="math display">
+D_i=d \quad\Longrightarrow\quad Y_i=Y_i(d).
+</span></p>
+<p>Pero “otro clima” mezcla nubes, lluvia y nieve. ¿Son realmente la misma intervención?</p>
+<div class="fragment">
+<p>Cuanto más heterogénea sea la definición de <span class="math inline">D=0</span>, más difícil es interpretar un único efecto. Definir con precisión el tratamiento es parte del análisis causal.</p>
+</div>
+</section></section>
+<section>
+<section id="el-dag-guía-los-controles" class="title-slide slide level1 inverse center middle" data-background-color="#F0B323">
+<h1>El DAG guía los controles</h1>
+
+</section>
+<section id="no-todas-las-covariables-son-confusores" class="slide level2">
+<h2>No todas las covariables son confusores</h2>
+<ul>
+<li><strong>Confusor:</strong> causa tanto <span class="math inline">D</span> como <span class="math inline">Y</span>. Controlarlo puede bloquear una asociación espuria.</li>
+<li><strong>Mediador:</strong> está en el camino <span class="math inline">D\rightarrow M\rightarrow Y</span>. Controlarlo elimina parte del efecto total.</li>
+<li><strong>Colisionador:</strong> recibe flechas <span class="math inline">D\rightarrow C\leftarrow Y</span>. Controlarlo puede crear una asociación espuria.</li>
+</ul>
+<div class="fragment">
+<p>El DAG representa supuestos sustantivos; no se “descubre” mirando significancia estadística.</p>
+</div>
+</section>
+<section id="más-controles-no-garantizan-causalidad" class="slide level2">
+<h2>Más controles no garantizan causalidad</h2>
+<p>Agregar variables a una regresión ayuda solo si esas variables cumplen el rol causal correcto.</p>
+<div class="fragment">
+<ul>
+<li>Omitir un confusor deja abierto un camino no causal.</li>
+<li>Incluir un mediador cambia el estimando: pasamos del efecto total a un efecto directo.</li>
+<li>Incluir un colisionador puede introducir sesgo.</li>
+<li>Ajustar por una variable medida después del tratamiento suele ser especialmente riesgoso.</li>
+</ul>
+</div>
+<div class="fragment">
+<p>La lista de controles se decide con un argumento causal <strong>antes</strong> de mirar qué especificación entrega el coeficiente preferido.</p>
+</div>
+</section>
+<section id="diseño-antes-que-sofisticación" class="slide level2">
+<h2>Diseño antes que sofisticación</h2>
+<p>La diferencia entre asociación y causalidad:</p>
+<ul>
+<li><strong>no</strong> es principalmente un problema de estimación;</li>
+<li><strong>no</strong> desaparece con una muestra más grande;</li>
+<li><strong>sí</strong> depende de cómo se asigna el tratamiento y cómo se construye la comparación.</li>
+</ul>
+<div class="fragment">
+<p>Experimentos aleatorizados, experimentos naturales y diseños cuasi-experimentales buscan hacer creíble la comparación contrafactual.</p>
+</div>
+</section>
+<section id="cómo-leer-los-coeficientes-desde-ahora" class="slide level2">
+<h2>Cómo leer los coeficientes desde ahora</h2>
+<p>Sin supuestos causales, el coeficiente de un logit describe una asociación condicional:</p>
+<blockquote>
+<p>Entre observaciones con iguales covariables, ¿cómo cambian las log-odds de <span class="math inline">Y=1</span> cuando cambia <span class="math inline">D</span>?</p>
+</blockquote>
+<div class="fragment">
+<p>Ese mismo coeficiente <strong>puede</strong> interpretarse como un efecto causal condicional si además:</p>
 <ol type="1">
-<li>Un DAG explícito de qué variables afectan a qué.</li>
-<li>Controlar por los confusores identificados en ese DAG (y no por mediadores ni colisionadores).</li>
-<li>Estar dispuesto a defender el supuesto de no-confusión con argumentos sustantivos, no solo con significancia estadística.</li>
+<li>definimos tratamiento, outcome, población y estimando;</li>
+<li>explicitamos un DAG;</li>
+<li>justificamos no-confusión, positividad y consistencia;</li>
+<li>evitamos controles que abran sesgos nuevos.</li>
 </ol>
 </div>
 </section>
-<section id="ejercicio" class="slide level2">
-<h2>Ejercicio</h2>
+<section id="ejercicio-construya-el-argumento-causal" class="slide level2">
+<h2>Ejercicio: construya el argumento causal</h2>
+<p>Suponga que queremos estimar el efecto de <code>workingday</code> sobre la probabilidad de <code>high_demand</code>.</p>
 <ol type="1">
-<li>Dibuje un DAG para la relación entre <code>workingday</code> (día hábil) y <code>bikers</code>, incluyendo al menos un confusor plausible.</li>
-<li>Ajuste un modelo sin ese confusor y otro controlando por él. Compare los coeficientes.</li>
-<li>Proponga una variable que sería un <strong>mediador</strong> de esa relación (no un confusor) y explique por qué no debería incluirse como control.</li>
-<li>Evalúe si el supuesto de no-confusión es defendible en este ejemplo, y qué confusor no observado podría seguir siendo un problema.</li>
+<li>Defina <span class="math inline">Y_i(1)</span> y <span class="math inline">Y_i(0)</span> y precise cuál es la unidad <span class="math inline">i</span>.</li>
+<li>Dibuje un DAG con al menos un confusor plausible.</li>
+<li>Identifique una variable que <strong>no</strong> debería controlarse y explique su rol.</li>
+<li>Proponga un diseño que haga más creíble la comparación causal.</li>
+<li>Evalúe dónde podría fallar la positividad.</li>
 </ol>
 </section>
 <section id="en-resumen" class="slide level2">
 <h2>En resumen</h2>
 <ul>
-<li>Un efecto causal compara resultados potenciales de la misma unidad; nunca observamos ambos a la vez.</li>
-<li>La asociación observada coincide con el efecto causal solo bajo el supuesto de no-confusión.</li>
-<li>Un DAG distingue confusores (hay que controlar), mediadores y colisionadores (no hay que controlar).</li>
-<li>“Controlar por X” en una regresión es incluir X como predictor — útil solo si X es, efectivamente, un confusor identificado a priori.</li>
-<li>Ningún test estadístico prueba el supuesto de no-confusión: es un argumento sustantivo, no un resultado del modelo.</li>
+<li>Causalidad compara resultados potenciales de la misma unidad.</li>
+<li>Solo observamos uno: el otro es contrafactual.</li>
+<li>Un coeficiente logístico es asociacional por defecto; puede ser causal bajo un diseño y supuestos adecuados.</li>
+<li>Los confusores crean caminos alternativos entre tratamiento y resultado.</li>
+<li>Más datos reducen incertidumbre, pero no eliminan confusión.</li>
+<li>La causalidad depende del diseño, no de la complejidad del modelo.</li>
 </ul>
 </section>
 <section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#8E1B3D">

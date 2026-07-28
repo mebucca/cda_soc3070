@@ -1,6 +1,6 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Causalidad"
+subtitle: "Causalidad y asociación"
 author: "Mauricio Bucca · Sociología UC"
 date: today
 body-classes: theme-roma
@@ -24,10 +24,38 @@ execute:
 ```{r course-style, include=FALSE}
 library(pacman)
 p_load(tidyverse)
+
 source("../_shared/bikeshare.R")
 course <- use_course_data("roma")
-bikedata <- course$data %>% mutate(month = as.integer(mnth))
 course_palette <- course$palette
+
+bikedata <- course$data %>%
+  mutate(
+    month = as.integer(mnth),
+    clear_weather = as.integer(weathersit == "clear"),
+    weather_label = factor(
+      clear_weather,
+      levels = c(0, 1),
+      labels = c("Otro clima", "Despejado")
+    ),
+    demand_label = factor(
+      high_demand,
+      levels = c(0, 1),
+      labels = c("Demanda no alta", "Demanda alta")
+    )
+  )
+
+logit_crudo <- glm(
+  high_demand ~ clear_weather,
+  family = binomial(link = "logit"),
+  data = bikedata
+)
+
+logit_mes <- glm(
+  high_demand ~ clear_weather + factor(month),
+  family = binomial(link = "logit"),
+  data = bikedata
+)
 ```
 
 ## Antes · Hoy · Después {.class-rhythm}
@@ -43,7 +71,7 @@ sobre-dispersión y quasi-Poisson.
 ::: {.content-box-primary}
 **Hoy**
 
-causalidad.
+asociación, contrafactuales y causalidad.
 :::
 
 ::: {.content-box-secondary}
@@ -56,171 +84,519 @@ predicción, overfitting y validación cruzada.
 
 # Causalidad {.inverse .center .middle}
 
-## La pregunta que quedó pendiente
+## Las preguntas causales comparan mundos
 
-Durante nueve clases ajustamos LPM, GLM, logit, logit multinomial y Poisson, y en cada una interpretamos un coeficiente $\beta_j$ como "el efecto de $x_j$ sobre $y$".
+Las ciencias sociales están llenas de preguntas aparentemente sencillas:
 
 . . .
 
-Nunca preguntamos, con cuidado, **qué se necesita para que esa interpretación sea causal** y no solo una asociación estadística. Esa es la pregunta de hoy.
+- ¿Una política de transporte cambia el uso de bicicletas?
+- ¿Un día despejado hace que más personas arrienden una bicicleta?
+- ¿Trabajar desde casa reduce los viajes en hora punta?
 
-## Ruta de la clase
+. . .
 
-1. Por qué asociación no es lo mismo que causalidad.
-2. El marco de resultados potenciales.
-3. Confusión (*confounding*): la razón más común por la que fallan las interpretaciones causales.
-4. Cómo pensar el problema con un diagrama causal (DAG).
-5. Qué hace —y qué no hace— "controlar por" una variable en una regresión.
+Todas preguntan qué **cambiaría** en un resultado si interviniéramos sobre una causa.
 
-# Asociación vs. causalidad {.inverse .center .middle}
+## Nuestro caso: clima despejado y demanda
 
-## Un ejemplo con nuestros propios datos
+Vamos a estudiar una hipótesis concreta:
 
-```{r assoc-demo, echo=FALSE, fig.height=4.6}
+> Un cielo despejado aumenta la probabilidad de demanda alta.
+
+Definimos un predictor binario:
+
+$$
+D_i =
+\begin{cases}
+1 & \text{si el clima de la hora } i \text{ está despejado}\\
+0 & \text{si hay nubes, lluvia o nieve}
+\end{cases}
+$$
+
+El resultado también es binario:
+
+$$
+Y_i =
+\begin{cases}
+1 & \text{si la hora tiene demanda alta}\\
+0 & \text{si la hora no tiene demanda alta}
+\end{cases}
+$$
+
+`high_demand = 1` identifica las horas sobre el percentil 75 de `bikers`.
+
+## Primero vemos una asociación
+
+```{r observed-association, echo=FALSE, fig.height=4.5}
 bikedata %>%
-  ggplot(aes(temp, bikers, color = factor(month))) +
-  geom_jitter(alpha = 0.15, width = 0.01) +
-  geom_smooth(aes(group = 1), method = "lm", se = FALSE, color = "black", linewidth = 1.2) +
-  scale_color_course() +
-  labs(x = "Temperatura (normalizada)", y = "Bikers", color = "Mes")
+  group_by(weather_label) %>%
+  summarise(prop_high = mean(high_demand), .groups = "drop") %>%
+  ggplot(aes(weather_label, prop_high, fill = weather_label)) +
+  geom_col(width = 0.58) +
+  geom_text(
+    aes(label = scales::percent(prop_high, accuracy = 0.1)),
+    vjust = -0.45, size = 5
+  ) +
+  scale_fill_course(guide = "none") +
+  scale_y_continuous(
+    labels = scales::percent_format(accuracy = 1),
+    limits = c(0, 0.34)
+  ) +
+  labs(x = NULL, y = "Probabilidad observada de demanda alta")
 ```
 
-`temp` y `bikers` están claramente asociadas. Pero, ¿la temperatura **causa** que la gente arriende más bicicletas, o hay algo más de fondo?
+Las horas despejadas tienen mayor probabilidad de demanda alta. Eso es un hecho descriptivo; todavía no es una conclusión causal.
+
+## La diferencia observada
+
+```{r observed-means, echo=FALSE}
+observed_means <- bikedata %>%
+  group_by(weather_label) %>%
+  summarise(
+    horas = n(),
+    prob_demanda_alta = mean(high_demand),
+    .groups = "drop"
+  )
+
+observed_means
+```
+
+```{r observed-difference, echo=FALSE}
+raw_difference <- with(
+  bikedata,
+  mean(high_demand[clear_weather == 1]) -
+    mean(high_demand[clear_weather == 0])
+)
+```
+
+La diferencia observada es de `r sub("\\.", ",", formatC(100 * raw_difference, format = "f", digits = 1))` puntos porcentuales.
 
 . . .
 
-Los colores muestran el mes: los meses cálidos (verano) también tienen más horas de luz, vacaciones escolares distintas, más eventos al aire libre. El **mes** podría estar afectando tanto `temp` como `bikers` — y parte de la asociación cruda podría deberse a eso, no a la temperatura en sí.
+**Pregunta:** ¿cuánto de esa diferencia se debe al clima y cuánto a que las horas despejadas son distintas en otros aspectos?
 
-## Definición: efecto causal
+## El coeficiente del logit resume la asociación
 
-Para una unidad $i$ (una hora, una persona), y un tratamiento binario $D_i\in\{0,1\}$, definimos dos **resultados potenciales**:
+Ajustamos:
 
-$$Y_i(1): \text{lo que pasaría si } D_i=1, \qquad Y_i(0): \text{lo que pasaría si } D_i=0.$$
+$$
+\operatorname{logit}\{\Pr(Y_i=1\mid D_i)\}
+=\beta_0+\beta_1D_i.
+$$
 
-| Símbolo | Significado |
-|---|---|
-| $Y_i(1)$ | resultado de la unidad $i$ **si** recibiera el tratamiento |
-| $Y_i(0)$ | resultado de la misma unidad $i$ **si no** lo recibiera |
-| $Y_i(1)-Y_i(0)$ | efecto causal individual |
+```{r crude-logit, echo=TRUE}
+logit_crudo <- glm(
+  high_demand ~ clear_weather,
+  family = binomial(link = "logit"),
+  data = bikedata
+)
 
-. . .
+coef(logit_crudo)[["clear_weather"]]
+exp(coef(logit_crudo)[["clear_weather"]])
+```
 
-El **problema fundamental de la inferencia causal**: para cada unidad $i$ solo observamos *uno* de los dos resultados potenciales — nunca ambos. El otro es, por definición, contrafactual.
-
-## De efectos individuales a un efecto promedio
-
-Como no podemos observar $Y_i(1)-Y_i(0)$ para ninguna unidad, apuntamos a un promedio poblacional, el **efecto promedio del tratamiento (ATE)**:
-
-$$\text{ATE} = \mathbb{E}[Y_i(1)] - \mathbb{E}[Y_i(0)].$$
-
-. . .
-
-Lo que sí podemos calcular con datos observacionales es la diferencia de medias **entre los grupos que efectivamente recibieron cada tratamiento**:
-
-$$\mathbb{E}[Y_i \mid D_i=1] - \mathbb{E}[Y_i \mid D_i=0].$$
+En estos datos, $\hat\beta_1=`r sub("\\.", ",", formatC(coef(logit_crudo)[["clear_weather"]], format = "f", digits = 3))`$ y $e^{\hat\beta_1}=`r sub("\\.", ",", formatC(exp(coef(logit_crudo)[["clear_weather"]]), format = "f", digits = 2))`$.
 
 . . .
 
-La pregunta de toda esta clase es: **¿cuándo esta diferencia observada es igual al ATE?**
+Las *odds* de demanda alta son aproximadamente `r formatC(100 * (exp(coef(logit_crudo)[["clear_weather"]]) - 1), format = "f", digits = 0)`% mayores bajo clima despejado. Por ahora, esta es una **asociación**.
 
-## Confusión (*confounding*)
+## Predicciones del logit
 
-La diferencia observada y el ATE **no coinciden** cuando existe una variable $X$ que afecta tanto a $D$ (quién recibe el tratamiento) como a $Y$ (el resultado) — un **confusor**.
+```{r logit-predictions, echo=FALSE, fig.height=4.6}
+prediction_data <- tibble(
+  clear_weather = c(0, 1),
+  weather_label = factor(
+    c(0, 1),
+    levels = c(0, 1),
+    labels = c("Otro clima", "Despejado")
+  )
+)
 
-```{r dag-confound, echo=FALSE, fig.height=4}
+pred_link <- predict(
+  logit_crudo,
+  newdata = prediction_data,
+  type = "link",
+  se.fit = TRUE
+)
+
+prediction_data <- prediction_data %>%
+  mutate(
+    probability = plogis(pred_link$fit),
+    lower = plogis(pred_link$fit - 1.96 * pred_link$se.fit),
+    upper = plogis(pred_link$fit + 1.96 * pred_link$se.fit)
+  )
+
+ggplot(
+  prediction_data,
+  aes(weather_label, probability, group = 1, color = weather_label)
+) +
+  geom_line(linewidth = 1, color = course_palette[["secondary"]]) +
+  geom_pointrange(
+    aes(ymin = lower, ymax = upper),
+    linewidth = 1, size = 1.2
+  ) +
+  scale_color_course(guide = "none") +
+  scale_y_continuous(
+    labels = scales::percent_format(accuracy = 1),
+    limits = c(0.15, 0.31)
+  ) +
+  labs(x = NULL, y = "Probabilidad predicha de demanda alta")
+```
+
+Con un único predictor binario, el logit produce dos probabilidades predichas: una para $D=0$ y otra para $D=1$.
+
+# Mundos paralelos {.inverse .center .middle}
+
+## Dos resultados potenciales para cada hora
+
+Para cada hora $i$ imaginamos dos resultados:
+
+$$
+Y_i(1): \text{demanda alta o no si esa hora estuviera despejada}
+$$
+
+$$
+Y_i(0): \text{demanda alta o no si esa misma hora tuviera otro clima}
+$$
+
+El efecto causal individual es:
+
+$$\tau_i = Y_i(1)-Y_i(0)\in\{-1,0,1\}.$$
+
+Esta comparación mantiene fija la unidad y cambia solo el tratamiento.
+
+## En el multiverso veríamos ambas columnas
+
+| Hora | $Y_i(1)$: despejado | $Y_i(0)$: otro clima | Efecto |
+|---|---:|---:|---:|
+| Lunes, 08:00 | Alta (1) | No alta (0) | +1 |
+| Martes, 14:00 | No alta (0) | No alta (0) | 0 |
+| Viernes, 18:00 | Alta (1) | Alta (1) | 0 |
+| Domingo, 11:00 | No alta (0) | Alta (1) | −1 |
+
+Si pudiéramos observar ambas columnas, calcular el efecto causal sería trivial.
+
+. . .
+
+Pero estos valores son una **ilustración**: en los datos reales nunca vemos las dos columnas para la misma hora.
+
+## En el mundo observado falta un contrafactual
+
+| Hora | Clima observado | $Y_i(1)$ | $Y_i(0)$ |
+|---|---|---:|---:|
+| Lunes, 08:00 | despejado | Alta (1) | **?** |
+| Martes, 14:00 | otro clima | **?** | No alta (0) |
+| Viernes, 18:00 | despejado | Alta (1) | **?** |
+| Domingo, 11:00 | otro clima | **?** | Alta (1) |
+
+Para cada unidad observamos:
+
+$$Y_i = D_iY_i(1)+(1-D_i)Y_i(0).$$
+
+El otro resultado potencial es contrafactual. Este es el **problema fundamental de la inferencia causal**.
+
+## Del efecto individual al efecto promedio
+
+Como no observamos $\tau_i$ para ninguna hora, apuntamos al **efecto promedio del tratamiento**:
+
+$$
+\text{ATE}=\mathbb{E}[Y_i(1)-Y_i(0)]
+=\mathbb{E}[Y_i(1)]-\mathbb{E}[Y_i(0)].
+$$
+
+. . .
+
+En cambio, los datos entregan la diferencia entre dos grupos de horas:
+
+$$
+\mathbb{E}[Y_i\mid D_i=1]-\mathbb{E}[Y_i\mid D_i=0].
+$$
+
+Una comparación es entre **mundos posibles para las mismas unidades**; la otra es entre **unidades diferentes en el mundo observado**.
+
+Como $Y$ es binario, ambas expresiones son diferencias de probabilidades. El ATE es un efecto causal promedio medido en puntos porcentuales.
+
+## Asociación no es causalidad
+
+::: {.pull-left}
+
+**Asociación observada**
+
+$$
+\mathbb{E}[Y\mid D=1]-
+\mathbb{E}[Y\mid D=0]
+$$
+
+Compara horas despejadas con horas no despejadas.
+
+:::
+
+::: {.pull-right}
+
+**Efecto causal**
+
+$$
+\mathbb{E}[Y(1)-Y(0)]
+$$
+
+Compara cada hora consigo misma bajo dos climas posibles.
+
+:::
+
+. . .
+
+La asociación identifica el efecto causal solo bajo supuestos adicionales.
+
+# ¿Por qué pueden diferir? {.inverse .center .middle}
+
+## El mes cambia el clima y también la demanda
+
+```{r clear-by-month, echo=FALSE, fig.height=4.2}
+bikedata %>%
+  group_by(mnth) %>%
+  summarise(
+    prop_clear = mean(clear_weather),
+    prop_high = mean(high_demand),
+    .groups = "drop"
+  ) %>%
+  ggplot(aes(mnth, prop_clear, group = 1)) +
+  geom_line(linewidth = 1.2, color = course_palette[["primary"]]) +
+  geom_point(size = 3, color = course_palette[["secondary"]]) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(x = "Mes", y = "Proporción de horas despejadas")
+```
+
+Los meses no tienen la misma probabilidad de estar despejados. Además, estación, vacaciones y horas de luz afectan la probabilidad de demanda alta.
+
+## Confusión: una causa común abre un camino alternativo
+
+```{r dag-confound, echo=FALSE, fig.height=4.2}
 nodes <- tibble(
-  x = c(1, 2, 3), y = c(1, 2.4, 1),
-  label = c("D (tratamiento)", "X (confusor)", "Y (resultado)")
+  x = c(1, 3, 2), y = c(1, 1, 2.45),
+  label = c("D\nClima despejado", "Y\nDemanda alta", "X\nMes")
 )
 edges <- tibble(
-  x = c(2, 2, 1), y = c(2.4, 2.4, 1),
-  xend = c(1, 3, 3), yend = c(1, 1, 1)
+  x = c(2, 2, 1), y = c(2.28, 2.28, 1),
+  xend = c(1.12, 2.88, 2.82), yend = c(1.18, 1.18, 1)
 )
 
 ggplot() +
-  geom_segment(data = edges, aes(x, y, xend = xend, yend = yend),
-               arrow = arrow(length = unit(0.25, "cm")),
-               color = course_palette[["secondary"]], linewidth = 1) +
-  geom_point(data = nodes, aes(x, y), size = 22, shape = 21,
-             fill = course_palette[["primary"]], color = "white") +
-  geom_text(data = nodes, aes(x, y, label = label), color = "white", size = 3.6) +
-  coord_cartesian(xlim = c(0.5, 3.5), ylim = c(0.5, 3)) +
+  geom_segment(
+    data = edges, aes(x, y, xend = xend, yend = yend),
+    arrow = arrow(length = unit(0.22, "cm"), type = "closed"),
+    color = course_palette[["secondary"]], linewidth = 1.1
+  ) +
+  geom_point(
+    data = nodes, aes(x, y), size = 25, shape = 21,
+    fill = course_palette[["primary"]], color = "white"
+  ) +
+  geom_text(
+    data = nodes, aes(x, y, label = label),
+    color = "white", size = 4, lineheight = 0.9
+  ) +
+  coord_cartesian(xlim = c(0.45, 3.55), ylim = c(0.55, 2.9)) +
   theme_void()
 ```
 
-En nuestro ejemplo: `month` (estación del año) afecta tanto la temperatura como la demanda por razones ajenas al clima (vacaciones, luz solar) — es un candidato a confusor de la relación `temp` → `bikers`.
+El camino $D \leftarrow X \rightarrow Y$ mezcla el efecto del clima con diferencias estacionales.
 
-## Diagramas causales (DAGs), en una frase
+## Ajustar por el confusor cambia el coeficiente
 
-Un **DAG** (*directed acyclic graph*) representa, con flechas, nuestros supuestos sobre qué variable causa a cuál. No se estima de los datos — es una hipótesis que traemos de la teoría.
-
-- **Confusor**: afecta tanto al tratamiento como al resultado. Si no se controla, contamina la asociación.
-- **Mediador**: está en el camino causal entre tratamiento y resultado ($D \to M \to Y$). Controlar por él **bloquea** parte del efecto que queremos medir.
-- **Colisionador (*collider*)**: es afectado *por ambos*, tratamiento y resultado ($D \to C \leftarrow Y$). Controlar por un colisionador **crea** una asociación espuria que no existía.
-
-. . .
-
-El DAG no es un adorno: nos dice exactamente **qué variables hay que controlar** (los confusores) y **cuáles no** (mediadores, colisionadores).
-
-## Qué hace "controlar por X" en una regresión
-
-Controlar por un confusor observado, en la práctica, es simplemente **incluirlo como predictor** — exactamente lo que hicimos, sin llamarlo así, en cada GLM de este curso.
-
-```{r control-demo}
-sin_control <- lm(bikers ~ temp, data = bikedata)
-con_control <- lm(bikers ~ temp + factor(month), data = bikedata)
-
+```{r control-demo, echo=FALSE}
 tibble(
-  modelo = c("Sin controlar por mes", "Controlando por mes"),
-  coef_temp = c(coef(sin_control)["temp"], coef(con_control)["temp"])
+  modelo = c("Logit crudo", "Logit ajustado por mes"),
+  beta_clima = c(
+    coef(logit_crudo)[["clear_weather"]],
+    coef(logit_mes)[["clear_weather"]]
+  ),
+  odds_ratio = exp(c(
+    coef(logit_crudo)[["clear_weather"]],
+    coef(logit_mes)[["clear_weather"]]
+  ))
 )
 ```
 
-El coeficiente de `temp` cambia al agregar `month` — parte de la asociación cruda sí correspondía a la estacionalidad, no a la temperatura por sí sola.
-
-## El supuesto que no podemos probar con datos
-
-Controlar por los confusores que **medimos** no es suficiente. La interpretación causal de una regresión requiere el supuesto de **no-confusión** (*unconfoundedness* / *ignorability*):
-
-$$\{Y_i(1), Y_i(0)\} \perp D_i \mid X_i.$$
-
-- En palabras: una vez que controlamos por $X$, no queda ningún otro factor —no medido— que afecte simultáneamente al tratamiento y al resultado.
-- Este supuesto **no se puede verificar con los datos que tenemos**: es una afirmación sustantiva sobre el mundo, que debe justificarse con teoría y conocimiento del contexto, no con un test estadístico.
-- Es, casi siempre, el eslabón más frágil de cualquier afirmación causal con datos observacionales.
-
-## Cuándo "más controles" no es la solución
-
-- Agregar controles **no** garantiza una interpretación causal — solo ayuda si el confusor específico que agregamos era, en efecto, un confusor.
-- Controlar por un **mediador** destruye parte del efecto que queremos medir.
-- Controlar por un **colisionador** introduce sesgo que no existía antes de controlar.
-- Por eso el DAG debe pensarse **antes** de decidir qué incluir en el modelo — no se elige la lista de controles solo porque "estaban disponibles en los datos".
-
-## Cómo leer, de ahora en adelante, los coeficientes de este curso
-
-Todos los modelos de las clases anteriores producen coeficientes válidos como **descripciones de asociación condicional**, sin necesidad de ningún supuesto causal adicional.
+El coeficiente cambia al comparar horas dentro del mismo mes: parte de la asociación cruda reflejaba composición estacional.
 
 . . .
 
-Para leerlos como **efectos causales**, hace falta además:
+Esto **no prueba** que el coeficiente ajustado sea causal. Solo elimina la confusión explicada por `month` bajo la forma funcional elegida.
 
-1. Un DAG explícito de qué variables afectan a qué.
-2. Controlar por los confusores identificados en ese DAG (y no por mediadores ni colisionadores).
-3. Estar dispuesto a defender el supuesto de no-confusión con argumentos sustantivos, no solo con significancia estadística.
+## El mismo coeficiente admite dos lecturas
 
-## Ejercicio
+::: {.pull-left}
 
-1. Dibuje un DAG para la relación entre `workingday` (día hábil) y `bikers`, incluyendo al menos un confusor plausible.
-2. Ajuste un modelo sin ese confusor y otro controlando por él. Compare los coeficientes.
-3. Proponga una variable que sería un **mediador** de esa relación (no un confusor) y explique por qué no debería incluirse como control.
-4. Evalúe si el supuesto de no-confusión es defendible en este ejemplo, y qué confusor no observado podría seguir siendo un problema.
+**Lectura asociacional**
+
+$$
+\beta_1=
+\log\frac{\operatorname{odds}(Y=1\mid D=1,X)}
+{\operatorname{odds}(Y=1\mid D=0,X)}
+$$
+
+Describe una comparación condicional en los datos observados.
+
+:::
+
+::: {.pull-right}
+
+**Lectura causal**
+
+$$
+\beta_1=
+\log\frac{\operatorname{odds}\{Y(1)=1\mid X\}}
+{\operatorname{odds}\{Y(0)=1\mid X\}}
+$$
+
+Compara resultados potenciales bajo dos intervenciones.
+
+:::
+
+. . .
+
+La segunda lectura necesita diseño y supuestos causales. La ecuación logística, por sí sola, solo garantiza la primera.
+
+## La causalidad no está en la complejidad
+
+El mismo logit puede ser:
+
+- **asociacional**, si el tratamiento está confundido;
+- **causal**, si el diseño hace creíble la comparación contrafactual.
+
+. . .
+
+Un modelo más complejo puede ajustar mejor la asociación, pero no fabrica el contrafactual faltante.
+
+. . .
+
+Una muestra más grande reduce el error estándar:
+
+$$
+n\uparrow \quad\Longrightarrow\quad SE(\hat\beta_1)\downarrow
+$$
+
+pero no elimina el sesgo por confusión. Podemos estimar una asociación no causal con enorme precisión.
+
+## El supuesto decisivo no viene de la regresión
+
+La **intercambiabilidad condicional** o no-confusión exige:
+
+$$
+\{Y_i(1),Y_i(0)\}\perp D_i\mid X_i.
+$$
+
+En palabras: dentro de grupos con igual $X$, recibir $D=1$ o $D=0$ es “como si” fuera aleatorio respecto de los resultados potenciales.
+
+. . .
+
+Este supuesto:
+
+- no se demuestra con un $p$-value;
+- no aparece automáticamente al aumentar $n$;
+- requiere teoría, conocimiento del proceso y un buen diseño.
+
+## También necesitamos comparaciones posibles
+
+Para cada combinación de confusores debe existir alguna posibilidad de observar ambos tratamientos:
+
+$$
+0<\Pr(D_i=1\mid X_i=x)<1.
+$$
+
+Este supuesto se llama **positividad** u **overlap**.
+
+. . .
+
+Si en cierto mes nunca hubiera horas despejadas, los datos no permitirían estimar qué ocurriría bajo clima despejado para ese mes: el contrafactual requeriría extrapolación.
+
+## Consistencia: el tratamiento debe estar bien definido
+
+La **consistencia** conecta el resultado observado con el potencial:
+
+$$
+D_i=d \quad\Longrightarrow\quad Y_i=Y_i(d).
+$$
+
+Pero “otro clima” mezcla nubes, lluvia y nieve. ¿Son realmente la misma intervención?
+
+. . .
+
+Cuanto más heterogénea sea la definición de $D=0$, más difícil es interpretar un único efecto. Definir con precisión el tratamiento es parte del análisis causal.
+
+# El DAG guía los controles {.inverse .center .middle}
+
+## No todas las covariables son confusores
+
+- **Confusor:** causa tanto $D$ como $Y$. Controlarlo puede bloquear una asociación espuria.
+- **Mediador:** está en el camino $D\rightarrow M\rightarrow Y$. Controlarlo elimina parte del efecto total.
+- **Colisionador:** recibe flechas $D\rightarrow C\leftarrow Y$. Controlarlo puede crear una asociación espuria.
+
+. . .
+
+El DAG representa supuestos sustantivos; no se “descubre” mirando significancia estadística.
+
+## Más controles no garantizan causalidad
+
+Agregar variables a una regresión ayuda solo si esas variables cumplen el rol causal correcto.
+
+. . .
+
+- Omitir un confusor deja abierto un camino no causal.
+- Incluir un mediador cambia el estimando: pasamos del efecto total a un efecto directo.
+- Incluir un colisionador puede introducir sesgo.
+- Ajustar por una variable medida después del tratamiento suele ser especialmente riesgoso.
+
+. . .
+
+La lista de controles se decide con un argumento causal **antes** de mirar qué especificación entrega el coeficiente preferido.
+
+## Diseño antes que sofisticación
+
+La diferencia entre asociación y causalidad:
+
+- **no** es principalmente un problema de estimación;
+- **no** desaparece con una muestra más grande;
+- **sí** depende de cómo se asigna el tratamiento y cómo se construye la comparación.
+
+. . .
+
+Experimentos aleatorizados, experimentos naturales y diseños cuasi-experimentales buscan hacer creíble la comparación contrafactual.
+
+## Cómo leer los coeficientes desde ahora
+
+Sin supuestos causales, el coeficiente de un logit describe una asociación condicional:
+
+> Entre observaciones con iguales covariables, ¿cómo cambian las log-odds de $Y=1$ cuando cambia $D$?
+
+. . .
+
+Ese mismo coeficiente **puede** interpretarse como un efecto causal condicional si además:
+
+1. definimos tratamiento, outcome, población y estimando;
+2. explicitamos un DAG;
+3. justificamos no-confusión, positividad y consistencia;
+4. evitamos controles que abran sesgos nuevos.
+
+## Ejercicio: construya el argumento causal
+
+Suponga que queremos estimar el efecto de `workingday` sobre la probabilidad de `high_demand`.
+
+1. Defina $Y_i(1)$ y $Y_i(0)$ y precise cuál es la unidad $i$.
+2. Dibuje un DAG con al menos un confusor plausible.
+3. Identifique una variable que **no** debería controlarse y explique su rol.
+4. Proponga un diseño que haga más creíble la comparación causal.
+5. Evalúe dónde podría fallar la positividad.
 
 ## En resumen
 
-- Un efecto causal compara resultados potenciales de la misma unidad; nunca observamos ambos a la vez.
-- La asociación observada coincide con el efecto causal solo bajo el supuesto de no-confusión.
-- Un DAG distingue confusores (hay que controlar), mediadores y colisionadores (no hay que controlar).
-- "Controlar por X" en una regresión es incluir X como predictor — útil solo si X es, efectivamente, un confusor identificado a priori.
-- Ningún test estadístico prueba el supuesto de no-confusión: es un argumento sustantivo, no un resultado del modelo.
+- Causalidad compara resultados potenciales de la misma unidad.
+- Solo observamos uno: el otro es contrafactual.
+- Un coeficiente logístico es asociacional por defecto; puede ser causal bajo un diseño y supuestos adecuados.
+- Los confusores crean caminos alternativos entre tratamiento y resultado.
+- Más datos reducen incertidumbre, pero no eliminan confusión.
+- La causalidad depende del diseño, no de la complejidad del modelo.
 
 ## Gracias {.inverse .center .middle .closing}
 

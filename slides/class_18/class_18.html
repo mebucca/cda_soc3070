@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-23">
+  <meta name="dcterms.date" content="2026-07-27">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -225,7 +225,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-23</p>
+  <p class="date">2026-07-27</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -241,49 +241,6 @@ Mauricio Bucca · Sociología UC
 <div class="content-box-secondary">
 <p><strong>Después</strong></p>
 <p>regularización: Ridge y LASSO.</p>
-</div>
-</div>
-</section>
-<section>
-<section id="evaluación-de-modelos-predictivos" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
-<h1>Evaluación de Modelos Predictivos</h1>
-
-</section>
-<section id="hatbeta-problems-vs.-haty-problems" class="slide level2">
-<h2><span class="math inline">\hat{\beta}</span>-problems vs.&nbsp;<span class="math inline">\hat{y}</span>-problems</h2>
-<p>(Mullainathan &amp; Spiess, 2017)</p>
-<div class="fragment">
-<div class="pull-left">
-<p><strong><span class="math inline">\hat{\beta}</span>-problems</strong></p>
-<ul>
-<li>Foco en <strong>parámetros</strong> y su interpretación.<br>
-</li>
-<li>Preguntas:
-<ul>
-<li>¿Cuál es el efecto de <span class="math inline">X</span> sobre <span class="math inline">Y</span>?<br>
-</li>
-<li>¿Es significativo / causal?</li>
-</ul></li>
-<li>Objetivo: <strong>explicación e inferencia</strong>.<br>
-</li>
-<li>Modelos suelen ser <strong>transparentes</strong> (fácil interpretar).</li>
-</ul>
-</div>
-<div class="pull-right">
-<p><strong><span class="math inline">\hat{y}</span>-problems</strong></p>
-<ul>
-<li>Foco en <strong>predicciones</strong> para nuevos casos.<br>
-</li>
-<li>Preguntas:
-<ul>
-<li>¿Qué tan bien predice el modelo en datos futuros?<br>
-</li>
-<li>¿Qué modelo predice mejor?</li>
-</ul></li>
-<li>Objetivo: <strong>desempeño y utilidad práctica</strong>.<br>
-</li>
-<li>Modelos pueden ser tratados como <strong>black-box</strong> (no importa cómo, mientras prediga bien).</li>
-</ul>
 </div>
 </div>
 </section>
@@ -319,7 +276,7 @@ Mauricio Bucca · Sociología UC
 </table>
 </div>
 </div>
-</section></section>
+</section>
 <section>
 <section id="regresión-logística-el-hello-world-de-ml" class="title-slide slide level1 center">
 <h1>Regresión Logística: el <strong>“hello world”</strong> de ML</h1>
@@ -940,17 +897,6 @@ Class: alta       0.659      0.766    0.583</code></pre>
 <li>Ninguna curva única resume el desempeño multinomial completo — se reportan <span class="math inline">J</span> curvas, o un promedio (macro-AUC).</li>
 <li>Log-loss (clase 6), en cambio, se generaliza de forma inmediata al caso multinomial — es la misma cross-entropy que usamos para ajustar <code>logit_multi</code>, y sigue siendo una sola cifra comparable entre modelos.</li>
 </ul>
-</section>
-<section id="en-el-próximo-episodio" class="slide level2 middle">
-<h2>en el próximo episodio …</h2>
-<div class="center">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="kfold_cv.gif"></p>
-<figcaption>Esquema de validación cruzada</figcaption>
-</figure>
-</div>
-</div>
 </section>
 <section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#8B1E2D">
 <h2>Gracias</h2>
