@@ -1,10 +1,10 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Estimación, MLE y Funciones de Pérdida"
+subtitle: "GLM, Regresión Logística & MLE"
 author: "Mauricio Bucca · Sociología UC"
 date: today
-body-classes: theme-tottenham
-course-team: tottenham
+body-classes: theme-liverpool
+course-team: liverpool
 filters: ["../_shared/course.lua"]
 format:
   revealjs:
@@ -19,9 +19,8 @@ format:
 ---
 
 ```{r course-style, include=FALSE}
-library(pacman)
 source("../_shared/bikeshare.R")
-course_palette <- use_course_style("tottenham")
+course_palette <- use_course_style("liverpool")
 ```
 
 ## Antes · Hoy · Después {.class-rhythm}
@@ -31,70 +30,332 @@ course_palette <- use_course_style("tottenham")
 ::: {.content-box}
 **Antes**
 
-valor esperado y varianza.
+componentes de un GLM y funciones de enlace.
 :::
 
 ::: {.content-box-primary}
 **Hoy**
 
-máxima verosimilitud (MLE) y funciones de pérdida.
+regresión logística y máxima verosimilitud.
 :::
 
 ::: {.content-box-secondary}
 **Después**
 
-regresión lineal y el modelo lineal de probabilidad.
+regresión logística: interpretación de parámetros.
 :::
 
 :::
 
-# Estimación {.inverse .center .middle}
-## Maximum Likelihood Estimation (MLE)
 
-## Estimación
 
-::: {.center}
+# Modelos Lineales Generalizados (GLM) {.inverse .center .middle}
 
-![estimado](estimado.jpeg)
+## Recordando: ¿qué es un GLM?
 
-:::
-
-## Estimación
-[Modelos estadísticos]{.bold}:  ¿Cuáles son los valores más [plausibles]{.bold}[1]
-
-::: {.footnote}
-
-[1] Notar que no dice "más probables"!
-
-:::
-
- de los *parámetros* dado los *datos* que observamos?
-Ej. Supongamos que alguien lanza 100 veces la misma moneda y registra los resultados en una base de datos. Los datos se ven así:
+La clase anterior definimos un GLM por tres piezas — repasemos antes de usarlas hoy con un caso concreto:
 
 ::: {.pull-left}
 
-```{r, echo=FALSE, fig.height=5, fig.width=6,  message=FALSE, warning=FALSE}
+- **Componente aleatorio**: distribución de $y_i$ (familia exponencial).
+- **Componente sistemático**: $\eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$.
+- **Función de enlace**: $g(\mu_{i}) = \eta_{i}$.
+
+:::
+
+::: {.pull-right}
+
+![nelder](nelder.png)
+
+:::
+
+. . .
+
+$$
+GLM:
+\begin{cases}
+&y_{i} \sim f(\mu_{i},\sigma_{i}) \\ \\
+& g(\mu_{i}) = \eta_{i}
+\end{cases}
+$$
+
+Hoy fijamos $y_{i} \sim \text{Bernoulli}(p_{i})$ y $g(\cdot) = \text{logit}(\cdot)$: la regresión logística es exactamente un GLM con esa combinación particular.
+
+# Regresión Logística {.inverse .center .middle}
+
+## Estructura de un modelo de regresión logística
+Podemos pensar en un modelo de regresión logística de la siguiente forma:
+
+. . .
+
+[Configuración]{.bold}
+
+- Tenemos $n$ observaciones (individuos) independientes: $i = 1, \dots, n$
+
+. . .
+
+- Para cada observación observamos datos $y_{i}, \dots , y_{n}$ que actuan como variable dependiente, donde $y_{i} \in \{0,1\}$
+
+. . .
+
+- Asumimos que estos datos son realizaciones de $n$ variables aleatorias Bernoulli con probabilidades desconocidas: $Y_{i} \sim \text{Bernoulli}(p_{i})$
+  - Alternativamente, recuento de éxitos puede tratarse como una variable Binomial.
+
+. . .
+
+- Asumimos que dichas probabilidades pueden variar de individuo en individuo.
+  - Un modelo con un $p_{i}$ para cada observación $i$ es un modelo "just-identified" (o saturado). Posible, pero no es un "modelo".
+
+## Estructura de un modelo de regresión logística
+Formalmente,
+$$Y_{i} \sim \text{Bernoulli}(p_{i})$$
+es decir
+$$\quad \mathbb{P}(Y_{i}= y) = p_{i}^{y}(1-p_{i})^{1-y} \quad \text{ donde } \quad y \in \{0,1\}$$
+
+. . .
+
+La pregunta es: ¿como estimamos $p_{i}$ de tal manera que ... ?
+
+. . .
+
+- Describamos $p_{i}$ con un número de parámetros $k<n$
+
+. . .
+
+- $\hat{p}_{i} \in [0,1]$
+
+## Estructura de un modelo de regresión logística
+El modelo de regresión logística aborda este problema de la siguiente manera:
+
+::: {.content-box-blue}
+
+$$p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}} \quad \quad  \text{donde} \quad \quad \eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$$
+
+:::
+
+. . .
+
+[Importante]{.bold} notar que:
+
+. . .
+
+- Esta función (llamada *sigmoide*) tiene la propiedad clave de estar restringida al intervalo $[0, 1]$.
+  - $e^{\eta_{i}} > 0$, de tal manera que el numerador es siempre menor que el denominador. Por lo tanto,  $0 < p_{i} <1$.
+
+. . .
+
+- $x_{1} \dots x_{k}$ son predictores o variables independientes
+
+. . .
+
+- $\beta_{1} \dots \beta_{k}$ son los respectivos "efectos" de los predictores sobre $\eta_{i}$
+
+. . .
+
+- $p_{i}$ [no está relacionado linealmente]{.bold} con sus predictores 
+
+## Estructura de un modelo de regresión logística
+Sin embargo, $\eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$ si es una función lineal de los predictores.
+
+. . .
+
+Por tanto, es conveniente expresar $\eta$ en función de $p$ ...
+
+. . .
+
+ Paso a paso:
+
+::: {.img-right}
+
+![mostaza](mostaza-merlo.jpg)
+
+:::
+
+. . .
+
+$p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}} = \frac{1}{e^{- \eta_{i}} + 1}$
+
+. . .
+
+$e^{-\eta_{i}} + 1 = \frac{1}{p_{i}}$
+
+. . .
+
+$e^{- \eta_{i}} = \frac{1}{p_{i}} - 1 =  \frac{1 - p_{i}}{p_{i}}$
+
+. . .
+
+$e^{\eta_{i}} = \frac{p_{i}}{1 - p_{i}}$
+
+. . .
+
+$\eta_{i} = \ln \frac{p_{i}}{1 - p_{i}} \quad \quad$
+
+. . .
+
+es decir, el log de las odds o log-odds
+
+. . .
+
+::: {.content-box-yellow}
+
+$$\text{Por tanto} \quad \quad  \ln \frac{p_{i}}{1 - p_{i}} = \eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$$
+
+:::
+
+## Estructura de un modelo de regresión logística
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=8, fig.width=12}
+library(pacman)
 p_load("tidyverse")
-set.seed(481)
 
-data_coins <- data.frame(X = rbinom(n=100, size=1, prob=0.8))
+theme_set(theme_julia())
 
-data_coins %>%
-  ggplot(aes(x=factor(X))) +
-    geom_bar(aes(fill=factor(X)), width = 1, color = "black") +
-    geom_text(aes(label=..count.., y = ..count..), stat='count', vjust=-0.5, size = 5) +
-    scale_fill_manual(values = c(course_palette[["accent"]], course_palette[["accent"]])) +
-    labs(y="Recuentos", x="", title="") +
-    guides(fill=FALSE) +
-    ylim(0,90) +
-    theme_julia() +
-    theme(
-      axis.text.y = element_text(size = 22),
-      axis.text.x = element_text(size = 22),
-      axis.title.y = element_text(size = 24),
-      axis.title.x = element_text(size = 24),
-      panel.border = element_blank()
-    )
+units <- tibble(p = seq(from=0, to=1, by=0.01)) %>% mutate(odd = p/(1-p)) %>%
+          mutate(log_odd = log(odd))
+
+# p to odds 
+
+p = 0.75
+o = p/(1-p)
+
+q = 1-p
+inv_o = q/(1-q)
+
+log_o <- log(o)
+log_inv_o <- log(inv_o)
+
+# p to log odds
+
+positions_v1 <- data.frame(x1 =log_o, x2 =log_o, y1 =0 , y2=p )    
+positions_h1 <- data.frame(x1 =-Inf,  x2 =log_o, y1=p , y2=p )    
+positions_v2 <- data.frame(x1 =log_inv_o , x2 =log_inv_o , y1 =0 , y2=q )    
+positions_h2 <- data.frame(x1 =-Inf , x2 =log_inv_o , y1 =q , y2=q )    
+
+logodd_p <- units %>% ggplot(aes(x=log_odd, y=p, colour="p = logit^-1(log-odd)")) + geom_line(size=1.5) +
+    scale_color_manual(values=c("p = logit^-1(log-odd)"=course_palette[["primary"]], "líneas guía"=course_palette[["secondary"]])) +
+    xlim(-8,8) +
+    geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2, colour="líneas guía"), data = positions_v1, size=1.5) +
+    geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2, colour="líneas guía"), data = positions_h1, size=1.5) +
+    geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2, colour="líneas guía"), data = positions_v2, size=1.5) +
+    geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2, colour="líneas guía"), data = positions_h2, size=1.5) +
+    annotate(geom="text", x=-3.8, y=0.28, label='bold("(log-odd=-1.1,p=0.25)")', color="black", parse=TRUE, size=8) +
+    annotate(geom="text", x=4, y=0.78, label='bold("(log-odd=1.1,p=0.75)")', color="black", parse=TRUE, size=8) +
+    labs(title =  "Log-odd a probability", y="p", x="ln p/(1-p)", color=NULL) +
+    theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+    axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
+    legend.text = element_text(size = 18), legend.position="bottom")
+
+print(logodd_p)
+
+```
+
+## Regresión Logística es un tipo de GLM
+Regresión Logística es un GLM con componente aleatorio [Bernoulli/Binomial]{.bold} y función de enlace [logit]{.bold}. 
+
+. . .
+
+- Componente aleatorio: $y_{1}, \dots y_{n}$ son $n$ variables independientes con distribución $\text{Bernoulli}(p_{i})$
+  - donde $p_{i} \equiv \mu_{i}$
+
+. . .
+
+- Función de enlace: $\text{logit}(x) = \ln \frac{x}{1 - x}$
+
+. . .
+
+- Componente sistemático: $\ln \frac{p_{i}}{1 - p_{i}} = \eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$
+
+. . .
+
+- Función media: $p_{i} = \text{logit}^{-1}(\eta_{i}) = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}}$
+
+## Regresión Logística es un tipo de GLM
+
+- Varianza $\operatorname{Var}(y_{i}) = \phi V(p_{i}), \quad$
+
+. . .
+
+  $\text{donde} \quad V(p_{i})= \frac{dp_{i}}{d\eta_{i}}$.
+
+. . .
+
+- $\eta_{i} = \ln \frac{p_{i}}{1 - p_{i}}  =  \ln(p_{i}) - \ln(1 - p_{i})$
+
+. . .
+
+- $\frac{d \eta_{i}}{d p_{i}} = \frac{1}{p_{i}} + \frac{1}{1 - p_{i}} = \frac{1}{p_{i}(1 - p_{i})}$
+
+. . .
+
+- $\frac{d p_{i}}{d \eta_{i}} = p_{i}(1 - p_{i})$
+
+. . .
+
+Por tanto, $\operatorname{Var}(y_{i}) = \phi V(p_{i}) = \phi p_{i}(1 - p_{i})$, con $\phi=1$
+
+En resumen, en un modelo de regresión logística
+
+::: {.content-box-blue}
+
+$$y_{i} \sim \text{Bernoulli}\Bigg(p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}}\Bigg)$$
+
+:::
+
+## Regresión Logística en la práctica
+Para ejemplificar el uso de regresión logística trabajaremos con los datos de demanda de bicicletas de _Capital Bikeshare_.
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+
+# datos de Capital Bikeshare (arriendos horarios de bicicletas), paquete "ISLR2"
+p_load("ISLR2")
+p_load("modelr")
+
+bikedata <- Bikeshare %>% as_tibble()
+
+# umbral de "alta demanda": top 25% de las horas (percentil 75 de bikers)
+p75 <- quantile(bikedata$bikers, 0.75)
+
+bikedata <- bikedata %>%
+  mutate(demand = if_else(bikers > p75, "alta", "baja")) %>%
+  # map into 0/1 code
+  mutate(high_demand = if_else(bikers > p75, 1, 0))
+
+# display the data as a tibble
+bikedata %>% select(bikers, high_demand, demand, temp, hum, weathersit) %>% tail(15)
+```
+
+## Regresión Logística en la práctica
+Ajustaremos el siguiente modelo: $\text{logit(alta demanda}_{i}) = \beta_{0} + \beta_{1}*\text{temp}_{i}$, que modela el log de la odd de que una hora sea de alta demanda como función de la temperatura (normalizada).
+```{r}
+logit_demand_temp <- glm(high_demand ~ temp, family=binomial(link="logit"), data=bikedata); summary(logit_demand_temp)
+```
+
+## Regresión Logística en la práctica
+
+::: {.pull-left}
+
+```{r, echo=FALSE}
+p_mu <- bikedata %>% with(mean(high_demand,na.rm=TRUE))
+b0 <- logit_demand_temp$coefficients[1]
+b1 <- logit_demand_temp$coefficients[2]
+
+# plot the result
+
+grid <- bikedata  %>% data_grid(temp,.model=logit_demand_temp)
+predictions <- cbind(grid,logit_hat = predict(logit_demand_temp, newdata = grid)) %>%
+  mutate(p_hat= 1/(1 + exp(-logit_hat)))
+
+bikedata %>% ggplot(aes(x=temp, y=high_demand, group=1)) +
+  stat_function(fun = function(.x) b0 + b1*.x, aes(colour="Recta ajustada"), alpha = 0.5, size=1.5) +
+  geom_hline(yintercept = b0 + b1*0, linetype="dotted", color = course_palette[["primary"]], alpha=0.5, size=1.5) +
+  geom_hline(yintercept = b0 + b1*1, linetype="dotted", color = course_palette[["primary"]], alpha=0.5, size=1.5) +
+  geom_line(data=predictions, aes(x=temp, y=logit_hat, colour="Predicción del modelo"), size=2, alpha = 1) +
+  xlim(-2,3) +
+  scale_color_manual(values=c("Recta ajustada"=course_palette[["accent"]], "Predicción del modelo"=course_palette[["primary"]])) +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
+  legend.text = element_text(size = 18), legend.position="bottom") +
+  labs(x="temperatura (normalizada)", y="logit(Alta demanda)", color=NULL) +
+  annotate('text', x = -1, y = 2, label = paste0("beta[1]==", course_number(b1)), parse = TRUE, size=8)
 ```
 
 :::
@@ -103,208 +364,162 @@ data_coins %>%
 
 ::: {.pull-right}
 
-- Lo que vemos en la izquierda son [datos]{.bold}
-- Datos: realización de $n$ variables aleatorias
-- Normalmente *no conocemos* la distribución de las variables
-- Datos nos dan una pista sobre cuál podría ser esa distribución
-- [Estadística]{.bold}: aprender de los datos para [*estimar*]{.bold} los parámetros que los generan
+```{r, echo=FALSE}
 
-:::
-
-## Estimación via Maximum Likelihood (MLE)
-Previamente lanzamos la misma moneda 100 veces y obtuvimos "Cara" (1) 82 veces.
-
-. . .
-
- ¿Qué valor de $p$ es más plausible ("likely") que genere estos datos?
-MLE es justamente la formalización de esta pregunta. Pasos:
-
-. . .
-
-1) Decidir sobre la distribución subyacente que genera los datos. En este caso, podemos asumir que:
-  * Cada lanzamiento $X_{1}, X_{2}, \dots X_{100} \sim \text{Bernoulli}(p)$, donde X's son $iid$
-
-. . .
-
-2)  Escribir una función que cuantifique la plausibilidad de diferentes valores del parámetro. Dicha función se denomina [likelihood function]{.bold}:
-
-  * $\mathcal{L}(p \mid \text{ Datos}) = \mathbb{P}(\text{ Datos : \{1,0,1,1,....0,1\}} | \text{ } p)$
-
-. . .
-
-  * $\mathcal{L}(p \mid \text{ Datos}) = \mathbb{P}(x_{1})\mathbb{P}(x_{2}) \dots \mathbb{P}(x_{100}) = p^{82}(1-p)^{18}$
-
-## Estimación via Maximum Likelihood (MLE)
-Podemos inspeccionar visualmente la "likelihood" de diferentes valores $p$.
-
-::: {.center}
-
-```{r, echo=FALSE, fig.height=5, fig.width=9,  message=FALSE, warning=FALSE}
-p_load("tidyverse")
-
-plot <- ggplot(data = data.frame(p = 0), mapping = aes(x = p))
-
-binom_distrib <- function(p,n,k) (p^(k))*((1-p)^(n-k))
-
-plot +
-  stat_function(fun = binom_distrib, args = list(n= 100, k= 82), size=1.5, color = course_palette[["accent"]]) +
-  xlim(0,1) +
-  labs(title="Likelihood of p", x="p", y=expression(paste(p^{82}, (1-p)^{18}))) +
-  guides(fill=FALSE, color=FALSE) +
-  theme_julia() +
-  theme(
-    axis.text.y = element_text(size = 22),
-    axis.text.x = element_text(size = 22),
-    axis.title.y = element_text(size = 24),
-    axis.title.x = element_text(size = 24),
-    panel.border = element_blank()
-  )
-
+bikedata %>% ggplot(aes(x=temp, y=high_demand, group=1)) +
+  stat_function(fun = function(.x) 1/(1 + exp(-(b0 + b1*.x))), aes(colour="Curva ajustada"), alpha = 0.5, size=1.5) +
+  geom_hline(yintercept = 1/(1 + exp(-(b0 + b1*0))), linetype="dotted", color = course_palette[["primary"]], alpha=0.5, size=1.5) +
+  geom_hline(yintercept = 1/(1 + exp(-(b0 + b1*1))), linetype="dotted", color = course_palette[["primary"]], alpha=0.5, size=1.5) +
+  geom_line(data=predictions, aes(x=temp, y=p_hat, colour="Predicción del modelo"), size=2, alpha = 1) +
+  xlim(-2,3) +
+  scale_color_manual(values=c("Curva ajustada"=course_palette[["accent"]], "Predicción del modelo"=course_palette[["primary"]])) +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
+  legend.text = element_text(size = 18), legend.position="bottom") +
+  labs(x="temperatura (normalizada)", y="P(Alta demanda)", color=NULL)
 ```
 
 :::
 
-Intuitivamente: habiendo obtenido 82 caras, $p=0.82$ es el valor más plausible de $p$
+## Estimación (MLE) {.inverse .center .middle}
 
-## Estimación via Maximum Likelihood (MLE)
+## Estimación (MLE)
+Retomando  nuestro ejemplo anterior,
 
-3) Encontrar matemáticamente el valor de $p$ que maximiza $\mathcal{L}(p \mid \text{ Datos})$.
-- $\mathcal{L}(p \mid \text{ Datos}) = \mathbb{P}(x_{1})\mathbb{P}(x_{2}) \dots \mathbb{P}(x_{n}) =\prod_{i=1}^{n} f(x_{i}) =  p^{k}(1-p)^{n-k} \quad \text{   donde  } k= \sum x_{i}$
+::: {.pull-left}
 
-. . .
+```{r, echo=FALSE}
+logit_demand_temp <- glm(high_demand ~ temp, family=binomial(link="logit"), data=bikedata); summary(logit_demand_temp)
+```
 
-- Para facilitar el cálculo tomamos logaritmo natural en ambos lados ([log-likelihood]{.bold})
-  - $\ell\ell(p) = \ln \mathcal{L}(p \mid \text{ Datos})  = k \ln(p) + (n - k) \ln(1-p)$
-
-. . .
-
--  Calcular la primera* derivada de $\ell\ell(p)$ con respecto a $p$: pendiente de la curva en cada valor de $p$.
-  - $\ell\ell^{\text{ '}}(p) = \frac{k}{p} -  \frac{n-k}{1-p}$
+:::
 
 . . .
 
-- Encontrar el máximo de la función $\ell\ell(p)$: valor de $p$ en el cual la curva no cambia, es decir cuando $\ell\ell^{\text{ '}}(p)=0$
-  - $\frac{k}{p} -  \frac{n-k}{1-p} = 0$
+::: {.pull-right}
+
+[¿De donde vienen estos números?]{.bold}
+
+:::
+
+## Estimación (MLE)
+Recordar que cada observación es una manifestación de una variable Bernoulli:
 
 . . .
 
-- Después de resolver por $p$ obtenemos:
-   $$p = \frac{k}{n} = \frac{\sum x_{i}}{n}$$
-
-## Estimación via Maximum Likelihood (MLE)
-
-- El estimador ML de $p$ es ....
-- $\hat{p} = \frac{\sum x_{i}}{n}$
-- Es decir, el porcentaje de 1's en la muestra!
+$Y_{i} \sim \text{Bernoulli}(p_{i}) \quad \text{ es decir } \quad \mathbb{P}(Y_{i}= y) = p_{i}^{y}(1-p_{i})^{1-y} \quad \text{ donde } \quad y \in \{0,1\}$
 
 . . .
 
-- Intuitivo y elegante
-
-## Estimación via Maximum Likelihood (MLE)
-[Generalización]{.bold}
-
-$$\hat{\boldsymbol{\beta}}_{MLE} = \underset{\beta}{\arg\max\ } \mathcal{L}(\boldsymbol{\beta} \mid \boldsymbol{X})$$
-$\hat{\boldsymbol{\beta}}$ es el MLE de $\boldsymbol{\beta}$ si es el(los) valor(es) que maximiza(n) la "likelihood function", condicional en los datos observados.
+Por tanto, la probabilidad de observar estos datos es descrita por la siguiente función:
+$$\mathbb{P}(y_{1}, \dots, y_{n}) = \prod_{i=1}^{n} p_{i}^{y_{i}}(1-p_{i})^{1-y_{i}}$$
 
 . . .
 
-- Recordar que   $\mathcal{L}(\boldsymbol{\beta} \mid \boldsymbol{X}) = \mathbb{P}(\boldsymbol{X} \mid \boldsymbol{\beta})$.
+En consecuencia, la [likelihood function]{.bold} de $p_{i}$ es:
+$$\mathcal{L}(\boldsymbol{p} \mid y_{1}, \dots, y_{n}) = \prod_{i=1}^{n} p_{i}^{y_{i}}(1-p_{i})^{1-y_{i}}$$
 
 . . .
 
-- Requiere especificar de antemano la distribución conjunta de las observaciones (dif. de OLS, por ejemplo).
+y la [log likelihood function]{.bold} de $p_{i}$ es:
+$$\ell(\boldsymbol{p} \mid y_{1}, \dots, y_{n}) = \sum_{i=1}^{n} \bigg( y_{i} \ln p_{i} + (1-y_{i}) \ln(1-p_{i}) \bigg)$$
+
+## Estimación (MLE)
+La [log likelihood function]{.bold} de $p$ es:
+$$\ell(\boldsymbol{p} \mid y_{1}, \dots, y_{n}) = \sum_{i=1}^{n} \bigg( y_{i} \ln p_{i} + (1-y_{i}) \ln(1-p_{i}) \bigg)$$
 
 . . .
 
-- ML es probablemente el approach de estimación más popular.
+Pero no estamos estimando $p_{i}$ directamente, sino que lo modelamos como un función de otros predictores.
 
 . . .
 
-- Intuitivo, pero, por lo general, no tan simple como el ejemplo que vimos hoy.
+específicamente: $p_{i} =\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}$
 
 . . .
 
-- Normalmente la maximización se realiza numéricamente (ej. método Newton–Raphson)
+por tanto, 
+$$\ell(\beta_{0},\beta_{1} \mid y_{1}, \dots, y_{n}) = \sum_{i=1}^{n} \bigg( y_{i} \ln \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}} + (1-y_{i}) \ln(1-\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}) \bigg)$$
+En definitiva, nuestros MLE son:
+$$\hat{\beta_{0}},\hat{\beta_{1}} = \underset{\beta_{0},\beta_{1}}{\arg\max\ } \sum_{i=1}^{n} \bigg( y_{i} \ln \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}} + (1-y_{i}) \ln(1-\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}) \bigg)$$
 
-## Estimación via Maximum Likelihood (MLE) {background-image="valdorcia.jpeg" .fullscreen .left .top .text-white}
+## Estimación (MLE)
 
-# Funciones de pérdida {.inverse .center .middle}
-
-## De maximizar a minimizar
-
-Todo lo que hicimos arriba tiene una lectura equivalente, muy usada en machine learning: en vez de **maximizar la verosimilitud**, podemos **minimizar una función de pérdida (loss function)**.
-
-. . .
-
-- Maximizar $\mathcal{L}(p\mid\text{Datos})$ ⟺ Maximizar $\ell\ell(p) = \ln\mathcal{L}(p\mid\text{Datos})$ ⟺ Minimizar $-\ell\ell(p)$.
-- El signo negativo es la única diferencia: "ajustar bien" y "perder poco" son la misma cosa vista al revés.
-
-## La pérdida, para nuestro mismo ejemplo
-
-Con $n$ lanzamientos y resultados $y_1,\dots,y_n\in\{0,1\}$, la log-verosimilitud de Bernoulli que ya escribimos es:
-
-$$
-\ell(\boldsymbol{p}) = \sum_{i=1}^{n} \big[ y_i \ln p_i + (1-y_i) \ln(1-p_i) \big]
-$$
+- No hay solución analítica (en general) para esta maximización. Típicamente se usa Fisher’s Scoring Method  (un algoritmo de búsqueda) para obtener los MLE. 
+-  Para ejemplificar  podemos implementar una optimización numérica simple e ineficiente para buscar los MLE.
 
 . . .
 
-En ML a $-\ell(\boldsymbol p)$ le llamamos **log-loss** o **cross-entropy loss**:
+ Para acelerar la búsqueda usaremos valores en la proximidad de las estimaciones reportadas arriba (que normalmente no conoceríamos):
+[Implementación en]{.bold} `R`:
+```{r, include=TRUE, echo=TRUE, warning=FALSE, message=FALSE}
 
-$$
-\text{LogLoss} = -\ell(\boldsymbol p)
-$$
+ll <- function(b0,b1) {
+  y = bikedata$high_demand
+  eta = b0 + b1*bikedata$temp
+  ell = sum( y*log(1/(1 + exp(-eta))) +  (1-y)*log(1 - (1/(1 + exp(-eta)))))
+  return(ll = ell)
+}
+```
 
-- Si las predicciones son correctas ($y=1$ y $p$ cercano a 1) → log-loss bajo.
-- Si se equivocan ($y=1$ pero $p$ cercano a 0) → log-loss alto.
-- Entrenar = **ajustar los parámetros para minimizar log-loss** (= maximizar likelihood).
-
-## Log-loss promedio
-
-En machine learning se suele trabajar con la **log-loss promedio**, para obtener una pérdida por observación (comparable entre datasets de distinto tamaño):
-
-$$
-\text{LogLoss} = -\frac{1}{n}\,\ell(\boldsymbol p)
-$$
+. . .
 
 ```{r}
-# usando nuestro ejemplo de 100 lanzamientos, 82 caras
-p_hat <- 0.82
-y <- c(rep(1, 82), rep(0, 18))
-p <- rep(p_hat, 100)
-log_loss <- -mean(y * log(p) + (1 - y) * log(1 - p))
-log_loss
+ll(b0=0,b1=0); ll(b0=-1,b1=2)
 ```
 
-Es exactamente $-\ell\ell(\hat p)/n$: la misma cantidad que maximizamos arriba, reescalada y con el signo invertido.
+## Estimación (MLE)
+[Implementación en]{.bold} `R`:
+```{r, include=TRUE, echo=TRUE, warning=FALSE, message=FALSE}
 
-## Otras funciones de pérdida
+# Evaluar la log-likelihood function  para muchas combinaciones de posibles valores de  b0 y b1
+# centramos la grilla en torno a las estimaciones del modelo
+b0_hat <- coef(logit_demand_temp)[1]
+b1_hat <- coef(logit_demand_temp)[2]
+parameter_space <- expand.grid(beta0 = seq(b0_hat-1, b0_hat+1, length.out=500), beta1 = seq(b1_hat-1, b1_hat+1, length.out=500)) %>%
+  rowwise() %>% mutate(loglik = ll(beta0,beta1))
 
-El mismo principio —MLE bajo un supuesto de distribución equivale a minimizar una pérdida específica— se generaliza más allá de Bernoulli:
+# Encuentra el par de valores b0,b1 que dan el mayor valor para la log-likelihood function
 
-| Outcome | Distribución supuesta | Pérdida asociada |
-|---|---|---|
-| Binario (0/1) | Bernoulli | log-loss / cross-entropy |
-| Continuo | Normal | error cuadrático medio (MSE) |
-| Conteo | Poisson | devianza de Poisson |
+m <- parameter_space %>% as.matrix()
+m[which.max(m[,3]),]
+```
 
-No son fórmulas sueltas: **toda pérdida que usaremos en este curso es, en el fondo, una log-verosimilitud negativa** de algún supuesto sobre cómo se generan los datos.
+## Estimación (MLE)
 
-## Por qué esto importa para lo que viene
+::: {.pull-left}
 
-- Cuando ajustemos un GLM (clase 8) o una regresión logística (clase 9), **estimar el modelo** va a significar, otra vez, encontrar los parámetros que maximizan una verosimilitud — o minimizan la pérdida asociada.
-- Cuando tratemos la regresión logística como **clasificador** (clase 18), log-loss va a ser exactamente la métrica que usemos para comparar modelos.
-- Cuando lleguemos a **regularización** (clase 19) y **redes neuronales** (clase 21), vamos a agregar un término extra a esta misma pérdida para controlar la complejidad del modelo — pero la pérdida de base sigue siendo esta.
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
 
-La idea de hoy —likelihood y pérdida son dos caras de la misma moneda— es una de las piezas que más se repite en el resto del curso.
+# Plot all LL values
+parameter_space %>% as.data.frame() %>% ggplot(aes(x=beta0, y=beta1,  z = loglik)) + geom_contour(bins = 700) + geom_contour_filled(bins = 500, alpha=0.75) +
+geom_point(aes(x=m[which.max(m[,3]),1], m[which.max(m[,3]),2]), size=1.5) +
+guides(fill=FALSE, color=FALSE) + labs(x=quote(beta[0]), y=quote(beta[1])) +
+annotate(geom="text", x=b0_hat, y=b1_hat-0.4, label=paste0('bold("(', course_number(b0_hat), ',', course_number(b1_hat), ')")'), color="black", parse=TRUE, size=6)  +
+theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+legend.text = element_text(size = 18), legend.position="none")
+```
+
+:::
+
+. . .
+
+::: {.pull-right}
+
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+summary(logit_demand_temp)
+```
+
+:::
 
 ## En resumen
 
-- MLE encuentra los parámetros que hacen más plausibles los datos observados.
-- La condición de primer orden $\ell\ell'(\hat\theta)=0$ es, en general, cómo se resuelve ese problema.
-- Minimizar una función de pérdida es lo mismo que maximizar una verosimilitud, con el signo invertido.
-- Log-loss (cross-entropy) es la pérdida asociada a un outcome Bernoulli — la usaremos una y otra vez en el resto del curso.
+- Regresión logística es un GLM con componente aleatorio Bernoulli/Binomial y enlace logit: $\ln \frac{p_{i}}{1-p_{i}} = \eta_{i}$.
+- La función media (sigmoide) $p_{i} = \frac{e^{\eta_{i}}}{1+e^{\eta_{i}}}$ mantiene $p_{i}$ restringido a $[0,1]$.
+- Los parámetros $\beta$ se estiman por máxima verosimilitud (MLE): no hay solución analítica cerrada, se usa un algoritmo de búsqueda numérica (ej. Fisher Scoring).
+- La log-likelihood de una Bernoulli es $\ell(\boldsymbol\beta \mid y) = \sum_{i=1}^{n}\big(y_{i}\ln p_{i} + (1-y_{i})\ln(1-p_{i})\big)$.
+- La próxima clase: regresión logística — interpretación de parámetros.
 
 ## Gracias {.inverse .center .middle .closing}
 

@@ -32,72 +32,6 @@
       margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
       vertical-align: middle;
     }
-    /* CSS for syntax highlighting */
-    html { -webkit-text-size-adjust: 100%; }
-    pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-    pre > code.sourceCode > span:empty { height: 1.2em; }
-    .sourceCode { overflow: visible; }
-    code.sourceCode > span { color: inherit; text-decoration: inherit; }
-    div.sourceCode { margin: 1em 0; }
-    pre.sourceCode { margin: 0; }
-    @media screen {
-    div.sourceCode { overflow: auto; }
-    }
-    @media print {
-    pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-    }
-    pre.numberSource code
-      { counter-reset: source-line 0; }
-    pre.numberSource code > span
-      { position: relative; left: -4em; counter-increment: source-line; }
-    pre.numberSource code > span > a:first-child::before
-      { content: counter(source-line);
-        position: relative; left: -1em; text-align: right; vertical-align: baseline;
-        border: none; display: inline-block;
-        -webkit-touch-callout: none; -webkit-user-select: none;
-        -khtml-user-select: none; -moz-user-select: none;
-        -ms-user-select: none; user-select: none;
-        padding: 0 4px; width: 4em;
-      }
-    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-    div.sourceCode
-      { color: #24292e;  }
-    @media screen {
-    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-    }
-    code span { color: #24292e; } /* Normal */
-    code span.al { color: #ff5555; font-weight: bold; } /* Alert */
-    code span.an { color: #6a737d; } /* Annotation */
-    code span.at { color: #d73a49; } /* Attribute */
-    code span.bn { color: #005cc5; } /* BaseN */
-    code span.bu { color: #d73a49; } /* BuiltIn */
-    code span.cf { color: #d73a49; } /* ControlFlow */
-    code span.ch { color: #032f62; } /* Char */
-    code span.cn { color: #005cc5; } /* Constant */
-    code span.co { color: #6a737d; } /* Comment */
-    code span.cv { color: #6a737d; } /* CommentVar */
-    code span.do { color: #6a737d; } /* Documentation */
-    code span.dt { color: #d73a49; } /* DataType */
-    code span.dv { color: #005cc5; } /* DecVal */
-    code span.er { color: #ff5555; text-decoration: underline; } /* Error */
-    code span.ex { color: #d73a49; font-weight: bold; } /* Extension */
-    code span.fl { color: #005cc5; } /* Float */
-    code span.fu { color: #6f42c1; } /* Function */
-    code span.im { color: #032f62; } /* Import */
-    code span.in { color: #6a737d; } /* Information */
-    code span.kw { color: #d73a49; } /* Keyword */
-    code span.op { color: #24292e; } /* Operator */
-    code span.ot { color: #6f42c1; } /* Other */
-    code span.pp { color: #d73a49; } /* Preprocessor */
-    code span.re { color: #6a737d; } /* RegionMarker */
-    code span.sc { color: #005cc5; } /* SpecialChar */
-    code span.ss { color: #032f62; } /* SpecialString */
-    code span.st { color: #032f62; } /* String */
-    code span.va { color: #e36209; } /* Variable */
-    code span.vs { color: #032f62; } /* VerbatimString */
-    code span.wa { color: #ff5555; } /* Warning */
   </style>
   <link rel="stylesheet" href="class_16_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
   <link rel="stylesheet" href="../_shared/course.css">
@@ -209,13 +143,13 @@
     }
   </style>
 </head>
-<body class="theme-roma quarto-light">
+<body class="theme-valencia quarto-light">
   <div class="reveal">
     <div class="slides">
 
-<section id="title-slide" data-background-color="#8E1B3D" class="quarto-title-block center">
+<section id="title-slide" data-background-color="#E87500" class="quarto-title-block center">
   <h1 class="title">Análisis de Datos Categóricos (SOC3070)</h1>
-  <p class="subtitle">Causalidad y asociación</p>
+  <p class="subtitle">Regularización: Ridge, LASSO y Elastic Net</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -232,448 +166,715 @@ Mauricio Bucca · Sociología UC
 <div class="full-width">
 <div class="content-box">
 <p><strong>Antes</strong></p>
-<p>sobre-dispersión y quasi-Poisson.</p>
+<p>GLM, logit, inferencia, bootstrap: modelos donde <em>nosotros</em> elegimos la forma.</p>
 </div>
 <div class="content-box-primary">
 <p><strong>Hoy</strong></p>
-<p>asociación, contrafactuales y causalidad.</p>
+<p>qué hacer cuando ya no confiamos en que esa forma sea la correcta.</p>
 </div>
 <div class="content-box-secondary">
 <p><strong>Después</strong></p>
-<p>predicción, overfitting y validación cruzada.</p>
+<p>dejar que el propio algoritmo aprenda la forma: árboles y ensambles.</p>
 </div>
 </div>
 </section>
 <section>
-<section id="causalidad" class="title-slide slide level1 inverse center middle" data-background-color="#F0B323">
-<h1>Causalidad</h1>
+<section id="regularización" class="title-slide slide level1 inverse center middle" data-background-color="#1B4B5A">
+<h1>Regularización</h1>
 
 </section>
-<section id="las-preguntas-causales-comparan-mundos" class="slide level2">
-<h2>Las preguntas causales comparan mundos</h2>
-<p>Las ciencias sociales están llenas de preguntas aparentemente sencillas:</p>
+<section id="un-nuevo-módulo-una-nueva-pregunta" class="slide level2">
+<h2>Un nuevo módulo, una nueva pregunta</h2>
+<p>Durante todo el curso, cada modelo (LPM, logit, Poisson) compartió un mismo supuesto: <strong>nosotros</strong> elegimos qué variables entran, qué interacciones importan, qué transformaciones usar. El modelo solo estima los coeficientes.</p>
 <div class="fragment">
+<p>Las próximas tres clases (19, 20 y 21) exploran una pregunta distinta: <strong>¿qué pasa cuando dejamos de confiar en que esa forma elegida a mano sea la correcta?</strong> ¿Puede el propio procedimiento de ajuste decidir cuánta complejidad usar — o incluso qué forma tomar?</p>
+</div>
+<div class="fragment">
+<p>Referencia principal para las tres clases: James et al.&nbsp;(2021), <em>An Introduction to Statistical Learning</em>, 2ª ed., capítulos 5–6, 8 y 10 (<a href="https://www.statlearning.com/">sitio oficial</a>).</p>
+</div>
+</section>
+<section id="el-problema-en-carne-propia" class="slide level2">
+<h2>El problema, en carne propia</h2>
+<p>Sigamos usando la misma pregunta sustantiva del curso — ¿cuándo hay demanda alta de bicicletas? — pero démosle al logit una interacción <strong>completa</strong> entre hora (24 categorías) y mes (12 categorías): mucho más flexible que la interacción hora × día hábil que usamos hasta ahora. Agreguemos esas variables de a poco y observemos qué pasa.</p>
+
+<img data-src="class_16_files/figure-revealjs/overfit-demo-1.png" width="960" class="r-stretch"></section>
+<section id="leer-la-curva" class="slide level2">
+<h2>Leer la curva</h2>
 <ul>
-<li>¿Una política de transporte cambia el uso de bicicletas?</li>
-<li>¿Un día despejado hace que más personas arrienden una bicicleta?</li>
-<li>¿Trabajar desde casa reduce los viajes en hora punta?</li>
+<li>Con pocos parámetros, <strong>ambos</strong> errores bajan juntos: el modelo aprende señal real (temperatura, hora, clima).</li>
+<li>Pasado cierto punto, el error de <strong>entrenamiento</strong> sigue bajando —más parámetros siempre ajustan mejor <em>esos</em> datos— pero el de <strong>validación</strong> empieza a <strong>subir</strong>: el modelo empieza a ajustar celdas hora×mes con pocas observaciones, memorizando ruido específico de esa combinación particular.</li>
+<li>Este divorcio entre “ajusta mejor” y “predice mejor” es el problema que motiva toda la clase de hoy.</li>
 </ul>
-</div>
 <div class="fragment">
-<p>Todas preguntan qué <strong>cambiaría</strong> en un resultado si interviniéramos sobre una causa.</p>
+<p>Nótese algo importante: <strong>no sabíamos de antemano</strong> cuál de estas variables hora×mes era señal y cuál era ruido — todas entraron con la misma justificación teórica (“la demanda varía por hora y por estación”). Hasta ahora controlábamos la complejidad <strong>a mano</strong>, decidiendo qué interacciones incluir. La pregunta de hoy es si el propio procedimiento de ajuste puede controlar esa complejidad automáticamente, de forma validada.</p>
 </div>
 </section>
-<section id="nuestro-caso-clima-despejado-y-demanda" class="slide level2">
-<h2>Nuestro caso: clima despejado y demanda</h2>
-<p>Vamos a estudiar una hipótesis concreta:</p>
-<blockquote>
-<p>Un cielo despejado aumenta la probabilidad de demanda alta.</p>
-</blockquote>
-<p>Definimos un predictor binario:</p>
-<p><span class="math display">
-D_i =
-\begin{cases}
-1 &amp; \text{si el clima de la hora } i \text{ está despejado}\\
-0 &amp; \text{si hay nubes, lluvia o nieve}
-\end{cases}
-</span></p>
-<p>El resultado también es binario:</p>
-<p><span class="math display">
-Y_i =
-\begin{cases}
-1 &amp; \text{si la hora tiene demanda alta}\\
-0 &amp; \text{si la hora no tiene demanda alta}
-\end{cases}
-</span></p>
-<p><code>high_demand = 1</code> identifica las horas sobre el percentil 75 de <code>bikers</code>.</p>
-</section>
-<section id="primero-vemos-una-asociación" class="slide level2">
-<h2>Primero vemos una asociación</h2>
+<section id="intuición-sesgo-y-varianza" class="slide level2">
+<h2>Intuición: sesgo y varianza</h2>
+<p>Antes de la solución, pongamos nombre al fenómeno que acabamos de ver, con una analogía simple.</p>
 
-<img data-src="class_16_files/figure-revealjs/observed-association-1.png" width="960" class="r-stretch"><p>Las horas despejadas tienen mayor probabilidad de demanda alta. Eso es un hecho descriptivo; todavía no es una conclusión causal.</p>
+<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20251212100155382352/frame_3244.webp" style="width:55.0%" class="r-stretch quarto-figure-center"><p class="caption">Sesgo = qué tan lejos del centro caen los tiros en promedio. Varianza = qué tan dispersos están entre sí.</p><div class="footnote">
+<p>Fuente: <a href="https://www.geeksforgeeks.org/machine-learning/bias-vs-variance-in-machine-learning/">GeeksforGeeks — Bias vs Variance in Machine Learning</a></p>
+</div>
+<ul>
+<li><strong>Pocos parámetros</strong> (modelo rígido): los tiros caen agrupados, pero lejos del centro — <strong>sesgo alto</strong>.</li>
+<li><strong>Muchos parámetros</strong> (modelo flexible): los tiros rodean el centro en promedio, pero dispersos — <strong>varianza alta</strong>.</li>
+<li>Nuestra curva de arriba es exactamente esto: pocos parámetros = sesgo (mal ajuste, en train y en validación); muchos parámetros = varianza (ajusta train, falla en validación).</li>
+</ul>
 </section>
-<section id="la-diferencia-observada" class="slide level2">
-<h2>La diferencia observada</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2 × 3
-  weather_label horas prob_demanda_alta
-  &lt;fct&gt;         &lt;int&gt;             &lt;dbl&gt;
-1 Otro clima     3000             0.189
-2 Despejado      5645             0.282</code></pre>
-</div>
-</div>
-<p>La diferencia observada es de 9,3 puntos porcentuales.</p>
-<div class="fragment">
-<p><strong>Pregunta:</strong> ¿cuánto de esa diferencia se debe al clima y cuánto a que las horas despejadas son distintas en otros aspectos?</p>
-</div>
-</section>
-<section id="el-coeficiente-del-logit-resume-la-asociación" class="slide level2">
-<h2>El coeficiente del logit resume la asociación</h2>
-<p>Ajustamos:</p>
+<section id="la-intuición-formalizada" class="slide level2">
+<h2>La intuición, formalizada</h2>
+<p>Para un punto <span class="math inline">x_0</span>, el error cuadrático esperado de un estimador <span class="math inline">\hat f</span> se descompone en tres piezas:</p>
 <p><span class="math display">
-\operatorname{logit}\{\Pr(Y_i=1\mid D_i)\}
-=\beta_0+\beta_1D_i.
+\mathbb{E}\big[(y_0-\hat f(x_0))^2\big]
+= \underbrace{\big(\mathbb{E}[\hat f(x_0)]-f(x_0)\big)^2}_{\text{sesgo}^2}
++ \underbrace{\mathrm{Var}(\hat f(x_0))}_{\text{varianza}}
++ \underbrace{\sigma^2}_{\text{irreducible}}.
 </span></p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href=""></a>logit_crudo <span class="ot">&lt;-</span> <span class="fu">glm</span>(</span>
-<span id="cb2-2"><a href=""></a>  high_demand <span class="sc">~</span> clear_weather,</span>
-<span id="cb2-3"><a href=""></a>  <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>),</span>
-<span id="cb2-4"><a href=""></a>  <span class="at">data =</span> bikedata</span>
-<span id="cb2-5"><a href=""></a>)</span>
-<span id="cb2-6"><a href=""></a></span>
-<span id="cb2-7"><a href=""></a><span class="fu">coef</span>(logit_crudo)[[<span class="st">"clear_weather"</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.522</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a><span class="fu">exp</span>(<span class="fu">coef</span>(logit_crudo)[[<span class="st">"clear_weather"</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 1.686</code></pre>
-</div>
-</div>
-<p>En estos datos, <span class="math inline">\hat\beta_1=0,522</span> y <span class="math inline">e^{\hat\beta_1}=1,69</span>.</p>
-<div class="fragment">
-<p>Las <em>odds</em> de demanda alta son aproximadamente 69% mayores bajo clima despejado. Por ahora, esta es una <strong>asociación</strong>.</p>
-</div>
-</section>
-<section id="predicciones-del-logit" class="slide level2">
-<h2>Predicciones del logit</h2>
-
-<img data-src="class_16_files/figure-revealjs/logit-predictions-1.png" width="960" class="r-stretch"><p>Con un único predictor binario, el logit produce dos probabilidades predichas: una para <span class="math inline">D=0</span> y otra para <span class="math inline">D=1</span>.</p>
-</section></section>
-<section>
-<section id="mundos-paralelos" class="title-slide slide level1 inverse center middle" data-background-color="#F0B323">
-<h1>Mundos paralelos</h1>
-
-</section>
-<section id="dos-resultados-potenciales-para-cada-hora" class="slide level2">
-<h2>Dos resultados potenciales para cada hora</h2>
-<p>Para cada hora <span class="math inline">i</span> imaginamos dos resultados:</p>
-<p><span class="math display">
-Y_i(1): \text{demanda alta o no si esa hora estuviera despejada}
-</span></p>
-<p><span class="math display">
-Y_i(0): \text{demanda alta o no si esa misma hora tuviera otro clima}
-</span></p>
-<p>El efecto causal individual es:</p>
-<p><span class="math display">\tau_i = Y_i(1)-Y_i(0)\in\{-1,0,1\}.</span></p>
-<p>Esta comparación mantiene fija la unidad y cambia solo el tratamiento.</p>
-</section>
-<section id="en-el-multiverso-veríamos-ambas-columnas" class="slide level2">
-<h2>En el multiverso veríamos ambas columnas</h2>
 <table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
 <thead>
 <tr class="header">
-<th>Hora</th>
-<th style="text-align: right;"><span class="math inline">Y_i(1)</span>: despejado</th>
-<th style="text-align: right;"><span class="math inline">Y_i(0)</span>: otro clima</th>
-<th style="text-align: right;">Efecto</th>
+<th>Símbolo</th>
+<th>Significado</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Lunes, 08:00</td>
-<td style="text-align: right;">Alta (1)</td>
-<td style="text-align: right;">No alta (0)</td>
-<td style="text-align: right;">+1</td>
+<td><span class="math inline">f(x_0)</span></td>
+<td>la relación verdadera (desconocida) entre predictores y outcome</td>
 </tr>
 <tr class="even">
-<td>Martes, 14:00</td>
-<td style="text-align: right;">No alta (0)</td>
-<td style="text-align: right;">No alta (0)</td>
-<td style="text-align: right;">0</td>
+<td><span class="math inline">\hat f(x_0)</span></td>
+<td>nuestra estimación, que cambiaría si cambiara la muestra</td>
 </tr>
 <tr class="odd">
-<td>Viernes, 18:00</td>
-<td style="text-align: right;">Alta (1)</td>
-<td style="text-align: right;">Alta (1)</td>
-<td style="text-align: right;">0</td>
+<td><span class="math inline">\mathbb{E}[\hat f(x_0)]-f(x_0)</span></td>
+<td><strong>sesgo</strong>: error sistemático por usar un modelo demasiado rígido</td>
 </tr>
 <tr class="even">
-<td>Domingo, 11:00</td>
-<td style="text-align: right;">No alta (0)</td>
-<td style="text-align: right;">Alta (1)</td>
-<td style="text-align: right;">−1</td>
+<td><span class="math inline">\mathrm{Var}(\hat f(x_0))</span></td>
+<td><strong>varianza</strong>: cuánto cambia el ajuste de muestra a muestra</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\sigma^2</span></td>
+<td>ruido irreducible; ninguna técnica lo elimina</td>
 </tr>
 </tbody>
 </table>
-<p>Si pudiéramos observar ambas columnas, calcular el efecto causal sería trivial.</p>
-<div class="fragment">
-<p>Pero estos valores son una <strong>ilustración</strong>: en los datos reales nunca vemos las dos columnas para la misma hora.</p>
-</div>
+<p>Regularizar <em>aumenta</em> el sesgo a propósito para <em>reducir</em> la varianza — conviene exactamente cuando la caída de varianza supera el aumento de sesgo, que es lo que vimos en la curva de validación.</p>
 </section>
-<section id="en-el-mundo-observado-falta-un-contrafactual" class="slide level2">
-<h2>En el mundo observado falta un contrafactual</h2>
+<section id="el-compromiso-en-una-imagen" class="slide level2">
+<h2>El compromiso, en una imagen</h2>
+
+<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20251209150317698595/model_complexity.webp" style="width:60.0%" class="r-stretch quarto-figure-center"><p class="caption">Sesgo, varianza y error total en función de la complejidad del modelo.</p><div class="footnote">
+<p>Fuente: <a href="https://www.geeksforgeeks.org/machine-learning/what-is-ridge-regression/">GeeksforGeeks — What is Ridge Regression</a></p>
+</div>
+<ul>
+<li><span class="math inline">\lambda=0</span> (sin penalizar): sesgo bajo, varianza alta → la mitad derecha de nuestra curva de validación.</li>
+<li><span class="math inline">\lambda\to\infty</span>: sesgo alto, varianza baja → subajuste.</li>
+<li>Existe un <span class="math inline">\lambda^{*}</span> intermedio que minimiza el error fuera de muestra — no lo conocemos, lo <strong>estimamos con validación</strong>.</li>
+</ul>
+</section>
+<section id="tres-formas-de-penalizar-en-una-frase" class="slide level2">
+<h2>Tres formas de penalizar, en una frase</h2>
+<p>Antes de cualquier fórmula, la idea completa en tres oraciones:</p>
+<ul>
+<li><strong>Ridge</strong>: encoge <strong>todos</strong> los coeficientes hacia cero, sin eliminar ninguno.</li>
+<li><strong>LASSO</strong>: encoge y además puede llevar algunos coeficientes <strong>exactamente a cero</strong> — selecciona variables.</li>
+<li><strong>Elastic Net</strong>: un punto intermedio entre ambos.</li>
+</ul>
+<p>Todo lo que sigue en esta clase es la formalización — y luego la implementación — de estas tres frases.</p>
+</section>
+<section id="configuración-outcome-y-partición" class="slide level2">
+<h2>Configuración: outcome y partición</h2>
+<p>El módulo completo (clases 19–22) comparte la misma preparación de datos. Primero definimos el outcome y partimos los datos:</p>
+</section>
+<section id="configuración-la-matriz-de-diseño" class="slide level2">
+<h2>Configuración: la matriz de diseño</h2>
+<p>Sobre esos datos construimos la matriz de predictores <span class="math inline">X</span> que usarán Ridge, LASSO y Elastic Net:</p>
+</section>
+<section id="el-diseño-de-datos-de-hoy" class="slide level2">
+<h2>El diseño de datos de hoy</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  observaciones_train variables_base columnas_modelo
+                &lt;int&gt;          &lt;dbl&gt;           &lt;int&gt;
+1                5162              9              60</code></pre>
+</div>
+</div>
+<p>La expansión incluye no linealidad en clima, indicadores de calendario e interacción hora × día hábil — exactamente el tipo de términos que, en la curva de arriba, empujaba el modelo hacia el sobreajuste. <code>temp</code> y <code>atemp</code> son además deliberadamente casi idénticas: veremos que ese tipo de colinealidad es precisamente donde Ridge resulta más útil.</p>
+</section>
+<section id="tres-conjuntos-tres-funciones" class="slide level2">
+<h2>Tres conjuntos, tres funciones</h2>
+<p>Antes de penalizar nada, fijemos la disciplina de evaluación — ya la usamos antes (bootstrap, validación) pero aquí es central, no un anexo:</p>
 <table class="caption-top">
 <thead>
 <tr class="header">
-<th>Hora</th>
-<th>Clima observado</th>
-<th style="text-align: right;"><span class="math inline">Y_i(1)</span></th>
-<th style="text-align: right;"><span class="math inline">Y_i(0)</span></th>
+<th>Conjunto</th>
+<th style="text-align: right;">Proporción</th>
+<th>Función</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Lunes, 08:00</td>
-<td>despejado</td>
-<td style="text-align: right;">Alta (1)</td>
-<td style="text-align: right;"><strong>?</strong></td>
+<td>Entrenamiento</td>
+<td style="text-align: right;">60%</td>
+<td>estimar coeficientes</td>
 </tr>
 <tr class="even">
-<td>Martes, 14:00</td>
-<td>otro clima</td>
-<td style="text-align: right;"><strong>?</strong></td>
-<td style="text-align: right;">No alta (0)</td>
+<td>Validación</td>
+<td style="text-align: right;">20%</td>
+<td>elegir <span class="math inline">\alpha</span> y <span class="math inline">\lambda</span></td>
 </tr>
 <tr class="odd">
-<td>Viernes, 18:00</td>
-<td>despejado</td>
-<td style="text-align: right;">Alta (1)</td>
-<td style="text-align: right;"><strong>?</strong></td>
-</tr>
-<tr class="even">
-<td>Domingo, 11:00</td>
-<td>otro clima</td>
-<td style="text-align: right;"><strong>?</strong></td>
-<td style="text-align: right;">Alta (1)</td>
+<td>Test</td>
+<td style="text-align: right;">20%</td>
+<td>estimar desempeño final, <strong>una sola vez</strong></td>
 </tr>
 </tbody>
 </table>
-<p>Para cada unidad observamos:</p>
-<p><span class="math display">Y_i = D_iY_i(1)+(1-D_i)Y_i(0).</span></p>
-<p>El otro resultado potencial es contrafactual. Este es el <strong>problema fundamental de la inferencia causal</strong>.</p>
-</section>
-<section id="del-efecto-individual-al-efecto-promedio" class="slide level2">
-<h2>Del efecto individual al efecto promedio</h2>
-<p>Como no observamos <span class="math inline">\tau_i</span> para ninguna hora, apuntamos al <strong>efecto promedio del tratamiento</strong>:</p>
-<p><span class="math display">
-\text{ATE}=\mathbb{E}[Y_i(1)-Y_i(0)]
-=\mathbb{E}[Y_i(1)]-\mathbb{E}[Y_i(0)].
-</span></p>
-<div class="fragment">
-<p>En cambio, los datos entregan la diferencia entre dos grupos de horas:</p>
-<p><span class="math display">
-\mathbb{E}[Y_i\mid D_i=1]-\mathbb{E}[Y_i\mid D_i=0].
-</span></p>
-<p>Una comparación es entre <strong>mundos posibles para las mismas unidades</strong>; la otra es entre <strong>unidades diferentes en el mundo observado</strong>.</p>
-<p>Como <span class="math inline">Y</span> es binario, ambas expresiones son diferencias de probabilidades. El ATE es un efecto causal promedio medido en puntos porcentuales.</p>
-</div>
-</section>
-<section id="asociación-no-es-causalidad" class="slide level2">
-<h2>Asociación no es causalidad</h2>
-<div class="pull-left">
-<p><strong>Asociación observada</strong></p>
-<p><span class="math display">
-\mathbb{E}[Y\mid D=1]-
-\mathbb{E}[Y\mid D=0]
-</span></p>
-<p>Compara horas despejadas con horas no despejadas.</p>
-</div>
-<div class="pull-right">
-<p><strong>Efecto causal</strong></p>
-<p><span class="math display">
-\mathbb{E}[Y(1)-Y(0)]
-</span></p>
-<p>Compara cada hora consigo misma bajo dos climas posibles.</p>
-</div>
-<div class="fragment">
-<p>La asociación identifica el efecto causal solo bajo supuestos adicionales.</p>
-</div>
-</section></section>
-<section>
-<section id="por-qué-pueden-diferir" class="title-slide slide level1 inverse center middle" data-background-color="#F0B323">
-<h1>¿Por qué pueden diferir?</h1>
-
-</section>
-<section id="el-mes-cambia-el-clima-y-también-la-demanda" class="slide level2">
-<h2>El mes cambia el clima y también la demanda</h2>
-
-<img data-src="class_16_files/figure-revealjs/clear-by-month-1.png" width="960" class="r-stretch"><p>Los meses no tienen la misma probabilidad de estar despejados. Además, estación, vacaciones y horas de luz afectan la probabilidad de demanda alta.</p>
-</section>
-<section id="confusión-una-causa-común-abre-un-camino-alternativo" class="slide level2">
-<h2>Confusión: una causa común abre un camino alternativo</h2>
-
-<img data-src="class_16_files/figure-revealjs/dag-confound-1.png" width="960" class="r-stretch"><p>El camino <span class="math inline">D \leftarrow X \rightarrow Y</span> mezcla el efecto del clima con diferencias estacionales.</p>
-</section>
-<section id="ajustar-por-el-confusor-cambia-el-coeficiente" class="slide level2">
-<h2>Ajustar por el confusor cambia el coeficiente</h2>
+<p>Mirar el test durante el tuning produce <strong>filtración de información</strong>: el desempeño deja de ser genuinamente fuera de muestra — el mismo problema, en miniatura, que acabamos de ver en la curva de sobreajuste.</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2 × 3
-  modelo                 beta_clima odds_ratio
-  &lt;chr&gt;                       &lt;dbl&gt;      &lt;dbl&gt;
-1 Logit crudo                 0.522       1.690
-2 Logit ajustado por mes      0.443       1.560</code></pre>
+<pre><code># A tibble: 3 × 4
+  conjunto      primer_día último_día horas
+  &lt;chr&gt;              &lt;dbl&gt;      &lt;dbl&gt; &lt;int&gt;
+1 Entrenamiento          1        219  5162
+2 Validación           220        292  1735
+3 Test                 293        365  1748</code></pre>
 </div>
 </div>
-<p>El coeficiente cambia al comparar horas dentro del mismo mes: parte de la asociación cruda reflejaba composición estacional.</p>
-<div class="fragment">
-<p>Esto <strong>no prueba</strong> que el coeficiente ajustado sea causal. Solo elimina la confusión explicada por <code>month</code> bajo la forma funcional elegida.</p>
-</div>
-</section>
-<section id="el-mismo-coeficiente-admite-dos-lecturas" class="slide level2">
-<h2>El mismo coeficiente admite dos lecturas</h2>
-<div class="pull-left">
-<p><strong>Lectura asociacional</strong></p>
-<p><span class="math display">
-\beta_1=
-\log\frac{\operatorname{odds}(Y=1\mid D=1,X)}
-{\operatorname{odds}(Y=1\mid D=0,X)}
-</span></p>
-<p>Describe una comparación condicional en los datos observados.</p>
-</div>
-<div class="pull-right">
-<p><strong>Lectura causal</strong></p>
-<p><span class="math display">
-\beta_1=
-\log\frac{\operatorname{odds}\{Y(1)=1\mid X\}}
-{\operatorname{odds}\{Y(0)=1\mid X\}}
-</span></p>
-<p>Compara resultados potenciales bajo dos intervenciones.</p>
-</div>
-<div class="fragment">
-<p>La segunda lectura necesita diseño y supuestos causales. La ecuación logística, por sí sola, solo garantiza la primera.</p>
-</div>
-</section>
-<section id="la-causalidad-no-está-en-la-complejidad" class="slide level2">
-<h2>La causalidad no está en la complejidad</h2>
-<p>El mismo logit puede ser:</p>
-<ul>
-<li><strong>asociacional</strong>, si el tratamiento está confundido;</li>
-<li><strong>causal</strong>, si el diseño hace creíble la comparación contrafactual.</li>
-</ul>
-<div class="fragment">
-<p>Un modelo más complejo puede ajustar mejor la asociación, pero no fabrica el contrafactual faltante.</p>
-</div>
-<div class="fragment">
-<p>Una muestra más grande reduce el error estándar:</p>
-<p><span class="math display">
-n\uparrow \quad\Longrightarrow\quad SE(\hat\beta_1)\downarrow
-</span></p>
-<p>pero no elimina el sesgo por confusión. Podemos estimar una asociación no causal con enorme precisión.</p>
-</div>
-</section>
-<section id="el-supuesto-decisivo-no-viene-de-la-regresión" class="slide level2">
-<h2>El supuesto decisivo no viene de la regresión</h2>
-<p>La <strong>intercambiabilidad condicional</strong> o no-confusión exige:</p>
-<p><span class="math display">
-\{Y_i(1),Y_i(0)\}\perp D_i\mid X_i.
-</span></p>
-<p>En palabras: dentro de grupos con igual <span class="math inline">X</span>, recibir <span class="math inline">D=1</span> o <span class="math inline">D=0</span> es “como si” fuera aleatorio respecto de los resultados potenciales.</p>
-<div class="fragment">
-<p>Este supuesto:</p>
-<ul>
-<li>no se demuestra con un <span class="math inline">p</span>-value;</li>
-<li>no aparece automáticamente al aumentar <span class="math inline">n</span>;</li>
-<li>requiere teoría, conocimiento del proceso y un buen diseño.</li>
-</ul>
-</div>
-</section>
-<section id="también-necesitamos-comparaciones-posibles" class="slide level2">
-<h2>También necesitamos comparaciones posibles</h2>
-<p>Para cada combinación de confusores debe existir alguna posibilidad de observar ambos tratamientos:</p>
-<p><span class="math display">
-0&lt;\Pr(D_i=1\mid X_i=x)&lt;1.
-</span></p>
-<p>Este supuesto se llama <strong>positividad</strong> u <strong>overlap</strong>.</p>
-<div class="fragment">
-<p>Si en cierto mes nunca hubiera horas despejadas, los datos no permitirían estimar qué ocurriría bajo clima despejado para ese mes: el contrafactual requeriría extrapolación.</p>
-</div>
-</section>
-<section id="consistencia-el-tratamiento-debe-estar-bien-definido" class="slide level2">
-<h2>Consistencia: el tratamiento debe estar bien definido</h2>
-<p>La <strong>consistencia</strong> conecta el resultado observado con el potencial:</p>
-<p><span class="math display">
-D_i=d \quad\Longrightarrow\quad Y_i=Y_i(d).
-</span></p>
-<p>Pero “otro clima” mezcla nubes, lluvia y nieve. ¿Son realmente la misma intervención?</p>
-<div class="fragment">
-<p>Cuanto más heterogénea sea la definición de <span class="math inline">D=0</span>, más difícil es interpretar un único efecto. Definir con precisión el tratamiento es parte del análisis causal.</p>
-</div>
+<p>Entrenamos con el pasado, elegimos hiperparámetros en un período posterior y reservamos los últimos días para test: una partición aleatoria sería optimista si horas vecinas comparten patrones no observados.</p>
 </section></section>
 <section>
-<section id="el-dag-guía-los-controles" class="title-slide slide level1 inverse center middle" data-background-color="#F0B323">
-<h1>El DAG guía los controles</h1>
+<section id="ridge" class="title-slide slide level1 inverse center middle" data-background-color="#1B4B5A">
+<h1>Ridge</h1>
 
 </section>
-<section id="no-todas-las-covariables-son-confusores" class="slide level2">
-<h2>No todas las covariables son confusores</h2>
-<ul>
-<li><strong>Confusor:</strong> causa tanto <span class="math inline">D</span> como <span class="math inline">Y</span>. Controlarlo puede bloquear una asociación espuria.</li>
-<li><strong>Mediador:</strong> está en el camino <span class="math inline">D\rightarrow M\rightarrow Y</span>. Controlarlo elimina parte del efecto total.</li>
-<li><strong>Colisionador:</strong> recibe flechas <span class="math inline">D\rightarrow C\leftarrow Y</span>. Controlarlo puede crear una asociación espuria.</li>
-</ul>
+<section id="motivación-cuando-los-predictores-se-parecen-entre-sí" class="slide level2">
+<h2>Motivación: cuando los predictores se parecen entre sí</h2>
+<p><code>temp</code> y <code>atemp</code> están altamente correlacionadas. En un GLM sin penalizar, esto genera un problema específico: <span class="math inline">X^\top X</span> se vuelve casi no invertible, y pequeños cambios en la muestra producen coeficientes muy distintos — alta varianza, tal como vimos arriba.</p>
 <div class="fragment">
-<p>El DAG representa supuestos sustantivos; no se “descubre” mirando significancia estadística.</p>
+<p><strong>Ridge</strong> ataca exactamente ese síntoma: en vez de dejar que los coeficientes crezcan sin control para “explicar” la colinealidad, los penaliza por tamaño.</p>
 </div>
 </section>
-<section id="más-controles-no-garantizan-causalidad" class="slide level2">
-<h2>Más controles no garantizan causalidad</h2>
-<p>Agregar variables a una regresión ayuda solo si esas variables cumplen el rol causal correcto.</p>
-<div class="fragment">
-<ul>
-<li>Omitir un confusor deja abierto un camino no causal.</li>
-<li>Incluir un mediador cambia el estimando: pasamos del efecto total a un efecto directo.</li>
-<li>Incluir un colisionador puede introducir sesgo.</li>
-<li>Ajustar por una variable medida después del tratamiento suele ser especialmente riesgoso.</li>
-</ul>
-</div>
-<div class="fragment">
-<p>La lista de controles se decide con un argumento causal <strong>antes</strong> de mirar qué especificación entrega el coeficiente preferido.</p>
+<section id="intuición-el-estimador-como-compromiso" class="slide level2">
+<h2>Intuición: el estimador como compromiso</h2>
+<p>En la geometría familiar de mínimos cuadrados, agregar una penalización por el tamaño de <span class="math inline">\boldsymbol\beta</span> es “tirar” al estimador hacia el origen, un poco menos lejos de donde los datos solos lo llevarían.</p>
+
+<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20251209150233295936/ridge_estimate.webp" style="width:50.0%" class="r-stretch quarto-figure-center"><p class="caption">El estimador Ridge (verde) es el punto donde las curvas de nivel de la pérdida (elipses) tocan primero la región de restricción circular.</p><div class="footnote">
+<p>Fuente: <a href="https://www.geeksforgeeks.org/machine-learning/what-is-ridge-regression/">GeeksforGeeks — What is Ridge Regression</a></p>
 </div>
 </section>
-<section id="diseño-antes-que-sofisticación" class="slide level2">
-<h2>Diseño antes que sofisticación</h2>
-<p>La diferencia entre asociación y causalidad:</p>
+<section id="definición-formal-penalización-l_2" class="slide level2">
+<h2>Definición formal: penalización <span class="math inline">L_2</span></h2>
+<p>Partimos de la pérdida logística y agregamos un costo por coeficientes grandes:</p>
+<p><span class="math display">
+\widehat{\boldsymbol\beta}^{\text{ridge}}
+=\arg\min_{\boldsymbol\beta}
+\left\{-\ell(\boldsymbol\beta)+\lambda \underbrace{\frac{1}{2}\sum_{j=1}^{p}\beta_j^2}_{P(\boldsymbol\beta)}\right\}.
+</span></p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Símbolo</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\ell(\boldsymbol\beta)</span></td>
+<td>log-verosimilitud logística: qué tan bien predicen las probabilidades</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">P(\boldsymbol\beta)</span></td>
+<td>penalización: qué tan grandes son los coeficientes</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\lambda\ge 0</span></td>
+<td>intensidad de la penalización: el “dial” que elegiremos con validación</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">\lambda=0</span> recupera el ajuste sin penalizar; <span class="math inline">\lambda</span> grande empuja todos los coeficientes hacia 0. El intercepto nunca se penaliza — no tiene sentido “encogerlo” hacia una demanda promedio de cero.</p>
+</section>
+<section id="la-verosimilitud-que-penalizamos" class="slide level2">
+<h2>La verosimilitud que penalizamos</h2>
+<p>Con log-odds <span class="math inline">\eta_i=\beta_0+x_i^\top\boldsymbol\beta</span> y <span class="math inline">p_i=\sigma(\eta_i)</span>:</p>
+<p><span class="math display">
+\ell(\boldsymbol\beta)=\sum_{i=1}^{n}\big[\,y_i\,\eta_i-\log(1+e^{\eta_i})\,\big].
+</span></p>
 <ul>
-<li><strong>no</strong> es principalmente un problema de estimación;</li>
-<li><strong>no</strong> desaparece con una muestra más grande;</li>
-<li><strong>sí</strong> depende de cómo se asigna el tratamiento y cómo se construye la comparación.</li>
+<li><span class="math inline">y_i\in\{0,1\}</span>: demanda alta observada.</li>
+<li><span class="math inline">\eta_i</span>: log-odds predicho; <span class="math inline">p_i=\sigma(\eta_i)</span>: probabilidad predicha — el mismo logit de las clases 9 a 11.</li>
+<li>Maximizar <span class="math inline">\ell</span> equivale a minimizar la <strong>devianza</strong> <span class="math inline">-2\ell</span>.</li>
 </ul>
+<p>Minimizar <span class="math inline">-\ell+\lambda P(\boldsymbol\beta)</span> es, entonces, “ajustar bien las probabilidades <strong>sin</strong> coeficientes desmesurados”.</p>
+</section>
+<section id="descomposición-matemática-solución-cerrada" class="slide level2">
+<h2>Descomposición matemática: solución cerrada</h2>
+<p>En regresión lineal, Ridge tiene solución explícita — útil para ver <em>qué hace</em> la penalización:</p>
+<p><span class="math display">
+\widehat{\boldsymbol\beta}^{\text{ridge}}=(X^\top X+\lambda I)^{-1}X^\top y.
+</span></p>
+<ul>
+<li>Sumar <span class="math inline">\lambda I</span> vuelve <strong>invertible</strong> a <span class="math inline">X^\top X</span> aunque haya colinealidad casi perfecta (<code>temp</code> y <code>atemp</code>) — resuelve exactamente el problema que motivó esta técnica.</li>
+<li><span class="math inline">\lambda=0</span> recupera mínimos cuadrados; <span class="math inline">\lambda\to\infty</span> lleva <span class="math inline">\widehat{\boldsymbol\beta}\to 0</span>.</li>
+<li>En regresión logística no hay fórmula cerrada, pero la misma penalización <span class="math inline">+\lambda I</span> estabiliza cada paso del ajuste iterativo (IRLS).</li>
+</ul>
+</section>
+<section id="descomposición-matemática-qué-hace-ridge-dirección-por-dirección" class="slide level2">
+<h2>Descomposición matemática: qué hace Ridge, dirección por dirección</h2>
+<p>Con la descomposición <span class="math inline">X=UDV^\top</span> (columnas estandarizadas), las predicciones Ridge se contraen <strong>dirección por dirección</strong>:</p>
+<p><span class="math display">
+\widehat y=\sum_{j}u_j\,\frac{d_j^{2}}{d_j^{2}+\lambda}\,u_j^\top y.
+</span></p>
+<ul>
+<li><span class="math inline">d_j</span>: valor singular de la dirección <span class="math inline">j</span> — cuánta varianza tiene esa combinación de predictores.</li>
+<li>Factor de contracción <span class="math inline">d_j^{2}/(d_j^{2}+\lambda)\in(0,1)</span>.</li>
+<li>Direcciones de <strong>poca varianza</strong> (colineales, <span class="math inline">d_j</span> pequeño) se contraen <strong>más</strong> — son justo las que producen coeficientes inestables.</li>
+</ul>
+
+<img data-src="class_16_files/figure-revealjs/svd-shrinkage-1.png" width="960" class="r-stretch"><p>Las direcciones de menor varianza —donde viven combinaciones como <code>temp</code><span class="math inline">\approx</span><code>atemp</code>— son las más contraídas. Ridge no las elimina; les quita influencia.</p>
+</section>
+<section id="por-qué-estandarizar-antes-de-penalizar" class="slide level2">
+<h2>Por qué estandarizar antes de penalizar</h2>
+<p>La penalización opera sobre el tamaño <em>numérico</em> de cada coeficiente. Si <code>temp</code> variara entre 0 y 1 y otra variable entre 0 y 1.000, una misma magnitud de coeficiente no sería comparable — la penalización castigaría por unidades, no por importancia real.</p>
+<p><span class="math display">z_{ij}=\frac{x_{ij}-\bar{x}_{j,\text{train}}}{s_{j,\text{train}}}.</span></p>
+<p><code>glmnet</code> estandariza los predictores por defecto, usando solo estadísticas del conjunto de entrenamiento (nunca de validación o test).</p>
+</section>
+<section id="ridge-ejemplo-empírico" class="slide level2">
+<h2>Ridge: ejemplo empírico</h2>
+
+<img data-src="class_16_files/figure-revealjs/ridge-path-1.png" width="960" class="r-stretch"></section>
+<section id="interpretación-leer-la-trayectoria" class="slide level2">
+<h2>Interpretación: leer la trayectoria</h2>
+<ul>
+<li>Hacia la derecha aumenta <span class="math inline">\lambda</span>; todos los coeficientes se contraen <strong>suavemente</strong>, sin saltos.</li>
+<li>Ninguna variable desaparece de forma abrupta — consistente con lo que la SVD predijo.</li>
+<li>El signo y el tamaño de cada coeficiente deben interpretarse condicionalmente al resto del modelo, igual que en cualquier GLM.</li>
+<li>Esta trayectoria muestra <strong>cómo cambia el modelo</strong> con <span class="math inline">\lambda</span>; todavía no nos dice cuál <span class="math inline">\lambda</span> predice mejor — eso lo resolveremos con validación, más adelante en la clase.</li>
+</ul>
+</section></section>
+<section>
+<section id="lasso-y-elastic-net" class="title-slide slide level1 inverse center middle" data-background-color="#1B4B5A">
+<h1>LASSO y Elastic Net</h1>
+
+</section>
+<section id="motivación-ridge-nunca-elige" class="slide level2">
+<h2>Motivación: Ridge nunca elige</h2>
+<p>Ridge resuelve la inestabilidad, pero deja un problema abierto: <strong>nunca elimina un predictor</strong>. Con muchas variables (interacciones, indicadores de calendario), sería útil que el propio ajuste nos dijera cuáles sobran — no solo que las encoja un poco.</p>
 <div class="fragment">
-<p>Experimentos aleatorizados, experimentos naturales y diseños cuasi-experimentales buscan hacer creíble la comparación contrafactual.</p>
+<p><strong>LASSO</strong> cambia la forma de la penalización para lograr justamente eso: contracción <strong>y</strong> selección de variables, en el mismo procedimiento.</p>
 </div>
 </section>
-<section id="cómo-leer-los-coeficientes-desde-ahora" class="slide level2">
-<h2>Cómo leer los coeficientes desde ahora</h2>
-<p>Sin supuestos causales, el coeficiente de un logit describe una asociación condicional:</p>
-<blockquote>
-<p>Entre observaciones con iguales covariables, ¿cómo cambian las log-odds de <span class="math inline">Y=1</span> cuando cambia <span class="math inline">D</span>?</p>
-</blockquote>
-<div class="fragment">
-<p>Ese mismo coeficiente <strong>puede</strong> interpretarse como un efecto causal condicional si además:</p>
+<section id="intuición-por-qué-una-forma-distinta-selecciona" class="slide level2">
+<h2>Intuición: por qué una forma distinta selecciona</h2>
+<p>Ridge penaliza <span class="math inline">\sum\beta_j^2</span> (un círculo, en dos dimensiones). LASSO penaliza <span class="math inline">\sum|\beta_j|</span> (un diamante). La diferencia de forma no es cosmética: cambia dónde el óptimo puede caer.</p>
+
+<img data-src="class_16_files/figure-revealjs/l1l2-geometry-1.png" width="960" class="r-stretch"><p>Elipses = curvas de nivel de <span class="math inline">-\ell</span>; círculo = restricción Ridge; diamante = restricción LASSO. El estimador penalizado vive donde esas curvas <strong>tocan por primera vez</strong> la región de restricción. El diamante tiene vértices sobre los ejes — es fácil tocar justo ahí, y en un vértice algún <span class="math inline">\beta_j=0</span>. El círculo no tiene esquinas: contrae, pero casi nunca anula.</p>
+</section>
+<section id="definición-formal-penalización-l_1" class="slide level2">
+<h2>Definición formal: penalización <span class="math inline">L_1</span></h2>
+<p><span class="math display">
+\widehat{\boldsymbol\beta}^{\text{lasso}}
+=\arg\min_{\boldsymbol\beta}
+\left\{-\ell(\boldsymbol\beta)+\lambda \underbrace{\sum_{j=1}^{p}|\beta_j|}_{P(\boldsymbol\beta)}\right\}.
+</span></p>
+<p>Misma estructura que Ridge — mismo <span class="math inline">\ell</span>, mismo rol de <span class="math inline">\lambda</span> — la única diferencia es la forma de <span class="math inline">P(\boldsymbol\beta)</span>. Eso basta para cambiar por completo el comportamiento del estimador, como acabamos de ver.</p>
+<p>La selección no implica causalidad: que un coeficiente sea exactamente 0 no prueba que esa variable sea irrelevante sustantivamente, solo que no ayudó a predecir en esta muestra bajo esta penalización.</p>
+</section>
+<section id="descomposición-matemática-soft-thresholding" class="slide level2">
+<h2>Descomposición matemática: soft-thresholding</h2>
+<p>Con predictores ortonormales, la solución LASSO es explícita — y deja ver el mecanismo exacto de la selección:</p>
+<p><span class="math display">
+\widehat\beta_j^{\text{lasso}}
+=\operatorname{sign}\!\big(\widehat\beta_j^{\text{OLS}}\big)\,
+\big(|\widehat\beta_j^{\text{OLS}}|-\lambda\big)_+ .
+</span></p>
+<ul>
+<li><span class="math inline">(\cdot)_+</span> = parte positiva: si <span class="math inline">|\widehat\beta_j^{\text{OLS}}|&lt;\lambda</span>, el coeficiente se vuelve <strong>exactamente 0</strong>.</li>
+<li>Ridge, en cambio, <strong>escala</strong> todos por igual: <span class="math inline">\widehat\beta_j^{\text{ridge}}=\widehat\beta_j^{\text{OLS}}/(1+\lambda)</span> — nunca llega a 0 exacto.</li>
+</ul>
+
+<img data-src="class_16_files/figure-revealjs/soft-threshold-1.png" width="960" class="r-stretch"></section>
+<section id="cómo-se-optimiza-en-la-práctica" class="slide level2">
+<h2>Cómo se optimiza en la práctica</h2>
+<p><code>glmnet</code> usa <strong>descenso por coordenadas</strong>: fija todos los coeficientes menos uno y lo actualiza con la fórmula de soft-thresholding sobre los <em>residuos parciales</em>, ciclando hasta converger. En logística se combina con IRLS (mínimos cuadrados ponderados iterados, la misma idea que vimos en la clase de MLE).</p>
+<ul>
+<li>Existe un <span class="math inline">\lambda_{\max}=\max_j |x_j^\top(y-\bar y)|/n</span> donde <strong>todos</strong> los coeficientes son 0; por eso la trayectoria empieza vacía.</li>
+<li>La ruta se calcula desde <span class="math inline">\lambda_{\max}</span> hacia abajo con <em>warm starts</em>: cada solución inicializa la siguiente.</li>
+<li>Alternativa clásica con el mismo resultado: <strong>LARS</strong> (<em>Least Angle Regression</em>), un algoritmo distinto que también traza la ruta completa de LASSO.</li>
+</ul>
+</section>
+<section id="lasso-ejemplo-empírico" class="slide level2">
+<h2>LASSO: ejemplo empírico</h2>
+
+<img data-src="class_16_files/figure-revealjs/lasso-path-1.png" width="960" class="r-stretch"></section>
+<section id="interpretación-a-diferencia-de-ridge" class="slide level2">
+<h2>Interpretación: a diferencia de Ridge</h2>
+<p>Compare esta trayectoria con la de Ridge: aquí las variables <strong>entran y salen</strong> del modelo en puntos concretos de <span class="math inline">\lambda</span>, no se contraen todas parejo. Cada vez que una línea toca el cero y se queda ahí, esa variable fue <strong>excluida</strong> para ese nivel de penalización.</p>
+</section>
+<section id="motivación-cuando-además-hay-bloques-correlacionados" class="slide level2">
+<h2>Motivación: cuando además hay bloques correlacionados</h2>
+<p>LASSO selecciona, pero con predictores muy correlacionados (<code>temp</code>, <code>atemp</code>, mes, estacionalidad) tiende a <strong>elegir uno arbitrariamente y descartar el resto</strong> — muestras parecidas pueden terminar con variables distintas seleccionadas.</p>
+<p><strong>Elastic Net</strong> combina ambas penalizaciones para resolver esto:</p>
+<p><span class="math display">
+P_{\alpha}(\boldsymbol\beta)=
+(1-\alpha)\frac{1}{2}\sum_j\beta_j^2+
+\alpha\sum_j|\beta_j|.
+</span></p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">\alpha</span></th>
+<th>Modelo</th>
+<th>Comportamiento típico</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td>Ridge</td>
+<td>conserva todos los predictores</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td>LASSO</td>
+<td>produce soluciones dispersas</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">entre 0 y 1</td>
+<td>Elastic Net</td>
+<td>combina estabilidad y selección</td>
+</tr>
+</tbody>
+</table>
+<p>El término <span class="math inline">L_2</span> reparte el peso entre variables correlacionadas (<strong>efecto de agrupamiento</strong>); el término <span class="math inline">L_1</span> conserva la capacidad de anular bloques irrelevantes.</p>
+</section>
+<section id="otros-casos-de-uso" class="slide level2">
+<h2>Otros casos de uso</h2>
+<p>La misma familia de penalizaciones (<span class="math inline">L_1</span>, <span class="math inline">L_2</span>, combinadas) aparece, con el mismo objetivo — controlar complejidad cuando hay muchos predictores o predictores correlacionados —, en dominios muy distintos:</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Dominio</th>
+<th>Uso típico</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Genómica</td>
+<td>LASSO para seleccionar genes relevantes entre miles, con pocos pacientes</td>
+</tr>
+<tr class="even">
+<td>Finanzas</td>
+<td>Ridge para estabilizar modelos de riesgo con indicadores macroeconómicos correlacionados</td>
+</tr>
+<tr class="odd">
+<td>Texto / NLP</td>
+<td>LASSO sobre miles de frecuencias de palabras, para quedarse con las predictivas</td>
+</tr>
+<tr class="even">
+<td>Marketing</td>
+<td>Elastic Net en modelos de <em>churn</em> con decenas de variables de comportamiento correlacionadas</td>
+</tr>
+<tr class="odd">
+<td>Neuroimagen</td>
+<td>Elastic Net para seleccionar vóxeles relevantes entre decenas de miles</td>
+</tr>
+</tbody>
+</table>
+<p>En todos los casos, el problema de fondo es el mismo que vimos hoy: muchos predictores, posible colinealidad, y la necesidad de controlar complejidad sin decidir a mano qué variable entra.</p>
+</section>
+<section id="comparación-sistemática" class="slide level2">
+<h2>Comparación sistemática</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Ridge</th>
+<th>LASSO</th>
+<th>Elastic Net</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Penalización</td>
+<td><span class="math inline">L_2</span></td>
+<td><span class="math inline">L_1</span></td>
+<td><span class="math inline">L_1+L_2</span></td>
+</tr>
+<tr class="even">
+<td>Coeficientes</td>
+<td>todos se achican, ninguno en 0</td>
+<td>algunos exactamente 0</td>
+<td>algunos en 0, resto achicado</td>
+</tr>
+<tr class="odd">
+<td>Supuesto implícito</td>
+<td>todos los predictores aportan algo</td>
+<td>pocos predictores realmente importan</td>
+<td>hay bloques correlacionados</td>
+</tr>
+<tr class="even">
+<td>Hiperparámetros</td>
+<td><span class="math inline">\lambda</span></td>
+<td><span class="math inline">\lambda</span></td>
+<td><span class="math inline">\lambda</span> y <span class="math inline">\alpha</span> (2 dimensiones)</td>
+</tr>
+<tr class="odd">
+<td>Costo computacional</td>
+<td>bajo (ruta cerrada por dirección)</td>
+<td>bajo (coordenadas)</td>
+<td>bajo, pero grilla 2D más cara</td>
+</tr>
+<tr class="even">
+<td>Interpretabilidad</td>
+<td>media (todos los coeficientes activos)</td>
+<td>alta (modelo disperso)</td>
+<td>media-alta</td>
+</tr>
+<tr class="odd">
+<td>Debilidad típica</td>
+<td>no simplifica el modelo</td>
+<td>descarta arbitrariamente entre correlacionados</td>
+<td>más costoso de tunear</td>
+</tr>
+</tbody>
+</table>
+<p>La decisión final es empírica: se compara desempeño de validación, no una preferencia a priori — lo hacemos a continuación.</p>
+</section>
+<section id="extensiones" class="slide level2">
+<h2>Extensiones</h2>
+<ul>
+<li><strong>Adaptive LASSO</strong>: pondera la penalización de cada coeficiente según una estimación previa, reduciendo el sesgo de selección de LASSO estándar.</li>
+<li><strong>Group LASSO</strong>: en vez de anular coeficientes individuales, anula <strong>grupos completos</strong> — por ejemplo, todos los indicadores de una variable categórica (como <code>factor(hr)</code>) entran o salen juntos.</li>
+<li><strong>SCAD / MCP</strong>: penalizaciones no convexas que corrigen el sesgo hacia cero que Ridge y LASSO imponen a coeficientes grandes.</li>
+</ul>
+<p>Todas resuelven variantes del mismo problema — controlar complejidad automáticamente — con ajustes a cómo se reparte la penalización.</p>
+</section></section>
+<section>
+<section id="validación" class="title-slide slide level1 inverse center middle" data-background-color="#1B4B5A">
+<h1>Validación</h1>
+
+</section>
+<section id="por-qué-la-validación-no-es-un-anexo" class="slide level2">
+<h2>Por qué la validación no es un anexo</h2>
+<p>Elegimos <span class="math inline">\alpha</span> y <span class="math inline">\lambda</span>; ninguno de los dos se estima maximizando la verosimilitud del modelo. Si los eligiéramos mirando qué tan bien ajustan el conjunto de entrenamiento, siempre ganaría <span class="math inline">\lambda=0</span> — el problema con el que empezamos la clase. Por eso la validación no es un paso posterior: es la forma concreta de resolver el compromiso sesgo-varianza sin hacer trampa.</p>
+</section>
+<section id="protocolo-de-tuning" class="slide level2">
+<h2>Protocolo de tuning</h2>
 <ol type="1">
-<li>definimos tratamiento, outcome, población y estimando;</li>
-<li>explicitamos un DAG;</li>
-<li>justificamos no-confusión, positividad y consistencia;</li>
-<li>evitamos controles que abran sesgos nuevos.</li>
+<li>Definir una grilla de <span class="math inline">\alpha</span>.</li>
+<li>Ajustar una trayectoria de <span class="math inline">\lambda</span> en entrenamiento.</li>
+<li>Predecir validación para cada combinación.</li>
+<li>Elegir la menor pérdida de validación.</li>
+<li>Reajustar con entrenamiento + validación.</li>
+<li>Evaluar una vez en test.</li>
 </ol>
-</div>
 </section>
-<section id="ejercicio-construya-el-argumento-causal" class="slide level2">
-<h2>Ejercicio: construya el argumento causal</h2>
-<p>Suponga que queremos estimar el efecto de <code>workingday</code> sobre la probabilidad de <code>high_demand</code>.</p>
+<section id="validación-simple-vs.-validación-cruzada" class="slide level2">
+<h2>Validación simple vs.&nbsp;validación cruzada</h2>
+<p>La idea de fondo de cualquier validación: en vez de “memorizar una única prueba”, evaluar el modelo como si rindiera <strong>varios exámenes distintos</strong> y ver si el desempeño es consistente.</p>
+<p><span class="math display">
+\text{CV}(\lambda)=\frac{1}{k}\sum_{f=1}^{k}\text{pérdida}_f(\lambda).
+</span></p>
+
+<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20250927122541290704/222.webp" style="width:50.0%" class="r-stretch quarto-figure-center"><p class="caption">k-fold cross-validation: los datos se dividen en k bloques; en cada ronda uno actúa como validación y el resto como entrenamiento.</p><div class="footnote">
+<p>Fuente: <a href="https://www.geeksforgeeks.org/machine-learning/cross-validation-machine-learning/">GeeksforGeeks — Cross Validation in Machine Learning</a></p>
+</div>
+<p>Con dependencia temporal como la nuestra, la CV aleatoria de la figura es <strong>optimista</strong>: horas vecinas se filtran entre pliegues. Por eso usamos un conjunto de validación fijo, cronológico.</p>
+</section>
+<section id="validación-cronológica-rolling-origin" class="slide level2">
+<h2>Validación cronológica (“rolling-origin”)</h2>
+<p>El análogo correcto de k-fold cuando los datos son series de tiempo se llama <strong>validación cruzada de series de tiempo</strong> (<em>rolling-origin</em> / <em>walk-forward</em>): cada “pliegue” entrena solo con el pasado y valida con un bloque futuro, avanzando el origen de entrenamiento en cada ronda. Es la generalización, a <span class="math inline">k</span> rondas, de la partición cronológica única que usamos hoy.</p>
+<p>Otras alternativas para elegir <span class="math inline">\lambda</span> sin re-ajustar muchas veces: <strong>validación cruzada generalizada (GCV)</strong>, y criterios de información como AIC/BIC.</p>
+</section>
+<section id="validación-de-α-y-λ-ejemplo-empírico" class="slide level2">
+<h2>Validación de α y λ: ejemplo empírico</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 3
+  alpha  lambda  loss
+  &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;
+1     0 0.003   0.351
+2     0 0.004 0.351
+3     0 0.005 0.352
+4     0 0.006 0.352
+5     0 0.007 0.353</code></pre>
+</div>
+</div>
+
+<img data-src="class_16_files/figure-revealjs/validation-plot-1.png" width="960" class="r-stretch"></section>
+<section id="reajuste-final-y-test-ejemplo-empírico" class="slide level2">
+<h2>Reajuste final y test: ejemplo empírico</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  alpha lambda validation_log_loss
+  &lt;dbl&gt;  &lt;dbl&gt;               &lt;dbl&gt;
+1     0  0.003               0.351</code></pre>
+</div>
+</div>
+<p>El umbral de clasificación se elige en validación maximizando accuracy balanceada — la misma lógica de la clase 15, ahora aplicada tras el tuning. El test no participó en ninguna de estas decisiones.</p>
+</section>
+<section id="interpretación-la-penalización-aporta" class="slide level2">
+<h2>Interpretación: ¿la penalización aporta?</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 5
+  modelo              log_loss accuracy sensitivity specificity
+  &lt;chr&gt;                  &lt;dbl&gt;    &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;
+1 Logit sin penalizar    0.323    0.822       0.937       0.781
+2 Elastic Net            0.306    0.747       0.991       0.659</code></pre>
+</div>
+</div>
+<p>Regularizar se justifica por desempeño y estabilidad fuera de muestra — comparado explícitamente aquí contra el logit sin penalizar de las clases 9–11 — no porque el método sea más reciente.</p>
+</section>
+<section id="interpretación-clasificación-y-calibración" class="slide level2">
+<h2>Interpretación: clasificación y calibración</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>         predicho
+observado baja alta
+     baja  848  439
+     alta    4  457</code></pre>
+</div>
+</div>
+
+<img data-src="class_16_files/figure-revealjs/calibration-1.png" width="960" class="r-stretch"><p>Los falsos negativos son horas de demanda alta que el sistema no anticipó. Discriminación (matriz de confusión) y calibración (¿las probabilidades predichas se cumplen en la frecuencia correcta?) son propiedades distintas — un modelo puede discriminar bien y calibrar mal, o viceversa.</p>
+</section>
+<section id="interpretación-qué-variables-quedan" class="slide level2">
+<h2>Interpretación: ¿qué variables quedan?</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 10 × 3
+   variable                coefficient selected
+   &lt;chr&gt;                         &lt;dbl&gt; &lt;lgl&gt;   
+ 1 factor(hr)8:workingday         8.590 TRUE    
+ 2 factor(hr)7:workingday         5.650 TRUE    
+ 3 factor(hr)10:workingday       -4.550 TRUE    
+ 4 factor(hr)16                   4.120 TRUE    
+ 5 factor(hr)14                   4.090 TRUE    
+ 6 atemp                          4.010 TRUE    
+ 7 factor(hr)17                   3.990 TRUE    
+ 8 factor(hr)11:workingday       -3.860 TRUE    
+ 9 factor(hr)13                   3.760 TRUE    
+10 factor(hr)12                   3.730 TRUE    </code></pre>
+</div>
+</div>
+<p>Un coeficiente igual a cero no demuestra irrelevancia sustantiva: solo dice que, bajo esta penalización y esta muestra, esa variable no ayudó a predecir. La selección puede cambiar entre muestras parecidas — no es una prueba de hipótesis.</p>
+</section>
+<section id="comparación-con-selección-clásica" class="slide level2">
+<h2>Comparación con selección clásica</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Método</th>
+<th>Controla complejidad</th>
+<th>Selección</th>
+<th>Nota</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mejor subconjunto</td>
+<td>prueba todas las combinaciones</td>
+<td>dura (0/1)</td>
+<td>inviable con <span class="math inline">p</span> grande</td>
+</tr>
+<tr class="even">
+<td>Paso a paso (stepwise)</td>
+<td>agrega/quita una variable a la vez</td>
+<td>dura</td>
+<td><em>greedy</em>, inestable</td>
+</tr>
+<tr class="odd">
+<td>Ridge / LASSO / Elastic Net</td>
+<td>penalización continua</td>
+<td>según método</td>
+<td>convexo, reproducible</td>
+</tr>
+</tbody>
+</table>
+<p>La regularización reemplaza la selección <strong>discreta</strong> (combinatoria, inestable, la que un GLM clásico haría “a mano” comparando AIC entre modelos) por una <strong>continua</strong> — el mismo objetivo del stepwise selection de la clase 15, resuelto de forma más estable.</p>
+</section>
+<section id="cuándo-puede-engañar" class="slide level2">
+<h2>Cuándo puede engañar</h2>
+<ul>
+<li><strong>Correlación fuerte</strong>: LASSO elige arbitrariamente entre predictores casi equivalentes.</li>
+<li><strong>Inferencia post-selección</strong>: los <span class="math inline">p</span>-valores clásicos no son válidos tras seleccionar con los mismos datos que se usan para inferencia.</li>
+<li><strong><span class="math inline">p\gg n</span></strong>: LASSO selecciona a lo sumo <span class="math inline">n</span> variables, aunque más sean relevantes.</li>
+<li><strong>Escalas ignoradas</strong>: sin estandarizar, la penalización castiga por unidades, no por importancia.</li>
+<li><strong>Fuga de información</strong>: estandarizar o elegir <span class="math inline">\lambda</span> mirando el test infla el desempeño reportado.</li>
+</ul>
+</section>
+<section id="síntesis-conceptual" class="slide level2">
+<h2>Síntesis conceptual</h2>
+<p>La regularización es una respuesta directa al compromiso sesgo–varianza con el que abrimos la clase: introducimos un sesgo controlado (<span class="math inline">\lambda P_\alpha</span>) a cambio de mucha menos varianza y un ajuste reproducible.</p>
+<ul>
+<li><strong>Ridge</strong> (<span class="math inline">L_2</span>): estabiliza, no selecciona; resuelve la colinealidad.</li>
+<li><strong>LASSO</strong> (<span class="math inline">L_1</span>): contrae y selecciona vía soft-thresholding.</li>
+<li><strong>Elastic Net</strong>: combina ambos cuando hay bloques correlacionados.</li>
+</ul>
+<p>Todo el resto del flujo —partición, estandarización, test intacto, calibración— existe para que ese compromiso se resuelva <strong>honestamente</strong>, sin volver a caer en la curva de sobreajuste del comienzo.</p>
+</section>
+<section id="ejercicio" class="slide level2">
+<h2>Ejercicio</h2>
 <ol type="1">
-<li>Defina <span class="math inline">Y_i(1)</span> y <span class="math inline">Y_i(0)</span> y precise cuál es la unidad <span class="math inline">i</span>.</li>
-<li>Dibuje un DAG con al menos un confusor plausible.</li>
-<li>Identifique una variable que <strong>no</strong> debería controlarse y explique su rol.</li>
-<li>Proponga un diseño que haga más creíble la comparación causal.</li>
-<li>Evalúe dónde podría fallar la positividad.</li>
+<li>Agregue una interacción entre <code>workingday</code> y <code>factor(hr)</code>.</li>
+<li>Repita el tuning sin observar el test.</li>
+<li>Compare log-loss y calibración contra el modelo de esta clase.</li>
+<li>Examine qué coeficientes sobreviven con LASSO.</li>
+<li>Explique por qué una mejora predictiva no basta para hablar de causalidad.</li>
 </ol>
+</section>
+<section id="la-pregunta-que-queda-abierta" class="slide level2">
+<h2>La pregunta que queda abierta</h2>
+<p>Regularización controla la complejidad de un modelo cuya <strong>forma</strong> seguimos eligiendo nosotros: seguimos escribiendo a mano <code>I(temp^2)</code>, <code>factor(hr) * workingday</code>, y esperando haber adivinado las interacciones correctas.</p>
+<div class="fragment">
+<p><strong>¿Qué pasa si no sabemos qué interacciones importan?</strong> ¿Puede el algoritmo, además de controlar cuánta complejidad usar, <strong>descubrir por sí solo</strong> qué variables interactúan y cómo? Esa es exactamente la pregunta que abre la próxima clase.</p>
+<p>Seguimos usando bicicletas como único caso — pero el mismo procedimiento (penalizar, validar sin mirar el test, elegir hiperparámetros honestamente) es exactamente el que corre detrás de un puntaje de crédito o un score de riesgo: la disciplina que practicamos aquí es la misma que se exige cuando el error afecta a una persona, no a una bicicleta.</p>
+</div>
 </section>
 <section id="en-resumen" class="slide level2">
 <h2>En resumen</h2>
 <ul>
-<li>Causalidad compara resultados potenciales de la misma unidad.</li>
-<li>Solo observamos uno: el otro es contrafactual.</li>
-<li>Un coeficiente logístico es asociacional por defecto; puede ser causal bajo un diseño y supuestos adecuados.</li>
-<li>Los confusores crean caminos alternativos entre tratamiento y resultado.</li>
-<li>Más datos reducen incertidumbre, pero no eliminan confusión.</li>
-<li>La causalidad depende del diseño, no de la complejidad del modelo.</li>
+<li>Un modelo demasiado flexible ajusta mejor el entrenamiento pero predice peor datos nuevos: sesgo-varianza.</li>
+<li>Ridge estabiliza modelos con predictores correlacionados, sin seleccionar.</li>
+<li>LASSO favorece parsimonia y selección vía soft-thresholding.</li>
+<li>Elastic Net ofrece un continuo entre ambos cuando hay bloques correlacionados.</li>
+<li><span class="math inline">\alpha</span> y <span class="math inline">\lambda</span> se eligen con validación, nunca maximizando el ajuste en entrenamiento.</li>
+<li>La forma funcional del modelo, sin embargo, la seguimos eligiendo nosotros — eso cambia en la próxima clase.</li>
 </ul>
 </section>
-<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#8E1B3D">
+<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#E87500">
 <h2>Gracias</h2>
 <p><strong>Hasta la próxima clase</strong></p>
 <p>Mauricio Bucca</p>

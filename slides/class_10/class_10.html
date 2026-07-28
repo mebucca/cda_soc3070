@@ -143,13 +143,13 @@
     }
   </style>
 </head>
-<body class="theme-juventus quarto-light">
+<body class="theme-ajax quarto-light">
   <div class="reveal">
     <div class="slides">
 
-<section id="title-slide" data-background-color="#6B2D5C" class="quarto-title-block center">
+<section id="title-slide" data-background-color="#E0642B" class="quarto-title-block center">
   <h1 class="title">Análisis de Datos Categóricos (SOC3070)</h1>
-  <p class="subtitle">Efectos en Regresión Logística</p>
+  <p class="subtitle">Regresión Logística Multinomial</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -166,167 +166,117 @@ Mauricio Bucca · Sociología UC
 <div class="full-width">
 <div class="content-box">
 <p><strong>Antes</strong></p>
-<p>regresión logística y máxima verosimilitud.</p>
+<p>estructura teórica de la regresión multinomial.</p>
 </div>
 <div class="content-box-primary">
 <p><strong>Hoy</strong></p>
-<p>interpretación de efectos y efectos marginales.</p>
+<p>interpretación de efectos multinomiales.</p>
 </div>
 <div class="content-box-secondary">
 <p><strong>Después</strong></p>
-<p>inferencia y bootstrap.</p>
+<p>regresión de Poisson para recuentos.</p>
 </div>
 </div>
 </section>
-<section>
-<section id="regresión-logística" class="title-slide slide level1 inverse center middle" data-background-color="#C69214">
-<h1>Regresión Logística</h1>
-
+<section id="regresión-logística-multinomial-interpretación-de-efectos" class="slide level2 inverse center middle" data-background-color="#C1122F">
+<h2>Regresión Logística Multinomial: interpretación de efectos</h2>
 </section>
-<section id="interpretación-de-efectos" class="slide level2">
-<h2>Interpretación de efectos</h2>
-</section>
-<section id="configuración" class="slide level2">
-<h2>Configuración</h2>
-<div class="fragment">
-<ul>
-<li>Tenemos <span class="math inline">y_{1}, \dots y_{n}</span> son <span class="math inline">n</span> variables independientes con distribución <span class="math inline">\text{Bernoulli}(p_{i})</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="math inline">\mathbb{E}(y_{i} \mid x_{i1}, \dots,x_{ik}) = \mathbb{P}(y_{i}=1 \mid x_{i1}, \dots,x_{ik}) = p_{i}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<p>donde, <span class="math display">\ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></p>
-</div>
-</section>
-<section id="configuración-1" class="slide level2">
-<h2>Configuración</h2>
-<ul>
-<li>Tenemos <span class="math inline">y_{1}, \dots y_{n}</span> son <span class="math inline">n</span> variables independientes con distribución <span class="math inline">\text{Bernoulli}(p_{i})</span></li>
-<li><span class="math inline">\mathbb{E}(y_{i} \mid x_{i1}, \dots,x_{ik}) = \mathbb{P}(y_{i}=1 \mid x_{i1}, \dots,x_{ik}) = p_{i}</span></li>
-</ul>
-<p>donde, <span class="math display">\underbrace{\ln \frac{p_{i}}{1 - p_{i}}}_{\text{Link logit}(p_{i})} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></p>
-</section>
-<section id="configuración-2" class="slide level2">
-<h2>Configuración</h2>
-<ul>
-<li>Tenemos <span class="math inline">y_{1}, \dots y_{n}</span> son <span class="math inline">n</span> variables independientes con distribución <span class="math inline">\text{Bernoulli}(p_{i})</span></li>
-<li><span class="math inline">\mathbb{E}(y_{i} \mid x_{i1}, \dots,x_{ik}) = \mathbb{P}(y_{i}=1 \mid x_{i1}, \dots,x_{ik}) = p_{i}</span></li>
-</ul>
-<p>donde, <span class="math display">\ln \frac{p_{i}}{1 - p_{i}} = \underbrace{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}_{\text{Predictor lineal  } \eta_{i}}</span></p>
-<div class="fragment">
-<ul>
-<li>Interpretación: ¿cuál es el significado de <span class="math inline">\beta_{0},\beta_{1}, \dots, \beta_{k}</span>?</li>
-</ul>
-</div>
+<section id="efectos-marginales-sobre-el-logit" class="slide level2 center middle">
+<h2>Efectos marginales sobre el logit</h2>
 </section>
 <section id="un-ejemplo-empírico" class="slide level2">
 <h2>Un ejemplo empírico</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2,700 × 8
+   region population sex     age education income statusquo vote 
+   &lt;fct&gt;       &lt;int&gt; &lt;fct&gt; &lt;int&gt; &lt;fct&gt;      &lt;int&gt;     &lt;dbl&gt; &lt;fct&gt;
+ 1 C          175000 F        64 P             NA     -1.800 U    
+ 2 M           25000 M        27 S           7500     -1.740 &lt;NA&gt; 
+ 3 SA         250000 F        21 PS         35000     -1.730 N    
+ 4 SA         250000 F        42 S          35000     -1.480 &lt;NA&gt; 
+ 5 SA         250000 M        27 S           7500     -1.340 N    
+ 6 C          250000 F        22 S           7500     -1.330 N    
+ 7 M           15000 M        34 P          15000     -1.330 N    
+ 8 SA         250000 M        66 S          35000     -1.310 &lt;NA&gt; 
+ 9 SA         250000 F        25 S          15000     -1.310 A    
+10 S          250000 F        39 S          15000     -1.310 N    
+# ℹ 2,690 more rows</code></pre>
+</div>
+</div>
 <div class="pull-left">
-<p>Continuando con los datos de demanda de bicicletas, ajustaremos el siguiente modelo:</p>
-<p><span class="math display">\underbrace{\ln \frac{p_{i}}{ 1 - p_{i}}}_{\text{logit}(p_{i})}    = \beta_{0} + \beta_{1}\text{hábil}_{i} + \beta_{2}\text{temp}_{i}</span></p>
-<p>donde:</p>
+<p>Continuando con los datos del plebiscito de 1988, ajustaremos el siguiente modelo: <span class="math display">\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}</span> donde:</p>
 <ul>
-<li><span class="math inline">p_{i} =\mathbb{P}(\text{alta demanda}_{i}=1)</span></li>
-<li><span class="math inline">\text{logit}(p_{i})</span> es el <span class="bold">log odds</span> de que una hora sea de alta demanda</li>
-<li><span class="math inline">p_{i}</span> y <span class="math inline">\text{logit}(p_{i})</span> son una función del tipo de día (hábil) y la temperatura (temp).</li>
+<li><span class="math inline">p_{iJ} =\mathbb{P}(\text{vote}_{i}=\text{A})</span></li>
+<li><span class="math inline">p_{ij} =\mathbb{P}(\text{vote}_{i}=j), \quad j \in \{\text{N},\text{U},\text{Y}\}</span></li>
+<li><span class="math inline">\text{logit}(p_{ij})</span> es el <span class="bold">log odds</span> de votar N/U/Y vs A.</li>
+<li><span class="math inline">p_{ij}</span>’s son una función de apoyo al status-quo (<code>statusquo</code>) y género (<code>sex</code>)</li>
 </ul>
 </div>
 <div class="fragment">
 <div class="pull-right">
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-glm(formula = high_demand ~ factor(workingday) + temp, family = binomial(link = "logit"), 
-    data = bikedata)
+<pre><code>Call:
+multinom(formula = vote ~ statusquo + sex, data = plebs_1988, 
+    trace = F)
 
 Coefficients:
-                    Estimate Std. Error z value             Pr(&gt;|z|)    
-(Intercept)          -3.469     0.097  -35.760 &lt; 0.000 ***
-factor(workingday)1  -0.362     0.057   -6.330        0.000 ***
-temp                  4.894     0.155   31.500 &lt; 0.000 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
+  (Intercept) statusquo    sexM
+N      0.110   -1.764  0.698
+U      1.290    0.336 -0.292
+Y      0.777    1.895 -0.114
 
-(Dispersion parameter for binomial family taken to be 1)
+Std. Errors:
+  (Intercept) statusquo   sexM
+N      0.144    0.129 0.173
+U      0.114    0.104 0.172
+Y      0.129    0.118 0.179
 
-    Null deviance: 9711.200  on 8644  degrees of freedom
-Residual deviance: 8473.600  on 8642  degrees of freedom
-AIC: 8480
-
-Number of Fisher Scoring iterations: 4</code></pre>
+Residual Deviance: 4323 
+AIC: 4341 </code></pre>
 </div>
 </div>
 </div>
 </div>
-</section>
-<section id="efectos-marginales-sobre-el-logit" class="slide level2 inverse center middle" data-background-color="#C69214">
-<h2>Efectos marginales sobre el logit</h2>
 </section>
 <section id="efectos-marginales-sobre-el-logit-1" class="slide level2">
 <h2>Efectos marginales sobre el logit</h2>
-<div class="center">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_10_files/figure-revealjs/unnamed-chunk-3-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-el-logit-2" class="slide level2">
-<h2>Efectos marginales sobre el logit</h2>
-<p>Dado el siguiente modelo de regresión logística: <span class="math display">\text{logit}(p_{i}) = \ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></p>
+<p>Un modelo de regresión logística multinomial consiste de <span class="math inline">J-1</span> ecuaciones: <span class="math display">\text{logit}(p_{ij}) = \ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}</span></p>
 <div class="fragment">
 <ul>
-<li>El intercepto <span class="math inline">\beta_{0}</span> corresponde al logit de la probabilidad de éxito cuando <span class="math inline">x_{1} = \dots = x_{k} = 0</span></li>
+<li>El intercepto <span class="math inline">\beta_{j0}</span> corresponde al log del ratio entre la probabilidad de obtener <span class="math inline">j</span> en vez de <span class="math inline">J</span> – <span class="math inline">\text{logit}(p_{j})</span> –, cuando <span class="math inline">x_{1} = \dots = x_{k} = 0</span></li>
 </ul>
 </div>
 <div class="fragment">
 <ul>
-<li>El efecto marginal de <span class="math inline">x_{k}</span> sobre el logit de la probabilidad de éxito está dado por:</li>
+<li>El efecto marginal de <span class="math inline">x_{k}</span> sobre el <span class="math inline">\text{logit}(p_{j})</span> por:</li>
 </ul>
 <div class="pull-left">
 <div class="content-box-blue">
-<p><span class="math display">\frac{\partial\text{logit}(p_{i})}{\partial x_{k}} = \beta_{k}</span></p>
+<p><span class="math display">\frac{\partial\text{logit}(p_{ij})}{\partial x_{k}} = \beta_{jk}</span></p>
 </div>
 </div>
 <div class="pull-right">
 <div class="content-box-yellow">
-<p>“Un cambio infinitesimal en <span class="math inline">x_{k}</span> <span class="math inline">\big(\partial x_{k}\big)</span> se traduce en un cambio en <span class="math inline">\partial x_{k} \beta_{k}</span> unidades en el logit de p”</p>
+<p>“Un cambio infinitesimal en <span class="math inline">x_{k}</span> ( <span class="math inline">\partial x_{k}</span> ) se traduce en un cambio en <span class="math inline">\partial x_{k} \beta_{jk}</span> unidades en el <span class="math inline">\text{logit}(p_{j})</span>”</p>
 </div>
 </div>
 </div>
 <div class="fragment">
-<p>¿Por qué?</p>
-</div>
-<div class="fragment">
-<p>Asumamos que sólo la variable <span class="math inline">x_{k}</span> cambia en una unidad, de <span class="math inline">x_{k}=c</span> a <span class="math inline">x_{k}=c+1</span>. Entonces:</p>
-</div>
-<div class="fragment">
-<p><span class="math display">\begin{align}
-  \frac{\Delta\text{logit}(p_{i}) }{\Delta x_{k}} &amp;= (\beta_{0} + \beta_{1}x_{1} +  \dots + \beta_{k}(c+1)) - (\beta_{0} + \beta_{1}x_{1} + \dots + \beta_{k}c)  \\
-  &amp;=  \beta_{k}(c+1) - \beta_{k}c = \beta_{k}
-\end{align}</span></p>
+<p><span class="bold">Importante:</span> los coeficientes y sus transformaciones entregan información sobre las probabilidades <span class="bold">relativas</span> de los diferentes <span class="math inline">j</span>’s (con respecto a categoría de referencia).</p>
 </div>
 </section>
-<section id="efectos-marginales-sobre-el-logit-3" class="slide level2">
+<section id="efectos-marginales-sobre-el-logit-2" class="slide level2">
 <h2>Efectos marginales sobre el logit</h2>
-<p>En nuestro ejemplo: <span class="math inline">\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i}</span></p>
+<p>En nuestro ejemplo: <span class="math inline">\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}</span></p>
 <div class="pull-left">
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>                    Estimate Std. Error
-(Intercept)          -3.469    0.097
-factor(workingday)1  -0.362    0.057
-temp                  4.894    0.155</code></pre>
+<pre><code>  (Intercept) statusquo    sexM
+N      0.110   -1.764  0.698
+U      1.290    0.336 -0.292
+Y      0.777    1.895 -0.114</code></pre>
 </div>
 </div>
 </div>
@@ -335,277 +285,298 @@ temp                  4.894    0.155</code></pre>
 <div class="cell-output-display">
 <div>
 <figure>
-<p><img data-src="class_10_files/figure-revealjs/unnamed-chunk-5-1.png" width="576"></p>
+<p><img data-src="class_10_files/figure-revealjs/unnamed-chunk-4-1.png" width="576"></p>
 </figure>
 </div>
 </div>
 </div>
 </div>
 </section>
-<section id="efectos-multiplicativos-sobre-las-odds-de-éxito" class="slide level2 inverse center middle" data-background-color="#C69214">
-<h2>Efectos multiplicativos sobre las odds de éxito</h2>
+<section id="efectos-marginales-sobre-el-logit-3" class="slide level2">
+<h2>Efectos marginales sobre el logit</h2>
+<div class="pull-left">
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>  (Intercept) statusquo    sexM
+N      0.110   -1.764  0.698
+U      1.290    0.336 -0.292
+Y      0.777    1.895 -0.114</code></pre>
+</div>
+</div>
+<p>Por tanto, <span class="math inline">\beta_{N1}</span> y <span class="math inline">\beta_{Y1}</span> son=</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>betaN1 betaY1 
+ -1.760   1.900 </code></pre>
+</div>
+</div>
+</div>
+<div class="pull-right">
+<p>Si <code>male=1</code> y <code>statusquo=0</code>, entonces <code>logit(p_N)</code> y <code>logit(p_Y)</code> son=</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>   N    Y 
+0.810 0.670 </code></pre>
+</div>
+</div>
+<p>Si <code>male=1</code> y <code>statusquo=1</code>, entonces <code>logit(p_N)</code> y <code>logit(p_Y)</code> son=</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>    N     Y 
+-0.950  2.570 </code></pre>
+</div>
+</div>
+</div>
 </section>
-<section id="efectos-multiplicativos-sobre-las-odds" class="slide level2">
+<section id="efectos-multiplicativos-sobre-las-odds" class="slide level2 center middle">
 <h2>Efectos multiplicativos sobre las odds</h2>
-<p>Dado el siguiente modelo de regresión logística: <span class="math display">\text{logit}(p_{i}) = \ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></p>
+</section>
+<section id="efectos-multiplicativos-sobre-las-odds-1" class="slide level2">
+<h2>Efectos multiplicativos sobre las odds</h2>
+<p>Dado el siguiente modelo de regresión logística multinomial: <span class="math display">\text{logit}(p_{ij}) = \ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}</span></p>
 <div class="fragment">
-<p>exponenciando a ambos lados obtenemos las <span class="bold">odds de éxito</span>: <span class="math display">\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}</span></p>
+<p>exponenciando a ambos lados obtenemos <span class="math display">\frac{p_{ij}}{p_{iJ}} = e^{\beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}}</span></p>
 </div>
 <div class="fragment">
 <p>equivalentemente</p>
 <div class="content-box-blue">
-<p><span class="math display">\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots e^{\beta_{k} x_{ik}}</span></p>
+<p><span class="math display">\frac{p_{ij}}{p_{iJ}} =  e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i1}}  \dots e^{\beta_{jk} x_{ik}}</span></p>
 </div>
-</div>
-</section>
-<section id="efectos-multiplicativos-sobre-las-odds-1" class="slide level2">
-<h2>Efectos multiplicativos sobre las odds</h2>
-<p><span class="math display">\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots e^{\beta_{k} x_{ik}}</span></p>
-<div class="fragment">
-<p>Examinando esta ecuación observamos que cuando <span class="math inline">x_1 = \dots = x_k = 0</span>,</p>
-<p><span class="math display">\frac{p_{i}}{1 - p_{i}}=  e^{\beta_{0}}</span> Es decir, cuando <span class="math inline">x_1 = \dots = x_k = 0</span> las odds de éxito están dadas por <span class="math inline">e^{\beta_{0}}</span>.</p>
-</div>
-<div class="fragment">
-<p>Generalizando, observamos que cuando <span class="math inline">x_1 = c_1  \dots = x_k = c_k</span>, las odds de éxito están dadas por</p>
-<p><span class="math display">\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0}} \cdot e^{\beta_{1} c_{1}}  \dots e^{\beta_{k} c_{k}}</span></p>
 </div>
 </section>
 <section id="efectos-multiplicativos-sobre-las-odds-odds-ratios" class="slide level2">
 <h2>Efectos multiplicativos sobre las odds: odds ratios</h2>
-<p>Considera la situación en que <span class="math inline">i</span> y <span class="math inline">j</span> son dos observaciones con <span class="math inline">x_{k}=c</span> y <span class="math inline">x_{k}=c+1</span>, respectivamente. El resto de las covariables toman valores idénticos.</p>
+<p>Considera la situación en que <span class="math inline">i</span> y <span class="math inline">i^{´}</span> son dos observaciones con <span class="math inline">x_{k}=c</span> y <span class="math inline">x_{k}=c+1</span>, respectivamente. El resto de las covariables toman valores idénticos.</p>
 <div class="fragment">
-<p>Las odds de éxito para cada caso son:</p>
+<p>Las odds de observar <span class="math inline">j</span> en vez de <span class="math inline">J</span> son:</p>
 <ul>
-<li><span class="math inline">p_{i}/(1 - p_{i}) = e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c}</span></li>
-<li><span class="math inline">p_{j}/(1 - p_{j}) = e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c+1}</span></li>
+<li><span class="math inline">p_{ij}/(p_{iJ}) = e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i1}}  \dots (e^{\beta_{jk}})^{c}</span></li>
+<li><span class="math inline">p_{i^{´}j}/(p_{i^{´}J}) = e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i^{´}1}}  \dots (e^{\beta_{jk}})^{c+1}</span></li>
 </ul>
 </div>
 <div class="fragment">
-<p>El ratio de las odd de éxito entre <span class="math inline">j</span> e <span class="math inline">i</span> está dado por:</p>
+<p>El ratio de las odd de éxito entre <span class="math inline">i^{´}</span> e <span class="math inline">i</span> está dado por:</p>
 <p><span class="math display">\begin{align}
-\frac{p_{j}/(1 - p_{j})}{p_{i}/(1 - p_{i})} &amp;= \frac{e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c+1}}{e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c}} \\ \\
-&amp;= e^{\beta_{k}}
-\end{align}</span> En otras palabras, manteniendo otros factores constantes, <span class="math inline">e^{\beta_{k}}</span> representa la odds ratio entre el caso con <span class="math inline">x_{k}</span> aumentado en una unidad, y el caso con <span class="math inline">x_{k}</span> en un nivel basal dado.</p>
+\frac{p_{i^{´}j}/p_{i^{´}J}}{p_{ij}/p_{iJ}} &amp;= \frac{e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i^{´}1}}  \dots (e^{\beta_{jk}})^{c+1}}{e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i1}}  \dots (e^{\beta_{jk}})^{c}} = e^{\beta_{jk}}
+\end{align}</span></p>
+<p>En otras palabras, manteniendo otros factores constantes, <span class="math inline">e^{\beta_{jk}}</span> representa la odds ratio de <span class="math inline">j</span> vs <span class="math inline">J</span> entre el caso con <span class="math inline">x_{k}</span> aumentado en una unidad, y el caso con <span class="math inline">x_{k}</span> en un nivel basal dado.</p>
 </div>
 </section>
 <section id="efectos-multiplicativos-sobre-las-odds-2" class="slide level2">
 <h2>Efectos multiplicativos sobre las odds</h2>
 <div class="content-box-yellow">
-<p>“Un cambio en <span class="math inline">\Delta</span> unidades de <span class="math inline">x_{k}</span> multiplica las las odds de éxito por <span class="math inline">e^{\Delta \beta_{k}}</span>”</p>
+<p>“Un cambio en <span class="math inline">\Delta</span> unidades de <span class="math inline">x_{k}</span> multiplica el ratio entre las probabilidad de obtener <span class="math inline">j</span> vs <span class="math inline">J</span> por <span class="math inline">e^{\Delta \beta_{jk}}</span>”</p>
 </div>
 <p><span class="bold">Propiedades</span>:</p>
 <div class="fragment">
 <ul>
-<li><span class="math inline">e^{\beta_{k}}</span> está restringido al rango <span class="math inline">[0,\infty+)</span>. Es una constante que “comprime” o amplifica las odds de éxito.</li>
+<li><span class="math inline">e^{\beta_{jk}}</span> está restringido al rango <span class="math inline">[0,\infty+)</span>. Es una constante que “comprime” o amplifica el ratio entre las probabilidades de <span class="math inline">j</span> vs <span class="math inline">J</span></li>
 </ul>
 </div>
 <div class="fragment">
 <ul>
-<li>Si <span class="math inline">\beta_{k} &lt; 0  \to  (0 &lt; e^{\beta_{k}} &lt; 1)</span>. Es decir, un aumento en <span class="math inline">x_{k}</span> está asociado con una reducción (multiplicativa) de las odds de éxito.</li>
+<li>Si <span class="math inline">\beta_{jk} &lt; 0  \to  (0 &lt; e^{\beta_{jk}} &lt; 1)</span>. Es decir, un aumento en <span class="math inline">x_{k}</span> está asociado con una reducción (multiplicativa) del ratio entre las probabilidades de <span class="math inline">j</span> vs <span class="math inline">J</span></li>
 </ul>
 </div>
 <div class="fragment">
 <ul>
-<li>Si <span class="math inline">\beta_{k} = 0  \to  (e^{\beta_{k}} =1)</span>. Es decir, un cambio en <span class="math inline">x_{k}</span> está asociado a un cambio nulo en las odds de éxito.</li>
+<li>Si <span class="math inline">\beta_{jk} = 0  \to  (e^{\beta_{jk}} =1)</span>. Es decir, un cambio en <span class="math inline">x_{k}</span> está asociado a un cambio nulo en el ratio entre las probabilidades de <span class="math inline">j</span> vs <span class="math inline">J</span></li>
 </ul>
 </div>
 <div class="fragment">
 <ul>
-<li>Si <span class="math inline">\beta_{k} &gt; 0  \to  (e^{\beta_{k}} &gt; 1)</span>. Es decir, un aumento en <span class="math inline">x_{k}</span> está asociado a aumento (multiplicativo) en de las odds de éxito.</li>
+<li>Si <span class="math inline">\beta_{jk} &gt; 0  \to  (e^{\beta_{jk}} &gt; 1)</span>. Es decir, un aumento en <span class="math inline">x_{k}</span> está asociado a aumento (multiplicativo) en el ratio entre las probabilidades de <span class="math inline">j</span> vs <span class="math inline">J</span></li>
 </ul>
 </div>
 </section>
 <section id="efectos-multiplicativos-sobre-las-odds-3" class="slide level2">
 <h2>Efectos multiplicativos sobre las odds</h2>
-<p>En nuestro ejemplo: <span class="math inline">\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i}</span>, por tanto:</p>
+<p>En nuestro ejemplo: <span class="math inline">\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}</span>, por tanto:</p>
 <div class="pull-left">
-<p><span class="math inline">\frac{p_{i}}{1 -p_{i}} = e^{\beta_{0}} \cdot  e^{\beta_{1}*\text{hábil}_{i}} \cdot e^{\beta_{2}\text{temp}_{i}}</span></p>
+<p><span class="math inline">\frac{p_{ij}}{p_{iJ}} = e^{\beta_{j0}} \cdot  e^{\beta_{j1}\text{statusquo}_{i}} \cdot e^{ \beta_{j2}\text{male}_{i} }</span></p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>                    Estimate Std. Error
-(Intercept)          -3.469    0.097
-factor(workingday)1  -0.362    0.057
-temp                  4.894    0.155</code></pre>
+<pre><code>  (Intercept) statusquo    sexM
+N      0.110   -1.764  0.698
+U      1.290    0.336 -0.292
+Y      0.777    1.895 -0.114</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>        (Intercept) factor(workingday)1                temp 
-            0.031             0.696           133.533 </code></pre>
+<pre><code>  (Intercept) statusquo   sexM
+N       1.116    0.171 2.010
+U       3.635    1.399 0.747
+Y       2.176    6.652 0.892</code></pre>
 </div>
 </div>
 </div>
 <div class="fragment">
 <div class="pull-right">
-<div class="cell" data-warnings="false">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_10_files/figure-revealjs/unnamed-chunk-7-1.png" width="960"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-éxito" class="slide level2 inverse center middle" data-background-color="#C69214">
-<h2>Efectos marginales sobre la probabilidad de éxito</h2>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-1" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de éxito</h2>
-<div class="center">
 <div class="cell">
 <div class="cell-output-display">
 <div>
 <figure>
-<p><img data-src="class_10_files/figure-revealjs/unnamed-chunk-8-1.png" width="576"></p>
+<p><img data-src="class_10_files/figure-revealjs/unnamed-chunk-10-1.png" width="960"></p>
 </figure>
 </div>
 </div>
 </div>
 </div>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-2" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de éxito</h2>
-<p>Dado el siguiente modelo de regresión logística: <span class="math display">\ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></p>
-<div class="fragment">
-<p>Queremos saber el <span class="bold">efecto marginal</span> de los predictores sobre la <span class="bold">probabilidad</span> de éxito. Formalmente</p>
-</div>
-<div class="fragment">
-<p><span class="math display">\frac{\partial p_{i}}{\partial x_{k}}</span></p>
-</div>
-<div class="fragment">
-<p><span class="bold">Paso a paso…</span></p>
-<div class="img-right">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="mostaza-merlo.jpg"></p>
-<figcaption>mostaza</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="bold">Paso 1</span>: reexpresar la ecuación de regresión como</li>
-</ul>
-<p><span class="math display">\ln(p_{i}) - \ln(1-p_{i}) = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></p>
 </div>
 </section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-3" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de éxito</h2>
-<ul>
-<li><span class="bold">Paso 1</span>: reexpresar la ecuación de regresión como <span class="math display">\ln(p_{i}) - \ln(1-p_{i}) = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></li>
-</ul>
-<div class="fragment">
-<ul>
-<li><span class="bold">Paso 2</span>: usando diferenciación implícita y tomando derivada con respecto a <span class="math inline">x_{k}</span> en ambos lados, obtenemos: <span class="math display">\frac{\partial p_{i} }{\partial x_{k}} \frac{1}{p_{i}} + \frac{\partial p_{i} }{\partial x_{k}} \frac{1}{(1 - p_{i})} = \beta_{k}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="bold">Paso 3</span>: re-agrupando: <span class="math display">\frac{\partial p_{i} }{\partial x_{k}} \frac{1}{p_{i}(1 - p_{i})}= \beta_{k}</span></li>
-</ul>
-</div>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-4" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de éxito</h2>
-<ul>
-<li><span class="bold">Paso 3</span>: re-agrupando: <span class="math display">\frac{\partial p_{i} }{\partial x_{k}} \frac{1}{p_{i}(1 - p_{i})}= \beta_{k}</span></li>
-</ul>
-<div class="fragment">
-<ul>
-<li><span class="bold">Paso 4</span>: re-ordenando los términos obtenemos el efecto marginal que buscamos:</li>
-</ul>
-<div class="content-box-blue">
-<p><span class="math display">\frac{\partial p_{i}}{\partial x_{k}}= \beta_{k} \cdot p_{i}(1 - p_{i})</span></p>
-</div>
-</div>
-<div class="fragment">
-<p>recordar que … <span class="math display">p_{i} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik})}}</span></p>
-</div>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-5" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de éxito</h2>
-<ul>
-<li><span class="bold">Paso 5</span>: reemplazando, <span class="math display">\frac{\partial p_{i}}{\partial x_{k}}= \beta_{k} \cdot \Bigg(\frac{1}{1 + e^{-(\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}})}\Bigg) \Bigg(1 - \frac{1}{1 + e^{-(\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik})}}\Bigg)</span></li>
-</ul>
-<div class="fragment">
-<p>Corolario:</p>
-</div>
-<div class="fragment">
-<ul>
-<li>Dado que <span class="math inline">p_{i}(1-p_{i})</span> es estrictamente positivo,</li>
-<li><span class="math inline">\beta_{k}&gt;0</span> indica que variable <span class="math inline">x_{k}</span> tienen un efecto positivo sobre la probabilidad de éxito</li>
-<li><span class="math inline">\beta_{k}&lt;0</span> indica que <span class="math inline">x_{k}</span> tiene un efecto negativo.</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>El <span class="bold">efecto marginal</span> de <span class="math inline">x_{k}</span> no depende sólo de <span class="math inline">\beta_{k}</span> sino varía dependiendo del valor de <span class="math inline">x_{k}</span> y del valor de todas las otras covariables.</li>
-</ul>
-</div>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-6" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de éxito</h2>
-<p><span class="math display">\frac{\partial p_{i}}{\partial x_{k}}= \beta_{k} \cdot \Bigg(\frac{1}{1 + e^{-(\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}})}\Bigg) \Bigg(1 - \frac{1}{1 + e^{-(\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik})}}\Bigg)</span></p>
-<div class="fragment">
-<p>Corolario,</p>
-</div>
-<div class="fragment">
-<ul>
-<li>A medida que la <span class="math inline">p_{i}</span> se aproxima a 0, <span class="math inline">\frac{\partial p_{i}}{\partial x_{k}}</span> tiende a 0.</li>
-<li>A medida que la <span class="math inline">p_{i}</span> se aproxima a 1, <span class="math inline">\frac{\partial p_{i}}{\partial x_{k}}</span> tiende a 0.</li>
-<li>A medida que la <span class="math inline">p_{i}</span> se acerca a 0.5, <span class="math inline">\frac{\partial p_{i}}{\partial x_{k}}</span> tiende a <span class="math inline">\beta_{k}/4</span>.</li>
-</ul>
-</div>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-7" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de éxito</h2>
-<p>En nuestro ejemplo: <span class="math inline">\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i}</span>, por tanto: <span class="math display">p_{i} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i})} }</span></p>
+<section id="efectos-multiplicativos-sobre-las-odds-4" class="slide level2">
+<h2>Efectos multiplicativos sobre las odds</h2>
 <div class="pull-left">
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>                    Estimate Std. Error
-(Intercept)          -3.469    0.097
-factor(workingday)1  -0.362    0.057
-temp                  4.894    0.155</code></pre>
+<pre><code>    beta1 exp.beta1
+N -1.764    0.171
+U  0.336    1.399
+Y  1.895    6.652</code></pre>
 </div>
 </div>
 </div>
 <div class="pull-right">
+<p>Si <code>male=1</code> y <code>statusquo=0</code>, entonces las odds de N e Y son=</p>
 <div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_10_files/figure-revealjs/unnamed-chunk-10-1.png" width="576"></p>
-</figure>
+<div class="cell-output cell-output-stdout">
+<pre><code>    N     Y 
+2.248 1.954 </code></pre>
 </div>
+</div>
+<p>Si <code>male=1</code> y <code>statusquo=1</code>, entonces las odds de N e Y son=</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>      N       Y 
+ 0.387 13.066 </code></pre>
 </div>
 </div>
 </div>
 </section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-8" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de éxito</h2>
+<section id="efectos-multiplicativos-sobre-las-odds-5" class="slide level2">
+<h2>Efectos multiplicativos sobre las odds</h2>
 <div class="pull-left">
-<p><span class="math display">p_{i} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i})}}</span></p>
 <div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_10_files/figure-revealjs/unnamed-chunk-11-1.png" width="576"></p>
-</figure>
+<div class="cell-output cell-output-stdout">
+<pre><code>    beta1 exp.beta1
+N -1.764    0.171
+U  0.336    1.399
+Y  1.895    6.652</code></pre>
 </div>
+</div>
+<p>Por tanto, <span class="math inline">e^{\beta_{N1}}</span> y <span class="math inline">e^{\beta_{Y1}}</span> son=</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>betaN1 betaY1 
+ 0.172  6.686 </code></pre>
+</div>
+</div>
+</div>
+<div class="pull-right">
+<p>Si <code>male=1</code> y <code>statusquo=0</code>, entonces las odds de N e Y son=</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>    N     Y 
+2.248 1.954 </code></pre>
+</div>
+</div>
+<p>Si <code>male=1</code> y <code>statusquo=1</code>, entonces las odds de N e Y son=</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>      N       Y 
+ 0.387 13.066 </code></pre>
+</div>
+</div>
+</div>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j" class="slide level2 center middle">
+<h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j-1" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
+<div class="fragment">
+<p>Dado el siguiente modelo de regresión logística multinomial: <span class="math display">\text{logit}(p_{ij}) = \ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}</span></p>
+</div>
+<div class="fragment">
+<p>Queremos saber el <span class="bold">efecto marginal</span> de los predictores sobre la <span class="bold">probabilidad</span> de observar cada categoría <span class="math inline">j: \{1, \dots, J\}</span>. Formalmente</p>
+</div>
+<div class="fragment">
+<p><span class="math display">\frac{\partial p_{ij}}{\partial x_{k}}</span></p>
+</div>
+<div class="fragment">
+<p><span class="math display">\vdots</span></p>
+</div>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j-2" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
+<p>Después de varios pasos, obtenemos:</p>
+<div class="content-box-yellow">
+<p><span class="math display">\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)</span></p>
+</div>
+<p>donde <span class="math display">p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1}  e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}</span></p>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j-3" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
+<div class="pull-left">
+<p>Analizando <span class="math display">\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)</span></p>
+</div>
+<div class="fragment">
+<div class="pull-right">
+<p>podemos notar que <span class="math inline">\sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk} \equiv \overline{\beta_{k}}, \quad</span> el “efecto promedio de” <span class="math inline">x_k</span> (no depende de <span class="math inline">j</span>). Se desprende que:</p>
+</div>
+</div>
+<div class="fragment">
+<ul>
+<li>El signo del efecto marginal de los predictores <span class="bold">no necesariamente</span> corresponde al signo del parámetro estimado en la regresión.</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li><span class="math inline">\frac{\partial p_{ij}}{\partial x_{k}} &gt; 0 \quad</span> si <span class="math inline">\quad \beta_{jk} &gt; \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}</span></li>
+<li><span class="math inline">\frac{\partial p_{ij}}{\partial x_{k}} = 0 \quad</span> si <span class="math inline">\quad \beta_{jk} = \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}</span></li>
+<li><span class="math inline">\frac{\partial p_{ij}}{\partial x_{k}} &lt; 0 \quad</span> si <span class="math inline">\quad \beta_{jk} &lt; \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}</span></li>
+</ul>
+</div>
+<div class="fragment">
+<p><span class="bold">Nota</span>: No tiene mucho sentido testear si efectos marginales son distintos de cero.</p>
+</div>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j-4" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
+<div class="pull-left">
+<p>si <span class="math display">\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)</span></p>
+</div>
+<div class="fragment">
+<div class="pull-right">
+<p>y <span class="math display">p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1}  e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}</span></p>
+</div>
+</div>
+<div class="fragment">
+<ul>
+<li>Es claro que el efecto marginal de <span class="math inline">x_{k}</span> varía dependiendo del valor de <span class="math inline">x_{k}</span>, de su coeficiente <span class="math inline">\beta_{jk}</span>, y de todas las otras covariables con sus respectivos coeficientes.</li>
+</ul>
+</div>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j-5" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
+<p>En nuestro ejemplo: <span class="math inline">\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}</span>, por tanto:</p>
+<div class="pull-left">
+<p><span class="math display">p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{l=1} e^{\beta_{l0} + \beta_{l1}\text{statusquo}_{i} + \beta_{l2}\text{male}_{i}}}</span></p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>  (Intercept) statusquo    sexM
+N      0.110   -1.764  0.698
+U      1.290    0.336 -0.292
+Y      0.777    1.895 -0.114</code></pre>
 </div>
 </div>
 </div>
 <div class="fragment">
 <div class="pull-right">
-<p><span class="math display">\frac{\partial p_{i}}{\partial \text{temp} }= \beta_{\text{temp}} \cdot p_{i}(1 - p_{i})</span></p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
 <figure>
-<p><img data-src="class_10_files/figure-revealjs/unnamed-chunk-12-1.png" width="576"></p>
+<p><img data-src="class_10_files/figure-revealjs/unnamed-chunk-19-1.png" width="960"></p>
 </figure>
 </div>
 </div>
@@ -613,14 +584,46 @@ temp                  4.894    0.155</code></pre>
 </div>
 </div>
 </section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-9" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de éxito</h2>
+<section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j-6" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
+<div class="pull-left">
+<p><span class="math display">p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{l=1} e^{\beta_{l0} + \beta_{l1}\text{statusquo}_{i} + \beta_{l2}\text{male}_{i}}}</span></p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_10_files/figure-revealjs/unnamed-chunk-20-1.png" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div class="pull-right">
+<p><span class="math display">\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)</span></p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_10_files/figure-revealjs/unnamed-chunk-21-1.png" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j-7" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
 <ul>
-<li>Efectos marginales son <em>esencialmente</em> heterogeneos. No hay un efecto sino muchos.</li>
+<li>Efectos marginales son <em>esencialmente</em> heterogéneos. No hay un efecto sino muchos.</li>
 </ul>
 <div class="fragment">
 <ul>
 <li>Heterogeneidad crece con la complejidad del modelo: número de predictores, interacciones, etc.</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Más aún, en el caso de modelos de regresión logística multinomial, los efectos marginales no son necesariamente monotónicos (pueden cambiar de signo).</li>
 </ul>
 </div>
 <div class="fragment">
@@ -630,7 +633,7 @@ temp                  4.894    0.155</code></pre>
 </div>
 <div class="fragment">
 <div class="pull-left">
-<p><strong>Objetivo:</strong> obtener un resumen único sin ocultar que el efecto varía entre observaciones.</p>
+<p><strong>Objetivo:</strong> resumir la heterogeneidad sin confundir un promedio con un efecto universal.</p>
 </div>
 </div>
 <div class="fragment">
@@ -644,203 +647,94 @@ temp                  4.894    0.155</code></pre>
 </div>
 </div>
 </section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-ame" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de éxito: AME</h2>
-<p><span class="bold">AME</span>: Efecto marginal promedio (en muestra)</p>
+<section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j-mem" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span>: MEM</h2>
 <div class="fragment">
-<p>En <code>R</code> pueden usar el nuevo paquete <code>marginaleffects</code> (o comando <code>margins</code> en <code>Stata</code> )</p>
+<p>Usando el paquete <code>marginaleffects</code>:</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>
-       Term Contrast Estimate Std. Error     z Pr(&gt;|z|)    S   2.500 %  97.500 %
- temp          dY/dX   0.787    0.020 39.050   &lt;0.001  Inf  0.748  0.827
- workingday    1 - 0  -0.060    0.010 -6.220   &lt;0.001 30.900 -0.079 -0.041
+ Group Estimate Std. Error      z Pr(&gt;|z|)     S   2.500 %   97.500 %
+     A  -0.023     0.011  -2.160  0.031   5.000 -0.045 -0.002
+     N  -0.437     0.014 -31.440  &lt; 0.001 718.400 -0.465 -0.410
+     U   0.050     0.016   3.170  0.002   9.400  0.019  0.082
+     Y   0.410     0.014  29.310  &lt; 0.001 625.100  0.383  0.438
 
-Type: response</code></pre>
-</div>
-</div>
-</div>
-<div class="fragment">
-<div class="pull-left">
-<p><span class="bold">¿De donde vienen estos números?</span></p>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-ame-1" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de éxito: AME</h2>
-<p><span class="bold">(a) Solución análítica</span>, usando <span class="math display">\frac{\partial p_{i}}{\partial \text{temp} }= \beta_{\text{temp}} \cdot p_{i}(1 - p_{i})</span></p>
-<div class="fragment">
-<p>En <code>R</code>:</p>
-</div>
-<div class="fragment">
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 8,645 × 3
-        p beta_temp    me
-    &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt;
- 1 0.092      4.890 0.407
- 2 0.084      4.890 0.376
- 3 0.084      4.890 0.376
- 4 0.092      4.890 0.407
- 5 0.092      4.890 0.407
- 6 0.092      4.890 0.407
- 7 0.084      4.890 0.376
- 8 0.077      4.890 0.346
- 9 0.092      4.890 0.407
-10 0.130       4.890 0.553
-# ℹ 8,635 more rows</code></pre>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] "AME Temperatura: 0.787"</code></pre>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-ame-2" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de éxito: AME</h2>
-<p><span class="bold">(b) Aproximación numérica</span>, usando la definición la derivada:</p>
-<div class="fragment">
-<p><span class="math display">\frac{\partial p_{i}}{\partial \text{temp}} \approx  \frac{p_{i}(x_{1}, \dots ,\text{temp} = c + \delta) - p_{i}(x_{1}, \dots ,\text{temp} = c )}{\delta}</span></p>
-</div>
-<div class="fragment">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.794</code></pre>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-mem" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de éxito: MEM</h2>
-<p><span class="bold">MEM</span>: Efecto marginal al valor promedio (en muestra)</p>
-<div class="fragment">
-<div class="pull-left">
-<ul>
-<li>¿Qué promedio?
-<ul>
-<li>¿Promedio de “temperatura” para cada tipo de día por separado?</li>
-<li>¿Promedio global de “temperatura” por cada tipo de día por separado?</li>
-<li>¿Promedio global de “temperatura” y la media del tipo de día (como var. continua)?</li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div class="fragment">
-<div class="pull-right">
-<p><strong>La elección depende de la pregunta sustantiva y de qué población queremos resumir.</strong></p>
-</div>
-</div>
-<div class="fragment">
-<p>Depende de que lo que queremos …</p>
-</div>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-mem-1" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de éxito: MEM</h2>
-<p>Implementamos la tercera opción usando <code>marginaleffects</code> en <code>R</code>: efecto marginal para temperatura y tipo de día fijos a su promedio global.</p>
-<div class="fragment">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>      Promedio temp Promedio workingday 
-             0.489              0.684 </code></pre>
-</div>
-</div>
-</div>
-<div class="fragment">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
-       Term Contrast Estimate Std. Error     z Pr(&gt;|z|)     S   2.500 %  97.500 %
- temp          dY/dX   0.813     0.023 34.720   &lt;0.001 875.000  0.767  0.859
- workingday    1 - 0  -0.062     0.010 -6.120   &lt;0.001  30.000 -0.082 -0.042
-
-Type: response</code></pre>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-mer" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de éxito: MER</h2>
-<p>Una versión más general de MEM es calcular los efectos marginales para “valores representativos”.</p>
-<div class="fragment">
-<p>En <code>R</code></p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
- Estimate Std. Error    z Pr(&gt;|z|)     S 2.500 % 97.500 %
-    0.346    0.014 23.900   &lt;0.001 418.200 0.318  0.374
-    0.253    0.009 27.600   &lt;0.001 555.200 0.235  0.271
-    0.953    0.034 28.000   &lt;0.001 570.600 0.886  1.019
-    0.785    0.024 32.300   &lt;0.001 755.900 0.737  0.832
-    1.164    0.029 39.500   &lt;0.001   Inf 1.107  1.222
-    1.221    0.037 32.900   &lt;0.001 788.400 1.149  1.294
-
-Term: temp
-Type: response
+Term: statusquo
+Type: probs
 Comparison: dY/dX</code></pre>
 </div>
 </div>
 </div>
 </section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-mer-1" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de éxito: MER</h2>
-<table class="caption-top">
-<colgroup>
-<col style="width: 19%">
-<col style="width: 29%">
-<col style="width: 21%">
-<col style="width: 29%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Método</th>
-<th>Definición</th>
-<th>Ventaja</th>
-<th>Limitación</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><strong>AME</strong></td>
-<td>Promedio del efecto marginal sobre todos los casos</td>
-<td>Resume heterogeneidad en 1 número</td>
-<td>Puede ocultar variación</td>
-</tr>
-<tr class="even">
-<td><strong>MEM</strong></td>
-<td>Efecto en covariables fijadas en su promedio</td>
-<td>Fácil de interpretar</td>
-<td>“Promedio” puede no ser realista</td>
-</tr>
-<tr class="odd">
-<td><strong>MER</strong></td>
-<td>Efectos en valores representativos</td>
-<td>Ilustra heterogeneidad</td>
-<td>Depende de la elección de escenarios</td>
-</tr>
-</tbody>
-</table>
+<section id="independence-of-irrelevant-alternatives-iia" class="slide level2 inverse center middle" data-background-color="#C1122F">
+<h2>Independence of Irrelevant Alternatives (IIA)</h2>
+</section>
+<section id="independence-of-irrelevant-alternatives-iia-1" class="slide level2">
+<h2>Independence of Irrelevant Alternatives (IIA)</h2>
+<div class="fragment">
+<ul>
+<li>Cuando regresión logística Multinomial es utilizada para modelar decisiones (choice), el modelo descansa en el supuesto implícito de IIA</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>IIA: las odds (probabilidades relativas) de seleccionar cualquiera de las <span class="math inline">J</span> alternativas no son afectadas por la existencia de alternativas irrelavantes.</li>
+</ul>
+</div>
+<div class="fragment">
+<p><span class="bold">Ejemplo</span> (McFadden’s 1974):</p>
+<ul>
+<li>Una persona puede viajar al trabajo en: <span class="math inline">\{\text{auto}, \text{ bus rojo}\}</span></li>
+<li><span class="math inline">\mathbb{P}(\text{auto}) =  \mathbb{P}(\text{ bus rojo}) = 1/2</span>. Odds=1.</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Supongamos se amplía el conjunto de alternativas: <span class="math inline">\{\text{auto}, \text{ bus rojo},  \text{ bus azul}\}</span></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Dado que los buses sólo difieren en color, esperaríamos que <span class="math inline">\mathbb{P}(\text{ bus rojo}) = \mathbb{P}(\text{bus azul})</span></li>
+<li>Único modo de retener Odds entre auto y bus rojo es si: <span class="math inline">\mathbb{P}(\text{auto}) =  \mathbb{P}(\text{ bus rojo}) = \mathbb{P}(\text{bus azul}) = 1/3</span></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Sería más realista esperar que <span class="math inline">\mathbb{P}(\text{auto}) = 1/2)</span> y <span class="math inline">\quad \mathbb{P}(\text{ bus rojo}) = \mathbb{P}(\text{bus azul}) = 1/4</span></li>
+<li>Sin embargo, violaría IIA porque las odds entre auto y bus rojo serían (1/2)/(1/4)=2.</li>
+</ul>
+</div>
+</section>
+<section id="independence-of-irrelevant-alternatives-iia-2" class="slide level2">
+<h2>Independence of Irrelevant Alternatives (IIA)</h2>
+<p>Existe una variedad de tests para el supuesto de IIA, pero ninguno ha mostrado ser concluyente:</p>
+<div class="center">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="iia.png"></p>
+<figcaption>iia</figcaption>
+</figure>
+</div>
+</div>
 </section>
 <section id="en-resumen" class="slide level2">
 <h2>En resumen</h2>
 <ul>
-<li>Un mismo coeficiente <span class="math inline">\beta_{k}</span> admite tres lecturas: efecto aditivo sobre el logit (<span class="math inline">\beta_{k}</span>), efecto multiplicativo sobre las odds (<span class="math inline">e^{\beta_{k}}</span> = odds ratio), y efecto marginal (no lineal) sobre la probabilidad (<span class="math inline">\beta_{k} \cdot p_{i}(1-p_{i})</span>).</li>
-<li>El efecto marginal sobre la probabilidad no es constante: depende de <span class="math inline">p_{i}</span>, y por tanto de los valores de todas las covariables — es máximo cuando <span class="math inline">p_{i} \approx 0.5</span> y se aproxima a 0 en los extremos.</li>
-<li>Para resumir esta heterogeneidad en un solo número usamos AME, MEM o MER, según la pregunta sustantiva.</li>
-<li>La próxima clase: inferencia y bootstrap.</li>
+<li>El efecto marginal de <span class="math inline">x_{k}</span> sobre <span class="math inline">\text{logit}(p_{ij})</span> es constante e igual a <span class="math inline">\beta_{jk}</span>; exponenciando, <span class="math inline">e^{\beta_{jk}}</span> es la odds ratio de <span class="math inline">j</span> vs <span class="math inline">J</span> asociada a un aumento de una unidad en <span class="math inline">x_{k}</span>.</li>
+<li>El efecto marginal sobre la <strong>probabilidad</strong> <span class="math inline">p_{ij}</span> no es <span class="math inline">\beta_{jk}</span>: <span class="math inline">\partial p_{ij}/\partial x_{k} = p_{ij}(\beta_{jk} - \overline{\beta_{k}})</span>, por lo que su signo y magnitud dependen de <span class="math inline">p_{ij}</span> y pueden variar entre observaciones (e incluso cambiar de signo).</li>
+<li>En la práctica se resume esta heterogeneidad con AME, MEM o MER (ej., <code>avg_slopes()</code> del paquete <code>marginaleffects</code>).</li>
+<li>El modelo logit multinomial supone Independencia de Alternativas Irrelevantes (IIA); no existe un test concluyente para verificarlo.</li>
+<li>La próxima clase aborda la regresión de Poisson, usada para modelar variables de conteo.</li>
 </ul>
 </section>
-<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#6B2D5C">
+<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#E0642B">
 <h2>Gracias</h2>
 <p><strong>Hasta la próxima clase</strong></p>
 <p>Mauricio Bucca</p>
 
-</section></section>
+</section>
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">

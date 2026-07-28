@@ -1,10 +1,10 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "GLM, Regresión Logística & MLE"
+subtitle: "Regresión Logística Multinomial - Estructura Teórica"
 author: "Mauricio Bucca · Sociología UC"
 date: today
-body-classes: theme-liverpool
-course-team: liverpool
+body-classes: theme-ajax
+course-team: ajax
 filters: ["../_shared/course.lua"]
 format:
   revealjs:
@@ -20,7 +20,7 @@ format:
 
 ```{r course-style, include=FALSE}
 source("../_shared/bikeshare.R")
-course_palette <- use_course_style("liverpool")
+course_palette <- use_course_style("ajax")
 ```
 
 ## Antes · Hoy · Después {.class-rhythm}
@@ -30,61 +30,29 @@ course_palette <- use_course_style("liverpool")
 ::: {.content-box}
 **Antes**
 
-componentes de un GLM y funciones de enlace.
+regresión logística: inferencia.
 :::
 
 ::: {.content-box-primary}
 **Hoy**
 
-regresión logística y máxima verosimilitud.
+estructura teórica de la regresión multinomial.
 :::
 
 ::: {.content-box-secondary}
 **Después**
 
-regresión logística: interpretación de parámetros.
+interpretación de efectos multinomiales.
 :::
 
 :::
 
 
 
-# Modelos Lineales Generalizados (GLM) {.inverse .center .middle}
+# Regresión Logística Multinomial {.inverse .center .middle}
 
-## Recordando: ¿qué es un GLM?
-
-La clase anterior definimos un GLM por tres piezas — repasemos antes de usarlas hoy con un caso concreto:
-
-::: {.pull-left}
-
-- **Componente aleatorio**: distribución de $y_i$ (familia exponencial).
-- **Componente sistemático**: $\eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$.
-- **Función de enlace**: $g(\mu_{i}) = \eta_{i}$.
-
-:::
-
-::: {.pull-right}
-
-![nelder](nelder.png)
-
-:::
-
-. . .
-
-$$
-GLM:
-\begin{cases}
-&y_{i} \sim f(\mu_{i},\sigma_{i}) \\ \\
-& g(\mu_{i}) = \eta_{i}
-\end{cases}
-$$
-
-Hoy fijamos $y_{i} \sim \text{Bernoulli}(p_{i})$ y $g(\cdot) = \text{logit}(\cdot)$: la regresión logística es exactamente un GLM con esa combinación particular.
-
-# Regresión Logística {.inverse .center .middle}
-
-## Estructura de un modelo de regresión logística
-Podemos pensar en un modelo de regresión logística de la siguiente forma:
+## Estructura de un modelo de regresión logística multinomial
+Un modelo de regresión logística multinomial generaliza la regresión logística (binomial) a situaciones en que la variable dependiente es una [variable discreta con dos o más valores no ordenados]{.bold} (ejemplo: voto entre tres candidatos, elección de barrio, etc).
 
 . . .
 
@@ -94,268 +62,388 @@ Podemos pensar en un modelo de regresión logística de la siguiente forma:
 
 . . .
 
-- Para cada observación observamos datos $y_{i}, \dots , y_{n}$ que actuan como variable dependiente, donde $y_{i} \in \{0,1\}$
+- Para cada observación observamos datos $y_{i}, \dots , y_{n}$ que actúan como variable dependiente, donde $y_{i} \in \{1,2, \cdots, J\}$
+  - Las $J$ categorías de $y_{i}$ no siguen necesariamente un orden.
 
 . . .
 
-- Asumimos que estos datos son realizaciones de $n$ variables aleatorias Bernoulli con probabilidades desconocidas: $Y_{i} \sim \text{Bernoulli}(p_{i})$
-  - Alternativamente, recuento de éxitos puede tratarse como una variable Binomial.
+- Asumimos que estos datos son realizaciones de $n$ variables aleatorias que siguen una distribución Multinomial con probabilidades desconocidas: $Y_{i} \sim \text{Multinomial}(\boldsymbol{p_{i}}: p_{1}, \dots, p_{J})$
 
 . . .
 
-- Asumimos que dichas probabilidades pueden variar de individuo en individuo.
-  - Un modelo con un $p_{i}$ para cada observación $i$ es un modelo "just-identified" (o saturado). Posible, pero no es un "modelo".
+- Dichas probabilidades, $\boldsymbol{p_{i}}$, varían de individuo en individuo en función de ciertas covariables.
 
-## Estructura de un modelo de regresión logística
-Formalmente,
-$$Y_{i} \sim \text{Bernoulli}(p_{i})$$
-es decir
-$$\quad \mathbb{P}(Y_{i}= y) = p_{i}^{y}(1-p_{i})^{1-y} \quad \text{ donde } \quad y \in \{0,1\}$$
+## Distribución Multinomial
 
-. . .
+[Distribución Multinomial:]{.bold}
 
-La pregunta es: ¿como estimamos $p_{i}$ de tal manera que ... ?
+- Dado un experimento con resultados posibles $\{1,2, \dots, J\}$, con respectiva probabilidad de "éxito" $\{p_1,p_2, \dots, p_J\}$
 
 . . .
 
-- Describamos $p_{i}$ con un número de parámetros $k<n$
+- Si repetimos el experimento $n$ veces: ¿Cuál es la probabilidad de obtener la siguiente cantidad de éxitos en cada categoría: $\{n_1,n_2, \dots, n_J\}$, donde $n_1 + n_2 + \dots + n_J =n$?
 
 . . .
 
-- $\hat{p}_{i} \in [0,1]$
+[Ejemplo]{.bold}: Al tirar un dado justo 12 veces, ¿cuál es la probabilidad de obtener cada lado 2 veces?
+```{r}
+dmultinom(x=c(2,2,2,2,2,2), size=12 ,p=c(1/6,1/6,1/6,1/6,1/6,1/6))
+```
 
-## Estructura de un modelo de regresión logística
-El modelo de regresión logística aborda este problema de la siguiente manera:
+## Distribución Multinomial (n=1)
+[Distribución Multinoulli o Categórica:]{.bold}
+Si la cantidad de intentos es igual a 1 (n=1), la probabilidad de éxito en una de las categorías (y fracaso en todas las otras) viene definida por la siguiente función de probabilidad:
 
-::: {.content-box-blue}
+. . .
 
-$$p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}} \quad \quad  \text{donde} \quad \quad \eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$$
+$$\quad \mathbb{P}(Y = j ) = p_{1}^{1[y=1]}p_{2}^{1[y=2]} \cdots p_{J}^{1[y=J]}    \quad \text{ donde } \quad y_{j} \in \{0,1\} \quad \text{y} \quad \sum^{J}_{j=1}1[y=j]=1$$
+
+. . .
+
+[Ejemplo]{.bold}: Al tirar un dado justo 1 vez, ¿cuál es la probabilidad de obtener el número 4?
+```{r}
+dmultinom(x=c(0,0,0,1,0,0), size=1 ,p=c(1/6,1/6,1/6,1/6,1/6,1/6))
+```
+
+. . .
+
+- En una regresión logística multinomial cada observación en la variable dependiente ( $y_{i}$ ) viene de una distribución Multinoulli.
+
+. . .
+
+- Observamos los resultados ( $y_{i}=j$ ) y queremos estimar las probabilidades que los generan, ( $p_{ij}$ ).
+
+. . .
+
+- Específicamente, queremos estimar ( $p_{ij}$ ) como una función de covariables, usando número de parámetros $k$, tal que $k<n$.
+
+## Regresión logística binomial
+Una regresión logística binomial $y_{i} \in {0,1}$
+
+::: {.content-box-yellow}
+
+$$\ln \frac{\mathbb{P}(y_{i}=1)}{\mathbb{P}(y_{i}=0)} =   \ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$$
 
 :::
 
 . . .
 
-[Importante]{.bold} notar que:
+Equivalentemente, podemos re-escribir el modelo como
+
+$$\ln \frac{\mathbb{P}(y_{i}=1)}{\mathbb{P}(y_{i}=0)} =   \ln \frac{p_{1i}}{p_{0i}} =  \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$$
 
 . . .
 
-- Esta función (llamada *sigmoide*) tiene la propiedad clave de estar restringida al intervalo $[0, 1]$.
-  - $e^{\eta_{i}} > 0$, de tal manera que el numerador es siempre menor que el denominador. Por lo tanto,  $0 < p_{i} <1$.
+Dado que $p_{0} + p_{1} = 1$, sólo necesitamos estimar una equación.
+
+## Regresión logística multinomial, 3 categorías
+Si la variable dependiente toma tres valores, $y \in \{1,2,3\}$, y las probabilidades de obtener estos resultados son $p_{1},p_{2},p_{3}$, entonces podemos estimar estas tres probabilidades con dos modelos de regresión logística:
 
 . . .
 
-- $x_{1} \dots x_{k}$ son predictores o variables independientes
+Usando $p_{3}$ como categoría de referencia:
+$$(1) \quad \ln \frac{\mathbb{P}(y_{i}=1)}{\mathbb{P}(y_{i}=3)} =   \ln \frac{p_{1i}}{p_{3i}} =  \beta_{10} + \beta_{11}x_{1i} + \dots + \beta_{1k}x_{ki}$$
 
 . . .
 
-- $\beta_{1} \dots \beta_{k}$ son los respectivos "efectos" de los predictores sobre $\eta_{i}$
+<br> y
+$$(2) \quad \ln \frac{\mathbb{P}(y_{i}=2)}{\mathbb{P}(y_{i}=3)} =   \ln \frac{p_{2i}}{p_{3i}} =  \beta_{20} + \beta_{21}x_{1i} + \dots + \beta_{2k}x_{ki}$$
 
 . . .
 
-- $p_{i}$ [no está relacionado linealmente]{.bold} con sus predictores 
+Describimos $\{(p_{1},p_{2},p_{3})_{i}, \quad  \dots \quad ,(p_{1},p_{2},p_{3})_{n}\}$ con $2(k + 1)$ parámetros.
 
-## Estructura de un modelo de regresión logística
-Sin embargo, $\eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$ si es una función lineal de los predictores.
-
-. . .
-
-Por tanto, es conveniente expresar $\eta$ en función de $p$ ...
+## Regresión logística multinomial, J-categorías
+Generalizando, si la variable dependiente toma, $J$ valores -- $y \in \{1,2,\dots,J\}$ -- , y las probabilidades de obtener estos resultados son $p_{1},p_{2},\dots,p_{J}$, entonces podemos estimar estas $J$ probabilidades con  $J-1$ modelos de regresión logística:
 
 . . .
 
- Paso a paso:
-
-::: {.img-right}
-
-![mostaza](mostaza-merlo.jpg)
-
-:::
+Usando $p_{J}$ como categoría de referencia:
+$$(1) \quad \ln \frac{\mathbb{P}(y_{i}=1)}{\mathbb{P}(y_{i}=J)} =   \ln \frac{p_{1i}}{p_{Ji}} =  \beta_{10} + \beta_{11}x_{1i} + \dots + \beta_{1k}x_{ki}$$
 
 . . .
 
-$p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}} = \frac{1}{e^{- \eta_{i}} + 1}$
+$$(2) \quad \ln \frac{\mathbb{P}(y_{i}=2)}{\mathbb{P}(y_{i}=J)} =   \ln \frac{p_{2i}}{p_{Ji}} =  \beta_{20} + \beta_{21}x_{1i} + \dots + \beta_{2k}x_{ki}$$
 
 . . .
 
-$e^{-\eta_{i}} + 1 = \frac{1}{p_{i}}$
+$$\vdots$$
 
 . . .
 
-$e^{- \eta_{i}} = \frac{1}{p_{i}} - 1 =  \frac{1 - p_{i}}{p_{i}}$
+$$(J-1) \quad \ln \frac{\mathbb{P}(y_{i}=J-1)}{\mathbb{P}(y_{i}=J)} =   \ln \frac{p_{(J-1)i}}{p_{Ji}} =  \beta_{(J-1)0} + \beta_{(J-1)1}x_{1i} + \dots + \beta_{(J-1)k}x_{ki}$$
 
-. . .
-
-$e^{\eta_{i}} = \frac{p_{i}}{1 - p_{i}}$
-
-. . .
-
-$\eta_{i} = \ln \frac{p_{i}}{1 - p_{i}} \quad \quad$
-
-. . .
-
-es decir, el log de las odds o log-odds
+## Regresión logística multinomial, J-categorías
+Una versión más compacta de lo expresado anteriormente lleva a la formulación estándar de un modelo de regresión multinomial:
 
 . . .
 
 ::: {.content-box-yellow}
 
-$$\text{Por tanto} \quad \quad  \ln \frac{p_{i}}{1 - p_{i}} = \eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$$
+$$\underbrace{\ln \frac{\mathbb{P}(y_{i}=j)}{\mathbb{P}(y_{i}=J)}}_{\text{log odds = log relative probability}}=   \ln \frac{p_{ji}}{p_{Ji}} = \overbrace{ \beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}^{\text{predictor lineal }j}$$
 
 :::
 
-## Estructura de un modelo de regresión logística
-```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=8, fig.width=12}
-library(pacman)
-p_load("tidyverse")
+. . .
 
-theme_set(theme_julia())
+Describimos $\{(p_{1},\dots,p_{J})_{i}, \quad  \dots \quad ,(p_{1},\dots,p_{J})_{n}\}$ con $(J-1)(k+1)$ parámetros.
 
-units <- tibble(p = seq(from=0, to=1, by=0.01)) %>% mutate(odd = p/(1-p)) %>%
-          mutate(log_odd = log(odd))
-
-# p to odds 
-
-p = 0.75
-o = p/(1-p)
-
-q = 1-p
-inv_o = q/(1-q)
-
-log_o <- log(o)
-log_inv_o <- log(inv_o)
-
-# p to log odds
-
-positions_v1 <- data.frame(x1 =log_o, x2 =log_o, y1 =0 , y2=p )    
-positions_h1 <- data.frame(x1 =-Inf,  x2 =log_o, y1=p , y2=p )    
-positions_v2 <- data.frame(x1 =log_inv_o , x2 =log_inv_o , y1 =0 , y2=q )    
-positions_h2 <- data.frame(x1 =-Inf , x2 =log_inv_o , y1 =q , y2=q )    
-
-logodd_p <- units %>% ggplot(aes(x=log_odd, y=p, colour="p = logit^-1(log-odd)")) + geom_line(size=1.5) +
-    scale_color_manual(values=c("p = logit^-1(log-odd)"=course_palette[["primary"]], "líneas guía"=course_palette[["secondary"]])) +
-    xlim(-8,8) +
-    geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2, colour="líneas guía"), data = positions_v1, size=1.5) +
-    geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2, colour="líneas guía"), data = positions_h1, size=1.5) +
-    geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2, colour="líneas guía"), data = positions_v2, size=1.5) +
-    geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2, colour="líneas guía"), data = positions_h2, size=1.5) +
-    annotate(geom="text", x=-3.8, y=0.28, label='bold("(log-odd=-1.1,p=0.25)")', color="black", parse=TRUE, size=8) +
-    annotate(geom="text", x=4, y=0.78, label='bold("(log-odd=1.1,p=0.75)")', color="black", parse=TRUE, size=8) +
-    labs(title =  "Log-odd a probability", y="p", x="ln p/(1-p)", color=NULL) +
-    theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-    axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-    legend.text = element_text(size = 18), legend.position="bottom")
-
-print(logodd_p)
-
-```
-
-## Regresión Logística es un tipo de GLM
-Regresión Logística es un GLM con componente aleatorio [Bernoulli/Binomial]{.bold} y función de enlace [logit]{.bold}. 
+## Regresión logística multinomial, J-categorías
+De la formulación anterior es posible derivar el contraste en todos los restantes pares de categorías.
 
 . . .
 
-- Componente aleatorio: $y_{1}, \dots y_{n}$ son $n$ variables independientes con distribución $\text{Bernoulli}(p_{i})$
-  - donde $p_{i} \equiv \mu_{i}$
+ Consideremos las categorías $a$ y $b$:
 
 . . .
 
-- Función de enlace: $\text{logit}(x) = \ln \frac{x}{1 - x}$
+$$\ln \frac{p_{ai}}{p_{bi}} =  \ln \frac{p_{ai}/p_{Ji}}{p_{bi}/p_{Ji}} = \ln \frac{p_{ai}}{p_{Ji}} - \ln \frac{p_{bi}}{p_{Ji}}$$
 
 . . .
 
-- Componente sistemático: $\ln \frac{p_{i}}{1 - p_{i}} = \eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$
+Por tanto,
+$$\ln \frac{p_{ai}}{p_{bi}} =  (\beta_{a0} + \beta_{a1}x_{1i} + \dots + \beta_{ak}x_{ki}) - (\beta_{b0} + \beta_{b1}x_{1i} + \dots + \beta_{bk}x_{ki})$$
 
 . . .
 
-- Función media: $p_{i} = \text{logit}^{-1}(\eta_{i}) = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}}$
+En resumen:
 
-## Regresión Logística es un tipo de GLM
+::: {.content-box-yellow}
 
-- Varianza $\operatorname{Var}(y_{i}) = \phi V(p_{i}), \quad$
-
-. . .
-
-  $\text{donde} \quad V(p_{i})= \frac{dp_{i}}{d\eta_{i}}$.
-
-. . .
-
-- $\eta_{i} = \ln \frac{p_{i}}{1 - p_{i}}  =  \ln(p_{i}) - \ln(1 - p_{i})$
-
-. . .
-
-- $\frac{d \eta_{i}}{d p_{i}} = \frac{1}{p_{i}} + \frac{1}{1 - p_{i}} = \frac{1}{p_{i}(1 - p_{i})}$
-
-. . .
-
-- $\frac{d p_{i}}{d \eta_{i}} = p_{i}(1 - p_{i})$
-
-. . .
-
-Por tanto, $\operatorname{Var}(y_{i}) = \phi V(p_{i}) = \phi p_{i}(1 - p_{i})$, con $\phi=1$
-
-En resumen, en un modelo de regresión logística
-
-::: {.content-box-blue}
-
-$$y_{i} \sim \text{Bernoulli}\Bigg(p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}}\Bigg)$$
+$$\ln \frac{p_{ai}}{p_{bi}} =  (\beta_{a0} -\beta_{b0}) + (\beta_{a1} - \beta_{b1}) x_{1i} + \dots + (\beta_{ak} - \beta_{bk}) x_{ki}$$
 
 :::
 
-## Regresión Logística en la práctica
-Para ejemplificar el uso de regresión logística trabajaremos con los datos de demanda de bicicletas de _Capital Bikeshare_.
+donde cada $(\beta_{ak} -\beta_{bk})$ es un coeficiente en si mismo.
+
+## Regresión logística multinomial expresada como probabilidades
+Dado
+$$\ln \frac{p_{ji}}{p_{Ji}} =  \beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}$$
+
+. . .
+
+-  Exponenciando en ambos lados obtenemos la probabilidad "relativa" entre las categorías $j$ y $J$:
+$$\frac{p_{ji}}{p_{Ji}} =  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}$$
+
+. . .
+
+- Luego, la probabilidad de obtener la categoría $j$ puede ser expresada como sigue:
+$$p_{ji}  =  p_{Ji} \cdot e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}$$
+
+## Regresión logística multinomial expresada como probabilidades
+La expresión $p_{ji}  =  p_{Ji} \cdot e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}$ significa que:
+
+. . .
+
+$$p_{1i}  =  p_{Ji} \cdot e^{\beta_{10} + \beta_{11}x_{1i} + \dots + \beta_{1k}x_{ki}}$$
+
+. . .
+
+$$p_{2i}  =  p_{Ji} \cdot e^{\beta_{20} + \beta_{21}x_{1i} + \dots + \beta_{2k}x_{ki}}$$
+
+. . .
+
+$$\vdots$$
+
+. . .
+
+$$p_{(J-1)i}  =  p_{Ji} \cdot e^{\beta_{(J-1)0} + \beta_{(J-1)1}x_{1i} + \dots + \beta_{(J-1)k}x_{ki}}$$
+
+. . .
+
+Luego, falta sólo determinar $p_{Ji}$.
+
+## Regresión logística multinomial expresada como probabilidades
+Para determinar $p_{Ji}$ usamos los siguientes hechos:
+
+. . .
+
+::: {.pull-left}
+
+$$\text{(1)} \quad p_{ji}  =  p_{Ji} \cdot e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}$$
+
+:::
+
+::: {.pull-right}
+
+$$\text{(2)} \quad   p_{1i} + p_{2i} + \dots + p_{Ji} = 1$$
+
+:::
+
+. . .
+
+Combinando (1) y (2) obtenemos que:
+$$\sum^{J-1}_{j=1} p_{Ji} \cdot e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}} + p_{Ji} = 1, \quad \text{luego ... }$$
+
+. . .
+
+$$p_{Ji} \bigg(\sum^{J-1}_{j=1}  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}} + 1 \bigg) = 1, \quad \text{por tanto ... }$$
+
+. . .
+
+::: {.content-box-yellow}
+
+$$p_{Ji} =\frac{1}{1 + \sum^{J-1}_{j=1}  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}$$
+
+:::
+
+## Regresión logística multinomial expresada como probabilidades
+Ahora sabemos que:
+
+. . .
+
+- $p_{Ji} =\frac{1}{1 + \sum^{J-1}_{j=1}  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}$
+- $p_{ji}  =  p_{Ji} \cdot e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}$
+
+. . .
+
+Combinando ambos resultados obtenemos:
+
+::: {.content-box-yellow}
+
+$$p_{ji} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1}  e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}$$
+
+:::
+
+## Estimación {.inverse .center .middle}
+
+## Estimación
+
+. . .
+
+- Parámetros son estimados via MLE
+
+. . .
+
+- Alternativamente, minimizando función $softmax$  (ej, paquete `nnet` en `R`)
+
+. . .
+
+- Las $J-1$ equaciones del modelo de regresión logística son estimadas simultáneamente, imponiendo la restricción: $\sum_{j}p_{i} = 1$  ("constrained optimization")
+
+. . .
+
+- Es posible estimar $J-1$ regresiones logísticas separadamente pero no garantiza que $\sum_{j}p_{i} = 1$.
+
+## Regresión logística multinomial en la práctica {.inverse .center .middle}
+
+## Regresión logística multinomial en la práctica
+Para ejemplificar el uso de regresión logística multinomial trabajaremos con los datos de intención de voto en el plebiscito de 1988.
 ```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
 
-# datos de Capital Bikeshare (arriendos horarios de bicicletas), paquete "ISLR2"
-p_load("ISLR2")
+# datos del plebiscito de 1988 (paquete "carData")
+library(pacman)
+p_load("carData")
+p_load("viridis")
+p_load("tidyverse")
 p_load("modelr")
+p_load("cowplot")
+p_load("rsample")
+p_load("arm")
+p_load("DescTools")
+p_load("caret")
+p_load("nnet")
+p_load("marginaleffects")
 
-bikedata <- Bikeshare %>% as_tibble()
+source("../_shared/bikeshare.R")
+course_palette <- use_course_style("ajax")
 
-# umbral de "alta demanda": top 25% de las horas (percentil 75 de bikers)
-p75 <- quantile(bikedata$bikers, 0.75)
-
-bikedata <- bikedata %>%
-  mutate(demand = if_else(bikers > p75, "alta", "baja")) %>%
-  # map into 0/1 code
-  mutate(high_demand = if_else(bikers > p75, 1, 0))
+data(Chile)
+plebs_1988 <- Chile %>% as_tibble()
 
 # display the data as a tibble
-bikedata %>% select(bikers, high_demand, demand, temp, hum, weathersit) %>% tail(15)
+plebs_1988 %>% arrange(statusquo)
 ```
 
-## Regresión Logística en la práctica
-Ajustaremos el siguiente modelo: $\text{logit(alta demanda}_{i}) = \beta_{0} + \beta_{1}*\text{temp}_{i}$, que modela el log de la odd de que una hora sea de alta demanda como función de la temperatura (normalizada).
-```{r}
-logit_demand_temp <- glm(high_demand ~ temp, family=binomial(link="logit"), data=bikedata); summary(logit_demand_temp)
+`vote`: (A) Abstención; (N) NO; (U) Indecisa; (Y) SI
+`statusquo`: apoyo al status-quo (+)
+
+## Regresión logística multinomial en la práctica
+```{r, message=FALSE, warning=FALSE}
+mlogit_vote_sq <- multinom(vote ~ statusquo, trace=F, data=plebs_1988);
+summary(mlogit_vote_sq)
 ```
 
-## Regresión Logística en la práctica
+## Regresión logística multinomial en la práctica
+```{r, message=FALSE, warning=FALSE}
+mlogit_vote_sq <- multinom(vote ~ statusquo, trace=F, data=plebs_1988)
+```
 
 ::: {.pull-left}
 
-```{r, echo=FALSE}
-p_mu <- bikedata %>% with(mean(high_demand,na.rm=TRUE))
-b0 <- logit_demand_temp$coefficients[1]
-b1 <- logit_demand_temp$coefficients[2]
+```{r, message=FALSE, warning=FALSE}
+plebs_1988$intercept <- 1
+X <- plebs_1988[, c("intercept", "statusquo")]; X
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, message=FALSE, warning=FALSE}
+betas <- coef(mlogit_vote_sq); betas
+```
+
+:::
+
+## Regresión logística multinomial en la práctica
+
+$$
+\hat{\eta} = X\beta  =
+\begin{bmatrix}
+1 & x_{11} & x_{12} & \dots & x_{1p} \\
+1 & x_{21} & x_{22} & \dots & x_{2p} \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+1 & x_{n1} & x_{n2} & \dots & x_{np}
+\end{bmatrix}
+\begin{bmatrix}
+\beta_{01} & \beta_{02} & \dots & \beta_{0(J-1)} \\
+\beta_{11} & \beta_{12} & \dots & \beta_{1(J-1)} \\
+\vdots & \vdots & \ddots & \vdots \\
+\beta_{p1} & \beta_{p2} & \dots & \beta_{p(J-1)}
+\end{bmatrix}
+$$
+```{r, message=F, warning=F}
+logit_predictions <- as.matrix(X) %*% t(betas)
+
+#Log-odds observation 1
+preds_1 <-logit_predictions[1,]; preds_1
+
+#Predicted probabilities observation 1
+probs_1 <- exp(preds_1)/(1 + sum(exp(preds_1)))
+probs_1
+```
+
+## Regresión logística multinomial en la práctica
+```{r, message=FALSE, warning=FALSE}
+mlogit_vote_sq <- multinom(vote ~ statusquo, trace=F, data=plebs_1988);
+predict(mlogit_vote_sq, type="prob")
+```
+
+## Regresión logística multinomial en la práctica
+
+::: {.pull-left}
+
+```{r, echo=FALSE,warning=FALSE, message=FALSE}
 
 # plot the result
+grid <- plebs_1988  %>% data_grid(statusquo=seq_range(statusquo,30),.model=mlogit_vote_sq)
 
-grid <- bikedata  %>% data_grid(temp,.model=logit_demand_temp)
-predictions <- cbind(grid,logit_hat = predict(logit_demand_temp, newdata = grid)) %>%
-  mutate(p_hat= 1/(1 + exp(-logit_hat)))
+predictions <- cbind(grid,predict(mlogit_vote_sq, newdata=grid, type="prob")) %>%
+              pivot_longer(-statusquo, names_to="outcome",values_to="p" ) %>%
+              mutate(p_outcome = paste0("p_",outcome)) %>% dplyr::select(-outcome) %>%
+              pivot_wider(names_from = p_outcome, values_from=p) %>%
+              mutate(across(p_N:p_Y, ~  log(.x/p_A), .names = "logit_{.col}" )) %>%
+              pivot_longer(-statusquo, names_to="quant", values_to="est")
 
-bikedata %>% ggplot(aes(x=temp, y=high_demand, group=1)) +
-  stat_function(fun = function(.x) b0 + b1*.x, aes(colour="Recta ajustada"), alpha = 0.5, size=1.5) +
-  geom_hline(yintercept = b0 + b1*0, linetype="dotted", color = course_palette[["primary"]], alpha=0.5, size=1.5) +
-  geom_hline(yintercept = b0 + b1*1, linetype="dotted", color = course_palette[["primary"]], alpha=0.5, size=1.5) +
-  geom_line(data=predictions, aes(x=temp, y=logit_hat, colour="Predicción del modelo"), size=2, alpha = 1) +
-  xlim(-2,3) +
-  scale_color_manual(values=c("Recta ajustada"=course_palette[["accent"]], "Predicción del modelo"=course_palette[["primary"]])) +
+predictions %>% filter(str_detect(quant, "^l")) %>% separate(quant,sep=8, into=c("quant","vote")) %>%
+  ggplot(aes(x=statusquo, y=est, colour=vote, group=vote)) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
   theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
   axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-  legend.text = element_text(size = 18), legend.position="bottom") +
-  labs(x="temperatura (normalizada)", y="logit(Alta demanda)", color=NULL) +
-  annotate('text', x = -1, y = 2, label = paste0("beta[1]==", course_number(b1)), parse = TRUE, size=8)
+  legend.text = element_text(size = 18), legend.position="top") +
+  labs(x="Apoyo al status-quo", y="Logit(Vote=j)", colour="vote")
 ```
 
 :::
@@ -364,162 +452,26 @@ bikedata %>% ggplot(aes(x=temp, y=high_demand, group=1)) +
 
 ::: {.pull-right}
 
-```{r, echo=FALSE}
-
-bikedata %>% ggplot(aes(x=temp, y=high_demand, group=1)) +
-  stat_function(fun = function(.x) 1/(1 + exp(-(b0 + b1*.x))), aes(colour="Curva ajustada"), alpha = 0.5, size=1.5) +
-  geom_hline(yintercept = 1/(1 + exp(-(b0 + b1*0))), linetype="dotted", color = course_palette[["primary"]], alpha=0.5, size=1.5) +
-  geom_hline(yintercept = 1/(1 + exp(-(b0 + b1*1))), linetype="dotted", color = course_palette[["primary"]], alpha=0.5, size=1.5) +
-  geom_line(data=predictions, aes(x=temp, y=p_hat, colour="Predicción del modelo"), size=2, alpha = 1) +
-  xlim(-2,3) +
-  scale_color_manual(values=c("Curva ajustada"=course_palette[["accent"]], "Predicción del modelo"=course_palette[["primary"]])) +
+```{r, echo=FALSE,  warning=FALSE, message=FALSE}
+predictions %>% filter(str_detect(quant, "^p")) %>%  separate(quant,sep=2, into=c("quant","vote")) %>%
+  ggplot(aes(x=statusquo, y=est, colour=vote, group=vote)) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
   theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
   axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-  legend.text = element_text(size = 18), legend.position="bottom") +
-  labs(x="temperatura (normalizada)", y="P(Alta demanda)", color=NULL)
-```
-
-:::
-
-## Estimación (MLE) {.inverse .center .middle}
-
-## Estimación (MLE)
-Retomando  nuestro ejemplo anterior,
-
-::: {.pull-left}
-
-```{r, echo=FALSE}
-logit_demand_temp <- glm(high_demand ~ temp, family=binomial(link="logit"), data=bikedata); summary(logit_demand_temp)
-```
-
-:::
-
-. . .
-
-::: {.pull-right}
-
-[¿De donde vienen estos números?]{.bold}
-
-:::
-
-## Estimación (MLE)
-Recordar que cada observación es una manifestación de una variable Bernoulli:
-
-. . .
-
-$Y_{i} \sim \text{Bernoulli}(p_{i}) \quad \text{ es decir } \quad \mathbb{P}(Y_{i}= y) = p_{i}^{y}(1-p_{i})^{1-y} \quad \text{ donde } \quad y \in \{0,1\}$
-
-. . .
-
-Por tanto, la probabilidad de observar estos datos es descrita por la siguiente función:
-$$\mathbb{P}(y_{1}, \dots, y_{n}) = \prod_{i=1}^{n} p_{i}^{y_{i}}(1-p_{i})^{1-y_{i}}$$
-
-. . .
-
-En consecuencia, la [likelihood function]{.bold} de $p_{i}$ es:
-$$\mathcal{L}(\boldsymbol{p} \mid y_{1}, \dots, y_{n}) = \prod_{i=1}^{n} p_{i}^{y_{i}}(1-p_{i})^{1-y_{i}}$$
-
-. . .
-
-y la [log likelihood function]{.bold} de $p_{i}$ es:
-$$\ell(\boldsymbol{p} \mid y_{1}, \dots, y_{n}) = \sum_{i=1}^{n} \bigg( y_{i} \ln p_{i} + (1-y_{i}) \ln(1-p_{i}) \bigg)$$
-
-## Estimación (MLE)
-La [log likelihood function]{.bold} de $p$ es:
-$$\ell(\boldsymbol{p} \mid y_{1}, \dots, y_{n}) = \sum_{i=1}^{n} \bigg( y_{i} \ln p_{i} + (1-y_{i}) \ln(1-p_{i}) \bigg)$$
-
-. . .
-
-Pero no estamos estimando $p_{i}$ directamente, sino que lo modelamos como un función de otros predictores.
-
-. . .
-
-específicamente: $p_{i} =\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}$
-
-. . .
-
-por tanto, 
-$$\ell(\beta_{0},\beta_{1} \mid y_{1}, \dots, y_{n}) = \sum_{i=1}^{n} \bigg( y_{i} \ln \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}} + (1-y_{i}) \ln(1-\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}) \bigg)$$
-En definitiva, nuestros MLE son:
-$$\hat{\beta_{0}},\hat{\beta_{1}} = \underset{\beta_{0},\beta_{1}}{\arg\max\ } \sum_{i=1}^{n} \bigg( y_{i} \ln \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}} + (1-y_{i}) \ln(1-\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}) \bigg)$$
-
-## Estimación (MLE)
-
-- No hay solución analítica (en general) para esta maximización. Típicamente se usa Fisher’s Scoring Method  (un algoritmo de búsqueda) para obtener los MLE. 
--  Para ejemplificar  podemos implementar una optimización numérica simple e ineficiente para buscar los MLE.
-
-. . .
-
- Para acelerar la búsqueda usaremos valores en la proximidad de las estimaciones reportadas arriba (que normalmente no conoceríamos):
-[Implementación en]{.bold} `R`:
-```{r, include=TRUE, echo=TRUE, warning=FALSE, message=FALSE}
-
-ll <- function(b0,b1) {
-  y = bikedata$high_demand
-  eta = b0 + b1*bikedata$temp
-  ell = sum( y*log(1/(1 + exp(-eta))) +  (1-y)*log(1 - (1/(1 + exp(-eta)))))
-  return(ll = ell)
-}
-```
-
-. . .
-
-```{r}
-ll(b0=0,b1=0); ll(b0=-1,b1=2)
-```
-
-## Estimación (MLE)
-[Implementación en]{.bold} `R`:
-```{r, include=TRUE, echo=TRUE, warning=FALSE, message=FALSE}
-
-# Evaluar la log-likelihood function  para muchas combinaciones de posibles valores de  b0 y b1
-# centramos la grilla en torno a las estimaciones del modelo
-b0_hat <- coef(logit_demand_temp)[1]
-b1_hat <- coef(logit_demand_temp)[2]
-parameter_space <- expand.grid(beta0 = seq(b0_hat-1, b0_hat+1, length.out=500), beta1 = seq(b1_hat-1, b1_hat+1, length.out=500)) %>%
-  rowwise() %>% mutate(loglik = ll(beta0,beta1))
-
-# Encuentra el par de valores b0,b1 que dan el mayor valor para la log-likelihood function
-
-m <- parameter_space %>% as.matrix()
-m[which.max(m[,3]),]
-```
-
-## Estimación (MLE)
-
-::: {.pull-left}
-
-```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
-
-# Plot all LL values
-parameter_space %>% as.data.frame() %>% ggplot(aes(x=beta0, y=beta1,  z = loglik)) + geom_contour(bins = 700) + geom_contour_filled(bins = 500, alpha=0.75) +
-geom_point(aes(x=m[which.max(m[,3]),1], m[which.max(m[,3]),2]), size=1.5) +
-guides(fill=FALSE, color=FALSE) + labs(x=quote(beta[0]), y=quote(beta[1])) +
-annotate(geom="text", x=b0_hat, y=b1_hat-0.4, label=paste0('bold("(', course_number(b0_hat), ',', course_number(b1_hat), ')")'), color="black", parse=TRUE, size=6)  +
-theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
-legend.text = element_text(size = 18), legend.position="none")
-```
-
-:::
-
-. . .
-
-::: {.pull-right}
-
-```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
-summary(logit_demand_temp)
+  legend.text = element_text(size = 18), legend.position="top") +
+  labs(x="Apoyo al status-quo", y="P(Vote=j)", colour="vote")
 ```
 
 :::
 
 ## En resumen
 
-- Regresión logística es un GLM con componente aleatorio Bernoulli/Binomial y enlace logit: $\ln \frac{p_{i}}{1-p_{i}} = \eta_{i}$.
-- La función media (sigmoide) $p_{i} = \frac{e^{\eta_{i}}}{1+e^{\eta_{i}}}$ mantiene $p_{i}$ restringido a $[0,1]$.
-- Los parámetros $\beta$ se estiman por máxima verosimilitud (MLE): no hay solución analítica cerrada, se usa un algoritmo de búsqueda numérica (ej. Fisher Scoring).
-- La log-likelihood de una Bernoulli es $\ell(\boldsymbol\beta \mid y) = \sum_{i=1}^{n}\big(y_{i}\ln p_{i} + (1-y_{i})\ln(1-p_{i})\big)$.
-- La próxima clase: regresión logística — interpretación de parámetros.
+- La regresión logística multinomial generaliza el modelo binomial cuando $y_{i}$ toma $J$ valores no ordenados: se estiman $J-1$ logits, cada uno comparando una categoría $j$ contra una categoría de referencia $J$.
+- Cada $y_{i}$ es una realización de una distribución Multinomial (o Multinoulli si $n=1$) con probabilidades $p_{i1}, \dots, p_{iJ}$.
+- De los $J-1$ logits se despeja $p_{ji}$ como una función softmax de los predictores lineales: $p_{ji} = \dfrac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1} e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}$.
+- Los parámetros se estiman via MLE, imponiendo la restricción $\sum_{j}p_{ij} = 1$ (optimización simultánea, no $J-1$ regresiones separadas).
+- La próxima clase aborda la interpretación de estos coeficientes: efectos sobre el logit, odds ratios, y efectos marginales sobre las probabilidades.
 
 ## Gracias {.inverse .center .middle .closing}
 

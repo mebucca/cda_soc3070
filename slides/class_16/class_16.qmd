@@ -1,18 +1,17 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Causalidad y asociación"
+subtitle: "Regularización: Ridge, LASSO y Elastic Net"
 author: "Mauricio Bucca · Sociología UC"
 date: today
-body-classes: theme-roma
-course-team: roma
+body-classes: theme-valencia
+course-team: valencia
 filters: ["../_shared/course.lua"]
 format:
   revealjs:
     css: "../_shared/course.css"
-    slide-number: false
     theme: default
     highlight-style: github
-    code-block-font-size: 0.9em
+    slide-number: false
     width: 1600
     height: 900
     html-math-method: katex
@@ -21,41 +20,14 @@ execute:
   message: false
 ---
 
-```{r course-style, include=FALSE}
+```{r setup, include=FALSE}
 library(pacman)
 p_load(tidyverse)
-
+p_load(glmnet)
 source("../_shared/bikeshare.R")
-course <- use_course_data("roma")
+course <- use_course_data("valencia")
+bikedata <- course$data %>% mutate(month = as.integer(mnth))
 course_palette <- course$palette
-
-bikedata <- course$data %>%
-  mutate(
-    month = as.integer(mnth),
-    clear_weather = as.integer(weathersit == "clear"),
-    weather_label = factor(
-      clear_weather,
-      levels = c(0, 1),
-      labels = c("Otro clima", "Despejado")
-    ),
-    demand_label = factor(
-      high_demand,
-      levels = c(0, 1),
-      labels = c("Demanda no alta", "Demanda alta")
-    )
-  )
-
-logit_crudo <- glm(
-  high_demand ~ clear_weather,
-  family = binomial(link = "logit"),
-  data = bikedata
-)
-
-logit_mes <- glm(
-  high_demand ~ clear_weather + factor(month),
-  family = binomial(link = "logit"),
-  data = bikedata
-)
 ```
 
 ## Antes · Hoy · Después {.class-rhythm}
@@ -65,538 +37,796 @@ logit_mes <- glm(
 ::: {.content-box}
 **Antes**
 
-sobre-dispersión y quasi-Poisson.
+GLM, logit, inferencia, bootstrap: modelos donde *nosotros* elegimos la forma.
 :::
 
 ::: {.content-box-primary}
 **Hoy**
 
-asociación, contrafactuales y causalidad.
+qué hacer cuando ya no confiamos en que esa forma sea la correcta.
 :::
 
 ::: {.content-box-secondary}
 **Después**
 
-predicción, overfitting y validación cruzada.
+dejar que el propio algoritmo aprenda la forma: árboles y ensambles.
 :::
 
 :::
 
-# Causalidad {.inverse .center .middle}
+```{r setup-continued, include=FALSE}
 
-## Las preguntas causales comparan mundos
+# Diseño y partición compartidos (ver _shared/bikeshare.R).
+setup <- bikeshare_learning_setup(bikedata)
+bikedata <- setup$data
+days <- setup$days
+train_days <- setup$train_days
+valid_days <- setup$valid_days
+test_days <- setup$test_days
+id_train <- setup$id_train
+id_valid <- setup$id_valid
+id_test <- setup$id_test
+demand_cutoff <- setup$demand_cutoff
+high_demand <- setup$high_demand
 
-Las ciencias sociales están llenas de preguntas aparentemente sencillas:
+x_all <- setup$x_all
+x_train <- x_all[id_train, , drop = FALSE]
+x_valid <- x_all[id_valid, , drop = FALSE]
+x_test <- x_all[id_test, , drop = FALSE]
+y_train <- high_demand[id_train]
+y_valid <- high_demand[id_valid]
+y_test <- high_demand[id_test]
 
-. . .
+log_loss <- function(y, p) {
+  p <- pmin(pmax(p, 1e-8), 1 - 1e-8)
+  -mean(y * log(p) + (1 - y) * log(1 - p))
+}
 
-- ¿Una política de transporte cambia el uso de bicicletas?
-- ¿Un día despejado hace que más personas arrienden una bicicleta?
-- ¿Trabajar desde casa reduce los viajes en hora punta?
-
-. . .
-
-Todas preguntan qué **cambiaría** en un resultado si interviniéramos sobre una causa.
-
-## Nuestro caso: clima despejado y demanda
-
-Vamos a estudiar una hipótesis concreta:
-
-> Un cielo despejado aumenta la probabilidad de demanda alta.
-
-Definimos un predictor binario:
-
-$$
-D_i =
-\begin{cases}
-1 & \text{si el clima de la hora } i \text{ está despejado}\\
-0 & \text{si hay nubes, lluvia o nieve}
-\end{cases}
-$$
-
-El resultado también es binario:
-
-$$
-Y_i =
-\begin{cases}
-1 & \text{si la hora tiene demanda alta}\\
-0 & \text{si la hora no tiene demanda alta}
-\end{cases}
-$$
-
-`high_demand = 1` identifica las horas sobre el percentil 75 de `bikers`.
-
-## Primero vemos una asociación
-
-```{r observed-association, echo=FALSE, fig.height=4.5}
-bikedata %>%
-  group_by(weather_label) %>%
-  summarise(prop_high = mean(high_demand), .groups = "drop") %>%
-  ggplot(aes(weather_label, prop_high, fill = weather_label)) +
-  geom_col(width = 0.58) +
-  geom_text(
-    aes(label = scales::percent(prop_high, accuracy = 0.1)),
-    vjust = -0.45, size = 5
-  ) +
-  scale_fill_course(guide = "none") +
-  scale_y_continuous(
-    labels = scales::percent_format(accuracy = 1),
-    limits = c(0, 0.34)
-  ) +
-  labs(x = NULL, y = "Probabilidad observada de demanda alta")
-```
-
-Las horas despejadas tienen mayor probabilidad de demanda alta. Eso es un hecho descriptivo; todavía no es una conclusión causal.
-
-## La diferencia observada
-
-```{r observed-means, echo=FALSE}
-observed_means <- bikedata %>%
-  group_by(weather_label) %>%
-  summarise(
-    horas = n(),
-    prob_demanda_alta = mean(high_demand),
-    .groups = "drop"
+class_metrics <- function(y, p, threshold = 0.5) {
+  predicted <- as.integer(p >= threshold)
+  tibble(
+    log_loss = log_loss(y, p),
+    accuracy = mean(predicted == y),
+    sensitivity = mean(predicted[y == 1] == 1),
+    specificity = mean(predicted[y == 0] == 0)
   )
-
-observed_means
+}
 ```
 
-```{r observed-difference, echo=FALSE}
-raw_difference <- with(
-  bikedata,
-  mean(high_demand[clear_weather == 1]) -
-    mean(high_demand[clear_weather == 0])
-)
-```
+# Regularización {.inverse .center .middle}
 
-La diferencia observada es de `r sub("\\.", ",", formatC(100 * raw_difference, format = "f", digits = 1))` puntos porcentuales.
+## Un nuevo módulo, una nueva pregunta
+
+Durante todo el curso, cada modelo (LPM, logit, Poisson) compartió un mismo supuesto: **nosotros** elegimos qué variables entran, qué interacciones importan, qué transformaciones usar. El modelo solo estima los coeficientes.
 
 . . .
 
-**Pregunta:** ¿cuánto de esa diferencia se debe al clima y cuánto a que las horas despejadas son distintas en otros aspectos?
-
-## El coeficiente del logit resume la asociación
-
-Ajustamos:
-
-$$
-\operatorname{logit}\{\Pr(Y_i=1\mid D_i)\}
-=\beta_0+\beta_1D_i.
-$$
-
-```{r crude-logit, echo=TRUE}
-logit_crudo <- glm(
-  high_demand ~ clear_weather,
-  family = binomial(link = "logit"),
-  data = bikedata
-)
-
-coef(logit_crudo)[["clear_weather"]]
-exp(coef(logit_crudo)[["clear_weather"]])
-```
-
-En estos datos, $\hat\beta_1=`r sub("\\.", ",", formatC(coef(logit_crudo)[["clear_weather"]], format = "f", digits = 3))`$ y $e^{\hat\beta_1}=`r sub("\\.", ",", formatC(exp(coef(logit_crudo)[["clear_weather"]]), format = "f", digits = 2))`$.
+Las próximas tres clases (19, 20 y 21) exploran una pregunta distinta: **¿qué pasa cuando dejamos de confiar en que esa forma elegida a mano sea la correcta?** ¿Puede el propio procedimiento de ajuste decidir cuánta complejidad usar — o incluso qué forma tomar?
 
 . . .
 
-Las *odds* de demanda alta son aproximadamente `r formatC(100 * (exp(coef(logit_crudo)[["clear_weather"]]) - 1), format = "f", digits = 0)`% mayores bajo clima despejado. Por ahora, esta es una **asociación**.
+Referencia principal para las tres clases: James et al. (2021), *An Introduction to Statistical Learning*, 2ª ed., capítulos 5–6, 8 y 10 ([sitio oficial](https://www.statlearning.com/)).
 
-## Predicciones del logit
+## El problema, en carne propia
 
-```{r logit-predictions, echo=FALSE, fig.height=4.6}
-prediction_data <- tibble(
-  clear_weather = c(0, 1),
-  weather_label = factor(
-    c(0, 1),
-    levels = c(0, 1),
-    labels = c("Otro clima", "Despejado")
+Sigamos usando la misma pregunta sustantiva del curso — ¿cuándo hay demanda alta de bicicletas? — pero démosle al logit una interacción **completa** entre hora (24 categorías) y mes (12 categorías): mucho más flexible que la interacción hora × día hábil que usamos hasta ahora. Agreguemos esas variables de a poco y observemos qué pasa.
+
+```{r overfit-demo, echo=FALSE, fig.height=5}
+features_flex <- ~ temp + atemp + I(temp^2) + hum + I(hum^2) + windspeed +
+  holiday + factor(weathersit) + factor(hr) * factor(month)
+x_flex <- model.matrix(features_flex, bikedata)[, -1]
+x_flex_train <- x_flex[id_train, , drop = FALSE]
+x_flex_valid <- x_flex[id_valid, , drop = FALSE]
+
+k_grid <- c(1, 5, 10, 15, 20, 25, 30, 35, 40)
+
+complejidad <- map_dfr(k_grid, function(k) {
+  Xk_train <- cbind(`(Intercept)` = 1, x_flex_train[, seq_len(k), drop = FALSE])
+  Xk_valid <- cbind(`(Intercept)` = 1, x_flex_valid[, seq_len(k), drop = FALSE])
+  ajuste <- suppressWarnings(glm.fit(x = Xk_train, y = y_train, family = binomial()))
+  p_train <- plogis(as.numeric(Xk_train %*% coef(ajuste)))
+  p_valid <- plogis(as.numeric(Xk_valid %*% coef(ajuste)))
+  tibble(
+    parametros = k + 1,
+    entrenamiento = log_loss(y_train, p_train),
+    validación = log_loss(y_valid, p_valid)
   )
-)
+})
 
-pred_link <- predict(
-  logit_crudo,
-  newdata = prediction_data,
-  type = "link",
-  se.fit = TRUE
-)
-
-prediction_data <- prediction_data %>%
-  mutate(
-    probability = plogis(pred_link$fit),
-    lower = plogis(pred_link$fit - 1.96 * pred_link$se.fit),
-    upper = plogis(pred_link$fit + 1.96 * pred_link$se.fit)
-  )
-
-ggplot(
-  prediction_data,
-  aes(weather_label, probability, group = 1, color = weather_label)
-) +
-  geom_line(linewidth = 1, color = course_palette[["secondary"]]) +
-  geom_pointrange(
-    aes(ymin = lower, ymax = upper),
-    linewidth = 1, size = 1.2
-  ) +
-  scale_color_course(guide = "none") +
-  scale_y_continuous(
-    labels = scales::percent_format(accuracy = 1),
-    limits = c(0.15, 0.31)
-  ) +
-  labs(x = NULL, y = "Probabilidad predicha de demanda alta")
+complejidad %>%
+  pivot_longer(-parametros, names_to = "conjunto", values_to = "log_loss") %>%
+  ggplot(aes(parametros, log_loss, color = conjunto)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2.6) +
+  scale_color_course() +
+  labs(x = "Número de parámetros en el modelo", y = "Log-loss", color = NULL)
 ```
 
-Con un único predictor binario, el logit produce dos probabilidades predichas: una para $D=0$ y otra para $D=1$.
+## Leer la curva
 
-# Mundos paralelos {.inverse .center .middle}
-
-## Dos resultados potenciales para cada hora
-
-Para cada hora $i$ imaginamos dos resultados:
-
-$$
-Y_i(1): \text{demanda alta o no si esa hora estuviera despejada}
-$$
-
-$$
-Y_i(0): \text{demanda alta o no si esa misma hora tuviera otro clima}
-$$
-
-El efecto causal individual es:
-
-$$\tau_i = Y_i(1)-Y_i(0)\in\{-1,0,1\}.$$
-
-Esta comparación mantiene fija la unidad y cambia solo el tratamiento.
-
-## En el multiverso veríamos ambas columnas
-
-| Hora | $Y_i(1)$: despejado | $Y_i(0)$: otro clima | Efecto |
-|---|---:|---:|---:|
-| Lunes, 08:00 | Alta (1) | No alta (0) | +1 |
-| Martes, 14:00 | No alta (0) | No alta (0) | 0 |
-| Viernes, 18:00 | Alta (1) | Alta (1) | 0 |
-| Domingo, 11:00 | No alta (0) | Alta (1) | −1 |
-
-Si pudiéramos observar ambas columnas, calcular el efecto causal sería trivial.
+- Con pocos parámetros, **ambos** errores bajan juntos: el modelo aprende señal real (temperatura, hora, clima).
+- Pasado cierto punto, el error de **entrenamiento** sigue bajando —más parámetros siempre ajustan mejor *esos* datos— pero el de **validación** empieza a **subir**: el modelo empieza a ajustar celdas hora×mes con pocas observaciones, memorizando ruido específico de esa combinación particular.
+- Este divorcio entre "ajusta mejor" y "predice mejor" es el problema que motiva toda la clase de hoy.
 
 . . .
 
-Pero estos valores son una **ilustración**: en los datos reales nunca vemos las dos columnas para la misma hora.
+Nótese algo importante: **no sabíamos de antemano** cuál de estas variables hora×mes era señal y cuál era ruido — todas entraron con la misma justificación teórica ("la demanda varía por hora y por estación"). Hasta ahora controlábamos la complejidad **a mano**, decidiendo qué interacciones incluir. La pregunta de hoy es si el propio procedimiento de ajuste puede controlar esa complejidad automáticamente, de forma validada.
 
-## En el mundo observado falta un contrafactual
+## Intuición: sesgo y varianza
 
-| Hora | Clima observado | $Y_i(1)$ | $Y_i(0)$ |
-|---|---|---:|---:|
-| Lunes, 08:00 | despejado | Alta (1) | **?** |
-| Martes, 14:00 | otro clima | **?** | No alta (0) |
-| Viernes, 18:00 | despejado | Alta (1) | **?** |
-| Domingo, 11:00 | otro clima | **?** | Alta (1) |
+Antes de la solución, pongamos nombre al fenómeno que acabamos de ver, con una analogía simple.
 
-Para cada unidad observamos:
+![Sesgo = qué tan lejos del centro caen los tiros en promedio. Varianza = qué tan dispersos están entre sí.](https://media.geeksforgeeks.org/wp-content/uploads/20251212100155382352/frame_3244.webp){fig-align="center" width="55%"}
 
-$$Y_i = D_iY_i(1)+(1-D_i)Y_i(0).$$
-
-El otro resultado potencial es contrafactual. Este es el **problema fundamental de la inferencia causal**.
-
-## Del efecto individual al efecto promedio
-
-Como no observamos $\tau_i$ para ninguna hora, apuntamos al **efecto promedio del tratamiento**:
-
-$$
-\text{ATE}=\mathbb{E}[Y_i(1)-Y_i(0)]
-=\mathbb{E}[Y_i(1)]-\mathbb{E}[Y_i(0)].
-$$
-
-. . .
-
-En cambio, los datos entregan la diferencia entre dos grupos de horas:
-
-$$
-\mathbb{E}[Y_i\mid D_i=1]-\mathbb{E}[Y_i\mid D_i=0].
-$$
-
-Una comparación es entre **mundos posibles para las mismas unidades**; la otra es entre **unidades diferentes en el mundo observado**.
-
-Como $Y$ es binario, ambas expresiones son diferencias de probabilidades. El ATE es un efecto causal promedio medido en puntos porcentuales.
-
-## Asociación no es causalidad
-
-::: {.pull-left}
-
-**Asociación observada**
-
-$$
-\mathbb{E}[Y\mid D=1]-
-\mathbb{E}[Y\mid D=0]
-$$
-
-Compara horas despejadas con horas no despejadas.
-
+::: {.footnote}
+Fuente: [GeeksforGeeks — Bias vs Variance in Machine Learning](https://www.geeksforgeeks.org/machine-learning/bias-vs-variance-in-machine-learning/)
 :::
 
-::: {.pull-right}
+- **Pocos parámetros** (modelo rígido): los tiros caen agrupados, pero lejos del centro — **sesgo alto**.
+- **Muchos parámetros** (modelo flexible): los tiros rodean el centro en promedio, pero dispersos — **varianza alta**.
+- Nuestra curva de arriba es exactamente esto: pocos parámetros = sesgo (mal ajuste, en train y en validación); muchos parámetros = varianza (ajusta train, falla en validación).
 
-**Efecto causal**
+## La intuición, formalizada
+
+Para un punto $x_0$, el error cuadrático esperado de un estimador $\hat f$ se descompone en tres piezas:
 
 $$
-\mathbb{E}[Y(1)-Y(0)]
+\mathbb{E}\big[(y_0-\hat f(x_0))^2\big]
+= \underbrace{\big(\mathbb{E}[\hat f(x_0)]-f(x_0)\big)^2}_{\text{sesgo}^2}
++ \underbrace{\mathrm{Var}(\hat f(x_0))}_{\text{varianza}}
++ \underbrace{\sigma^2}_{\text{irreducible}}.
 $$
 
-Compara cada hora consigo misma bajo dos climas posibles.
+| Símbolo | Significado |
+|---|---|
+| $f(x_0)$ | la relación verdadera (desconocida) entre predictores y outcome |
+| $\hat f(x_0)$ | nuestra estimación, que cambiaría si cambiara la muestra |
+| $\mathbb{E}[\hat f(x_0)]-f(x_0)$ | **sesgo**: error sistemático por usar un modelo demasiado rígido |
+| $\mathrm{Var}(\hat f(x_0))$ | **varianza**: cuánto cambia el ajuste de muestra a muestra |
+| $\sigma^2$ | ruido irreducible; ninguna técnica lo elimina |
 
+Regularizar *aumenta* el sesgo a propósito para *reducir* la varianza — conviene exactamente cuando la caída de varianza supera el aumento de sesgo, que es lo que vimos en la curva de validación.
+
+## El compromiso, en una imagen
+
+![Sesgo, varianza y error total en función de la complejidad del modelo.](https://media.geeksforgeeks.org/wp-content/uploads/20251209150317698595/model_complexity.webp){fig-align="center" width="60%"}
+
+::: {.footnote}
+Fuente: [GeeksforGeeks — What is Ridge Regression](https://www.geeksforgeeks.org/machine-learning/what-is-ridge-regression/)
 :::
+
+- $\lambda=0$ (sin penalizar): sesgo bajo, varianza alta → la mitad derecha de nuestra curva de validación.
+- $\lambda\to\infty$: sesgo alto, varianza baja → subajuste.
+- Existe un $\lambda^{*}$ intermedio que minimiza el error fuera de muestra — no lo conocemos, lo **estimamos con validación**.
+
+## Tres formas de penalizar, en una frase
+
+Antes de cualquier fórmula, la idea completa en tres oraciones:
+
+- **Ridge**: encoge **todos** los coeficientes hacia cero, sin eliminar ninguno.
+- **LASSO**: encoge y además puede llevar algunos coeficientes **exactamente a cero** — selecciona variables.
+- **Elastic Net**: un punto intermedio entre ambos.
+
+Todo lo que sigue en esta clase es la formalización — y luego la implementación — de estas tres frases.
+
+## Configuración: outcome y partición
+
+El módulo completo (clases 19–22) comparte la misma preparación de datos. Primero definimos el outcome y partimos los datos:
+
+```{r config-split, eval=FALSE}
+# Preparación compartida por las clases 19-22 (ver _shared/bikeshare.R)
+setup <- bikeshare_learning_setup(bikedata)
+
+# Outcome binario: "alta demanda" = top 25% de las horas.
+# El umbral (cuantil 0.75) se aprende SOLO en entrenamiento.
+demand_cutoff <- setup$demand_cutoff
+high_demand   <- setup$high_demand
+
+# Partición CRONOLÓGICA 60/20/20 por día (no aleatoria):
+# entrenar con el pasado, validar después, reservar los últimos días para test.
+id_train <- setup$id_train
+id_valid <- setup$id_valid
+id_test  <- setup$id_test
+```
+
+## Configuración: la matriz de diseño
+
+Sobre esos datos construimos la matriz de predictores $X$ que usarán Ridge, LASSO y Elastic Net:
+
+```{r config-design, eval=FALSE}
+# Expansión de predictores: no linealidad en clima, calendario e
+# interacción hora × día hábil. temp y atemp son casi colineales a propósito.
+features <- ~ temp + atemp + I(temp^2) + hum + I(hum^2) + windspeed +
+  holiday + month + sin(2 * pi * month / 12) + cos(2 * pi * month / 12) +
+  factor(weathersit) + factor(hr) * workingday
+
+x_all   <- model.matrix(features, bikedata)[, -1]
+x_train <- x_all[id_train, ]; y_train <- high_demand[id_train]
+x_valid <- x_all[id_valid, ]; y_valid <- high_demand[id_valid]
+x_test  <- x_all[id_test, ];  y_test  <- high_demand[id_test]
+```
+
+## El diseño de datos de hoy
+
+```{r}
+tibble(
+  observaciones_train = nrow(x_train),
+  variables_base = 9,
+  columnas_modelo = ncol(x_train)
+)
+```
+
+La expansión incluye no linealidad en clima, indicadores de calendario e interacción hora × día hábil — exactamente el tipo de términos que, en la curva de arriba, empujaba el modelo hacia el sobreajuste. `temp` y `atemp` son además deliberadamente casi idénticas: veremos que ese tipo de colinealidad es precisamente donde Ridge resulta más útil.
+
+## Tres conjuntos, tres funciones
+
+Antes de penalizar nada, fijemos la disciplina de evaluación — ya la usamos antes (bootstrap, validación) pero aquí es central, no un anexo:
+
+| Conjunto | Proporción | Función |
+|---|---:|---|
+| Entrenamiento | 60% | estimar coeficientes |
+| Validación | 20% | elegir $\alpha$ y $\lambda$ |
+| Test | 20% | estimar desempeño final, **una sola vez** |
+
+Mirar el test durante el tuning produce **filtración de información**: el desempeño deja de ser genuinamente fuera de muestra — el mismo problema, en miniatura, que acabamos de ver en la curva de sobreajuste.
+
+```{r}
+tibble(
+  conjunto = c("Entrenamiento", "Validación", "Test"),
+  primer_día = c(min(train_days), min(valid_days), min(test_days)),
+  último_día = c(max(train_days), max(valid_days), max(test_days)),
+  horas = c(length(id_train), length(id_valid), length(id_test))
+)
+```
+
+Entrenamos con el pasado, elegimos hiperparámetros en un período posterior y reservamos los últimos días para test: una partición aleatoria sería optimista si horas vecinas comparten patrones no observados.
+
+# Ridge {.inverse .center .middle}
+
+## Motivación: cuando los predictores se parecen entre sí
+
+`temp` y `atemp` están altamente correlacionadas. En un GLM sin penalizar, esto genera un problema específico: $X^\top X$ se vuelve casi no invertible, y pequeños cambios en la muestra producen coeficientes muy distintos — alta varianza, tal como vimos arriba.
 
 . . .
 
-La asociación identifica el efecto causal solo bajo supuestos adicionales.
+**Ridge** ataca exactamente ese síntoma: en vez de dejar que los coeficientes crezcan sin control para "explicar" la colinealidad, los penaliza por tamaño.
 
-# ¿Por qué pueden diferir? {.inverse .center .middle}
+## Intuición: el estimador como compromiso
 
-## El mes cambia el clima y también la demanda
+En la geometría familiar de mínimos cuadrados, agregar una penalización por el tamaño de $\boldsymbol\beta$ es "tirar" al estimador hacia el origen, un poco menos lejos de donde los datos solos lo llevarían.
 
-```{r clear-by-month, echo=FALSE, fig.height=4.2}
-bikedata %>%
-  group_by(mnth) %>%
-  summarise(
-    prop_clear = mean(clear_weather),
-    prop_high = mean(high_demand),
-    .groups = "drop"
-  ) %>%
-  ggplot(aes(mnth, prop_clear, group = 1)) +
-  geom_line(linewidth = 1.2, color = course_palette[["primary"]]) +
-  geom_point(size = 3, color = course_palette[["secondary"]]) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  labs(x = "Mes", y = "Proporción de horas despejadas")
+![El estimador Ridge (verde) es el punto donde las curvas de nivel de la pérdida (elipses) tocan primero la región de restricción circular.](https://media.geeksforgeeks.org/wp-content/uploads/20251209150233295936/ridge_estimate.webp){fig-align="center" width="50%"}
+
+::: {.footnote}
+Fuente: [GeeksforGeeks — What is Ridge Regression](https://www.geeksforgeeks.org/machine-learning/what-is-ridge-regression/)
+:::
+
+## Definición formal: penalización $L_2$
+
+Partimos de la pérdida logística y agregamos un costo por coeficientes grandes:
+
+$$
+\widehat{\boldsymbol\beta}^{\text{ridge}}
+=\arg\min_{\boldsymbol\beta}
+\left\{-\ell(\boldsymbol\beta)+\lambda \underbrace{\frac{1}{2}\sum_{j=1}^{p}\beta_j^2}_{P(\boldsymbol\beta)}\right\}.
+$$
+
+| Símbolo | Significado |
+|---|---|
+| $\ell(\boldsymbol\beta)$ | log-verosimilitud logística: qué tan bien predicen las probabilidades |
+| $P(\boldsymbol\beta)$ | penalización: qué tan grandes son los coeficientes |
+| $\lambda\ge 0$ | intensidad de la penalización: el "dial" que elegiremos con validación |
+
+$\lambda=0$ recupera el ajuste sin penalizar; $\lambda$ grande empuja todos los coeficientes hacia 0. El intercepto nunca se penaliza — no tiene sentido "encogerlo" hacia una demanda promedio de cero.
+
+## La verosimilitud que penalizamos
+
+Con log-odds $\eta_i=\beta_0+x_i^\top\boldsymbol\beta$ y $p_i=\sigma(\eta_i)$:
+
+$$
+\ell(\boldsymbol\beta)=\sum_{i=1}^{n}\big[\,y_i\,\eta_i-\log(1+e^{\eta_i})\,\big].
+$$
+
+- $y_i\in\{0,1\}$: demanda alta observada.
+- $\eta_i$: log-odds predicho; $p_i=\sigma(\eta_i)$: probabilidad predicha — el mismo logit de las clases 9 a 11.
+- Maximizar $\ell$ equivale a minimizar la **devianza** $-2\ell$.
+
+Minimizar $-\ell+\lambda P(\boldsymbol\beta)$ es, entonces, "ajustar bien las probabilidades **sin** coeficientes desmesurados".
+
+## Descomposición matemática: solución cerrada
+
+En regresión lineal, Ridge tiene solución explícita — útil para ver *qué hace* la penalización:
+
+$$
+\widehat{\boldsymbol\beta}^{\text{ridge}}=(X^\top X+\lambda I)^{-1}X^\top y.
+$$
+
+- Sumar $\lambda I$ vuelve **invertible** a $X^\top X$ aunque haya colinealidad casi perfecta (`temp` y `atemp`) — resuelve exactamente el problema que motivó esta técnica.
+- $\lambda=0$ recupera mínimos cuadrados; $\lambda\to\infty$ lleva $\widehat{\boldsymbol\beta}\to 0$.
+- En regresión logística no hay fórmula cerrada, pero la misma penalización $+\lambda I$ estabiliza cada paso del ajuste iterativo (IRLS).
+
+## Descomposición matemática: qué hace Ridge, dirección por dirección
+
+Con la descomposición $X=UDV^\top$ (columnas estandarizadas), las predicciones Ridge se contraen **dirección por dirección**:
+
+$$
+\widehat y=\sum_{j}u_j\,\frac{d_j^{2}}{d_j^{2}+\lambda}\,u_j^\top y.
+$$
+
+- $d_j$: valor singular de la dirección $j$ — cuánta varianza tiene esa combinación de predictores.
+- Factor de contracción $d_j^{2}/(d_j^{2}+\lambda)\in(0,1)$.
+- Direcciones de **poca varianza** (colineales, $d_j$ pequeño) se contraen **más** — son justo las que producen coeficientes inestables.
+
+```{r svd-shrinkage, echo=FALSE, fig.height=4.4}
+keep <- apply(x_train, 2, sd) > 0
+xs <- scale(x_train[, keep, drop = FALSE]) / sqrt(nrow(x_train))
+d_sv <- svd(xs)$d
+
+shrink <- map_dfr(c(0.001, 0.01, 0.1, 1), function(l) {
+  tibble(lambda = l, componente = seq_along(d_sv),
+         factor = d_sv^2 / (d_sv^2 + l))
+})
+
+shrink %>%
+  mutate(lambda = factor(lambda)) %>%
+  ggplot(aes(componente, factor, color = lambda)) +
+  geom_line(linewidth = 1.1) +
+  scale_color_course() +
+  scale_y_continuous(limits = c(0, 1)) +
+  labs(x = "Componente (de mayor a menor varianza)",
+       y = expression(d[j]^2 / (d[j]^2 + lambda)),
+       color = expression(lambda))
 ```
 
-Los meses no tienen la misma probabilidad de estar despejados. Además, estación, vacaciones y horas de luz afectan la probabilidad de demanda alta.
+Las direcciones de menor varianza —donde viven combinaciones como `temp`$\approx$`atemp`— son las más contraídas. Ridge no las elimina; les quita influencia.
 
-## Confusión: una causa común abre un camino alternativo
+## Por qué estandarizar antes de penalizar
 
-```{r dag-confound, echo=FALSE, fig.height=4.2}
-nodes <- tibble(
-  x = c(1, 3, 2), y = c(1, 1, 2.45),
-  label = c("D\nClima despejado", "Y\nDemanda alta", "X\nMes")
+La penalización opera sobre el tamaño *numérico* de cada coeficiente. Si `temp` variara entre 0 y 1 y otra variable entre 0 y 1.000, una misma magnitud de coeficiente no sería comparable — la penalización castigaría por unidades, no por importancia real.
+
+$$z_{ij}=\frac{x_{ij}-\bar{x}_{j,\text{train}}}{s_{j,\text{train}}}.$$
+
+`glmnet` estandariza los predictores por defecto, usando solo estadísticas del conjunto de entrenamiento (nunca de validación o test).
+
+## Ridge: ejemplo empírico
+
+```{r ridge-path, fig.height=5}
+lambda_path <- exp(seq(log(100), log(0.001), length.out = 70))
+ridge_fit <- glmnet(
+  x_train, y_train, family = "binomial", alpha = 0,
+  lambda = lambda_path, standardize = TRUE
 )
-edges <- tibble(
-  x = c(2, 2, 1), y = c(2.28, 2.28, 1),
-  xend = c(1.12, 2.88, 2.82), yend = c(1.18, 1.18, 1)
-)
+
+ridge_coef <- as.matrix(coef(ridge_fit))[-1, , drop = FALSE]
+ridge_long <- as_tibble(t(ridge_coef), .name_repair = "minimal") %>%
+  mutate(lambda = ridge_fit$lambda) %>%
+  pivot_longer(-lambda, names_to = "variable", values_to = "coefficient")
+
+ridge_long %>%
+  filter(variable %in% c("temp", "hum", "windspeed", "workingday")) %>%
+  ggplot(aes(log(lambda), coefficient, color = variable)) +
+  geom_hline(yintercept = 0, color = "grey50", linewidth = 0.7) +
+  geom_line(linewidth = 1.15) +
+  scale_color_course() +
+  labs(x = expression(log(lambda)), y = "Coeficiente", color = NULL)
+```
+
+## Interpretación: leer la trayectoria
+
+- Hacia la derecha aumenta $\lambda$; todos los coeficientes se contraen **suavemente**, sin saltos.
+- Ninguna variable desaparece de forma abrupta — consistente con lo que la SVD predijo.
+- El signo y el tamaño de cada coeficiente deben interpretarse condicionalmente al resto del modelo, igual que en cualquier GLM.
+- Esta trayectoria muestra **cómo cambia el modelo** con $\lambda$; todavía no nos dice cuál $\lambda$ predice mejor — eso lo resolveremos con validación, más adelante en la clase.
+
+# LASSO y Elastic Net {.inverse .center .middle}
+
+## Motivación: Ridge nunca elige
+
+Ridge resuelve la inestabilidad, pero deja un problema abierto: **nunca elimina un predictor**. Con muchas variables (interacciones, indicadores de calendario), sería útil que el propio ajuste nos dijera cuáles sobran — no solo que las encoja un poco.
+
+. . .
+
+**LASSO** cambia la forma de la penalización para lograr justamente eso: contracción **y** selección de variables, en el mismo procedimiento.
+
+## Intuición: por qué una forma distinta selecciona
+
+Ridge penaliza $\sum\beta_j^2$ (un círculo, en dos dimensiones). LASSO penaliza $\sum|\beta_j|$ (un diamante). La diferencia de forma no es cosmética: cambia dónde el óptimo puede caer.
+
+```{r l1l2-geometry, echo=FALSE, fig.height=4.6}
+beta_hat <- c(2.1, 1.6)
+A <- matrix(c(1, 0.6, 0.6, 1.3), 2, 2)
+quad <- function(b1, b2) {
+  d <- cbind(b1 - beta_hat[1], b2 - beta_hat[2])
+  rowSums((d %*% A) * d)
+}
+grid <- expand.grid(b1 = seq(-0.8, 3, length.out = 220),
+                    b2 = seq(-0.8, 3, length.out = 220))
+grid$z <- quad(grid$b1, grid$b2)
+
+circ <- tibble(theta = seq(0, 2 * pi, length.out = 200)) %>%
+  mutate(b1 = 1.2 * cos(theta), b2 = 1.2 * sin(theta))
+tt <- 1.35
+diam <- tibble(b1 = c(tt, 0, -tt, 0, tt), b2 = c(0, tt, 0, -tt, 0))
 
 ggplot() +
-  geom_segment(
-    data = edges, aes(x, y, xend = xend, yend = yend),
-    arrow = arrow(length = unit(0.22, "cm"), type = "closed"),
-    color = course_palette[["secondary"]], linewidth = 1.1
-  ) +
-  geom_point(
-    data = nodes, aes(x, y), size = 25, shape = 21,
-    fill = course_palette[["primary"]], color = "white"
-  ) +
-  geom_text(
-    data = nodes, aes(x, y, label = label),
-    color = "white", size = 4, lineheight = 0.9
-  ) +
-  coord_cartesian(xlim = c(0.45, 3.55), ylim = c(0.55, 2.9)) +
-  theme_void()
+  geom_contour(data = grid, aes(b1, b2, z = z),
+               breaks = as.numeric(quad(0, 0)) * c(0.15, 0.4, 0.8, 1.3),
+               color = course_palette[["series-3"]], linewidth = 0.6) +
+  geom_path(data = circ, aes(b1, b2),
+            color = course_palette[["primary"]], linewidth = 1.2) +
+  geom_path(data = diam, aes(b1, b2),
+            color = course_palette[["secondary"]], linewidth = 1.2) +
+  geom_point(aes(beta_hat[1], beta_hat[2]), size = 3) +
+  geom_point(aes(0, tt), color = course_palette[["secondary"]], size = 3) +
+  annotate("text", x = 0, y = tt + 0.28, label = "vértice: β₁ = 0", size = 3) +
+  coord_equal() +
+  labs(x = expression(beta[1]), y = expression(beta[2]))
 ```
 
-El camino $D \leftarrow X \rightarrow Y$ mezcla el efecto del clima con diferencias estacionales.
+Elipses = curvas de nivel de $-\ell$; círculo = restricción Ridge; diamante = restricción LASSO. El estimador penalizado vive donde esas curvas **tocan por primera vez** la región de restricción. El diamante tiene vértices sobre los ejes — es fácil tocar justo ahí, y en un vértice algún $\beta_j=0$. El círculo no tiene esquinas: contrae, pero casi nunca anula.
 
-## Ajustar por el confusor cambia el coeficiente
+## Definición formal: penalización $L_1$
 
-```{r control-demo, echo=FALSE}
-tibble(
-  modelo = c("Logit crudo", "Logit ajustado por mes"),
-  beta_clima = c(
-    coef(logit_crudo)[["clear_weather"]],
-    coef(logit_mes)[["clear_weather"]]
-  ),
-  odds_ratio = exp(c(
-    coef(logit_crudo)[["clear_weather"]],
-    coef(logit_mes)[["clear_weather"]]
-  ))
+$$
+\widehat{\boldsymbol\beta}^{\text{lasso}}
+=\arg\min_{\boldsymbol\beta}
+\left\{-\ell(\boldsymbol\beta)+\lambda \underbrace{\sum_{j=1}^{p}|\beta_j|}_{P(\boldsymbol\beta)}\right\}.
+$$
+
+Misma estructura que Ridge — mismo $\ell$, mismo rol de $\lambda$ — la única diferencia es la forma de $P(\boldsymbol\beta)$. Eso basta para cambiar por completo el comportamiento del estimador, como acabamos de ver.
+
+La selección no implica causalidad: que un coeficiente sea exactamente 0 no prueba que esa variable sea irrelevante sustantivamente, solo que no ayudó a predecir en esta muestra bajo esta penalización.
+
+## Descomposición matemática: soft-thresholding
+
+Con predictores ortonormales, la solución LASSO es explícita — y deja ver el mecanismo exacto de la selección:
+
+$$
+\widehat\beta_j^{\text{lasso}}
+=\operatorname{sign}\!\big(\widehat\beta_j^{\text{OLS}}\big)\,
+\big(|\widehat\beta_j^{\text{OLS}}|-\lambda\big)_+ .
+$$
+
+- $(\cdot)_+$ = parte positiva: si $|\widehat\beta_j^{\text{OLS}}|<\lambda$, el coeficiente se vuelve **exactamente 0**.
+- Ridge, en cambio, **escala** todos por igual: $\widehat\beta_j^{\text{ridge}}=\widehat\beta_j^{\text{OLS}}/(1+\lambda)$ — nunca llega a 0 exacto.
+
+```{r soft-threshold, echo=FALSE, fig.height=4.2}
+lam <- 1
+tibble(beta_ols = seq(-3, 3, length.out = 400)) %>%
+  mutate(
+    Ridge = beta_ols / (1 + lam),
+    LASSO = sign(beta_ols) * pmax(abs(beta_ols) - lam, 0)
+  ) %>%
+  pivot_longer(c(Ridge, LASSO), names_to = "metodo", values_to = "beta_pen") %>%
+  ggplot(aes(beta_ols, beta_pen, color = metodo)) +
+  geom_abline(slope = 1, intercept = 0, color = "grey60", linetype = "dashed") +
+  geom_line(linewidth = 1.2) +
+  scale_color_course() +
+  coord_equal() +
+  labs(x = expression(hat(beta)[OLS]),
+       y = expression(hat(beta)[pen]), color = NULL)
+```
+
+## Cómo se optimiza en la práctica
+
+`glmnet` usa **descenso por coordenadas**: fija todos los coeficientes menos uno y lo actualiza con la fórmula de soft-thresholding sobre los *residuos parciales*, ciclando hasta converger. En logística se combina con IRLS (mínimos cuadrados ponderados iterados, la misma idea que vimos en la clase de MLE).
+
+- Existe un $\lambda_{\max}=\max_j |x_j^\top(y-\bar y)|/n$ donde **todos** los coeficientes son 0; por eso la trayectoria empieza vacía.
+- La ruta se calcula desde $\lambda_{\max}$ hacia abajo con *warm starts*: cada solución inicializa la siguiente.
+- Alternativa clásica con el mismo resultado: **LARS** (*Least Angle Regression*), un algoritmo distinto que también traza la ruta completa de LASSO.
+
+## LASSO: ejemplo empírico
+
+```{r lasso-path, fig.height=5}
+lasso_fit <- glmnet(
+  x_train, y_train, family = "binomial", alpha = 1,
+  lambda = lambda_path, standardize = TRUE
 )
+
+lasso_coef <- as.matrix(coef(lasso_fit))[-1, , drop = FALSE]
+lasso_long <- as_tibble(t(lasso_coef), .name_repair = "minimal") %>%
+  mutate(lambda = lasso_fit$lambda) %>%
+  pivot_longer(-lambda, names_to = "variable", values_to = "coefficient")
+
+lasso_long %>%
+  group_by(variable) %>%
+  mutate(max_abs = max(abs(coefficient))) %>%
+  ungroup() %>%
+  filter(dense_rank(desc(max_abs)) <= 9) %>%
+  ggplot(aes(log(lambda), coefficient, color = variable)) +
+  geom_hline(yintercept = 0, color = "grey50", linewidth = 0.7) +
+  geom_line(linewidth = 1.05) +
+  scale_color_course() +
+  labs(x = expression(log(lambda)), y = "Coeficiente", color = NULL)
 ```
 
-El coeficiente cambia al comparar horas dentro del mismo mes: parte de la asociación cruda reflejaba composición estacional.
+## Interpretación: a diferencia de Ridge
 
-. . .
+Compare esta trayectoria con la de Ridge: aquí las variables **entran y salen** del modelo en puntos concretos de $\lambda$, no se contraen todas parejo. Cada vez que una línea toca el cero y se queda ahí, esa variable fue **excluida** para ese nivel de penalización.
 
-Esto **no prueba** que el coeficiente ajustado sea causal. Solo elimina la confusión explicada por `month` bajo la forma funcional elegida.
+## Motivación: cuando además hay bloques correlacionados
 
-## El mismo coeficiente admite dos lecturas
+LASSO selecciona, pero con predictores muy correlacionados (`temp`, `atemp`, mes, estacionalidad) tiende a **elegir uno arbitrariamente y descartar el resto** — muestras parecidas pueden terminar con variables distintas seleccionadas.
 
-::: {.pull-left}
-
-**Lectura asociacional**
+**Elastic Net** combina ambas penalizaciones para resolver esto:
 
 $$
-\beta_1=
-\log\frac{\operatorname{odds}(Y=1\mid D=1,X)}
-{\operatorname{odds}(Y=1\mid D=0,X)}
+P_{\alpha}(\boldsymbol\beta)=
+(1-\alpha)\frac{1}{2}\sum_j\beta_j^2+
+\alpha\sum_j|\beta_j|.
 $$
 
-Describe una comparación condicional en los datos observados.
+| $\alpha$ | Modelo | Comportamiento típico |
+|---:|---|---|
+| 0 | Ridge | conserva todos los predictores |
+| 1 | LASSO | produce soluciones dispersas |
+| entre 0 y 1 | Elastic Net | combina estabilidad y selección |
 
+El término $L_2$ reparte el peso entre variables correlacionadas (**efecto de agrupamiento**); el término $L_1$ conserva la capacidad de anular bloques irrelevantes.
+
+## Otros casos de uso
+
+La misma familia de penalizaciones ($L_1$, $L_2$, combinadas) aparece, con el mismo objetivo — controlar complejidad cuando hay muchos predictores o predictores correlacionados —, en dominios muy distintos:
+
+| Dominio | Uso típico |
+|---|---|
+| Genómica | LASSO para seleccionar genes relevantes entre miles, con pocos pacientes |
+| Finanzas | Ridge para estabilizar modelos de riesgo con indicadores macroeconómicos correlacionados |
+| Texto / NLP | LASSO sobre miles de frecuencias de palabras, para quedarse con las predictivas |
+| Marketing | Elastic Net en modelos de *churn* con decenas de variables de comportamiento correlacionadas |
+| Neuroimagen | Elastic Net para seleccionar vóxeles relevantes entre decenas de miles |
+
+En todos los casos, el problema de fondo es el mismo que vimos hoy: muchos predictores, posible colinealidad, y la necesidad de controlar complejidad sin decidir a mano qué variable entra.
+
+## Comparación sistemática
+
+| | Ridge | LASSO | Elastic Net |
+|---|---|---|---|
+| Penalización | $L_2$ | $L_1$ | $L_1+L_2$ |
+| Coeficientes | todos se achican, ninguno en 0 | algunos exactamente 0 | algunos en 0, resto achicado |
+| Supuesto implícito | todos los predictores aportan algo | pocos predictores realmente importan | hay bloques correlacionados |
+| Hiperparámetros | $\lambda$ | $\lambda$ | $\lambda$ y $\alpha$ (2 dimensiones) |
+| Costo computacional | bajo (ruta cerrada por dirección) | bajo (coordenadas) | bajo, pero grilla 2D más cara |
+| Interpretabilidad | media (todos los coeficientes activos) | alta (modelo disperso) | media-alta |
+| Debilidad típica | no simplifica el modelo | descarta arbitrariamente entre correlacionados | más costoso de tunear |
+
+La decisión final es empírica: se compara desempeño de validación, no una preferencia a priori — lo hacemos a continuación.
+
+## Extensiones
+
+- **Adaptive LASSO**: pondera la penalización de cada coeficiente según una estimación previa, reduciendo el sesgo de selección de LASSO estándar.
+- **Group LASSO**: en vez de anular coeficientes individuales, anula **grupos completos** — por ejemplo, todos los indicadores de una variable categórica (como `factor(hr)`) entran o salen juntos.
+- **SCAD / MCP**: penalizaciones no convexas que corrigen el sesgo hacia cero que Ridge y LASSO imponen a coeficientes grandes.
+
+Todas resuelven variantes del mismo problema — controlar complejidad automáticamente — con ajustes a cómo se reparte la penalización.
+
+# Validación {.inverse .center .middle}
+
+## Por qué la validación no es un anexo
+
+Elegimos $\alpha$ y $\lambda$; ninguno de los dos se estima maximizando la verosimilitud del modelo. Si los eligiéramos mirando qué tan bien ajustan el conjunto de entrenamiento, siempre ganaría $\lambda=0$ — el problema con el que empezamos la clase. Por eso la validación no es un paso posterior: es la forma concreta de resolver el compromiso sesgo-varianza sin hacer trampa.
+
+## Protocolo de tuning
+
+1. Definir una grilla de $\alpha$.
+2. Ajustar una trayectoria de $\lambda$ en entrenamiento.
+3. Predecir validación para cada combinación.
+4. Elegir la menor pérdida de validación.
+5. Reajustar con entrenamiento + validación.
+6. Evaluar una vez en test.
+
+## Validación simple vs. validación cruzada
+
+La idea de fondo de cualquier validación: en vez de "memorizar una única prueba", evaluar el modelo como si rindiera **varios exámenes distintos** y ver si el desempeño es consistente.
+
+$$
+\text{CV}(\lambda)=\frac{1}{k}\sum_{f=1}^{k}\text{pérdida}_f(\lambda).
+$$
+
+![k-fold cross-validation: los datos se dividen en k bloques; en cada ronda uno actúa como validación y el resto como entrenamiento.](https://media.geeksforgeeks.org/wp-content/uploads/20250927122541290704/222.webp){fig-align="center" width="50%"}
+
+::: {.footnote}
+Fuente: [GeeksforGeeks — Cross Validation in Machine Learning](https://www.geeksforgeeks.org/machine-learning/cross-validation-machine-learning/)
 :::
 
-::: {.pull-right}
+Con dependencia temporal como la nuestra, la CV aleatoria de la figura es **optimista**: horas vecinas se filtran entre pliegues. Por eso usamos un conjunto de validación fijo, cronológico.
 
-**Lectura causal**
+## Validación cronológica ("rolling-origin")
 
-$$
-\beta_1=
-\log\frac{\operatorname{odds}\{Y(1)=1\mid X\}}
-{\operatorname{odds}\{Y(0)=1\mid X\}}
-$$
+El análogo correcto de k-fold cuando los datos son series de tiempo se llama **validación cruzada de series de tiempo** (*rolling-origin* / *walk-forward*): cada "pliegue" entrena solo con el pasado y valida con un bloque futuro, avanzando el origen de entrenamiento en cada ronda. Es la generalización, a $k$ rondas, de la partición cronológica única que usamos hoy.
 
-Compara resultados potenciales bajo dos intervenciones.
+Otras alternativas para elegir $\lambda$ sin re-ajustar muchas veces: **validación cruzada generalizada (GCV)**, y criterios de información como AIC/BIC.
 
-:::
+## Validación de α y λ: ejemplo empírico
+
+```{r tuning, cache=TRUE}
+alpha_grid <- c(0, 0.5, 1)
+lambda_grid <- exp(seq(log(30), log(0.003), length.out = 45))
+
+validation <- map_dfr(alpha_grid, function(a) {
+  fit <- glmnet(
+    x_train, y_train, family = "binomial", alpha = a,
+    lambda = lambda_grid, standardize = TRUE
+  )
+  prob <- predict(fit, newx = x_valid, type = "response")
+  tibble(
+    alpha = a,
+    lambda = fit$lambda,
+    loss = map_dbl(seq_len(ncol(prob)), ~ log_loss(y_valid, prob[, .x]))
+  )
+})
+
+validation %>% arrange(loss) %>% slice_head(n = 5)
+```
+
+```{r validation-plot, fig.height=4.6}
+validation %>%
+  mutate(alpha = factor(alpha)) %>%
+  ggplot(aes(log(lambda), loss, color = alpha)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(data = ~ slice_min(.x, loss, n = 1), size = 3) +
+  scale_color_course() +
+  labs(
+    x = expression(log(lambda)), y = "Log-loss de validación",
+    color = expression(alpha)
+  )
+```
+
+## Reajuste final y test: ejemplo empírico
+
+```{r final-fit}
+best <- validation %>% slice_min(loss, n = 1, with_ties = FALSE)
+tuned_train_fit <- glmnet(
+  x_train, y_train, family = "binomial",
+  alpha = best$alpha, lambda = best$lambda,
+  standardize = TRUE
+)
+validation_prob <- as.numeric(predict(
+  tuned_train_fit, newx = x_valid, type = "response"
+))
+
+thresholds <- seq(0.1, 0.9, by = 0.05)
+threshold_choice <- map_dfr(thresholds, function(t) {
+  class_metrics(y_valid, validation_prob, t) %>% mutate(threshold = t)
+}) %>%
+  mutate(balanced_accuracy = (sensitivity + specificity) / 2) %>%
+  slice_max(balanced_accuracy, n = 1, with_ties = FALSE)
+selected_threshold <- threshold_choice$threshold
+
+x_dev <- rbind(x_train, x_valid)
+y_dev <- c(y_train, y_valid)
+
+final_fit <- glmnet(
+  x_dev, y_dev, family = "binomial",
+  alpha = best$alpha, lambda = best$lambda,
+  standardize = TRUE
+)
+test_prob <- as.numeric(predict(final_fit, newx = x_test, type = "response"))
+
+best %>% select(alpha, lambda, validation_log_loss = loss)
+```
+
+El umbral de clasificación se elige en validación maximizando accuracy balanceada — la misma lógica de la clase 15, ahora aplicada tras el tuning. El test no participó en ninguna de estas decisiones.
+
+## Interpretación: ¿la penalización aporta?
+
+```{r}
+baseline_fit <- glm.fit(
+  x = cbind(`(Intercept)` = 1, x_dev), y = y_dev,
+  family = binomial()
+)
+baseline_prob <- as.numeric(plogis(
+  cbind(`(Intercept)` = 1, x_test) %*% coef(baseline_fit)
+))
+
+bind_rows(
+  class_metrics(y_test, baseline_prob, selected_threshold) %>%
+    mutate(modelo = "Logit sin penalizar"),
+  class_metrics(y_test, test_prob, selected_threshold) %>%
+    mutate(modelo = "Elastic Net")
+) %>%
+  select(modelo, everything())
+```
+
+Regularizar se justifica por desempeño y estabilidad fuera de muestra — comparado explícitamente aquí contra el logit sin penalizar de las clases 9–11 — no porque el método sea más reciente.
+
+## Interpretación: clasificación y calibración
+
+```{r}
+test_class <- factor(
+  if_else(test_prob >= selected_threshold, "alta", "baja"),
+  levels = c("baja", "alta")
+)
+observed <- factor(if_else(y_test == 1, "alta", "baja"), levels = c("baja", "alta"))
+table(observado = observed, predicho = test_class)
+```
+
+```{r calibration, fig.height=4.4}
+calibration <- tibble(y = y_test, p = test_prob) %>%
+  mutate(bin = ntile(p, 10)) %>%
+  group_by(bin) %>%
+  summarise(predicted = mean(p), observed = mean(y), n = n(), .groups = "drop")
+
+calibration %>%
+  ggplot(aes(predicted, observed, size = n)) +
+  geom_abline(slope = 1, intercept = 0, color = course_palette[["secondary"]]) +
+  geom_point(color = course_palette[["primary"]], alpha = 0.85) +
+  scale_x_continuous(limits = c(0, 1)) +
+  scale_y_continuous(limits = c(0, 1)) +
+  labs(x = "Probabilidad media predicha", y = "Proporción observada", size = "Horas")
+```
+
+Los falsos negativos son horas de demanda alta que el sistema no anticipó. Discriminación (matriz de confusión) y calibración (¿las probabilidades predichas se cumplen en la frecuencia correcta?) son propiedades distintas — un modelo puede discriminar bien y calibrar mal, o viceversa.
+
+## Interpretación: ¿qué variables quedan?
+
+```{r}
+selected <- as.matrix(coef(final_fit)) %>%
+  as_tibble(rownames = "variable") %>%
+  rename(coefficient = 2) %>%
+  filter(variable != "(Intercept)") %>%
+  mutate(selected = abs(coefficient) > 1e-8) %>%
+  arrange(desc(abs(coefficient)))
+
+selected %>% slice_head(n = 10)
+```
+
+Un coeficiente igual a cero no demuestra irrelevancia sustantiva: solo dice que, bajo esta penalización y esta muestra, esa variable no ayudó a predecir. La selección puede cambiar entre muestras parecidas — no es una prueba de hipótesis.
+
+## Comparación con selección clásica
+
+| Método | Controla complejidad | Selección | Nota |
+|---|---|---|---|
+| Mejor subconjunto | prueba todas las combinaciones | dura (0/1) | inviable con $p$ grande |
+| Paso a paso (stepwise) | agrega/quita una variable a la vez | dura | *greedy*, inestable |
+| Ridge / LASSO / Elastic Net | penalización continua | según método | convexo, reproducible |
+
+La regularización reemplaza la selección **discreta** (combinatoria, inestable, la que un GLM clásico haría "a mano" comparando AIC entre modelos) por una **continua** — el mismo objetivo del stepwise selection de la clase 15, resuelto de forma más estable.
+
+## Cuándo puede engañar
+
+- **Correlación fuerte**: LASSO elige arbitrariamente entre predictores casi equivalentes.
+- **Inferencia post-selección**: los $p$-valores clásicos no son válidos tras seleccionar con los mismos datos que se usan para inferencia.
+- **$p\gg n$**: LASSO selecciona a lo sumo $n$ variables, aunque más sean relevantes.
+- **Escalas ignoradas**: sin estandarizar, la penalización castiga por unidades, no por importancia.
+- **Fuga de información**: estandarizar o elegir $\lambda$ mirando el test infla el desempeño reportado.
+
+## Síntesis conceptual
+
+La regularización es una respuesta directa al compromiso sesgo–varianza con el que abrimos la clase: introducimos un sesgo controlado ($\lambda P_\alpha$) a cambio de mucha menos varianza y un ajuste reproducible.
+
+- **Ridge** ($L_2$): estabiliza, no selecciona; resuelve la colinealidad.
+- **LASSO** ($L_1$): contrae y selecciona vía soft-thresholding.
+- **Elastic Net**: combina ambos cuando hay bloques correlacionados.
+
+Todo el resto del flujo —partición, estandarización, test intacto, calibración— existe para que ese compromiso se resuelva **honestamente**, sin volver a caer en la curva de sobreajuste del comienzo.
+
+## Ejercicio
+
+1. Agregue una interacción entre `workingday` y `factor(hr)`.
+2. Repita el tuning sin observar el test.
+3. Compare log-loss y calibración contra el modelo de esta clase.
+4. Examine qué coeficientes sobreviven con LASSO.
+5. Explique por qué una mejora predictiva no basta para hablar de causalidad.
+
+## La pregunta que queda abierta
+
+Regularización controla la complejidad de un modelo cuya **forma** seguimos eligiendo nosotros: seguimos escribiendo a mano `I(temp^2)`, `factor(hr) * workingday`, y esperando haber adivinado las interacciones correctas.
 
 . . .
 
-La segunda lectura necesita diseño y supuestos causales. La ecuación logística, por sí sola, solo garantiza la primera.
+**¿Qué pasa si no sabemos qué interacciones importan?** ¿Puede el algoritmo, además de controlar cuánta complejidad usar, **descubrir por sí solo** qué variables interactúan y cómo? Esa es exactamente la pregunta que abre la próxima clase.
 
-## La causalidad no está en la complejidad
-
-El mismo logit puede ser:
-
-- **asociacional**, si el tratamiento está confundido;
-- **causal**, si el diseño hace creíble la comparación contrafactual.
-
-. . .
-
-Un modelo más complejo puede ajustar mejor la asociación, pero no fabrica el contrafactual faltante.
-
-. . .
-
-Una muestra más grande reduce el error estándar:
-
-$$
-n\uparrow \quad\Longrightarrow\quad SE(\hat\beta_1)\downarrow
-$$
-
-pero no elimina el sesgo por confusión. Podemos estimar una asociación no causal con enorme precisión.
-
-## El supuesto decisivo no viene de la regresión
-
-La **intercambiabilidad condicional** o no-confusión exige:
-
-$$
-\{Y_i(1),Y_i(0)\}\perp D_i\mid X_i.
-$$
-
-En palabras: dentro de grupos con igual $X$, recibir $D=1$ o $D=0$ es “como si” fuera aleatorio respecto de los resultados potenciales.
-
-. . .
-
-Este supuesto:
-
-- no se demuestra con un $p$-value;
-- no aparece automáticamente al aumentar $n$;
-- requiere teoría, conocimiento del proceso y un buen diseño.
-
-## También necesitamos comparaciones posibles
-
-Para cada combinación de confusores debe existir alguna posibilidad de observar ambos tratamientos:
-
-$$
-0<\Pr(D_i=1\mid X_i=x)<1.
-$$
-
-Este supuesto se llama **positividad** u **overlap**.
-
-. . .
-
-Si en cierto mes nunca hubiera horas despejadas, los datos no permitirían estimar qué ocurriría bajo clima despejado para ese mes: el contrafactual requeriría extrapolación.
-
-## Consistencia: el tratamiento debe estar bien definido
-
-La **consistencia** conecta el resultado observado con el potencial:
-
-$$
-D_i=d \quad\Longrightarrow\quad Y_i=Y_i(d).
-$$
-
-Pero “otro clima” mezcla nubes, lluvia y nieve. ¿Son realmente la misma intervención?
-
-. . .
-
-Cuanto más heterogénea sea la definición de $D=0$, más difícil es interpretar un único efecto. Definir con precisión el tratamiento es parte del análisis causal.
-
-# El DAG guía los controles {.inverse .center .middle}
-
-## No todas las covariables son confusores
-
-- **Confusor:** causa tanto $D$ como $Y$. Controlarlo puede bloquear una asociación espuria.
-- **Mediador:** está en el camino $D\rightarrow M\rightarrow Y$. Controlarlo elimina parte del efecto total.
-- **Colisionador:** recibe flechas $D\rightarrow C\leftarrow Y$. Controlarlo puede crear una asociación espuria.
-
-. . .
-
-El DAG representa supuestos sustantivos; no se “descubre” mirando significancia estadística.
-
-## Más controles no garantizan causalidad
-
-Agregar variables a una regresión ayuda solo si esas variables cumplen el rol causal correcto.
-
-. . .
-
-- Omitir un confusor deja abierto un camino no causal.
-- Incluir un mediador cambia el estimando: pasamos del efecto total a un efecto directo.
-- Incluir un colisionador puede introducir sesgo.
-- Ajustar por una variable medida después del tratamiento suele ser especialmente riesgoso.
-
-. . .
-
-La lista de controles se decide con un argumento causal **antes** de mirar qué especificación entrega el coeficiente preferido.
-
-## Diseño antes que sofisticación
-
-La diferencia entre asociación y causalidad:
-
-- **no** es principalmente un problema de estimación;
-- **no** desaparece con una muestra más grande;
-- **sí** depende de cómo se asigna el tratamiento y cómo se construye la comparación.
-
-. . .
-
-Experimentos aleatorizados, experimentos naturales y diseños cuasi-experimentales buscan hacer creíble la comparación contrafactual.
-
-## Cómo leer los coeficientes desde ahora
-
-Sin supuestos causales, el coeficiente de un logit describe una asociación condicional:
-
-> Entre observaciones con iguales covariables, ¿cómo cambian las log-odds de $Y=1$ cuando cambia $D$?
-
-. . .
-
-Ese mismo coeficiente **puede** interpretarse como un efecto causal condicional si además:
-
-1. definimos tratamiento, outcome, población y estimando;
-2. explicitamos un DAG;
-3. justificamos no-confusión, positividad y consistencia;
-4. evitamos controles que abran sesgos nuevos.
-
-## Ejercicio: construya el argumento causal
-
-Suponga que queremos estimar el efecto de `workingday` sobre la probabilidad de `high_demand`.
-
-1. Defina $Y_i(1)$ y $Y_i(0)$ y precise cuál es la unidad $i$.
-2. Dibuje un DAG con al menos un confusor plausible.
-3. Identifique una variable que **no** debería controlarse y explique su rol.
-4. Proponga un diseño que haga más creíble la comparación causal.
-5. Evalúe dónde podría fallar la positividad.
+Seguimos usando bicicletas como único caso — pero el mismo procedimiento (penalizar, validar sin mirar el test, elegir hiperparámetros honestamente) es exactamente el que corre detrás de un puntaje de crédito o un score de riesgo: la disciplina que practicamos aquí es la misma que se exige cuando el error afecta a una persona, no a una bicicleta.
 
 ## En resumen
 
-- Causalidad compara resultados potenciales de la misma unidad.
-- Solo observamos uno: el otro es contrafactual.
-- Un coeficiente logístico es asociacional por defecto; puede ser causal bajo un diseño y supuestos adecuados.
-- Los confusores crean caminos alternativos entre tratamiento y resultado.
-- Más datos reducen incertidumbre, pero no eliminan confusión.
-- La causalidad depende del diseño, no de la complejidad del modelo.
+- Un modelo demasiado flexible ajusta mejor el entrenamiento pero predice peor datos nuevos: sesgo-varianza.
+- Ridge estabiliza modelos con predictores correlacionados, sin seleccionar.
+- LASSO favorece parsimonia y selección vía soft-thresholding.
+- Elastic Net ofrece un continuo entre ambos cuando hay bloques correlacionados.
+- $\alpha$ y $\lambda$ se eligen con validación, nunca maximizando el ajuste en entrenamiento.
+- La forma funcional del modelo, sin embargo, la seguimos eligiendo nosotros — eso cambia en la próxima clase.
 
 ## Gracias {.inverse .center .middle .closing}
 

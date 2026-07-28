@@ -32,6 +32,72 @@
       margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
       vertical-align: middle;
     }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      { color: #24292e;  }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #24292e; } /* Normal */
+    code span.al { color: #ff5555; font-weight: bold; } /* Alert */
+    code span.an { color: #6a737d; } /* Annotation */
+    code span.at { color: #d73a49; } /* Attribute */
+    code span.bn { color: #005cc5; } /* BaseN */
+    code span.bu { color: #d73a49; } /* BuiltIn */
+    code span.cf { color: #d73a49; } /* ControlFlow */
+    code span.ch { color: #032f62; } /* Char */
+    code span.cn { color: #005cc5; } /* Constant */
+    code span.co { color: #6a737d; } /* Comment */
+    code span.cv { color: #6a737d; } /* CommentVar */
+    code span.do { color: #6a737d; } /* Documentation */
+    code span.dt { color: #d73a49; } /* DataType */
+    code span.dv { color: #005cc5; } /* DecVal */
+    code span.er { color: #ff5555; text-decoration: underline; } /* Error */
+    code span.ex { color: #d73a49; font-weight: bold; } /* Extension */
+    code span.fl { color: #005cc5; } /* Float */
+    code span.fu { color: #6f42c1; } /* Function */
+    code span.im { color: #032f62; } /* Import */
+    code span.in { color: #6a737d; } /* Information */
+    code span.kw { color: #d73a49; } /* Keyword */
+    code span.op { color: #24292e; } /* Operator */
+    code span.ot { color: #6f42c1; } /* Other */
+    code span.pp { color: #d73a49; } /* Preprocessor */
+    code span.re { color: #6a737d; } /* RegionMarker */
+    code span.sc { color: #005cc5; } /* SpecialChar */
+    code span.ss { color: #032f62; } /* SpecialString */
+    code span.st { color: #032f62; } /* String */
+    code span.va { color: #e36209; } /* Variable */
+    code span.vs { color: #032f62; } /* VerbatimString */
+    code span.wa { color: #ff5555; } /* Warning */
   </style>
   <link rel="stylesheet" href="class_19_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
   <link rel="stylesheet" href="../_shared/course.css">
@@ -143,13 +209,13 @@
     }
   </style>
 </head>
-<body class="theme-valencia quarto-light">
+<body class="theme-chelsea quarto-light">
   <div class="reveal">
     <div class="slides">
 
-<section id="title-slide" data-background-color="#E87500" class="quarto-title-block center">
+<section id="title-slide" data-background-color="#034694" class="quarto-title-block center">
   <h1 class="title">Análisis de Datos Categóricos (SOC3070)</h1>
-  <p class="subtitle">Regularización: Ridge, LASSO y Elastic Net</p>
+  <p class="subtitle">Un “Flavor” de LLMs (usando Regresión Logística)</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -166,717 +232,452 @@ Mauricio Bucca · Sociología UC
 <div class="full-width">
 <div class="content-box">
 <p><strong>Antes</strong></p>
-<p>GLM, logit, inferencia, bootstrap: modelos donde <em>nosotros</em> elegimos la forma.</p>
+<p>redes neuronales para clasificación y regresión.</p>
 </div>
 <div class="content-box-primary">
 <p><strong>Hoy</strong></p>
-<p>qué hacer cuando ya no confiamos en que esa forma sea la correcta.</p>
+<p>un “flavor” de LLMs, usando regresión logística.</p>
 </div>
 <div class="content-box-secondary">
 <p><strong>Después</strong></p>
-<p>dejar que el propio algoritmo aprenda la forma: árboles y ensambles.</p>
+<p>cierre del curso.</p>
 </div>
 </div>
 </section>
 <section>
-<section id="regularización" class="title-slide slide level1 inverse center middle" data-background-color="#1B4B5A">
-<h1>Regularización</h1>
+<section id="un-flavor-de-llms" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
+<h1>Un “flavor” de LLMs</h1>
 
 </section>
-<section id="un-nuevo-módulo-una-nueva-pregunta" class="slide level2">
-<h2>Un nuevo módulo, una nueva pregunta</h2>
-<p>Durante todo el curso, cada modelo (LPM, logit, Poisson) compartió un mismo supuesto: <strong>nosotros</strong> elegimos qué variables entran, qué interacciones importan, qué transformaciones usar. El modelo solo estima los coeficientes.</p>
+<section id="una-advertencia-antes-de-empezar" class="slide level2">
+<h2>Una advertencia antes de empezar</h2>
+<p>Lo que vamos a construir hoy <strong>no es un LLM pequeño</strong>. Es un modelo estadístico bien conocido —regresión logística multinomial, de la clase 9— aplicado a texto.</p>
 <div class="fragment">
-<p>Las próximas tres clases (19, 20 y 21) exploran una pregunta distinta: <strong>¿qué pasa cuando dejamos de confiar en que esa forma elegida a mano sea la correcta?</strong> ¿Puede el propio procedimiento de ajuste decidir cuánta complejidad usar — o incluso qué forma tomar?</p>
-</div>
-<div class="fragment">
-<p>Referencia principal para las tres clases: James et al.&nbsp;(2021), <em>An Introduction to Statistical Learning</em>, 2ª ed., capítulos 5–6, 8 y 10 (<a href="https://www.statlearning.com/">sitio oficial</a>).</p>
+<p>Lo que sí es cierto, y es la razón de esta clase: <strong>un LLM moderno resuelve, en su capa final, exactamente el mismo problema de clasificación multinomial que ya sabemos resolver.</strong> La diferencia es la escala y cómo se construyen los predictores — no la formulación estadística del problema.</p>
 </div>
 </section>
-<section id="el-problema-en-carne-propia" class="slide level2">
-<h2>El problema, en carne propia</h2>
-<p>Sigamos usando la misma pregunta sustantiva del curso — ¿cuándo hay demanda alta de bicicletas? — pero démosle al logit una interacción <strong>completa</strong> entre hora (24 categorías) y mes (12 categorías): mucho más flexible que la interacción hora × día hábil que usamos hasta ahora. Agreguemos esas variables de a poco y observemos qué pasa.</p>
-
-<img data-src="class_19_files/figure-revealjs/overfit-demo-1.png" width="960" class="r-stretch"></section>
-<section id="leer-la-curva" class="slide level2">
-<h2>Leer la curva</h2>
-<ul>
-<li>Con pocos parámetros, <strong>ambos</strong> errores bajan juntos: el modelo aprende señal real (temperatura, hora, clima).</li>
-<li>Pasado cierto punto, el error de <strong>entrenamiento</strong> sigue bajando —más parámetros siempre ajustan mejor <em>esos</em> datos— pero el de <strong>validación</strong> empieza a <strong>subir</strong>: el modelo empieza a ajustar celdas hora×mes con pocas observaciones, memorizando ruido específico de esa combinación particular.</li>
-<li>Este divorcio entre “ajusta mejor” y “predice mejor” es el problema que motiva toda la clase de hoy.</li>
-</ul>
-<div class="fragment">
-<p>Nótese algo importante: <strong>no sabíamos de antemano</strong> cuál de estas variables hora×mes era señal y cuál era ruido — todas entraron con la misma justificación teórica (“la demanda varía por hora y por estación”). Hasta ahora controlábamos la complejidad <strong>a mano</strong>, decidiendo qué interacciones incluir. La pregunta de hoy es si el propio procedimiento de ajuste puede controlar esa complejidad automáticamente, de forma validada.</p>
-</div>
-</section>
-<section id="intuición-sesgo-y-varianza" class="slide level2">
-<h2>Intuición: sesgo y varianza</h2>
-<p>Antes de la solución, pongamos nombre al fenómeno que acabamos de ver, con una analogía simple.</p>
-
-<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20251212100155382352/frame_3244.webp" style="width:55.0%" class="r-stretch quarto-figure-center"><p class="caption">Sesgo = qué tan lejos del centro caen los tiros en promedio. Varianza = qué tan dispersos están entre sí.</p><div class="footnote">
-<p>Fuente: <a href="https://www.geeksforgeeks.org/machine-learning/bias-vs-variance-in-machine-learning/">GeeksforGeeks — Bias vs Variance in Machine Learning</a></p>
-</div>
-<ul>
-<li><strong>Pocos parámetros</strong> (modelo rígido): los tiros caen agrupados, pero lejos del centro — <strong>sesgo alto</strong>.</li>
-<li><strong>Muchos parámetros</strong> (modelo flexible): los tiros rodean el centro en promedio, pero dispersos — <strong>varianza alta</strong>.</li>
-<li>Nuestra curva de arriba es exactamente esto: pocos parámetros = sesgo (mal ajuste, en train y en validación); muchos parámetros = varianza (ajusta train, falla en validación).</li>
-</ul>
-</section>
-<section id="la-intuición-formalizada" class="slide level2">
-<h2>La intuición, formalizada</h2>
-<p>Para un punto <span class="math inline">x_0</span>, el error cuadrático esperado de un estimador <span class="math inline">\hat f</span> se descompone en tres piezas:</p>
-<p><span class="math display">
-\mathbb{E}\big[(y_0-\hat f(x_0))^2\big]
-= \underbrace{\big(\mathbb{E}[\hat f(x_0)]-f(x_0)\big)^2}_{\text{sesgo}^2}
-+ \underbrace{\mathrm{Var}(\hat f(x_0))}_{\text{varianza}}
-+ \underbrace{\sigma^2}_{\text{irreducible}}.
-</span></p>
-<table class="caption-top">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Símbolo</th>
-<th>Significado</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><span class="math inline">f(x_0)</span></td>
-<td>la relación verdadera (desconocida) entre predictores y outcome</td>
-</tr>
-<tr class="even">
-<td><span class="math inline">\hat f(x_0)</span></td>
-<td>nuestra estimación, que cambiaría si cambiara la muestra</td>
-</tr>
-<tr class="odd">
-<td><span class="math inline">\mathbb{E}[\hat f(x_0)]-f(x_0)</span></td>
-<td><strong>sesgo</strong>: error sistemático por usar un modelo demasiado rígido</td>
-</tr>
-<tr class="even">
-<td><span class="math inline">\mathrm{Var}(\hat f(x_0))</span></td>
-<td><strong>varianza</strong>: cuánto cambia el ajuste de muestra a muestra</td>
-</tr>
-<tr class="odd">
-<td><span class="math inline">\sigma^2</span></td>
-<td>ruido irreducible; ninguna técnica lo elimina</td>
-</tr>
-</tbody>
-</table>
-<p>Regularizar <em>aumenta</em> el sesgo a propósito para <em>reducir</em> la varianza — conviene exactamente cuando la caída de varianza supera el aumento de sesgo, que es lo que vimos en la curva de validación.</p>
-</section>
-<section id="el-compromiso-en-una-imagen" class="slide level2">
-<h2>El compromiso, en una imagen</h2>
-
-<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20251209150317698595/model_complexity.webp" style="width:60.0%" class="r-stretch quarto-figure-center"><p class="caption">Sesgo, varianza y error total en función de la complejidad del modelo.</p><div class="footnote">
-<p>Fuente: <a href="https://www.geeksforgeeks.org/machine-learning/what-is-ridge-regression/">GeeksforGeeks — What is Ridge Regression</a></p>
-</div>
-<ul>
-<li><span class="math inline">\lambda=0</span> (sin penalizar): sesgo bajo, varianza alta → la mitad derecha de nuestra curva de validación.</li>
-<li><span class="math inline">\lambda\to\infty</span>: sesgo alto, varianza baja → subajuste.</li>
-<li>Existe un <span class="math inline">\lambda^{*}</span> intermedio que minimiza el error fuera de muestra — no lo conocemos, lo <strong>estimamos con validación</strong>.</li>
-</ul>
-</section>
-<section id="tres-formas-de-penalizar-en-una-frase" class="slide level2">
-<h2>Tres formas de penalizar, en una frase</h2>
-<p>Antes de cualquier fórmula, la idea completa en tres oraciones:</p>
-<ul>
-<li><strong>Ridge</strong>: encoge <strong>todos</strong> los coeficientes hacia cero, sin eliminar ninguno.</li>
-<li><strong>LASSO</strong>: encoge y además puede llevar algunos coeficientes <strong>exactamente a cero</strong> — selecciona variables.</li>
-<li><strong>Elastic Net</strong>: un punto intermedio entre ambos.</li>
-</ul>
-<p>Todo lo que sigue en esta clase es la formalización — y luego la implementación — de estas tres frases.</p>
-</section>
-<section id="configuración-outcome-y-partición" class="slide level2">
-<h2>Configuración: outcome y partición</h2>
-<p>El módulo completo (clases 19–22) comparte la misma preparación de datos. Primero definimos el outcome y partimos los datos:</p>
-</section>
-<section id="configuración-la-matriz-de-diseño" class="slide level2">
-<h2>Configuración: la matriz de diseño</h2>
-<p>Sobre esos datos construimos la matriz de predictores <span class="math inline">X</span> que usarán Ridge, LASSO y Elastic Net:</p>
-</section>
-<section id="el-diseño-de-datos-de-hoy" class="slide level2">
-<h2>El diseño de datos de hoy</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 3
-  observaciones_train variables_base columnas_modelo
-                &lt;int&gt;          &lt;dbl&gt;           &lt;int&gt;
-1                5162              9              60</code></pre>
-</div>
-</div>
-<p>La expansión incluye no linealidad en clima, indicadores de calendario e interacción hora × día hábil — exactamente el tipo de términos que, en la curva de arriba, empujaba el modelo hacia el sobreajuste. <code>temp</code> y <code>atemp</code> son además deliberadamente casi idénticas: veremos que ese tipo de colinealidad es precisamente donde Ridge resulta más útil.</p>
-</section>
-<section id="tres-conjuntos-tres-funciones" class="slide level2">
-<h2>Tres conjuntos, tres funciones</h2>
-<p>Antes de penalizar nada, fijemos la disciplina de evaluación — ya la usamos antes (bootstrap, validación) pero aquí es central, no un anexo:</p>
-<table class="caption-top">
-<thead>
-<tr class="header">
-<th>Conjunto</th>
-<th style="text-align: right;">Proporción</th>
-<th>Función</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Entrenamiento</td>
-<td style="text-align: right;">60%</td>
-<td>estimar coeficientes</td>
-</tr>
-<tr class="even">
-<td>Validación</td>
-<td style="text-align: right;">20%</td>
-<td>elegir <span class="math inline">\alpha</span> y <span class="math inline">\lambda</span></td>
-</tr>
-<tr class="odd">
-<td>Test</td>
-<td style="text-align: right;">20%</td>
-<td>estimar desempeño final, <strong>una sola vez</strong></td>
-</tr>
-</tbody>
-</table>
-<p>Mirar el test durante el tuning produce <strong>filtración de información</strong>: el desempeño deja de ser genuinamente fuera de muestra — el mismo problema, en miniatura, que acabamos de ver en la curva de sobreajuste.</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 3 × 4
-  conjunto      primer_día último_día horas
-  &lt;chr&gt;              &lt;dbl&gt;      &lt;dbl&gt; &lt;int&gt;
-1 Entrenamiento          1        219  5162
-2 Validación           220        292  1735
-3 Test                 293        365  1748</code></pre>
-</div>
-</div>
-<p>Entrenamos con el pasado, elegimos hiperparámetros en un período posterior y reservamos los últimos días para test: una partición aleatoria sería optimista si horas vecinas comparten patrones no observados.</p>
-</section></section>
-<section>
-<section id="ridge" class="title-slide slide level1 inverse center middle" data-background-color="#1B4B5A">
-<h1>Ridge</h1>
-
-</section>
-<section id="motivación-cuando-los-predictores-se-parecen-entre-sí" class="slide level2">
-<h2>Motivación: cuando los predictores se parecen entre sí</h2>
-<p><code>temp</code> y <code>atemp</code> están altamente correlacionadas. En un GLM sin penalizar, esto genera un problema específico: <span class="math inline">X^\top X</span> se vuelve casi no invertible, y pequeños cambios en la muestra producen coeficientes muy distintos — alta varianza, tal como vimos arriba.</p>
-<div class="fragment">
-<p><strong>Ridge</strong> ataca exactamente ese síntoma: en vez de dejar que los coeficientes crezcan sin control para “explicar” la colinealidad, los penaliza por tamaño.</p>
-</div>
-</section>
-<section id="intuición-el-estimador-como-compromiso" class="slide level2">
-<h2>Intuición: el estimador como compromiso</h2>
-<p>En la geometría familiar de mínimos cuadrados, agregar una penalización por el tamaño de <span class="math inline">\boldsymbol\beta</span> es “tirar” al estimador hacia el origen, un poco menos lejos de donde los datos solos lo llevarían.</p>
-
-<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20251209150233295936/ridge_estimate.webp" style="width:50.0%" class="r-stretch quarto-figure-center"><p class="caption">El estimador Ridge (verde) es el punto donde las curvas de nivel de la pérdida (elipses) tocan primero la región de restricción circular.</p><div class="footnote">
-<p>Fuente: <a href="https://www.geeksforgeeks.org/machine-learning/what-is-ridge-regression/">GeeksforGeeks — What is Ridge Regression</a></p>
-</div>
-</section>
-<section id="definición-formal-penalización-l_2" class="slide level2">
-<h2>Definición formal: penalización <span class="math inline">L_2</span></h2>
-<p>Partimos de la pérdida logística y agregamos un costo por coeficientes grandes:</p>
-<p><span class="math display">
-\widehat{\boldsymbol\beta}^{\text{ridge}}
-=\arg\min_{\boldsymbol\beta}
-\left\{-\ell(\boldsymbol\beta)+\lambda \underbrace{\frac{1}{2}\sum_{j=1}^{p}\beta_j^2}_{P(\boldsymbol\beta)}\right\}.
-</span></p>
-<table class="caption-top">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Símbolo</th>
-<th>Significado</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><span class="math inline">\ell(\boldsymbol\beta)</span></td>
-<td>log-verosimilitud logística: qué tan bien predicen las probabilidades</td>
-</tr>
-<tr class="even">
-<td><span class="math inline">P(\boldsymbol\beta)</span></td>
-<td>penalización: qué tan grandes son los coeficientes</td>
-</tr>
-<tr class="odd">
-<td><span class="math inline">\lambda\ge 0</span></td>
-<td>intensidad de la penalización: el “dial” que elegiremos con validación</td>
-</tr>
-</tbody>
-</table>
-<p><span class="math inline">\lambda=0</span> recupera el ajuste sin penalizar; <span class="math inline">\lambda</span> grande empuja todos los coeficientes hacia 0. El intercepto nunca se penaliza — no tiene sentido “encogerlo” hacia una demanda promedio de cero.</p>
-</section>
-<section id="la-verosimilitud-que-penalizamos" class="slide level2">
-<h2>La verosimilitud que penalizamos</h2>
-<p>Con log-odds <span class="math inline">\eta_i=\beta_0+x_i^\top\boldsymbol\beta</span> y <span class="math inline">p_i=\sigma(\eta_i)</span>:</p>
-<p><span class="math display">
-\ell(\boldsymbol\beta)=\sum_{i=1}^{n}\big[\,y_i\,\eta_i-\log(1+e^{\eta_i})\,\big].
-</span></p>
-<ul>
-<li><span class="math inline">y_i\in\{0,1\}</span>: demanda alta observada.</li>
-<li><span class="math inline">\eta_i</span>: log-odds predicho; <span class="math inline">p_i=\sigma(\eta_i)</span>: probabilidad predicha — el mismo logit de las clases 9 a 11.</li>
-<li>Maximizar <span class="math inline">\ell</span> equivale a minimizar la <strong>devianza</strong> <span class="math inline">-2\ell</span>.</li>
-</ul>
-<p>Minimizar <span class="math inline">-\ell+\lambda P(\boldsymbol\beta)</span> es, entonces, “ajustar bien las probabilidades <strong>sin</strong> coeficientes desmesurados”.</p>
-</section>
-<section id="descomposición-matemática-solución-cerrada" class="slide level2">
-<h2>Descomposición matemática: solución cerrada</h2>
-<p>En regresión lineal, Ridge tiene solución explícita — útil para ver <em>qué hace</em> la penalización:</p>
-<p><span class="math display">
-\widehat{\boldsymbol\beta}^{\text{ridge}}=(X^\top X+\lambda I)^{-1}X^\top y.
-</span></p>
-<ul>
-<li>Sumar <span class="math inline">\lambda I</span> vuelve <strong>invertible</strong> a <span class="math inline">X^\top X</span> aunque haya colinealidad casi perfecta (<code>temp</code> y <code>atemp</code>) — resuelve exactamente el problema que motivó esta técnica.</li>
-<li><span class="math inline">\lambda=0</span> recupera mínimos cuadrados; <span class="math inline">\lambda\to\infty</span> lleva <span class="math inline">\widehat{\boldsymbol\beta}\to 0</span>.</li>
-<li>En regresión logística no hay fórmula cerrada, pero la misma penalización <span class="math inline">+\lambda I</span> estabiliza cada paso del ajuste iterativo (IRLS).</li>
-</ul>
-</section>
-<section id="descomposición-matemática-qué-hace-ridge-dirección-por-dirección" class="slide level2">
-<h2>Descomposición matemática: qué hace Ridge, dirección por dirección</h2>
-<p>Con la descomposición <span class="math inline">X=UDV^\top</span> (columnas estandarizadas), las predicciones Ridge se contraen <strong>dirección por dirección</strong>:</p>
-<p><span class="math display">
-\widehat y=\sum_{j}u_j\,\frac{d_j^{2}}{d_j^{2}+\lambda}\,u_j^\top y.
-</span></p>
-<ul>
-<li><span class="math inline">d_j</span>: valor singular de la dirección <span class="math inline">j</span> — cuánta varianza tiene esa combinación de predictores.</li>
-<li>Factor de contracción <span class="math inline">d_j^{2}/(d_j^{2}+\lambda)\in(0,1)</span>.</li>
-<li>Direcciones de <strong>poca varianza</strong> (colineales, <span class="math inline">d_j</span> pequeño) se contraen <strong>más</strong> — son justo las que producen coeficientes inestables.</li>
-</ul>
-
-<img data-src="class_19_files/figure-revealjs/svd-shrinkage-1.png" width="960" class="r-stretch"><p>Las direcciones de menor varianza —donde viven combinaciones como <code>temp</code><span class="math inline">\approx</span><code>atemp</code>— son las más contraídas. Ridge no las elimina; les quita influencia.</p>
-</section>
-<section id="por-qué-estandarizar-antes-de-penalizar" class="slide level2">
-<h2>Por qué estandarizar antes de penalizar</h2>
-<p>La penalización opera sobre el tamaño <em>numérico</em> de cada coeficiente. Si <code>temp</code> variara entre 0 y 1 y otra variable entre 0 y 1.000, una misma magnitud de coeficiente no sería comparable — la penalización castigaría por unidades, no por importancia real.</p>
-<p><span class="math display">z_{ij}=\frac{x_{ij}-\bar{x}_{j,\text{train}}}{s_{j,\text{train}}}.</span></p>
-<p><code>glmnet</code> estandariza los predictores por defecto, usando solo estadísticas del conjunto de entrenamiento (nunca de validación o test).</p>
-</section>
-<section id="ridge-ejemplo-empírico" class="slide level2">
-<h2>Ridge: ejemplo empírico</h2>
-
-<img data-src="class_19_files/figure-revealjs/ridge-path-1.png" width="960" class="r-stretch"></section>
-<section id="interpretación-leer-la-trayectoria" class="slide level2">
-<h2>Interpretación: leer la trayectoria</h2>
-<ul>
-<li>Hacia la derecha aumenta <span class="math inline">\lambda</span>; todos los coeficientes se contraen <strong>suavemente</strong>, sin saltos.</li>
-<li>Ninguna variable desaparece de forma abrupta — consistente con lo que la SVD predijo.</li>
-<li>El signo y el tamaño de cada coeficiente deben interpretarse condicionalmente al resto del modelo, igual que en cualquier GLM.</li>
-<li>Esta trayectoria muestra <strong>cómo cambia el modelo</strong> con <span class="math inline">\lambda</span>; todavía no nos dice cuál <span class="math inline">\lambda</span> predice mejor — eso lo resolveremos con validación, más adelante en la clase.</li>
-</ul>
-</section></section>
-<section>
-<section id="lasso-y-elastic-net" class="title-slide slide level1 inverse center middle" data-background-color="#1B4B5A">
-<h1>LASSO y Elastic Net</h1>
-
-</section>
-<section id="motivación-ridge-nunca-elige" class="slide level2">
-<h2>Motivación: Ridge nunca elige</h2>
-<p>Ridge resuelve la inestabilidad, pero deja un problema abierto: <strong>nunca elimina un predictor</strong>. Con muchas variables (interacciones, indicadores de calendario), sería útil que el propio ajuste nos dijera cuáles sobran — no solo que las encoja un poco.</p>
-<div class="fragment">
-<p><strong>LASSO</strong> cambia la forma de la penalización para lograr justamente eso: contracción <strong>y</strong> selección de variables, en el mismo procedimiento.</p>
-</div>
-</section>
-<section id="intuición-por-qué-una-forma-distinta-selecciona" class="slide level2">
-<h2>Intuición: por qué una forma distinta selecciona</h2>
-<p>Ridge penaliza <span class="math inline">\sum\beta_j^2</span> (un círculo, en dos dimensiones). LASSO penaliza <span class="math inline">\sum|\beta_j|</span> (un diamante). La diferencia de forma no es cosmética: cambia dónde el óptimo puede caer.</p>
-
-<img data-src="class_19_files/figure-revealjs/l1l2-geometry-1.png" width="960" class="r-stretch"><p>Elipses = curvas de nivel de <span class="math inline">-\ell</span>; círculo = restricción Ridge; diamante = restricción LASSO. El estimador penalizado vive donde esas curvas <strong>tocan por primera vez</strong> la región de restricción. El diamante tiene vértices sobre los ejes — es fácil tocar justo ahí, y en un vértice algún <span class="math inline">\beta_j=0</span>. El círculo no tiene esquinas: contrae, pero casi nunca anula.</p>
-</section>
-<section id="definición-formal-penalización-l_1" class="slide level2">
-<h2>Definición formal: penalización <span class="math inline">L_1</span></h2>
-<p><span class="math display">
-\widehat{\boldsymbol\beta}^{\text{lasso}}
-=\arg\min_{\boldsymbol\beta}
-\left\{-\ell(\boldsymbol\beta)+\lambda \underbrace{\sum_{j=1}^{p}|\beta_j|}_{P(\boldsymbol\beta)}\right\}.
-</span></p>
-<p>Misma estructura que Ridge — mismo <span class="math inline">\ell</span>, mismo rol de <span class="math inline">\lambda</span> — la única diferencia es la forma de <span class="math inline">P(\boldsymbol\beta)</span>. Eso basta para cambiar por completo el comportamiento del estimador, como acabamos de ver.</p>
-<p>La selección no implica causalidad: que un coeficiente sea exactamente 0 no prueba que esa variable sea irrelevante sustantivamente, solo que no ayudó a predecir en esta muestra bajo esta penalización.</p>
-</section>
-<section id="descomposición-matemática-soft-thresholding" class="slide level2">
-<h2>Descomposición matemática: soft-thresholding</h2>
-<p>Con predictores ortonormales, la solución LASSO es explícita — y deja ver el mecanismo exacto de la selección:</p>
-<p><span class="math display">
-\widehat\beta_j^{\text{lasso}}
-=\operatorname{sign}\!\big(\widehat\beta_j^{\text{OLS}}\big)\,
-\big(|\widehat\beta_j^{\text{OLS}}|-\lambda\big)_+ .
-</span></p>
-<ul>
-<li><span class="math inline">(\cdot)_+</span> = parte positiva: si <span class="math inline">|\widehat\beta_j^{\text{OLS}}|&lt;\lambda</span>, el coeficiente se vuelve <strong>exactamente 0</strong>.</li>
-<li>Ridge, en cambio, <strong>escala</strong> todos por igual: <span class="math inline">\widehat\beta_j^{\text{ridge}}=\widehat\beta_j^{\text{OLS}}/(1+\lambda)</span> — nunca llega a 0 exacto.</li>
-</ul>
-
-<img data-src="class_19_files/figure-revealjs/soft-threshold-1.png" width="960" class="r-stretch"></section>
-<section id="cómo-se-optimiza-en-la-práctica" class="slide level2">
-<h2>Cómo se optimiza en la práctica</h2>
-<p><code>glmnet</code> usa <strong>descenso por coordenadas</strong>: fija todos los coeficientes menos uno y lo actualiza con la fórmula de soft-thresholding sobre los <em>residuos parciales</em>, ciclando hasta converger. En logística se combina con IRLS (mínimos cuadrados ponderados iterados, la misma idea que vimos en la clase de MLE).</p>
-<ul>
-<li>Existe un <span class="math inline">\lambda_{\max}=\max_j |x_j^\top(y-\bar y)|/n</span> donde <strong>todos</strong> los coeficientes son 0; por eso la trayectoria empieza vacía.</li>
-<li>La ruta se calcula desde <span class="math inline">\lambda_{\max}</span> hacia abajo con <em>warm starts</em>: cada solución inicializa la siguiente.</li>
-<li>Alternativa clásica con el mismo resultado: <strong>LARS</strong> (<em>Least Angle Regression</em>), un algoritmo distinto que también traza la ruta completa de LASSO.</li>
-</ul>
-</section>
-<section id="lasso-ejemplo-empírico" class="slide level2">
-<h2>LASSO: ejemplo empírico</h2>
-
-<img data-src="class_19_files/figure-revealjs/lasso-path-1.png" width="960" class="r-stretch"></section>
-<section id="interpretación-a-diferencia-de-ridge" class="slide level2">
-<h2>Interpretación: a diferencia de Ridge</h2>
-<p>Compare esta trayectoria con la de Ridge: aquí las variables <strong>entran y salen</strong> del modelo en puntos concretos de <span class="math inline">\lambda</span>, no se contraen todas parejo. Cada vez que una línea toca el cero y se queda ahí, esa variable fue <strong>excluida</strong> para ese nivel de penalización.</p>
-</section>
-<section id="motivación-cuando-además-hay-bloques-correlacionados" class="slide level2">
-<h2>Motivación: cuando además hay bloques correlacionados</h2>
-<p>LASSO selecciona, pero con predictores muy correlacionados (<code>temp</code>, <code>atemp</code>, mes, estacionalidad) tiende a <strong>elegir uno arbitrariamente y descartar el resto</strong> — muestras parecidas pueden terminar con variables distintas seleccionadas.</p>
-<p><strong>Elastic Net</strong> combina ambas penalizaciones para resolver esto:</p>
-<p><span class="math display">
-P_{\alpha}(\boldsymbol\beta)=
-(1-\alpha)\frac{1}{2}\sum_j\beta_j^2+
-\alpha\sum_j|\beta_j|.
-</span></p>
-<table class="caption-top">
-<thead>
-<tr class="header">
-<th style="text-align: right;"><span class="math inline">\alpha</span></th>
-<th>Modelo</th>
-<th>Comportamiento típico</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: right;">0</td>
-<td>Ridge</td>
-<td>conserva todos los predictores</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">1</td>
-<td>LASSO</td>
-<td>produce soluciones dispersas</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">entre 0 y 1</td>
-<td>Elastic Net</td>
-<td>combina estabilidad y selección</td>
-</tr>
-</tbody>
-</table>
-<p>El término <span class="math inline">L_2</span> reparte el peso entre variables correlacionadas (<strong>efecto de agrupamiento</strong>); el término <span class="math inline">L_1</span> conserva la capacidad de anular bloques irrelevantes.</p>
-</section>
-<section id="otros-casos-de-uso" class="slide level2">
-<h2>Otros casos de uso</h2>
-<p>La misma familia de penalizaciones (<span class="math inline">L_1</span>, <span class="math inline">L_2</span>, combinadas) aparece, con el mismo objetivo — controlar complejidad cuando hay muchos predictores o predictores correlacionados —, en dominios muy distintos:</p>
-<table class="caption-top">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Dominio</th>
-<th>Uso típico</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Genómica</td>
-<td>LASSO para seleccionar genes relevantes entre miles, con pocos pacientes</td>
-</tr>
-<tr class="even">
-<td>Finanzas</td>
-<td>Ridge para estabilizar modelos de riesgo con indicadores macroeconómicos correlacionados</td>
-</tr>
-<tr class="odd">
-<td>Texto / NLP</td>
-<td>LASSO sobre miles de frecuencias de palabras, para quedarse con las predictivas</td>
-</tr>
-<tr class="even">
-<td>Marketing</td>
-<td>Elastic Net en modelos de <em>churn</em> con decenas de variables de comportamiento correlacionadas</td>
-</tr>
-<tr class="odd">
-<td>Neuroimagen</td>
-<td>Elastic Net para seleccionar vóxeles relevantes entre decenas de miles</td>
-</tr>
-</tbody>
-</table>
-<p>En todos los casos, el problema de fondo es el mismo que vimos hoy: muchos predictores, posible colinealidad, y la necesidad de controlar complejidad sin decidir a mano qué variable entra.</p>
-</section>
-<section id="comparación-sistemática" class="slide level2">
-<h2>Comparación sistemática</h2>
-<table class="caption-top">
-<colgroup>
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-</colgroup>
-<thead>
-<tr class="header">
-<th></th>
-<th>Ridge</th>
-<th>LASSO</th>
-<th>Elastic Net</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Penalización</td>
-<td><span class="math inline">L_2</span></td>
-<td><span class="math inline">L_1</span></td>
-<td><span class="math inline">L_1+L_2</span></td>
-</tr>
-<tr class="even">
-<td>Coeficientes</td>
-<td>todos se achican, ninguno en 0</td>
-<td>algunos exactamente 0</td>
-<td>algunos en 0, resto achicado</td>
-</tr>
-<tr class="odd">
-<td>Supuesto implícito</td>
-<td>todos los predictores aportan algo</td>
-<td>pocos predictores realmente importan</td>
-<td>hay bloques correlacionados</td>
-</tr>
-<tr class="even">
-<td>Hiperparámetros</td>
-<td><span class="math inline">\lambda</span></td>
-<td><span class="math inline">\lambda</span></td>
-<td><span class="math inline">\lambda</span> y <span class="math inline">\alpha</span> (2 dimensiones)</td>
-</tr>
-<tr class="odd">
-<td>Costo computacional</td>
-<td>bajo (ruta cerrada por dirección)</td>
-<td>bajo (coordenadas)</td>
-<td>bajo, pero grilla 2D más cara</td>
-</tr>
-<tr class="even">
-<td>Interpretabilidad</td>
-<td>media (todos los coeficientes activos)</td>
-<td>alta (modelo disperso)</td>
-<td>media-alta</td>
-</tr>
-<tr class="odd">
-<td>Debilidad típica</td>
-<td>no simplifica el modelo</td>
-<td>descarta arbitrariamente entre correlacionados</td>
-<td>más costoso de tunear</td>
-</tr>
-</tbody>
-</table>
-<p>La decisión final es empírica: se compara desempeño de validación, no una preferencia a priori — lo hacemos a continuación.</p>
-</section>
-<section id="extensiones" class="slide level2">
-<h2>Extensiones</h2>
-<ul>
-<li><strong>Adaptive LASSO</strong>: pondera la penalización de cada coeficiente según una estimación previa, reduciendo el sesgo de selección de LASSO estándar.</li>
-<li><strong>Group LASSO</strong>: en vez de anular coeficientes individuales, anula <strong>grupos completos</strong> — por ejemplo, todos los indicadores de una variable categórica (como <code>factor(hr)</code>) entran o salen juntos.</li>
-<li><strong>SCAD / MCP</strong>: penalizaciones no convexas que corrigen el sesgo hacia cero que Ridge y LASSO imponen a coeficientes grandes.</li>
-</ul>
-<p>Todas resuelven variantes del mismo problema — controlar complejidad automáticamente — con ajustes a cómo se reparte la penalización.</p>
-</section></section>
-<section>
-<section id="validación" class="title-slide slide level1 inverse center middle" data-background-color="#1B4B5A">
-<h1>Validación</h1>
-
-</section>
-<section id="por-qué-la-validación-no-es-un-anexo" class="slide level2">
-<h2>Por qué la validación no es un anexo</h2>
-<p>Elegimos <span class="math inline">\alpha</span> y <span class="math inline">\lambda</span>; ninguno de los dos se estima maximizando la verosimilitud del modelo. Si los eligiéramos mirando qué tan bien ajustan el conjunto de entrenamiento, siempre ganaría <span class="math inline">\lambda=0</span> — el problema con el que empezamos la clase. Por eso la validación no es un paso posterior: es la forma concreta de resolver el compromiso sesgo-varianza sin hacer trampa.</p>
-</section>
-<section id="protocolo-de-tuning" class="slide level2">
-<h2>Protocolo de tuning</h2>
+<section id="ruta-de-la-clase" class="slide level2">
+<h2>Ruta de la clase</h2>
 <ol type="1">
-<li>Definir una grilla de <span class="math inline">\alpha</span>.</li>
-<li>Ajustar una trayectoria de <span class="math inline">\lambda</span> en entrenamiento.</li>
-<li>Predecir validación para cada combinación.</li>
-<li>Elegir la menor pérdida de validación.</li>
-<li>Reajustar con entrenamiento + validación.</li>
-<li>Evaluar una vez en test.</li>
+<li>El lenguaje como variable categórica.</li>
+<li>Un caso simple: predicción binaria.</li>
+<li>El caso general: predicción multinomial.</li>
+<li>Cómo representar el contexto.</li>
+<li>Ajustar el modelo e interpretar sus probabilidades.</li>
+<li>Generación secuencial de texto.</li>
+<li>Qué le falta a esto para ser un LLM de verdad.</li>
+</ol>
+</section></section>
+<section>
+<section id="el-lenguaje-como-variable-categórica" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
+<h1>El lenguaje como variable categórica</h1>
+
+</section>
+<section id="qué-hace-en-el-fondo-un-llm" class="slide level2">
+<h2>Qué hace, en el fondo, un LLM</h2>
+<p>Cuando un modelo de lenguaje “escribe”, en cada paso hace exactamente una cosa: dado el texto visto hasta ahora, <strong>predice cuál es la siguiente palabra</strong>, entre todas las palabras posibles de su vocabulario.</p>
+<div class="fragment">
+<p>Eso es, formalmente, un problema que ya conocemos:</p>
+<p><span class="math display">
+\mathbb{P}(Y = j \mid X) = \text{softmax}(X\beta)_j, \qquad j = 1, \dots, J
+</span></p>
+<p>donde <span class="math inline">Y</span> es la próxima palabra (una categoría entre <span class="math inline">J</span> posibles) y <span class="math inline">X</span> es alguna representación de las palabras anteriores. <strong>Esta es exactamente la regresión logística multinomial de la clase 9.</strong></p>
+</div>
+</section>
+<section id="nuestro-corpus-de-juguete" class="slide level2">
+<h2>Nuestro corpus de juguete</h2>
+<p>Vamos a trabajar con oraciones de la forma “el SUJETO VERBO los OBJETO”, generadas a partir de un vocabulario pequeño:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href=""></a><span class="fu">set.seed</span>(<span class="dv">3070</span>)</span>
+<span id="cb1-2"><a href=""></a></span>
+<span id="cb1-3"><a href=""></a>sujetos <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"estudiante"</span>, <span class="st">"investigador"</span>, <span class="st">"modelo"</span>, <span class="st">"algoritmo"</span>)</span>
+<span id="cb1-4"><a href=""></a>verbos  <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"analiza"</span>, <span class="st">"estima"</span>, <span class="st">"predice"</span>, <span class="st">"explica"</span>)</span>
+<span id="cb1-5"><a href=""></a>objetos <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"datos"</span>, <span class="st">"resultados"</span>, <span class="st">"modelos"</span>, <span class="st">"problemas"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<ul>
+<li>Vocabulario total: <span class="math inline">4+4+4=12</span> palabras de contenido (más “el”/“los”).</li>
+<li>No es un corpus real: lo construimos con una estructura conocida, para poder verificar que el modelo efectivamente la aprende.</li>
+</ul>
+</section>
+<section id="construyendo-el-corpus" class="slide level2">
+<h2>Construyendo el corpus</h2>
+<p>Para que el ejercicio tenga sentido, el sujeto influye en qué verbo es más probable, y el verbo influye en qué objeto es más probable — igual que en el lenguaje real, donde el contexto restringe (sin determinar) la palabra que sigue.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href=""></a>p_verbo_dado_sujeto <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(</span>
+<span id="cb2-2"><a href=""></a>  .<span class="dv">50</span>, .<span class="dv">20</span>, .<span class="dv">20</span>, .<span class="dv">10</span>,   <span class="co"># estudiante</span></span>
+<span id="cb2-3"><a href=""></a>  .<span class="dv">20</span>, .<span class="dv">50</span>, .<span class="dv">10</span>, .<span class="dv">20</span>,   <span class="co"># investigador</span></span>
+<span id="cb2-4"><a href=""></a>  .<span class="dv">10</span>, .<span class="dv">10</span>, .<span class="dv">60</span>, .<span class="dv">20</span>,   <span class="co"># modelo</span></span>
+<span id="cb2-5"><a href=""></a>  .<span class="dv">10</span>, .<span class="dv">10</span>, .<span class="dv">20</span>, .<span class="dv">60</span>    <span class="co"># algoritmo</span></span>
+<span id="cb2-6"><a href=""></a>), <span class="at">nrow =</span> <span class="dv">4</span>, <span class="at">byrow =</span> <span class="cn">TRUE</span>, <span class="at">dimnames =</span> <span class="fu">list</span>(sujetos, verbos))</span>
+<span id="cb2-7"><a href=""></a></span>
+<span id="cb2-8"><a href=""></a>p_objeto_dado_verbo <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(</span>
+<span id="cb2-9"><a href=""></a>  .<span class="dv">60</span>, .<span class="dv">20</span>, .<span class="dv">10</span>, .<span class="dv">10</span>,   <span class="co"># analiza</span></span>
+<span id="cb2-10"><a href=""></a>  .<span class="dv">20</span>, .<span class="dv">20</span>, .<span class="dv">50</span>, .<span class="dv">10</span>,   <span class="co"># estima</span></span>
+<span id="cb2-11"><a href=""></a>  .<span class="dv">10</span>, .<span class="dv">60</span>, .<span class="dv">10</span>, .<span class="dv">20</span>,   <span class="co"># predice</span></span>
+<span id="cb2-12"><a href=""></a>  .<span class="dv">10</span>, .<span class="dv">10</span>, .<span class="dv">20</span>, .<span class="dv">60</span>    <span class="co"># explica</span></span>
+<span id="cb2-13"><a href=""></a>), <span class="at">nrow =</span> <span class="dv">4</span>, <span class="at">byrow =</span> <span class="cn">TRUE</span>, <span class="at">dimnames =</span> <span class="fu">list</span>(verbos, objetos))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="generando-300-oraciones" class="slide level2">
+<h2>Generando 300 oraciones</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href=""></a>n_oraciones <span class="ot">&lt;-</span> <span class="dv">300</span></span>
+<span id="cb3-2"><a href=""></a>corpus <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">id =</span> <span class="dv">1</span><span class="sc">:</span>n_oraciones) <span class="sc">%&gt;%</span></span>
+<span id="cb3-3"><a href=""></a>  <span class="fu">mutate</span>(</span>
+<span id="cb3-4"><a href=""></a>    <span class="at">sujeto  =</span> <span class="fu">sample</span>(sujetos, <span class="fu">n</span>(), <span class="at">replace =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb3-5"><a href=""></a>    <span class="at">verbo   =</span> <span class="fu">map_chr</span>(sujeto, <span class="sc">~</span> <span class="fu">sample</span>(verbos, <span class="dv">1</span>, <span class="at">prob =</span> p_verbo_dado_sujeto[.x, ])),</span>
+<span id="cb3-6"><a href=""></a>    <span class="at">objeto  =</span> <span class="fu">map_chr</span>(verbo,  <span class="sc">~</span> <span class="fu">sample</span>(objetos, <span class="dv">1</span>, <span class="at">prob =</span> p_objeto_dado_verbo[.x, ])),</span>
+<span id="cb3-7"><a href=""></a>    <span class="at">oracion =</span> <span class="fu">paste</span>(<span class="st">"el"</span>, sujeto, verbo, <span class="st">"los"</span>, objeto)</span>
+<span id="cb3-8"><a href=""></a>  )</span>
+<span id="cb3-9"><a href=""></a></span>
+<span id="cb3-10"><a href=""></a>corpus <span class="sc">%&gt;%</span> <span class="fu">select</span>(sujeto, verbo, objeto, oracion) <span class="sc">%&gt;%</span> <span class="fu">head</span>(<span class="dv">6</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 4
+  sujeto       verbo   objeto     oracion                              
+  &lt;chr&gt;        &lt;chr&gt;   &lt;chr&gt;      &lt;chr&gt;                                
+1 modelo       predice problemas  el modelo predice los problemas      
+2 investigador estima  modelos    el investigador estima los modelos   
+3 algoritmo    explica datos      el algoritmo explica los datos       
+4 investigador estima  modelos    el investigador estima los modelos   
+5 algoritmo    explica datos      el algoritmo explica los datos       
+6 investigador estima  resultados el investigador estima los resultados</code></pre>
+</div>
+</div>
+<p>Cada fila es una “oración”. <code>sujeto</code>, <code>verbo</code> y <code>objeto</code> son las palabras de contenido; <code>oracion</code> es el texto completo.</p>
+</section></section>
+<section>
+<section id="predicción-binaria" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
+<h1>Predicción binaria</h1>
+
+</section>
+<section id="el-caso-más-simple-la-próxima-palabra-es-datos" class="slide level2">
+<h2>El caso más simple: ¿la próxima palabra es “datos”?</h2>
+<p>Antes del caso general, empecemos con una pregunta binaria: dado el verbo, <strong>¿el objeto va a ser “datos” o no?</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href=""></a>corpus <span class="ot">&lt;-</span> corpus <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">es_datos =</span> <span class="fu">as.integer</span>(objeto <span class="sc">==</span> <span class="st">"datos"</span>))</span>
+<span id="cb5-2"><a href=""></a></span>
+<span id="cb5-3"><a href=""></a>m_bin <span class="ot">&lt;-</span> <span class="fu">glm</span>(es_datos <span class="sc">~</span> verbo, <span class="at">data =</span> corpus, <span class="at">family =</span> binomial)</span>
+<span id="cb5-4"><a href=""></a><span class="fu">summary</span>(m_bin)<span class="sc">$</span>coefficients</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>             Estimate Std. Error z value     Pr(&gt;|z|)
+(Intercept)    0.395     0.232   1.698 0.089
+verboestima   -1.781     0.379  -4.705 0.000
+verboexplica  -1.850     0.377  -4.908 0.000
+verbopredice  -2.216     0.400  -5.547 0.000</code></pre>
+</div>
+</div>
+<ul>
+<li>Esto es exactamente un <code>glm(family=binomial)</code>, como en la clase 6 — solo que el predictor es una palabra (categórica) y no una variable numérica como <code>temp</code>.</li>
+<li>El coeficiente de <code>verboanaliza</code> (ausente = categoría de referencia) es más alto que el resto, reflejando que <code>analiza</code> predice “datos” con más frecuencia — así lo construimos en <code>p_objeto_dado_verbo</code>.</li>
+</ul>
+</section>
+<section id="de-binario-a-multinomial" class="slide level2">
+<h2>De binario a multinomial</h2>
+<p>Reducir “cuál es la próxima palabra” a una sola pregunta binaria descarta información: en un vocabulario de <span class="math inline">J</span> palabras hay <span class="math inline">J</span> posibles respuestas, no 2.</p>
+<div class="fragment">
+<p>La generalización natural —y la que de verdad se usa— es la regresión logística <strong>multinomial</strong>, que ya vimos en la clase 9:</p>
+<p><span class="math display">
+\mathbb{P}(Y=j \mid X) = \frac{e^{X\beta_j}}{\sum_{k=1}^{J} e^{X\beta_k}}, \qquad j=1,\dots,J.
+</span></p>
+<p>Esta fórmula —<strong>softmax</strong>— es, literalmente, la capa final de un LLM: convierte <span class="math inline">J</span> puntajes reales en una distribución de probabilidad sobre el vocabulario.</p>
+</div>
+</section></section>
+<section>
+<section id="predicción-multinomial" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
+<h1>Predicción multinomial</h1>
+
+</section>
+<section id="el-softmax-término-a-término" class="slide level2">
+<h2>El softmax, término a término</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Símbolo</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">J</span></td>
+<td>tamaño del vocabulario (número de palabras posibles)</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">X\beta_j</span></td>
+<td>puntaje (logit) de la palabra <span class="math inline">j</span>, dado el contexto <span class="math inline">X</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">e^{X\beta_j}</span></td>
+<td>ese puntaje, convertido a un número positivo</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\sum_k e^{X\beta_k}</span></td>
+<td>normalización: hace que las <span class="math inline">J</span> probabilidades sumen 1</td>
+</tr>
+</tbody>
+</table>
+<p>Con <span class="math inline">J=2</span>, el softmax se reduce exactamente a la sigmoide de la regresión logística binaria — el mismo resultado que vimos en la clase 9 para el caso multinomial en general.</p>
+</section>
+<section id="ajustemos-el-modelo-multinomial" class="slide level2">
+<h2>Ajustemos el modelo multinomial</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href=""></a>m_objeto <span class="ot">&lt;-</span> <span class="fu">multinom</span>(objeto <span class="sc">~</span> verbo, <span class="at">data =</span> corpus, <span class="at">trace =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb7-2"><a href=""></a></span>
+<span id="cb7-3"><a href=""></a><span class="fu">predict</span>(m_objeto, <span class="at">newdata =</span> <span class="fu">tibble</span>(<span class="at">verbo =</span> <span class="st">"predice"</span>), <span class="at">type =</span> <span class="st">"probs"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     datos    modelos  problemas resultados 
+    0.139     0.101     0.228     0.532 </code></pre>
+</div>
+</div>
+<p>Dado el verbo “predice”, el modelo asigna la mayor probabilidad a “resultados” — exactamente el patrón que construimos en <code>p_objeto_dado_verbo</code>. El modelo <strong>aprendió la estructura del corpus a partir de los datos</strong>, sin que se la diéramos explícitamente.</p>
+</section></section>
+<section>
+<section id="representación-del-contexto" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
+<h1>Representación del contexto</h1>
+
+</section>
+<section id="qué-es-el-contexto-en-términos-de-x" class="slide level2">
+<h2>¿Qué es “el contexto”, en términos de <span class="math inline">X</span>?</h2>
+<p>Para que el softmax funcione necesitamos convertir palabras en números. La forma más simple: variables <strong>dummy</strong>, una por cada palabra posible del contexto — exactamente como codificamos <code>factor(weathersit)</code> en clases anteriores.</p>
+<div class="fragment">
+<p>Un LLM real reemplaza estas dummies por <strong>embeddings</strong>: vectores densos aprendidos que representan cada palabra. La lógica de “convertir una palabra en un vector de números” es la misma; lo que cambia es qué tan compacta y aprendida es esa representación.</p>
+</div>
+</section>
+<section id="tres-formas-de-representar-el-contexto" class="slide level2">
+<h2>Tres formas de representar el contexto</h2>
+<p>Comparemos tres representaciones, todas prediciendo el <code>objeto</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href=""></a>m0 <span class="ot">&lt;-</span> <span class="fu">multinom</span>(objeto <span class="sc">~</span> <span class="dv">1</span>, <span class="at">data =</span> corpus, <span class="at">trace =</span> <span class="cn">FALSE</span>)                <span class="co"># sin contexto</span></span>
+<span id="cb9-2"><a href=""></a>m1 <span class="ot">&lt;-</span> <span class="fu">multinom</span>(objeto <span class="sc">~</span> verbo, <span class="at">data =</span> corpus, <span class="at">trace =</span> <span class="cn">FALSE</span>)            <span class="co"># 1 palabra de contexto</span></span>
+<span id="cb9-3"><a href=""></a>m2 <span class="ot">&lt;-</span> <span class="fu">multinom</span>(objeto <span class="sc">~</span> verbo <span class="sc">*</span> sujeto, <span class="at">data =</span> corpus, <span class="at">trace =</span> <span class="cn">FALSE</span>)   <span class="co"># 2 palabras de contexto</span></span>
+<span id="cb9-4"><a href=""></a></span>
+<span id="cb9-5"><a href=""></a>log_loss_multinom <span class="ot">&lt;-</span> <span class="cf">function</span>(modelo, data, target) {</span>
+<span id="cb9-6"><a href=""></a>  probs <span class="ot">&lt;-</span> <span class="fu">predict</span>(modelo, <span class="at">newdata =</span> data, <span class="at">type =</span> <span class="st">"probs"</span>)</span>
+<span id="cb9-7"><a href=""></a>  y <span class="ot">&lt;-</span> data[[target]]</span>
+<span id="cb9-8"><a href=""></a>  idx <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="fu">seq_along</span>(y), <span class="fu">match</span>(y, <span class="fu">colnames</span>(probs)))</span>
+<span id="cb9-9"><a href=""></a>  <span class="sc">-</span><span class="fu">mean</span>(<span class="fu">log</span>(<span class="fu">pmax</span>(probs[idx], <span class="fl">1e-8</span>)))</span>
+<span id="cb9-10"><a href=""></a>}</span>
+<span id="cb9-11"><a href=""></a></span>
+<span id="cb9-12"><a href=""></a><span class="fu">tibble</span>(</span>
+<span id="cb9-13"><a href=""></a>  <span class="at">modelo =</span> <span class="fu">c</span>(<span class="st">"Sin contexto"</span>, <span class="st">"1 palabra (verbo)"</span>, <span class="st">"2 palabras (verbo + sujeto)"</span>),</span>
+<span id="cb9-14"><a href=""></a>  <span class="at">log_loss =</span> <span class="fu">c</span>(</span>
+<span id="cb9-15"><a href=""></a>    <span class="fu">log_loss_multinom</span>(m0, corpus, <span class="st">"objeto"</span>),</span>
+<span id="cb9-16"><a href=""></a>    <span class="fu">log_loss_multinom</span>(m1, corpus, <span class="st">"objeto"</span>),</span>
+<span id="cb9-17"><a href=""></a>    <span class="fu">log_loss_multinom</span>(m2, corpus, <span class="st">"objeto"</span>)</span>
+<span id="cb9-18"><a href=""></a>  ),</span>
+<span id="cb9-19"><a href=""></a>  parámetros <span class="ot">=</span> <span class="fu">c</span>(<span class="fu">length</span>(<span class="fu">coef</span>(m0)), <span class="fu">length</span>(<span class="fu">coef</span>(m1)), <span class="fu">length</span>(<span class="fu">coef</span>(m2)))</span>
+<span id="cb9-20"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  modelo                      log_loss parámetros
+  &lt;chr&gt;                          &lt;dbl&gt;      &lt;int&gt;
+1 Sin contexto                    1.380          3
+2 1 palabra (verbo)               1.120         12
+3 2 palabras (verbo + sujeto)     1.060         48</code></pre>
+</div>
+</div>
+</section>
+<section id="leer-esta-tabla" class="slide level2">
+<h2>Leer esta tabla</h2>
+<ul>
+<li>El log-loss —la misma métrica de la clase 3 y la clase 15— <strong>baja</strong> a medida que agregamos contexto: más contexto, mejor predicción.</li>
+<li>El número de parámetros <strong>sube</strong> rápido: de 3, a 12, a 48. Con dos palabras de contexto ya necesitamos una interacción completa <code>verbo × sujeto</code>.</li>
+<li>En un LLM real el contexto son cientos o miles de palabras anteriores. Modelar eso con dummies e interacciones completas —como acabamos de hacer— es completamente inviable: el número de parámetros explota. Los embeddings y la arquitectura Transformer existen, en gran medida, para resolver este mismo problema de forma escalable.</li>
+</ul>
+</section></section>
+<section>
+<section id="ajuste-e-interpretación" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
+<h1>Ajuste e interpretación</h1>
+
+</section>
+<section id="interpretando-el-modelo-elegido" class="slide level2">
+<h2>Interpretando el modelo elegido</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href=""></a><span class="fu">predict</span>(m1, <span class="at">newdata =</span> <span class="fu">tibble</span>(<span class="at">verbo =</span> verbos), <span class="at">type =</span> <span class="st">"probs"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-2"><a href=""></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb11-3"><a href=""></a>  <span class="fu">mutate</span>(<span class="at">verbo =</span> verbos, <span class="at">.before =</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 5
+  verbo   datos modelos problemas resultados
+  &lt;chr&gt;   &lt;dbl&gt;   &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;
+1 analiza 0.597  0.091    0.078     0.234 
+2 estima  0.200  0.543     0.057     0.200 
+3 predice 0.139  0.101     0.228      0.532 
+4 explica 0.189  0.189     0.568      0.054</code></pre>
+</div>
+</div>
+<p>Cada fila es una distribución de probabilidad completa sobre el vocabulario de objetos, condicional en el verbo — exactamente lo que un LLM produce en cada paso, solo que aquí el “contexto” es una sola palabra categórica en vez de cientos de tokens representados con embeddings.</p>
+</section>
+<section id="esto-ya-es-entrenar-un-modelo-de-lenguaje" class="slide level2">
+<h2>Esto ya es “entrenar un modelo de lenguaje”</h2>
+<ul>
+<li><strong>Estimar</strong> <code>m1</code> (vía <code>multinom</code>, que maximiza verosimilitud) es, conceptualmente, lo mismo que “entrenar” una red que predice el siguiente token: ambos minimizan cross-entropy / log-loss (clase 3) sobre ejemplos de contexto → palabra siguiente.</li>
+<li>La diferencia no es el objetivo de entrenamiento — es <strong>la familia de funciones</strong> que se usa para pasar del contexto a los puntajes <span class="math inline">X\beta_j</span>: aquí, una combinación lineal de dummies; en un LLM, muchas capas de una red neuronal (clase 18) operando sobre embeddings.</li>
+</ul>
+</section></section>
+<section>
+<section id="generación-secuencial" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
+<h1>Generación secuencial</h1>
+
+</section>
+<section id="el-ciclo-de-generación" class="slide level2">
+<h2>El ciclo de generación</h2>
+<p>Generar texto, token a token, es un ciclo de cuatro pasos que se repite:</p>
+<ol type="1">
+<li>Tomar el contexto actual.</li>
+<li>Calcular la distribución de probabilidad sobre la siguiente palabra (softmax).</li>
+<li><strong>Muestrear</strong> una palabra de esa distribución (no necesariamente la más probable).</li>
+<li>Agregar la palabra elegida al contexto, y volver a 1.</li>
 </ol>
 </section>
-<section id="validación-simple-vs.-validación-cruzada" class="slide level2">
-<h2>Validación simple vs.&nbsp;validación cruzada</h2>
-<p>La idea de fondo de cualquier validación: en vez de “memorizar una única prueba”, evaluar el modelo como si rindiera <strong>varios exámenes distintos</strong> y ver si el desempeño es consistente.</p>
+<section id="generando-oraciones-con-nuestro-modelo" class="slide level2">
+<h2>Generando oraciones con nuestro modelo</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href=""></a>m_verbo <span class="ot">&lt;-</span> <span class="fu">multinom</span>(verbo <span class="sc">~</span> sujeto, <span class="at">data =</span> corpus, <span class="at">trace =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href=""></a>generar_oracion <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb14-2"><a href=""></a>  sujeto <span class="ot">&lt;-</span> <span class="fu">sample</span>(sujetos, <span class="dv">1</span>)</span>
+<span id="cb14-3"><a href=""></a></span>
+<span id="cb14-4"><a href=""></a>  p_verbo <span class="ot">&lt;-</span> <span class="fu">predict</span>(m_verbo, <span class="at">newdata =</span> <span class="fu">tibble</span>(<span class="at">sujeto =</span> sujeto), <span class="at">type =</span> <span class="st">"probs"</span>)</span>
+<span id="cb14-5"><a href=""></a>  verbo <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">names</span>(p_verbo), <span class="dv">1</span>, <span class="at">prob =</span> p_verbo)</span>
+<span id="cb14-6"><a href=""></a></span>
+<span id="cb14-7"><a href=""></a>  p_objeto <span class="ot">&lt;-</span> <span class="fu">predict</span>(m1, <span class="at">newdata =</span> <span class="fu">tibble</span>(<span class="at">verbo =</span> verbo), <span class="at">type =</span> <span class="st">"probs"</span>)</span>
+<span id="cb14-8"><a href=""></a>  objeto <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">names</span>(p_objeto), <span class="dv">1</span>, <span class="at">prob =</span> p_objeto)</span>
+<span id="cb14-9"><a href=""></a></span>
+<span id="cb14-10"><a href=""></a>  <span class="fu">paste</span>(<span class="st">"el"</span>, sujeto, verbo, <span class="st">"los"</span>, objeto)</span>
+<span id="cb14-11"><a href=""></a>}</span>
+<span id="cb14-12"><a href=""></a></span>
+<span id="cb14-13"><a href=""></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb14-14"><a href=""></a><span class="fu">map_chr</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="sc">~</span> <span class="fu">generar_oracion</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "el estudiante analiza los datos"      "el estudiante analiza los modelos"    "el modelo explica los modelos"       
+[4] "el investigador estima los modelos"   "el estudiante analiza los resultados"</code></pre>
+</div>
+</div>
+<p>En cada llamada, el modelo: (1) elige un sujeto, (2) predice un verbo condicional en ese sujeto y <strong>muestrea</strong> uno, (3) predice un objeto condicional en ese verbo y muestrea uno. Es exactamente el ciclo de la lámina anterior, aplicado dos veces.</p>
+</section>
+<section id="temperatura-controlando-qué-tan-arriesgada-es-la-generación" class="slide level2">
+<h2>Temperatura: controlando qué tan “arriesgada” es la generación</h2>
+<p>Antes de muestrear, un LLM suele reescalar los puntajes con un parámetro de <strong>temperatura</strong> <span class="math inline">T</span>:</p>
 <p><span class="math display">
-\text{CV}(\lambda)=\frac{1}{k}\sum_{f=1}^{k}\text{pérdida}_f(\lambda).
+\mathbb{P}(Y=j) = \frac{e^{X\beta_j / T}}{\sum_k e^{X\beta_k/T}}.
 </span></p>
+<ul>
+<li><span class="math inline">T \to 0</span>: la distribución se concentra en la palabra más probable (generación “conservadora”, casi determinística).</li>
+<li><span class="math inline">T = 1</span>: las probabilidades originales del softmax, sin modificar.</li>
+<li><span class="math inline">T</span> grande: la distribución se aplana — todas las palabras se vuelven casi igual de probables (generación “creativa”, más ruidosa).</li>
+</ul>
+<p>Muestrear en vez de tomar siempre el máximo —y ajustar <span class="math inline">T</span>— es lo que hace que la generación de texto no sea siempre la misma oración, exactamente como en nuestro generador de arriba.</p>
+</section></section>
+<section>
+<section id="conexión-con-los-llm" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
+<h1>Conexión con los LLM</h1>
 
-<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20250927122541290704/222.webp" style="width:50.0%" class="r-stretch quarto-figure-center"><p class="caption">k-fold cross-validation: los datos se dividen en k bloques; en cada ronda uno actúa como validación y el resto como entrenamiento.</p><div class="footnote">
-<p>Fuente: <a href="https://www.geeksforgeeks.org/machine-learning/cross-validation-machine-learning/">GeeksforGeeks — Cross Validation in Machine Learning</a></p>
-</div>
-<p>Con dependencia temporal como la nuestra, la CV aleatoria de la figura es <strong>optimista</strong>: horas vecinas se filtran entre pliegues. Por eso usamos un conjunto de validación fijo, cronológico.</p>
 </section>
-<section id="validación-cronológica-rolling-origin" class="slide level2">
-<h2>Validación cronológica (“rolling-origin”)</h2>
-<p>El análogo correcto de k-fold cuando los datos son series de tiempo se llama <strong>validación cruzada de series de tiempo</strong> (<em>rolling-origin</em> / <em>walk-forward</em>): cada “pliegue” entrena solo con el pasado y valida con un bloque futuro, avanzando el origen de entrenamiento en cada ronda. Es la generalización, a <span class="math inline">k</span> rondas, de la partición cronológica única que usamos hoy.</p>
-<p>Otras alternativas para elegir <span class="math inline">\lambda</span> sin re-ajustar muchas veces: <strong>validación cruzada generalizada (GCV)</strong>, y criterios de información como AIC/BIC.</p>
-</section>
-<section id="validación-de-α-y-λ-ejemplo-empírico" class="slide level2">
-<h2>Validación de α y λ: ejemplo empírico</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 5 × 3
-  alpha  lambda  loss
-  &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;
-1     0 0.003   0.351
-2     0 0.004 0.351
-3     0 0.005 0.352
-4     0 0.006 0.352
-5     0 0.007 0.353</code></pre>
-</div>
-</div>
-
-<img data-src="class_19_files/figure-revealjs/validation-plot-1.png" width="960" class="r-stretch"></section>
-<section id="reajuste-final-y-test-ejemplo-empírico" class="slide level2">
-<h2>Reajuste final y test: ejemplo empírico</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 3
-  alpha lambda validation_log_loss
-  &lt;dbl&gt;  &lt;dbl&gt;               &lt;dbl&gt;
-1     0  0.003               0.351</code></pre>
-</div>
-</div>
-<p>El umbral de clasificación se elige en validación maximizando accuracy balanceada — la misma lógica de la clase 18, ahora aplicada tras el tuning. El test no participó en ninguna de estas decisiones.</p>
-</section>
-<section id="interpretación-la-penalización-aporta" class="slide level2">
-<h2>Interpretación: ¿la penalización aporta?</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2 × 5
-  modelo              log_loss accuracy sensitivity specificity
-  &lt;chr&gt;                  &lt;dbl&gt;    &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;
-1 Logit sin penalizar    0.323    0.822       0.937       0.781
-2 Elastic Net            0.306    0.747       0.991       0.659</code></pre>
-</div>
-</div>
-<p>Regularizar se justifica por desempeño y estabilidad fuera de muestra — comparado explícitamente aquí contra el logit sin penalizar de las clases 9–11 — no porque el método sea más reciente.</p>
-</section>
-<section id="interpretación-clasificación-y-calibración" class="slide level2">
-<h2>Interpretación: clasificación y calibración</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>         predicho
-observado baja alta
-     baja  848  439
-     alta    4  457</code></pre>
-</div>
-</div>
-
-<img data-src="class_19_files/figure-revealjs/calibration-1.png" width="960" class="r-stretch"><p>Los falsos negativos son horas de demanda alta que el sistema no anticipó. Discriminación (matriz de confusión) y calibración (¿las probabilidades predichas se cumplen en la frecuencia correcta?) son propiedades distintas — un modelo puede discriminar bien y calibrar mal, o viceversa.</p>
-</section>
-<section id="interpretación-qué-variables-quedan" class="slide level2">
-<h2>Interpretación: ¿qué variables quedan?</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 10 × 3
-   variable                coefficient selected
-   &lt;chr&gt;                         &lt;dbl&gt; &lt;lgl&gt;   
- 1 factor(hr)8:workingday         8.590 TRUE    
- 2 factor(hr)7:workingday         5.650 TRUE    
- 3 factor(hr)10:workingday       -4.550 TRUE    
- 4 factor(hr)16                   4.120 TRUE    
- 5 factor(hr)14                   4.090 TRUE    
- 6 atemp                          4.010 TRUE    
- 7 factor(hr)17                   3.990 TRUE    
- 8 factor(hr)11:workingday       -3.860 TRUE    
- 9 factor(hr)13                   3.760 TRUE    
-10 factor(hr)12                   3.730 TRUE    </code></pre>
-</div>
-</div>
-<p>Un coeficiente igual a cero no demuestra irrelevancia sustantiva: solo dice que, bajo esta penalización y esta muestra, esa variable no ayudó a predecir. La selección puede cambiar entre muestras parecidas — no es una prueba de hipótesis.</p>
-</section>
-<section id="comparación-con-selección-clásica" class="slide level2">
-<h2>Comparación con selección clásica</h2>
+<section id="tabla-comparativa-nuestro-modelo-vs.-un-llm" class="slide level2">
+<h2>Tabla comparativa: nuestro modelo vs.&nbsp;un LLM</h2>
 <table class="caption-top">
 <colgroup>
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
 </colgroup>
 <thead>
 <tr class="header">
-<th>Método</th>
-<th>Controla complejidad</th>
-<th>Selección</th>
-<th>Nota</th>
+<th>Elemento</th>
+<th>Nuestro modelo de juguete</th>
+<th>Un LLM</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Mejor subconjunto</td>
-<td>prueba todas las combinaciones</td>
-<td>dura (0/1)</td>
-<td>inviable con <span class="math inline">p</span> grande</td>
+<td>Vocabulario</td>
+<td>12 palabras</td>
+<td>decenas de miles de <em>tokens</em></td>
 </tr>
 <tr class="even">
-<td>Paso a paso (stepwise)</td>
-<td>agrega/quita una variable a la vez</td>
-<td>dura</td>
-<td><em>greedy</em>, inestable</td>
+<td>Representación de entrada</td>
+<td>variables dummy</td>
+<td><em>embeddings</em> (vectores densos aprendidos)</td>
 </tr>
 <tr class="odd">
-<td>Ridge / LASSO / Elastic Net</td>
-<td>penalización continua</td>
-<td>según método</td>
-<td>convexo, reproducible</td>
+<td>Contexto usado</td>
+<td>1–2 palabras anteriores</td>
+<td>cientos o miles de tokens anteriores</td>
+</tr>
+<tr class="even">
+<td>Función de contexto → puntajes</td>
+<td>combinación lineal (logit multinomial)</td>
+<td>red profunda tipo Transformer (atención)</td>
+</tr>
+<tr class="odd">
+<td>Capa de salida</td>
+<td>softmax sobre <code>objeto</code></td>
+<td>softmax sobre todo el vocabulario</td>
+</tr>
+<tr class="even">
+<td>Función de pérdida al entrenar</td>
+<td>log-loss / cross-entropy</td>
+<td>log-loss / cross-entropy (la misma)</td>
+</tr>
+<tr class="odd">
+<td>Número de parámetros</td>
+<td>decenas</td>
+<td>miles de millones</td>
 </tr>
 </tbody>
 </table>
-<p>La regularización reemplaza la selección <strong>discreta</strong> (combinatoria, inestable, la que un GLM clásico haría “a mano” comparando AIC entre modelos) por una <strong>continua</strong> — el mismo objetivo del stepwise selection de la clase 18, resuelto de forma más estable.</p>
 </section>
-<section id="cuándo-puede-engañar" class="slide level2">
-<h2>Cuándo puede engañar</h2>
-<ul>
-<li><strong>Correlación fuerte</strong>: LASSO elige arbitrariamente entre predictores casi equivalentes.</li>
-<li><strong>Inferencia post-selección</strong>: los <span class="math inline">p</span>-valores clásicos no son válidos tras seleccionar con los mismos datos que se usan para inferencia.</li>
-<li><strong><span class="math inline">p\gg n</span></strong>: LASSO selecciona a lo sumo <span class="math inline">n</span> variables, aunque más sean relevantes.</li>
-<li><strong>Escalas ignoradas</strong>: sin estandarizar, la penalización castiga por unidades, no por importancia.</li>
-<li><strong>Fuga de información</strong>: estandarizar o elegir <span class="math inline">\lambda</span> mirando el test infla el desempeño reportado.</li>
-</ul>
-</section>
-<section id="síntesis-conceptual" class="slide level2">
-<h2>Síntesis conceptual</h2>
-<p>La regularización es una respuesta directa al compromiso sesgo–varianza con el que abrimos la clase: introducimos un sesgo controlado (<span class="math inline">\lambda P_\alpha</span>) a cambio de mucha menos varianza y un ajuste reproducible.</p>
-<ul>
-<li><strong>Ridge</strong> (<span class="math inline">L_2</span>): estabiliza, no selecciona; resuelve la colinealidad.</li>
-<li><strong>LASSO</strong> (<span class="math inline">L_1</span>): contrae y selecciona vía soft-thresholding.</li>
-<li><strong>Elastic Net</strong>: combina ambos cuando hay bloques correlacionados.</li>
-</ul>
-<p>Todo el resto del flujo —partición, estandarización, test intacto, calibración— existe para que ese compromiso se resuelva <strong>honestamente</strong>, sin volver a caer en la curva de sobreajuste del comienzo.</p>
+<section id="qué-comparten-y-qué-no" class="slide level2">
+<h2>Qué comparten, y qué no</h2>
+<p><strong>Comparten</strong>: la formulación del problema (predecir el siguiente token es clasificación multinomial), la función de pérdida (cross-entropy), y el ciclo de generación (contexto → probabilidad → muestreo → repetir).</p>
+<div class="fragment">
+<p><strong>No comparten</strong>: la forma de representar el contexto (dummies vs.&nbsp;embeddings aprendidos), la función que va de contexto a puntajes (lineal vs.&nbsp;Transformer con atención), y, sobre todo, la escala.</p>
+</div>
+<div class="fragment">
+<p>Por eso la advertencia del comienzo: esto <strong>no es un LLM pequeño</strong>. Es la misma pregunta estadística, resuelta con las herramientas más simples posibles, para que la pregunta —no la ingeniería— quede clara.</p>
+</div>
 </section>
 <section id="ejercicio" class="slide level2">
 <h2>Ejercicio</h2>
 <ol type="1">
-<li>Agregue una interacción entre <code>workingday</code> y <code>factor(hr)</code>.</li>
-<li>Repita el tuning sin observar el test.</li>
-<li>Compare log-loss y calibración contra el modelo de esta clase.</li>
-<li>Examine qué coeficientes sobreviven con LASSO.</li>
-<li>Explique por qué una mejora predictiva no basta para hablar de causalidad.</li>
+<li>Cambie las matrices <code>p_verbo_dado_sujeto</code> / <code>p_objeto_dado_verbo</code> para crear una estructura distinta y verifique que <code>multinom</code> la recupera.</li>
+<li>Ajuste un modelo <code>objeto ~ verbo + sujeto</code> (sin interacción) y compare su log-loss y número de parámetros contra <code>m1</code> y <code>m2</code>.</li>
+<li>Modifique <code>generar_oracion()</code> para que, en vez de muestrear, siempre elija la palabra más probable (<code>which.max</code>). Compare la diversidad de oraciones generadas.</li>
+<li>Implemente el reescalamiento por temperatura en <code>generar_oracion()</code> y observe qué pasa con <span class="math inline">T=0.1</span> y <span class="math inline">T=5</span>.</li>
 </ol>
-</section>
-<section id="la-pregunta-que-queda-abierta" class="slide level2">
-<h2>La pregunta que queda abierta</h2>
-<p>Regularización controla la complejidad de un modelo cuya <strong>forma</strong> seguimos eligiendo nosotros: seguimos escribiendo a mano <code>I(temp^2)</code>, <code>factor(hr) * workingday</code>, y esperando haber adivinado las interacciones correctas.</p>
-<div class="fragment">
-<p><strong>¿Qué pasa si no sabemos qué interacciones importan?</strong> ¿Puede el algoritmo, además de controlar cuánta complejidad usar, <strong>descubrir por sí solo</strong> qué variables interactúan y cómo? Esa es exactamente la pregunta que abre la próxima clase.</p>
-<p>Seguimos usando bicicletas como único caso — pero el mismo procedimiento (penalizar, validar sin mirar el test, elegir hiperparámetros honestamente) es exactamente el que corre detrás de un puntaje de crédito o un score de riesgo: la disciplina que practicamos aquí es la misma que se exige cuando el error afecta a una persona, no a una bicicleta.</p>
-</div>
 </section>
 <section id="en-resumen" class="slide level2">
 <h2>En resumen</h2>
 <ul>
-<li>Un modelo demasiado flexible ajusta mejor el entrenamiento pero predice peor datos nuevos: sesgo-varianza.</li>
-<li>Ridge estabiliza modelos con predictores correlacionados, sin seleccionar.</li>
-<li>LASSO favorece parsimonia y selección vía soft-thresholding.</li>
-<li>Elastic Net ofrece un continuo entre ambos cuando hay bloques correlacionados.</li>
-<li><span class="math inline">\alpha</span> y <span class="math inline">\lambda</span> se eligen con validación, nunca maximizando el ajuste en entrenamiento.</li>
-<li>La forma funcional del modelo, sin embargo, la seguimos eligiendo nosotros — eso cambia en la próxima clase.</li>
+<li>Predecir la siguiente palabra es un problema de clasificación multinomial — el mismo que vimos en la clase 9.</li>
+<li>Softmax convierte puntajes en probabilidades sobre un vocabulario; con dos categorías, se reduce a la regresión logística binaria.</li>
+<li>Más contexto mejora la predicción (menor log-loss) pero aumenta rápidamente el número de parámetros — el problema que los embeddings y los Transformers resuelven a escala.</li>
+<li>Generar texto es muestrear, repetidamente, de la distribución que el modelo predice — el mismo ciclo, ya sea con un logit multinomial o con un LLM de miles de millones de parámetros.</li>
 </ul>
 </section>
-<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#E87500">
+<section id="mapa-conceptual-del-curso" class="slide level2">
+<h2>Mapa conceptual del curso</h2>
+<p><span class="math display">
+\text{probabilidad y GLM}
+\;\longrightarrow\;
+\text{logit, multinomial, Poisson}
+\;\longrightarrow\;
+\text{causalidad}
+\;\longrightarrow\;
+\text{predicción y regularización}
+\;\longrightarrow\;
+\text{árboles, redes, LLMs}.
+</span></p>
+<p>En cada clase preguntamos lo mismo: ¿qué outcome predecimos o explicamos, qué distribución supone el modelo, cómo se estima, y qué podemos —y no podemos— concluir de él?</p>
+</section>
+<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#034694">
 <h2>Gracias</h2>
-<p><strong>Hasta la próxima clase</strong></p>
+<p><strong>Fin del curso</strong></p>
 <p>Mauricio Bucca</p>
 
 </section></section>

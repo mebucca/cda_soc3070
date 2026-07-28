@@ -143,13 +143,13 @@
     }
   </style>
 </head>
-<body class="theme-barcelona quarto-light">
+<body class="theme-tottenham quarto-light">
   <div class="reveal">
     <div class="slides">
 
-<section id="title-slide" data-background-color="#004D98" class="quarto-title-block center">
+<section id="title-slide" data-background-color="#132257" class="quarto-title-block center">
   <h1 class="title">Análisis de Datos Categóricos (SOC3070)</h1>
-  <p class="subtitle">Presentación del curso</p>
+  <p class="subtitle">Estimación, MLE y Funciones de Pérdida</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -166,197 +166,289 @@ Mauricio Bucca · Sociología UC
 <div class="full-width">
 <div class="content-box">
 <p><strong>Antes</strong></p>
-<p>fundamentos de teoría de probabilidad.</p>
+<p>valor esperado y varianza.</p>
 </div>
 <div class="content-box-primary">
 <p><strong>Hoy</strong></p>
-<p>presentación, expectativas y forma de trabajo.</p>
+<p>máxima verosimilitud (MLE) y funciones de pérdida.</p>
 </div>
 <div class="content-box-secondary">
 <p><strong>Después</strong></p>
-<p>variables aleatorias y distribuciones discretas.</p>
+<p>regresión lineal y el modelo lineal de probabilidad.</p>
 </div>
 </div>
 </section>
 <section>
-<section id="presentación-del-curso" class="title-slide slide level1 inverse center middle" data-background-color="#A50044">
-<h1>Presentación del curso</h1>
+<section id="estimación" class="title-slide slide level1 inverse center middle" data-background-color="#C8102E">
+<h1>Estimación</h1>
 
 </section>
-<section id="sobre-mi" class="slide level2">
-<h2>Sobre mi</h2>
-<ul>
-<li>Profesor Asistente, Sociología UC</li>
-</ul>
-<div class="fragment">
-<ul>
-<li>Max Weber Postdoctoral Fellow, European University Institute, Firenze</li>
-<li>PhD en Sociología, Cornell University, NY
-<ul>
-<li>PhD Minor en Estadística, Departamento de Estadística, Cornell University</li>
-</ul></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Investigación: movilidad social intergeneracional, desigualdades en el mercado laboral, creencias sobre las desigualdades, métodos cuantitativos</li>
-<li>Métodos: modelación estadística, estrategias empíricas para inferencia causal, métodos experimentales y computacionales
-<ul>
-<li>Datos categóricos: desarrollos en “log-linear models”</li>
-</ul></li>
-</ul>
-</div>
-<div class="fragment">
-<p><span class="bold">Información de contacto</span> - mail: mebucca@uc.cl - webpage: https://mebucca.github.io/</p>
-</div>
+<section id="maximum-likelihood-estimation-mle" class="slide level2">
+<h2>Maximum Likelihood Estimation (MLE)</h2>
 </section>
-<section id="ayudantía" class="slide level2">
-<h2>Ayudantía</h2>
-<div class="pull-left">
-<p><span class="bold">Roberto Cantillán</span></p>
-<ul>
-<li>Estudiante doctorado en Sociología PUC</li>
-<li>Investigador Núcleo Milenio para el Estudio de Desajustes del Mercado Laboral (LM²C²)</li>
-<li>Investigación: Desigualdades, sociología analítica, consolidación y homofilia, mercados laborales.</li>
-<li>Métodos: Análisis de redes sociales, modelos multinivel, inferencia causal.</li>
-</ul>
-</div>
-<div class="figure-right">
+<section id="estimación-1" class="slide level2">
+<h2>Estimación</h2>
+<div class="center">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="roberto.jpeg"></p>
-<figcaption>ayudante</figcaption>
+<p><img data-src="estimado.jpeg"></p>
+<figcaption>estimado</figcaption>
 </figure>
 </div>
 </div>
-</section></section>
-<section>
-<section id="logística-del-curso" class="title-slide slide level1 inverse center middle" data-background-color="#A50044">
-<h1>Logística del curso</h1>
-
 </section>
-<section id="contenidos" class="slide level2">
-<h2>Contenidos</h2>
+<section id="estimación-2" class="slide level2">
+<h2>Estimación</h2>
+<p><span class="bold">Modelos estadísticos</span>: ¿Cuáles son los valores más <span class="bold">plausibles</span>[1]</p>
+<div class="footnote">
+<p>[1] Notar que no dice “más probables”!</p>
+</div>
+<p>de los <em>parámetros</em> dado los <em>datos</em> que observamos? Ej. Supongamos que alguien lanza 100 veces la misma moneda y registra los resultados en una base de datos. Los datos se ven así:</p>
 <div class="pull-left">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_3_files/figure-revealjs/unnamed-chunk-1-1.png" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div class="fragment">
+<div class="pull-right">
+<ul>
+<li>Lo que vemos en la izquierda son <span class="bold">datos</span></li>
+<li>Datos: realización de <span class="math inline">n</span> variables aleatorias</li>
+<li>Normalmente <em>no conocemos</em> la distribución de las variables</li>
+<li>Datos nos dan una pista sobre cuál podría ser esa distribución</li>
+<li><span class="bold">Estadística</span>: aprender de los datos para <span class="bold"><em>estimar</em></span> los parámetros que los generan</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="estimación-via-maximum-likelihood-mle" class="slide level2">
+<h2>Estimación via Maximum Likelihood (MLE)</h2>
+<p>Previamente lanzamos la misma moneda 100 veces y obtuvimos “Cara” (1) 82 veces.</p>
+<div class="fragment">
+<p>¿Qué valor de <span class="math inline">p</span> es más plausible (“likely”) que genere estos datos? MLE es justamente la formalización de esta pregunta. Pasos:</p>
+</div>
+<div class="fragment">
 <ol type="1">
-<li>Fundamentos de teoría de la probabilidad</li>
-<li>Variables aleatorias y distribuciones discretas</li>
-<li>Estimación via Maximum Likelihood (MLE)</li>
-<li>Tablas de contingencia</li>
-<li>Modelo Lineal de Probabilidad (LPM)</li>
+<li>Decidir sobre la distribución subyacente que genera los datos. En este caso, podemos asumir que:</li>
 </ol>
+<ul>
+<li>Cada lanzamiento <span class="math inline">X_{1}, X_{2}, \dots X_{100} \sim \text{Bernoulli}(p)</span>, donde X’s son <span class="math inline">iid</span></li>
+</ul>
 </div>
-<div class="pull-right">
-<ol start="6" type="1">
-<li>Modelos Lineales Generalizados (GLM)</li>
-<li>Modelos de Regresión Logística</li>
-<li>Modelos de Regresión Logística Multinomial</li>
-<li>Modelos de Regresión Poisson y Quasi-Poisson</li>
-<li>Modelos Log-Lineales para tablas de contingencia</li>
+<div class="fragment">
+<ol start="2" type="1">
+<li>Escribir una función que cuantifique la plausibilidad de diferentes valores del parámetro. Dicha función se denomina <span class="bold">likelihood function</span>:</li>
 </ol>
-</div>
-</section>
-<section id="evaluación" class="slide level2">
-<h2>Evaluación</h2>
-<div class="content-box-primary">
-<p>Tareas cortas (24%) · Trabajos (40%) · Trabajo Final (30%) · Participación (6%)</p>
+<ul>
+<li><span class="math inline">\mathcal{L}(p \mid \text{ Datos}) = \mathbb{P}(\text{ Datos : \{1,0,1,1,....0,1\}} | \text{ } p)</span></li>
+</ul>
 </div>
 <div class="fragment">
 <ul>
-<li><span class="bold">Tareas cortas:</span> 4 tareas cortas, 6% cada una</li>
-<li><span class="bold">Trabajos:</span> 2 trabajos de mediana extensión, 20% cada uno</li>
-<li><span class="bold">Trabajo final:</span> 1 trabajo final (30%), aplicando contenidos del curso a un problema sustantivo</li>
-<li><span class="bold">Participación</span> activa en clases y ayudantías</li>
+<li><span class="math inline">\mathcal{L}(p \mid \text{ Datos}) = \mathbb{P}(x_{1})\mathbb{P}(x_{2}) \dots \mathbb{P}(x_{100}) = p^{82}(1-p)^{18}</span></li>
 </ul>
 </div>
 </section>
-<section id="políticas" class="slide level2">
-<h2>Políticas</h2>
-<ul>
-<li><span class="bold">Asistencia:</span> regular a clases es importante, esperada, pero no obligatoria</li>
-<li><span class="bold">Entregas:</span> tareas y trabajos se entregan a más tardar el día indicado en el calendario del curso, a la hora señalada</li>
-<li><span class="bold">Uso de IA:</span> permitido de forma ética y transparente, únicamente como herramienta de estudio o apoyo en la escritura de código. Debe declararse explícitamente qué herramientas fueron usadas y con qué propósito</li>
-<li><span class="bold">Honestidad académica:</span> el desconocimiento de la política de honestidad académica de la universidad — incluyendo el uso de IA — no es una explicación razonable para su incumplimiento</li>
-</ul>
-</section></section>
-<section>
-<section id="filosofía-de-enseñanza" class="title-slide slide level1 inverse center middle" data-background-color="#A50044">
-<h1>Filosofía de enseñanza</h1>
-
-</section>
-<section class="slide level2">
-
-<h3 id="los-atajos-estadísticos-dificultan-el-aprendizaje">1. Los “atajos” estadísticos dificultan el aprendizaje</h3>
-<div class="fragment">
+<section id="estimación-via-maximum-likelihood-mle-1" class="slide level2">
+<h2>Estimación via Maximum Likelihood (MLE)</h2>
+<p>Podemos inspeccionar visualmente la “likelihood” de diferentes valores <span class="math inline">p</span>.</p>
 <div class="center">
-<div class="quarto-figure quarto-figure-center">
+<div class="cell">
+<div class="cell-output-display">
+<div>
 <figure>
-<p><img data-src="pvalue.png"></p>
-<figcaption>pvalue</figcaption>
+<p><img data-src="class_3_files/figure-revealjs/unnamed-chunk-2-1.png" width="864"></p>
 </figure>
 </div>
 </div>
 </div>
+</div>
+<p>Intuitivamente: habiendo obtenido 82 caras, <span class="math inline">p=0.82</span> es el valor más plausible de <span class="math inline">p</span></p>
 </section>
-<section class="slide level2">
-
-<h3 id="la-sola-intuición-no-es-suficiente">2. La sola intuición no es suficiente</h3>
+<section id="estimación-via-maximum-likelihood-mle-2" class="slide level2">
+<h2>Estimación via Maximum Likelihood (MLE)</h2>
+<ol start="3" type="1">
+<li>Encontrar matemáticamente el valor de <span class="math inline">p</span> que maximiza <span class="math inline">\mathcal{L}(p \mid \text{ Datos})</span>.</li>
+</ol>
+<ul>
+<li><span class="math inline">\mathcal{L}(p \mid \text{ Datos}) = \mathbb{P}(x_{1})\mathbb{P}(x_{2}) \dots \mathbb{P}(x_{n}) =\prod_{i=1}^{n} f(x_{i}) =  p^{k}(1-p)^{n-k} \quad \text{   donde  } k= \sum x_{i}</span></li>
+</ul>
 <div class="fragment">
-<div class="pull-left">
-<p><span class="bold">Muchas cosas parecen más difíciles de lo que son</span> <span class="huge"><span class="math display">\int xf(x)dx := \mu </span></span></p>
-</div>
-</div>
-<div class="fragment">
-<div class="pull-right">
-<p><span class="bold">Otras parecen más simples de lo que son</span> <span class="huge"><span class="math display">X   \text{ es una variable}</span></span></p>
-</div>
+<ul>
+<li>Para facilitar el cálculo tomamos logaritmo natural en ambos lados (<span class="bold">log-likelihood</span>)
+<ul>
+<li><span class="math inline">\ell\ell(p) = \ln \mathcal{L}(p \mid \text{ Datos})  = k \ln(p) + (n - k) \ln(1-p)</span></li>
+</ul></li>
+</ul>
 </div>
 <div class="fragment">
 <ul>
-<li>Vacíos de conocimiento, notación, poca exposición a las matemáticas.</li>
-<li>Este curso nivela estos vacíos activamente. No hay carta bajo la manga.</li>
+<li>Calcular la primera* derivada de <span class="math inline">\ell\ell(p)</span> con respecto a <span class="math inline">p</span>: pendiente de la curva en cada valor de <span class="math inline">p</span>.</li>
+<li><span class="math inline">\ell\ell^{\text{ '}}(p) = \frac{k}{p} -  \frac{n-k}{1-p}</span></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Encontrar el máximo de la función <span class="math inline">\ell\ell(p)</span>: valor de <span class="math inline">p</span> en el cual la curva no cambia, es decir cuando <span class="math inline">\ell\ell^{\text{ '}}(p)=0</span>
+<ul>
+<li><span class="math inline">\frac{k}{p} -  \frac{n-k}{1-p} = 0</span></li>
+</ul></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Después de resolver por <span class="math inline">p</span> obtenemos: <span class="math display">p = \frac{k}{n} = \frac{\sum x_{i}}{n}</span></li>
 </ul>
 </div>
 </section>
-<section class="slide level2">
-
-<h3 id="menos-es-más">3. Menos es más</h3>
+<section id="estimación-via-maximum-likelihood-mle-3" class="slide level2">
+<h2>Estimación via Maximum Likelihood (MLE)</h2>
+<ul>
+<li>El estimador ML de <span class="math inline">p</span> es ….</li>
+<li><span class="math inline">\hat{p} = \frac{\sum x_{i}}{n}</span></li>
+<li>Es decir, el porcentaje de 1’s en la muestra!</li>
+</ul>
 <div class="fragment">
-<div class="pull-left">
-<p><span class="bold">Muchos métodos</span> <img data-src="methods.png" alt="methods"></p>
+<ul>
+<li>Intuitivo y elegante</li>
+</ul>
 </div>
+</section>
+<section id="estimación-via-maximum-likelihood-mle-4" class="slide level2">
+<h2>Estimación via Maximum Likelihood (MLE)</h2>
+<p><span class="bold">Generalización</span></p>
+<p><span class="math display">\hat{\boldsymbol{\beta}}_{MLE} = \underset{\beta}{\arg\max\ } \mathcal{L}(\boldsymbol{\beta} \mid \boldsymbol{X})</span> <span class="math inline">\hat{\boldsymbol{\beta}}</span> es el MLE de <span class="math inline">\boldsymbol{\beta}</span> si es el(los) valor(es) que maximiza(n) la “likelihood function”, condicional en los datos observados.</p>
+<div class="fragment">
+<ul>
+<li>Recordar que <span class="math inline">\mathcal{L}(\boldsymbol{\beta} \mid \boldsymbol{X}) = \mathbb{P}(\boldsymbol{X} \mid \boldsymbol{\beta})</span>.</li>
+</ul>
 </div>
 <div class="fragment">
-<div class="pull-right">
-<p><span class="bold">Fundamentos sólidos</span> <img data-src="foundations.jpg" alt="methods"></p>
+<ul>
+<li>Requiere especificar de antemano la distribución conjunta de las observaciones (dif. de OLS, por ejemplo).</li>
+</ul>
 </div>
+<div class="fragment">
+<ul>
+<li>ML es probablemente el approach de estimación más popular.</li>
+</ul>
 </div>
+<div class="fragment">
+<ul>
+<li>Intuitivo, pero, por lo general, no tan simple como el ejemplo que vimos hoy.</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Normalmente la maximización se realiza numéricamente (ej. método Newton–Raphson)</li>
+</ul>
+</div>
+</section>
+<section id="estimación-via-maximum-likelihood-mle-5" class="slide level2 fullscreen left top text-white" data-background-image="valdorcia.jpeg">
+<h2>Estimación via Maximum Likelihood (MLE)</h2>
 </section></section>
 <section>
-<section id="recursos" class="title-slide slide level1 inverse center middle" data-background-color="#A50044">
-<h1>Recursos</h1>
+<section id="funciones-de-pérdida" class="title-slide slide level1 inverse center middle" data-background-color="#C8102E">
+<h1>Funciones de pérdida</h1>
 
 </section>
-<section id="repositorio-github" class="slide level2">
-<h2>Repositorio Github</h2>
-<p>Todo el material del curso será almacenado y actualizado regularmente en repositorio <code>Github</code>:</p>
-<div class="center">
-<p><img data-src="github.png" alt="github"> <span class="bold">https://github.com/mebucca/cda_soc3070</span></p>
+<section id="de-maximizar-a-minimizar" class="slide level2">
+<h2>De maximizar a minimizar</h2>
+<p>Todo lo que hicimos arriba tiene una lectura equivalente, muy usada en machine learning: en vez de <strong>maximizar la verosimilitud</strong>, podemos <strong>minimizar una función de pérdida (loss function)</strong>.</p>
+<div class="fragment">
+<ul>
+<li>Maximizar <span class="math inline">\mathcal{L}(p\mid\text{Datos})</span> ⟺ Maximizar <span class="math inline">\ell\ell(p) = \ln\mathcal{L}(p\mid\text{Datos})</span> ⟺ Minimizar <span class="math inline">-\ell\ell(p)</span>.</li>
+<li>El signo negativo es la única diferencia: “ajustar bien” y “perder poco” son la misma cosa vista al revés.</li>
+</ul>
 </div>
 </section>
-<section id="horario-de-consulta-y-ayudantías" class="slide level2">
-<h2>Horario de consulta y ayudantías</h2>
-<div class="center">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="officehours.jpg"></p>
-<figcaption>officehours</figcaption>
-</figure>
-</div>
-<p><span class="bold">Consulta:</span> Lunes 14:30–15:30 (Mauricio Bucca, mebucca@uc.cl) <span class="bold">Ayudantía:</span> Martes 12:20–13:30 (Roberto Cantillan, ricantillan@uc.cl)</p>
+<section id="la-pérdida-para-nuestro-mismo-ejemplo" class="slide level2">
+<h2>La pérdida, para nuestro mismo ejemplo</h2>
+<p>Con <span class="math inline">n</span> lanzamientos y resultados <span class="math inline">y_1,\dots,y_n\in\{0,1\}</span>, la log-verosimilitud de Bernoulli que ya escribimos es:</p>
+<p><span class="math display">
+\ell(\boldsymbol{p}) = \sum_{i=1}^{n} \big[ y_i \ln p_i + (1-y_i) \ln(1-p_i) \big]
+</span></p>
+<div class="fragment">
+<p>En ML a <span class="math inline">-\ell(\boldsymbol p)</span> le llamamos <strong>log-loss</strong> o <strong>cross-entropy loss</strong>:</p>
+<p><span class="math display">
+\text{LogLoss} = -\ell(\boldsymbol p)
+</span></p>
+<ul>
+<li>Si las predicciones son correctas (<span class="math inline">y=1</span> y <span class="math inline">p</span> cercano a 1) → log-loss bajo.</li>
+<li>Si se equivocan (<span class="math inline">y=1</span> pero <span class="math inline">p</span> cercano a 0) → log-loss alto.</li>
+<li>Entrenar = <strong>ajustar los parámetros para minimizar log-loss</strong> (= maximizar likelihood).</li>
+</ul>
 </div>
 </section>
-<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#004D98">
+<section id="log-loss-promedio" class="slide level2">
+<h2>Log-loss promedio</h2>
+<p>En machine learning se suele trabajar con la <strong>log-loss promedio</strong>, para obtener una pérdida por observación (comparable entre datasets de distinto tamaño):</p>
+<p><span class="math display">
+\text{LogLoss} = -\frac{1}{n}\,\ell(\boldsymbol p)
+</span></p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.471</code></pre>
+</div>
+</div>
+<p>Es exactamente <span class="math inline">-\ell\ell(\hat p)/n</span>: la misma cantidad que maximizamos arriba, reescalada y con el signo invertido.</p>
+</section>
+<section id="otras-funciones-de-pérdida" class="slide level2">
+<h2>Otras funciones de pérdida</h2>
+<p>El mismo principio —MLE bajo un supuesto de distribución equivale a minimizar una pérdida específica— se generaliza más allá de Bernoulli:</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Outcome</th>
+<th>Distribución supuesta</th>
+<th>Pérdida asociada</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Binario (0/1)</td>
+<td>Bernoulli</td>
+<td>log-loss / cross-entropy</td>
+</tr>
+<tr class="even">
+<td>Continuo</td>
+<td>Normal</td>
+<td>error cuadrático medio (MSE)</td>
+</tr>
+<tr class="odd">
+<td>Conteo</td>
+<td>Poisson</td>
+<td>devianza de Poisson</td>
+</tr>
+</tbody>
+</table>
+<p>No son fórmulas sueltas: <strong>toda pérdida que usaremos en este curso es, en el fondo, una log-verosimilitud negativa</strong> de algún supuesto sobre cómo se generan los datos.</p>
+</section>
+<section id="por-qué-esto-importa-para-lo-que-viene" class="slide level2">
+<h2>Por qué esto importa para lo que viene</h2>
+<ul>
+<li>Cuando ajustemos un GLM (clase 5) o una regresión logística (clase 6), <strong>estimar el modelo</strong> va a significar, otra vez, encontrar los parámetros que maximizan una verosimilitud — o minimizan la pérdida asociada.</li>
+<li>Cuando tratemos la regresión logística como <strong>clasificador</strong> (clase 15), log-loss va a ser exactamente la métrica que usemos para comparar modelos.</li>
+<li>Cuando lleguemos a <strong>regularización</strong> (clase 16) y <strong>redes neuronales</strong> (clase 18), vamos a agregar un término extra a esta misma pérdida para controlar la complejidad del modelo — pero la pérdida de base sigue siendo esta.</li>
+</ul>
+<p>La idea de hoy —likelihood y pérdida son dos caras de la misma moneda— es una de las piezas que más se repite en el resto del curso.</p>
+</section>
+<section id="en-resumen" class="slide level2">
+<h2>En resumen</h2>
+<ul>
+<li>MLE encuentra los parámetros que hacen más plausibles los datos observados.</li>
+<li>La condición de primer orden <span class="math inline">\ell\ell'(\hat\theta)=0</span> es, en general, cómo se resuelve ese problema.</li>
+<li>Minimizar una función de pérdida es lo mismo que maximizar una verosimilitud, con el signo invertido.</li>
+<li>Log-loss (cross-entropy) es la pérdida asociada a un outcome Bernoulli — la usaremos una y otra vez en el resto del curso.</li>
+</ul>
+</section>
+<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#132257">
 <h2>Gracias</h2>
 <p><strong>Hasta la próxima clase</strong></p>
 <p>Mauricio Bucca</p>

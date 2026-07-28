@@ -1,10 +1,10 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Modelos Lineales Generalizados"
+subtitle: "Inferencia en Regresión Logística"
 author: "Mauricio Bucca · Sociología UC"
 date: today
-body-classes: theme-river
-course-team: river
+body-classes: theme-inter
+course-team: inter
 filters: ["../_shared/course.lua"]
 format:
   revealjs:
@@ -20,7 +20,7 @@ format:
 
 ```{r course-style, include=FALSE}
 source("../_shared/bikeshare.R")
-course_palette <- use_course_style("river")
+course_palette <- use_course_style("inter")
 ```
 
 ## Antes · Hoy · Después {.class-rhythm}
@@ -30,422 +30,333 @@ course_palette <- use_course_style("river")
 ::: {.content-box}
 **Antes**
 
-modelo lineal de probabilidad y sus límites.
+interpretación de efectos y efectos marginales.
 :::
 
 ::: {.content-box-primary}
 **Hoy**
 
-componentes de un GLM y funciones de enlace.
+inferencia y bootstrap en regresión logística.
 :::
 
 ::: {.content-box-secondary}
 **Después**
 
-regresión logística: estructura teórica y estimación.
+regresión logística multinomial: estructura teórica.
 :::
 
 :::
 
 
 
-# Modelos Lineales Generalizados (GLM) {.inverse .center .middle}
+# Regresión Logística {.inverse .center .middle}
+## Inferencia
 
-## Más allá del modelo de regresión lineal (LM)
-LM es un marco muy útil y productivo, pero hay situaciones en las que no proporciona una descripción adecuada de los datos. En particular:
-
-. . .
-
-- Cuando $y_i$'s no distribuyen normal
+## Configuración
 
 . . .
 
-- Cuando el rango de $y_i$'s está restringido (por ejemplo, binario, recuento)
+- Tenemos $y_{1}, \dots y_{n}$ son $n$ variables independientes con distribución $\text{Bernoulli}(p_{i})$
 
 . . .
 
-- Cuando la varianza de los $y_i$'s no es independiente de su valor esperado.
+- $\mathbb{E}(y_{i} \mid x_{i1}, \dots,x_{ik}) = \mathbb{P}(y_{i}=1 \mid x_{i1}, \dots,x_{ik}) = p_{i}$ 
 
 . . .
 
-[GLM]{.bold} ofrece un marco mucho más general y flexible que incorpora y amplía el LM para abordar estas cuestiones.
+donde, 
+$$\ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$$
 
-## Estructura de los modelos lineales generalizados
-Un modelo lineal generalizado tiene cuatro componentes:
+## Configuración
 
-::: {.pull-left}
+- Tenemos $y_{1}, \dots y_{n}$ son $n$ variables independientes con distribución $\text{Bernoulli}(p_{i})$
+- $\mathbb{E}(y_{i} \mid x_{i1}, \dots,x_{ik}) = \mathbb{P}(y_{i}=1 \mid x_{i1}, \dots,x_{ik}) = p_{i}$ 
 
-- Un _componente aleatorio_
-- Un _componente sistemático_ 
-- Una _función de enlace_ (link).
-- Una _función de varianza_
+donde, 
 
-:::
+::: {.content-box-blue}
 
-::: {.pull-right}
-
-![nelder](nelder.png)
-
-:::
-
-# Componente Aleatorio {.inverse .center .middle}
-
-## Componente Aleatorio
-El componente aleatorio de un GLM identifica la distribución de probabilidad de la variable dependiente
-
-- Al igual que con LM, los datos que queremos modelar son una colección de observaciones $y_{1}, \dots, y_{n}$, donde cada observación es la manifestación de una variable aleatoria.
-
-. . .
-
--  Estas variables aleatorias  $y_{1}, \dots, y_{n}$ son independientes  entre si y provienen de la misma _familia_ de distribución: [iid]{.bold}
-  - La distribución de los datos nos da una pista sobre la distribución de probabilidad subyacente
-  - Muestreo aleatorio garantiza que supuesto de independencia se cumpla
-
-## Componente Aleatorio
-Mientras que la LM asume que la variable dependiente sigue una distribución normal, GLM abarca un conjunto más amplio de distribuciones, [tanto continuas como discretas]{.bold}, siempre y cuando pertenezcan a la clase más general de la [_familia exponencial de distribuciones_](https://en.wikipedia.org/wiki/Exponential_family).  
-<br><br>
-
-. . .
-
-::: {.center}
-
-![Some distributions of the exponential family and their relationship](expo_fam.png)
-
-:::
-
-# Componente Sistemático {.inverse .center .middle}
-
-## Componente Sistemático
-El componente sistemático de un GLM especifica las variables explicativas, es decir, las $x$'s en el lado derecho de la ecuación
-
-::: {.content-box-primary}
-
-$$\color{white}{\eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}$$
-
-:::
-
-<br><br>
-
-. . .
-
- - En terminología GLM $\eta$ se denomina [predictor lineal]{.bold}.
-
-. . .
-
- - $\eta$ es lineal "en parámetros": no vamos a encontrar términos del tipo $\beta_{0}*\beta_{1}$ o $\beta_{1}^{\beta_{0}}$.
-
-. . .
-
-   - pero puede ser no lineal "en variables" (por ejemplo, interacciones, términos cuadrados, etc.): $\beta_{1}x_{1} + \beta_{2}x_{1}^2$
-
-. . .
-
- - Las $x$'s son tratadas como fijas, no como variables aleatorias.
-
-# Función de Enlace {.inverse .center .middle}
-
-## Función de enlace (link)
-En el [LM estándar]{.bold}, la media condicional del resultado $\mu_{i}$ está linealmente relacionada con los predictores del modelo.
-$$\underbrace{\mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k} )}_{\mu_{i}} = \underbrace{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}_{\eta_{i}}$$
-
-. . .
-
-- [GLM]{.bold} permiten una relación más general y flexible entre estos dos términos.
-
-. . .
-
-- En un GLM el componente sistemático $\eta_{i}$ debe estar relacionado linealmente (en parámetros) con una función $g(\cdot)$ de $\mu_{i}$. Dicha función se denomina *función de enlace*. Formalmente,
-
-::: {.content-box-primary}
-
-$$\color{white}{g\Big(\mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k})\Big) =  g(\mu_{i}) = \eta_{i}}$$
+$$\underbrace{\ln \frac{p_{i}}{1 - p_{i}}}_{\text{Link logit}(p_{i})} = \overbrace{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}^{\text{Predictor lineal  } \eta_{i}}$$
 
 :::
 
 . . .
 
-Ejemplo, si $g(\cdot) = \ln(\cdot)$, entonces
-$$\ln \mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k}) =  \ln \mu_{i} = \eta_{i}$$
+- [Inferencia]{.bold}: ¿que podemos decir sobre $\hat{\beta}_{0},\hat{\beta}_{1}, \dots, \hat{\beta}_{k}$  (o cualquier producto de éstos) más allá de nuestra muestra?
 
-## Función de Enlace (link)
+## Inferencia estadística para regresión logística (y GLMs) {.inverse .center .middle}
 
-- El inverso de esta expresión es la llamada [función media]{.bold}, que expresa la media condicional de $y_{i}$ como una función potencialmente no lineal de los predictores:
+## Inferencia acerca de parámetros del modelo
 
-::: {.content-box-primary}
-
-$$\color{white}{\mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k}) = \mu_{i} = g^{-1}(\eta_{i})}$$
-
-:::
+- Los coeficientes de un GLM son estimados via MLE.
 
 . . .
 
-Ejemplo, si $g(\cdot) = \ln(\cdot)$, entonces
-$$\ln \mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k}) =  \ln \mu_{i} = \eta_{i}$$
+ Un ML "estimate" $\hat{\theta}$ tiene las siguientes propiedades:
 
 . . .
-
-En consecuencia, $g^{-1}(\cdot) = e^{(\cdot)}$ y,
-$$\mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k}) = \mu_{i} = e^{\eta_{i}}$$
-
-. . .
-
-- La _función de enlace_ cumple un objetivo importante: mantener $\mu_{i}$ dentro de su rango natural. 
-  - Ejemplo: si $y_{i}$ es estrictamente positivo (ingreso), $\eta_{i} \in (-\infty, \infty+)$ pero $\mu_{i} = e^{\eta_{i}} \in  (0, \infty+)$
-
-## Función de Enlace (link)
-
-Más allá de este ejemplo, hay una variedad de posibles funciones de enlace:
-
-::: {.center}
-
-![Some commonly used link functions](link_fn.png)
-
-:::
-
-- $g(\cdot)$ debe ser "smooth" y monotónica
-
-## El enlace "natural" de cada distribución
-
-La elección de $g(\cdot)$ no es arbitraria: cada distribución de la familia exponencial tiene un **enlace canónico**, aquel para el cual el parámetro natural de la distribución coincide exactamente con $\eta_{i}$.
-
-| Distribución | Enlace canónico | $g(\mu)$ |
-|---|---|---|
-| Normal | identidad | $\mu$ |
-| Poisson | log | $\ln(\mu)$ |
-| Binomial | logit | $\ln\!\left(\frac{\mu}{1-\mu}\right)$ |
-
-Usar el enlace canónico simplifica la estimación (MLE), pero **no es obligatorio**: cualquier $g(\cdot)$ monotónica y "smooth" define un GLM válido.
-
-# Función de Varianza {.inverse .center .middle}
-
-## Función de varianza
-La función de varianza describe cómo la varianza $\operatorname{Var}(y_{i})$ depende de la media $\mu_{i}$. Formalmente:
-
-::: {.content-box-primary}
-
-$$\color{white}{\operatorname{Var}(y_{i}) = \phi V(\mu_{i})}$$
-
-:::
-
-donde
-
-- $\phi$ es una constante llamada "parámetro de dispersión"
-- $V(\cdot)$ es la  función de varianza, definida como: $V(\mu) = \frac{d\mu}{d \eta}$
-
-. . .
-
-Por ejemplo, si $\mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k}) =  \mu_{i} = e^{\eta_{i}}$, entonces,
-$$V(\mu_i) = \frac{d\mu_i}{d \eta_i} = e^{\eta_{i}} \quad \to \quad \operatorname{Var}(y_{i}) = \phi e^{\eta_{i}}$$
-
-# .......... Definiendo un GLM ..... {.inverse .middle}
 
 ::: {.img-right}
 
-![mizer](mixer.png)
+![MLE_prop](unbiased_consistent.png)
 
 :::
 
-## Definiendo un GLM
-La estructura básica de un GLM se especifica mediante la elección de dos componentes: (1) [componente sistemático]{.bold} (la distribución de la variable dependiente ) y (2) la [función de enlace]{.bold}. 
-
-\begin{align}
-  GLM:
-	\begin{cases}
-	&y_{i} \sim f(\mu_{i},\sigma_{i}) \\ \\
-	& g(\mu_{i}) = \eta_{i}
-	\end{cases}
-\end{align}
-
-. . .
-
-Cualquier combinación de estos componentes definirá un GLM diferente. Algunas de estas combinaciones son especialmente relevantes:
-
-| Distribution         | Canonical Link: $\eta = g(\mu)$ | Link name             | Model name           |
-| -----------------    | ------------------              | --------------------- | -------------------- |
-| Normal (Gaussian)    | $\eta = \mu$                    | identity              | Standard regression  |
-| Poisson              | $\eta = \log(\mu)$              | logarithm             | Poisson regression   |
-| Bernoulli / Binomial | $\eta = \log(\mu/(1-\mu))$      | logit                 | Logistic regression  |
-| Gamma                | $\eta = (1/\mu)$                | reciprocal            | Gamma regression     |
-
-## LM es un caso particular de GLM
-El tipo más simple de GLM es el que tiene un componente aleatorio normal y una función de enlace de identidad, en cuyo caso obtenemos el modelo estándar de regresión lineal. Formalmente:
-
-. . .
-
-- Componente aleatorio: $y_{1}, \dots y_{n}$ son $n$ variables independientes con distribución $\text{Normal}(\mu_{i},\sigma_{i})$
-
-. . .
-
-- Función de enlace "identidad": $g(x) = x$
-
-. . .
-
-- Componente sistemático: $\mu_{i} = \eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$
-
-. . .
-
-- Función media: $\mu_{i} = g^{-1}(\eta_{i}) = \eta_{i}$
-
-. . .
-
-- Varianza $\operatorname{Var}(y_{i}) = \phi V(\mu_{i}) = \sigma^2$,
-
-. . .
-
- con $\phi=\sigma^2$ y $V(\mu_{i})= \frac{d\mu_{i}}{d\eta_{i}}=1$.
-<br><br>
-
-. . .
-
-Por tanto,
-$$y_{i} \sim \text{Normal}(\mu_{i} = \eta_{i}, \sigma_{i} = \sqrt{\phi})$$
-
-- En nomenclatura GLM $\phi$ (parámetro de dispersión) es un modo más general de expresar el componente constante de la varianza ( $\sigma^2$ en LM)
-
-# Ejemplo empírico {.inverse .center .middle}
-## GLM log-lineal
-
-## GLM log-lineal: ejemplo de modelo "híbrido"
-Ejemplo:
-
-. . .
-
-- $y_{1}, \dots y_{n}$ son $n$ variables independientes con distribución $\text{Normal}(\mu_{i},\sigma_{i})$
-
-. . .
-
-- La función de enlace es $g(\cdot) = \ln(\cdot)$
-
-. . .
-
-- $\ln(\mu_{i}) = \eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$
-
-. . .
-
-- $\mu_{i} = e^{\eta_{i}}$
-
-. . .
-
-Se sigue de lo anterior que:
-
-- $\operatorname{Var}(y_{i}) = \phi V(\mu) = \phi \frac{d\mu_{i}}{d\eta_{i}} = \phi e^{\eta_{i}} = \phi \mu_{i}$
-
-. . .
-
-Obtenemos un [modelo log-lineal]{.bold}, que es apropiado cuando las predicciones deben ser estrictamente positivas.
-$$y_{i} \sim \text{Normal}(\mu_{i} = e^{\eta_{i}}, \sigma_{i} = \sqrt{\phi \mu_{i}})$$
-
-## Enlace vs. transformaciones
-Usar una función de enlance [es distinto]{.bold} de transformar la variable dependiente!
-
-. . .
-
-[Ejemplo:]{.bold} es un práctica común trabajar con la variable dependiente transforma a logs (ej. ingresos).
-
-- $y_{1}, \dots y_{n}$ son $n$ variables que no distribuyen normal  pero $\ln(y_{1}), \dots \ln(y_{n})$ si.
-- Estimar LM con variable dependiente transformada:
-
-$$\ln y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}}^{\mathbb{E}(\ln y_{i} \mid x_{1}, \dots, x_{k} )  } + \underbrace{e_{i}}_{\text{Normal}(0,\sigma)}$$
-
-. . .
-
-Notar diferencia:
-
 ::: {.pull-left}
 
-[GLM con log-link]{.bold}
-$$\ln \mathbb{E} (y_{i} \mid x_{1}, \dots, x_{k}  ) = \beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}$$
+- Es [consistente]{.bold}: $\hat{\theta} \xrightarrow{p} \theta$. Es decir, en la medida que $n \to \infty$, el  estimador $\hat{\theta}$ tiende en probabilidad a $\theta$, el valor verdadero del parámetro. 
 
 :::
 
 ::: {.pull-right}
 
-[LM con variable dependiente log(y) ]{.bold}
-$$\mathbb{E}( \ln y_{i} \mid x_{1}, \dots, x_{k} ) = \beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}$$
+:::
+
+. . .
+
+::: {.pull-left}
+
+- Es [insesgado]{.bold}: $\mathbb{E}(\hat{\theta}) = \theta$.
 
 :::
 
-## GLM con log-link: demanda horaria de bicicletas
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+::: {.pull-right}
+
+:::
+
+. . .
+
+::: {.pull-left}
+
+- Distribuye [asintónticamente normal]{.bold}: $\hat{\theta} \xrightarrow{d} \mathcal{N}(\theta, \frac{\sigma_{\theta}}{\sqrt{n}})$. Es decir, no solo converge al valor verdadero, sino que converge rápidamente ( $1/\sqrt{n}$ ).
+
+:::
+
+::: {.pull-right}
+
+:::
+
+. . .
+
+Notar que $\frac{\sigma_{\theta}}{\sqrt{n}}$ es el "standard error" (SE) de $\theta$.
+```{css, echo=FALSE}
+.pull-right ~ * { clear: unset; }
+.pull-right + * { clear: both; }
+```
+
+## Inferencia acerca de parámetros del modelo: intervalos de confianza
+Dado que $\hat{\theta} \sim \mathcal{N}(\theta, \frac{\sigma_{\theta}}{\sqrt{n}})$ ...
+
+. . .
+
+podemos construir un intervalo de confianza de la siguiente manera:
+$$(1 - \alpha) \text{ CI}_{\hat{\theta}} = \hat{\theta} \pm \Phi^{-1}(\alpha/2) \cdot SE_{\hat{\theta}}$$
+
+. . .
+
+Ejemplo, un intervalo al 95% de confianza está dado por:
+$$95\% \text{ CI}_{\hat{\theta}} = \hat{\theta} \pm 2 \cdot  \frac{\sigma_{\theta}}{\sqrt{n}}$$
+
+## Inferencia acerca de parámetros del modelo:  intervalos de confianza
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+
+# datos de Capital Bikeshare del paquete "ISLR2"
 library(pacman)
+p_load("ISLR2")
+p_load("viridis")
 p_load("tidyverse")
-bikedata <- prepare_bikeshare()
+p_load("modelr")
+p_load("cowplot")
+p_load("margins")
+p_load("rsample")
+p_load("arm")
+p_load("stargazer")
+
+theme_set(theme_julia())
+
+bikedata <- Bikeshare %>% as_tibble()
+
+# variable binaria: alta demanda = top 25% de las horas (umbral P75 de bikers)
+p75 <- quantile(bikedata$bikers, 0.75)
+bikedata <- bikedata %>%
+  mutate(demand = if_else(bikers > p75, "alta", "baja")) %>%
+  # codificación 0/1
+  mutate(high_demand = if_else(bikers > p75, 1, 0))
+```
+Retomando nuestro modelo de clases anteriores: $\ln \frac{p_{i}}{ 1 - p_{i}}    = \beta_{0} + \beta_{1}\text{hábil}_{i} + \beta_{2}\text{temp}_{i}$
+
+. . .
+
+```{r,echo=FALSE}
+logit_demand_wday_temp <-
+  glm(high_demand ~ factor(workingday) + temp,
+      family=binomial(link="logit"),
+      data=bikedata)
+logit_demand_wday_temp$formula
+summary(logit_demand_wday_temp)$coefficients
 ```
 
-::: {.center}
+. . .
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=5}
+::: {.content-box-blue}
 
-bikedata %>% 
-  ggplot(aes(x = bikers)) + 
-  geom_histogram(fill = course_palette[["primary"]], color = "white", bins = 35) +
-  guides(fill = FALSE, color = FALSE) + 
-  labs(x = "Arriendos por hora", y = "Horas") +
-  theme_julia() +
-  theme(
-    legend.position = "none",
-    axis.text.y = element_text(size = 22, color = "black"),
-    axis.text.x = element_text(size = 22, color = "black"),
-    axis.title.y = element_text(size = 24, color = "black"),
-    axis.title.x = element_text(size = 24, color = "black"),
-    panel.border = element_blank()
-  )
-
-```
+[Calculemos un IC al 95% para el efecto de la "temperatura" sobre el logit de alta demanda:]{.bold} $\beta_{2}$
 
 :::
 
-Datos horarios de Capital Bikeshare en Washington DC. `bikers` es un conteo positivo y fuertemente asimétrico.
+. . .
 
-## LM con log en variable dependiente
 ```{r}
-our_lm <- lm(log(bikers) ~ factor(workingday), data=bikedata)
-summary(our_lm)
+beta2 <- summary(logit_demand_wday_temp)$coefficients["temp","Estimate"]
+se_beta2 <- summary(logit_demand_wday_temp)$coefficients["temp","Std. Error"]
+ci_beta2 <- beta2 + c(-2,2)*se_beta2; ci_beta2
 ```
 
-## Gaussian GLM con log-link
+. . .
+
 ```{r}
-our_glm <- glm(bikers ~ factor(workingday), family = gaussian(link="log"), data=bikedata)
-summary(our_glm)
+confint(logit_demand_wday_temp)
 ```
 
-## Gaussian GLM con log-link
-$$\ln \mu_{i} = \ln \mathbb{E}(\text{bikers}_{i} \mid \text{workingday}_{i})
-= \beta_{0} + \beta_{1}\text{workingday}_{i}$$
+## Inferencia acerca de parámetros del modelo: tests
+```{r,echo=FALSE}
+summary(logit_demand_wday_temp)$coefficients
+```
 
 . . .
 
-Por tanto,
-
-- $\mathbb{E}(\text{bikers}_{i} \mid \text{workingday}=1) = e^{\beta_{0} + \beta_{1}}$.
-- $\mathbb{E}(\text{bikers}_{i} \mid \text{workingday}=0) = e^{\beta_{0}}$.
+[¿Que significan los p-values en este contexto?]{.bold}
 
 . . .
 
-Interpretación coeficientes
-$\beta_{1} = \ln \frac{\mathbb{E}(\text{bikers}_{i} \mid \text{workingday}=1)}{\mathbb{E}(\text{bikers}_{i} \mid \text{workingday}=0)}$
+::: {.img-right}
+
+![star](stars.jpg)
+
+:::
+
+```{r,echo=FALSE}
+stargazer(logit_demand_wday_temp, type = "text", single.row=TRUE)
+```
+
+## Inferencia acerca de parámetros del modelo: tests
+```{r,echo=FALSE}
+summary(logit_demand_wday_temp)$coefficients
+```
 
 . . .
 
- $\quad \implies  \quad e^{\beta_{1}} =  \frac{\mathbb{E}(\text{bikers}_{i} \mid \text{workingday}=1)}{\mathbb{E}(\text{bikers}_{i} \mid \text{workingday}=0)}$
+[Test de hipótesis]{.bold}
 
 . . .
 
-[Razón de demanda]{.bold}: $e^{\beta_1}$ compara la demanda horaria esperada entre días hábiles y no hábiles.
+1) $H_{0}:$ La temperatura no afecta la probabilidad de alta demanda ( $\beta_{2}=0$ )
 
-## Gaussian GLM con log-link
+. . .
+
+2) ¿Cuál es la distribución de $\beta_{2}$ si la hipótesis nula es verdadera?
+
+. . .
+
+::: {.content-box-blue}
+
+$$\beta_{2} \mid H_{0} \sim \text{Normal}\Big(\mu_{\beta_{2}} = 0, \sigma_{\beta_{2}} = \text{SE}_{\beta_{2}}\Big)$$
+
+:::
+
+. . .
+
+3) Calcular [p-value]{.bold} (2 colas)
+
+::: {.content-box-blue}
+
+$$\mathbb{P}( |\beta_{2}| > | \hat{\beta}_{2} |  \mid H_{0}) :=   \mathbb{P}\big(|\text{Normal}(\mu_{\beta_{2}} = 0, \sigma_{\beta_{2}} = \text{SE}_{\beta_{2}})|  > |\hat{\beta}_{2}| \big)$$
+
+:::
+
+```{css, echo=FALSE}
+.pull-right ~ * { clear: unset; }
+.pull-right + * { clear: both; }
+```
+
+## Inferencia acerca de parámetros del modelo: tests
+```{r,echo=FALSE}
+summary(logit_demand_wday_temp)$coefficients
+```
+```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
+
+# Extract coefficient estimate and standard error
+beta2_hat <- (summary(logit_demand_wday_temp)$coefficients)[3,1]
+beta2_se  <- (summary(logit_demand_wday_temp)$coefficients)[3,2]
+
+# Create a sequence of values around the estimate
+x_vals <- seq(-4*beta2_se, 4*beta2_se, length.out = 500)
+
+# Compute normal density
+dens_vals <- dnorm(x_vals, mean = 0, sd = beta2_se)
+
+# Plot
+tibble(x = x_vals, y = dens_vals) %>%
+  ggplot(aes(x = x, y = y)) +
+    geom_line(size = 1.2, colour = course_palette[["primary"]]) +
+    geom_vline(aes(xintercept = beta2_hat), size = 1.2, colour = course_palette[["secondary"]]) +
+    labs(x = expression(hat(beta)[2]), y = "Density") +
+    theme_julia() +
+    theme(
+      axis.text = element_text(size = 14),
+      axis.title = element_text(size = 16)
+    )
+```
+
+## Inferencia acerca de parámetros del modelo: ejemplo empírico
+
+. . .
+
+::: {.content-box-blue}
+
+[Calculemos ahora un IC al 95% para el efecto multiplicativo de la "temperatura" sobre las odds de alta demanda:]{.bold} $e^{\beta_{2}}$= `r expbeta2=exp(beta2); expbeta2`
+
+:::
+
+. . .
+
+![michael](michael.gif)
+
+. . .
+
+¿Cuál es la sampling distribution de una función de nuestro estimate?
+
+## El test que acabamos de construir tiene nombre
+
+El procedimiento anterior —dividir el coeficiente por su error estándar y comparar con una Normal— es el **test de Wald**: usa la estimación y el error estándar de **un solo modelo ajustado**.
+
+. . .
+
+Existe una alternativa: el **test de razón de verosimilitudes (LR test)**. En vez de mirar un coeficiente aislado, compara la log-verosimilitud de dos modelos anidados —uno con la variable, otro sin ella:
+
+::: {.content-box-secondary}
+
+$$LR = -2\big[\ell(\text{modelo restringido}) - \ell(\text{modelo completo})\big] \sim \chi^{2}_{df}$$
+
+:::
+
+. . .
+
+```{r}
+logit_sin_temp <- glm(high_demand ~ factor(workingday),
+                      family = binomial(link = "logit"), data = bikedata)
+anova(logit_sin_temp, logit_demand_wday_temp, test = "LRT")
+```
+
+En regresión logística, el LR test suele ser más confiable que Wald —especialmente con muestras chicas o coeficientes grandes— porque no depende de la aproximación Normal para un único parámetro.
+
+## Bootstrap Method {.inverse .center .middle}
+
+---
 
 ::: {.pull-left}
 
-Dispersión estimada: $\hat\phi=$ `r round(summary(our_glm)$dispersion, 3)`
-$\operatorname{Var}(y_{i}) = \phi V(\mu) = \phi \frac{d\mu_{i}}{d\eta_{i}} = \phi e^{\eta_{i}} = \phi \mu_{i}$
-$\operatorname{Var}(y_{i})  = \phi\mu_{i} = \phi e^{\beta_0 + \beta_1\text{workingday}_{i}}$
-<br><br>
-Por tanto, 
-$$y_{i} \sim \text{Normal}(\mu_{i},\sigma_{i}) \quad \text{ donde}$$
-
-- $\mu_{i}=e^{\beta_{0} +  \beta_{1}\text{workingday}_{i}}$
-- $\sigma_{i} = \sqrt{\phi\mu_{i}}$
+![boots](rambo.jpg)
 
 :::
 
@@ -453,46 +364,421 @@ $$y_{i} \sim \text{Normal}(\mu_{i},\sigma_{i}) \quad \text{ donde}$$
 
 ::: {.pull-right}
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=6, fig.width=8}
-p_load("tidyverse")
-p_load("ggfortify")
-beta <- coef(our_glm)
-phi <- summary(our_glm)$dispersion
-eta <- function(x) exp(beta[[1]] + beta[[2]] * x)
-sdy <- function(x) sqrt(phi * eta(x))
+![boots](boots.jpg)
 
-preds <- data_frame(x = c(0,1)) %>% mutate(mu = eta(x), sd=sdy(x)) %>% as.matrix()
+:::
 
-plot <- ggplot(data.frame(x = seq(0, 500, by = 0.5)), aes(x = x)) +
-  stat_function(fun = dnorm, args = list(preds[1,2], preds[1,3]),
-                aes(colour = "no hábil"), size = 1.5) +
-  stat_function(fun = dnorm, args = list(preds[2,2], preds[2,3]),
-                aes(colour = "hábil"), size = 1.5) +
-  scale_x_continuous(name = "Arriendos por hora") +
-  scale_color_manual(values = c("no hábil" = course_palette[["primary"]],
-                                "hábil" = course_palette[["secondary"]])) +
-  labs(y="densidad", color=NULL)+
-  theme_julia() +
-  theme(
-    axis.text.y = element_text(size = 22, color = "black"),
-    axis.text.x = element_text(size = 22, color = "black"),
-    axis.title.y = element_text(size = 24, color = "black"),
-    axis.title.x = element_text(size = 24, color = "black"),
-    panel.border = element_blank()
-  )
+## Bootstrap Method
+[Intuición:]{.bold}
 
-print(plot)
+. . .
+
+- Estimamos un modelo y tenemos una cierta "cantidad de interés" (estimate)
+
+. . .
+
+- No conocemos la distribución nuestro estimate a través de infinitas muestras porque sólo tenemos una muestra.
+
+. . .
+
+- Tampoco tenemos conocimiento teórico sobre la distribución de nuestro estimate.
+
+. . .
+
+- Podemos tomar muestras de nuestra muestra, preservando cualquier distribución desconocida subyacente.
+
+. . .
+
+- Podemos observar y estudiar el comportamiento de nuestro estimate en estas muestras de nuestras muestras.
+
+## Bootstrap Method
+[Muestrando desde la muestra:]{.bold}
+¿Cuántas muestras podemos tomar (con reemplazo) a partir de nuestra muestra?
+
+. . .
+
+ [Respuesta]{.bold}: $n^n$
+
+. . .
+
+$$\text{muestra} : \left[\begin{array}{c}
+    1 \\
+    2 \\
+    3 
+    \end{array} \right]$$
+
+. . .
+
+$$\text{posibles muestras de la muesta:} \left[\begin{array}{c} 
+    1 \\
+    1 \\
+    1 
+    \end{array} \right] 
+    \text{ o}  \left[\begin{array}{c} 
+    1 \\
+    1 \\
+    2 
+    \end{array} \right] 
+    \text{ o}  \left[\begin{array}{c} 
+    1 \\
+    3 \\
+    2 
+    \end{array} \right] 
+    \text{ o}  \left[\begin{array}{c} 
+    3 \\
+    1 \\
+    2 
+    \end{array} \right] 
+    \text{ o}  \left[\begin{array}{c} 
+    3 \\
+    3 \\
+    3 
+    \end{array} \right]  ...$$
+
+## Bootstrap Method
+[Esquema del algoritmo]{.bold} (Bootstrap no paramétrico):
+
+. . .
+
+1. Asume que la distribución empírica del los datos refleja la distribución de probabilidad de las variables de interés.
+
+. . .
+
+2. A partir de la muestra obtenén una muestra aleatoria del mismo tamaño que la muestra original (N), con reemplazo:  $(y_{b},X_{b})$
+
+. . .
+
+3. Regresiona $y_{b}$ y $X_{b}$ para obtener el estimate $\hat{\theta}_{b}$
+
+. . .
+
+4. Repite los pasos 2 y 3 un gran número de veces B.
+
+. . .
+
+5. El conjunto de B resultados obtenidos corresponde a la "Bootstrap distribution" del estimate.
+
+. . .
+
+6. Evalúa la distribución del estimate (SE,CI, etc) o de cualquier cantidad derivada de éste.
+
+## Bootstrap Method: ejemplo empírico
+Siguiendo con $\ln \frac{p_{i}}{ 1 - p_{i}}    = \beta_{0} + \beta_{1}\text{hábil}_{i} + \beta_{2}\text{temp}_{i}$,
+
+. . .
+
+::: {.content-box-blue}
+
+[Calculemos un IC al 95% para el efecto de la "temperatura" sobre el logit de alta demanda:]{.bold} $\beta_{2}$
+
+:::
+
+. . .
+
+```{r}
+
+# Escribir una función que ejecute re-sampling y la estimación
+bs_beta2  <- function(x) {
+  data_b  <- sample_n(bikedata,size=nrow(bikedata),replace=TRUE)
+  logit_b <- glm(high_demand ~ factor(workingday) + temp, family=binomial(link="logit"), data=data_b)
+  beta2_b <- logit_b$coefficients[3]
+  return(beta2_b)
+}
+
+# Iterar función y almacenar resultados 
+nreps =1200
+betas2_bs <- replicate(nreps,bs_beta2()); head(betas2_bs)
+
+```
+
+## Bootstrap Method: ejemplo empírico
+
+::: {.pull-left}
+
+```{r}
+se_beta2_bs <- sd(betas2_bs)
+se_beta2_bs
+
+ci_beta2_bs <- 
+  quantile(betas2_bs, p=c(0.025,0.975))
+  ci_beta2_bs
+```
+
+:::
+
+. . .
+
+::: {.pull-right}
+
+```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
+ci95 = round(ci_beta2_bs, 3)
+
+betas2_bs %>% as_tibble() %>% ggplot(aes(x=value)) + 
+      geom_density(colour="black", fill=course_palette[["primary"]], alpha=0.1, size=1.5) +
+      scale_color_course() + 
+      geom_vline(aes(xintercept = beta2, colour=paste0("beta2=",course_number(beta2)) ), size=1.5) +
+      geom_vline(aes(xintercept = ci_beta2_bs[1],
+                     colour=paste0("95% CI: (",ci95[1],",",ci95[2],")")), linetype="dashed", size=1.5) +
+      geom_vline(aes(xintercept = ci_beta2_bs[2], 
+                     colour=paste0("95% CI: (",ci95[1],",",ci95[2],")")), linetype="dashed", size=1.5) +
+      guides(fill=FALSE) + labs(colour="", x="beta2") +
+      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+      legend.text = element_text(size = 18), legend.position="bottom") +
+      guides(color=guide_legend(nrow=3,byrow=TRUE))
+```
+
+:::
+
+## Bootstrap Method: ejemplo empírico
+
+::: {.content-box-blue}
+
+¿Un IC al 95% para el efecto de la "temperatura" como ["odds ratio"]{.bold}: $e^{\beta_{2}}$?
+
+:::
+
+. . .
+
+Bootstrapeando ...
+
+::: {.img-bottom-right}
+
+![easy](easy.gif)
+
+:::
+
+## Bootstrap Method: ejemplo empírico
+
+::: {.content-box-blue}
+
+¿Un IC al 95% para el efecto de la "temperatura" como ["odds ratio"]{.bold}: $e^{\beta_{2}}$?
+
+:::
+
+Bootstrapeando ...
+```{r}
+
+# Escribir una función que ejecute re-sampling y la estimación
+bs_expbeta2  <- function(x) {
+  data_b  <- sample_n(bikedata,size=nrow(bikedata),replace=TRUE)
+  logit_b <- glm(high_demand ~ factor(workingday) + temp, family=binomial(link="logit"), data=data_b)
+  expbeta2_b <- exp(logit_b$coefficients[3])
+  return(expbeta2_b)
+}
+
+# Iterar función y almacenar resultados 
+nreps = 2000 
+expbetas2_bs <- replicate(nreps,bs_expbeta2()); head(expbetas2_bs)
+
+```
+
+## Bootstrap Method: ejemplo empírico
+
+::: {.pull-left}
+
+```{r}
+se_expbeta2_bs <- sd(expbetas2_bs)
+se_expbeta2_bs
+
+ci_expbeta2_bs <- 
+  quantile(expbetas2_bs, p=c(0.025,0.975))
+  ci_expbeta2_bs
+```
+
+:::
+
+. . .
+
+::: {.pull-right}
+
+```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
+ci95 = round(ci_expbeta2_bs, 3)
+
+expbetas2_bs %>% as_tibble() %>% ggplot(aes(x=value)) + 
+      geom_density(colour="black", fill=course_palette[["primary"]], alpha=0.1, size=1.5) +
+      scale_color_course() + 
+      geom_vline(aes(xintercept = expbeta2, colour=paste0("exp(beta2)=",course_number(expbeta2)) ), size=1.5) +
+      geom_vline(aes(xintercept = ci_expbeta2_bs[1],
+                     colour=paste0("95% CI: (",ci95[1],",",ci95[2],")")), linetype="dashed", size=1.5) +
+      geom_vline(aes(xintercept = ci_expbeta2_bs[2], 
+                     colour=paste0("95% CI: (",ci95[1],",",ci95[2],")")), linetype="dashed", size=1.5) +
+      guides(fill=FALSE) + labs(colour="", x="exp(beta2)") +
+      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+      legend.text = element_text(size = 18), legend.position="bottom") +
+      guides(color=guide_legend(nrow=3,byrow=TRUE))
+```
+
+:::
+
+## Bootstrap Method: ejemplo empírico
+
+::: {.content-box-blue}
+
+[Calculemos ahora IC al 95% para el Average Marginal Effect de la "temperatura" sobre la probabilidad de alta demanda]{.bold}
+
+:::
+
+. . .
+
+Bootstrapeando ...
+
+::: {.img-bottom-right}
+
+![easy](easy.gif)
+
+:::
+
+## Bootstrap Method: ejemplo empírico
+
+::: {.content-box-blue}
+
+[Calculemos ahora IC al 95% para el Average Marginal Effect de la "temperatura" sobre la probabilidad de alta demanda]{.bold}
+
+:::
+
+Bootstrapeando ...
+```{r}
+
+# Escribir una función que ejecute re-sampling y la estimación
+bs_ame_temp  <- function(x) {
+  data_b   <- sample_n(bikedata,size=nrow(bikedata),replace=TRUE)
+  logit_b  <- glm(high_demand ~ factor(workingday) + temp, family=binomial(link="logit"), data=data_b)
+  beta2_b  <- logit_b$coefficients[3]
+  p_hat_b  <- predict(logit_b, type = "response")
+  me_temp_b   <- beta2_b*p_hat_b*(1-p_hat_b)
+  return(ame_temp_b = mean(me_temp_b))
+}
+
+# Iterar función y almacenar resultados
+nreps =1200
+ame_temp_bs <- replicate(nreps,bs_ame_temp()); head(ame_temp_bs)
+
+```
+
+## Bootstrap Method: ejemplo empírico
+
+::: {.pull-left}
+
+```{r}
+
+p_hat   <- predict(logit_demand_wday_temp, type = "response")
+me_temp   <- beta2*p_hat*(1-p_hat)
+ame_temp  <- mean(me_temp); ame_temp
+
+se_ame_temp_bs <- sd(ame_temp_bs)
+se_ame_temp_bs
+
+ci_ame_temp_bs <-
+  quantile(ame_temp_bs, p=c(0.025,0.975))
+  ci_ame_temp_bs
+```
+
+:::
+
+. . .
+
+::: {.pull-right}
+
+```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
+ci95 = round(ci_ame_temp_bs,3)
+
+ame_temp_bs %>% as_tibble() %>% ggplot(aes(x=value)) +
+      geom_density(colour="black", fill=course_palette[["primary"]], alpha=0.1, size=1.5) +
+      scale_color_course() +
+      geom_vline(aes(xintercept = ame_temp, colour=paste0("AME(temp)=",course_number(ame_temp)) ), size=1.5) +
+      geom_vline(aes(xintercept = ci_ame_temp_bs[1],
+                     colour=paste0("95% CI: (",ci95[1],",",ci95[2],")")), linetype="dashed", size=1.5) +
+      geom_vline(aes(xintercept = ci_ame_temp_bs[2],
+                     colour=paste0("95% CI: (",ci95[1],",",ci95[2],")")), linetype="dashed", size=1.5) +
+      guides(fill=FALSE) + labs(colour="", x="AME(temp) BS") +
+      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+      legend.text = element_text(size = 18), legend.position="bottom") +
+      guides(color=guide_legend(nrow=3,byrow=TRUE))
+```
+
+:::
+
+## Bootstrap Method: más ...
+```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
+
+# function to implement within each sample (regression model)
+logit_fit <- function(split){
+  model_bs = glm(high_demand ~ factor(workingday) + temp, family=binomial(link="logit"), data=analysis(split))
+}
+
+boots <- bikedata  %>% bootstraps(times = nreps)
+```
+
+::: {.pull-left}
+
+```{r, echo=FALSE, fig.width=7, fig.height=6, warning=F}
+grid <- bikedata %>% data_grid(workingday, temp = seq_range(temp,20),.model=logit_demand_wday_temp)
+
+predict_new <- function(fit){
+  preds = predict(fit,newdata=grid, type = "response")
+  preds = cbind(grid,preds)
+  return(preds)
+}
+
+boots %>%
+  mutate(fit = map(splits, logit_fit)) %>%
+  mutate(newpred = map(fit,predict_new)) %>%
+  dplyr::select(id,newpred) %>%
+  mutate_if(is.list, map, as_tibble) %>%
+  unnest() %>%
+  ggplot(aes(x=temp,y=preds, group=interaction(id,workingday), colour=factor(workingday))) + geom_line(alpha=0.08) +
+  scale_color_course()  +
+  guides(color = guide_legend(override.aes = list(alpha = 1))) +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
+  legend.text = element_text(size = 18), legend.position="bottom") +
+  labs(x="temperatura", y="P(alta demanda) predicha", color="Día hábil")
+
+```
+
+:::
+
+. . .
+
+::: {.pull-right}
+
+```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
+grid <- bikedata %>% data_grid(workingday, temp = seq_range(temp,75),.model=logit_demand_wday_temp)
+
+predict_new <- function(fit){
+  preds = predict(fit,newdata=grid, type = "response")
+  preds = cbind(grid,preds)
+  return(preds)
+}
+
+boots %>%
+  mutate(fit = map(splits, logit_fit)) %>%
+  mutate(newpred = map(fit,predict_new)) %>%
+  dplyr::select(id,newpred) %>%
+  mutate_if(is.list, map, as_tibble) %>%
+  unnest() %>%
+  ggplot(aes(x=temp,y=preds, group=interaction(id,workingday), colour=factor(workingday))) + geom_line(alpha=0.08) +
+  scale_color_course()  +
+  guides(color = guide_legend(override.aes = list(alpha = 1))) +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
+  legend.text = element_text(size = 18), legend.position="bottom") +
+  labs(x="temperatura", y="P(alta demanda) predicha", color="Día hábil")
+
 ```
 
 :::
 
 ## En resumen
 
-- Un GLM se define por cuatro piezas: componente aleatorio (familia exponencial), componente sistemático $\eta_{i}$, función de enlace $g(\mu_{i})=\eta_{i}$ y función de varianza $\operatorname{Var}(y_{i})=\phi V(\mu_{i})$.
-- La función de enlace mantiene $\mu_{i}$ dentro de su rango natural; cada distribución tiene un enlace "canónico" (Normal: identidad, Poisson: log, Binomial: logit).
-- LM es el caso particular de GLM con componente Normal y enlace identidad.
-- Usar una función de enlace (ej. log) no es lo mismo que transformar la variable dependiente: cambian tanto la interpretación de los coeficientes como los supuestos sobre la varianza.
-- La próxima clase: regresión logística — estructura teórica y estimación.
+- Los estimadores MLE de un GLM (como la regresión logística) son consistentes, insesgados y asintóticamente normales — de ahí que $\hat\theta \pm z \cdot SE_{\hat\theta}$ sea un intervalo de confianza válido en muestras grandes.
+- Test de Wald: divide el coeficiente por su error estándar y lo compara con una Normal; usa la estimación de **un solo** modelo.
+- Test de razón de verosimilitudes (LR): compara la log-verosimilitud de dos modelos anidados; suele ser más confiable que Wald con muestras chicas o coeficientes grandes.
+- Bootstrap: remuestrea los datos con reemplazo para aproximar la distribución muestral de cualquier estimate (SE, CI) sin depender de fórmulas asintóticas.
+- La próxima clase extiende el modelo logístico a variables dependientes con más de dos categorías no ordenadas: regresión logística multinomial.
 
 ## Gracias {.inverse .center .middle .closing}
 

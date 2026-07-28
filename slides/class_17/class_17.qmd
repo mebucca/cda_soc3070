@@ -1,18 +1,17 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Predicción, overfitting y validación cruzada"
+subtitle: "Árboles, Random Forest y Gradient Boosting"
 author: "Mauricio Bucca · Sociología UC"
 date: today
-body-classes: theme-celtic
-course-team: celtic
+body-classes: theme-bayern
+course-team: bayern
 filters: ["../_shared/course.lua"]
 format:
   revealjs:
     css: "../_shared/course.css"
-    slide-number: false
     theme: default
     highlight-style: github
-    code-block-font-size: 0.9em
+    slide-number: false
     width: 1600
     height: 900
     html-math-method: katex
@@ -21,18 +20,15 @@ execute:
   message: false
 ---
 
-```{r course-style, include=FALSE}
+```{r setup, include=FALSE}
 library(pacman)
-p_load(tidyverse, rsample)
-
+p_load(tidyverse)
+p_load(rpart)
+p_load(randomForest)
+p_load(gbm)
 source("../_shared/bikeshare.R")
-course <- use_course_data("celtic")
+course <- use_course_data("bayern")
 course_palette <- course$palette
-bikedata <- course$data
-
-rmse <- function(truth, estimate) {
-  sqrt(mean((truth - estimate)^2))
-}
 ```
 
 ## Antes · Hoy · Después {.class-rhythm}
@@ -42,565 +38,911 @@ rmse <- function(truth, estimate) {
 ::: {.content-box}
 **Antes**
 
-asociación y causalidad.
+regularización y selección de hiperparámetros.
 :::
 
 ::: {.content-box-primary}
 **Hoy**
 
-generalización, overfitting y validación cruzada.
+árboles, Random Forest y Gradient Boosting.
 :::
 
 ::: {.content-box-secondary}
 **Después**
 
-clasificador logístico: métricas y umbrales.
+redes neuronales.
 :::
 
 :::
 
-# Predecir es generalizar {.inverse .center .middle}
-
-## Dos preguntas, dos criterios de éxito
-
-::: {.pull-left}
-
-**Problemas de $\hat{\beta}$**
-
-- ¿Cómo se relaciona $X$ con $Y$?
-- ¿Qué parámetro resume esa relación?
-- ¿Qué incertidumbre tiene la estimación?
-- ¿Es defendible una interpretación causal?
-
-El foco está en **explicación e inferencia**.
-
-:::
-
-::: {.pull-right}
-
-**Problemas de $\hat{y}$**
-
-- ¿Qué valor tendrá $Y$ para un caso nuevo?
-- ¿Cuánto nos equivocaremos?
-- ¿Qué especificación predice mejor?
-- ¿El desempeño se mantiene en otros datos?
-
-El foco está en **generalización**.
-
-:::
-
-::: {.footnote}
-Distinción inspirada en Mullainathan y Spiess (2017).
-:::
-
-## El examen ocurre en datos nuevos
-
-Un modelo recibe predictores $X$ y construye una regla:
-
-$$
-\widehat{f}:X\longrightarrow \widehat{Y}.
-$$
-
-El objetivo predictivo no es reproducir los datos que ya vimos, sino minimizar el error esperado en una nueva observación:
-
-$$
-\mathbb{E}\left[L\{Y_{\text{nuevo}},\widehat f(X_{\text{nuevo}})\}\right].
-$$
-
-. . .
-
-La función de pérdida $L$ depende de la tarea: error cuadrático, error absoluto, log-loss, error de clasificación, etc.
-
-## Nuestro problema de hoy
-
-Usaremos `bikers` como outcome:
-
-> ¿Cuántos arriendos habrá en una hora que el modelo no usó para aprender?
-
-Los predictores disponibles describen clima, calendario y hora del día.
-
-. . .
-
-No necesitamos comprometernos con una familia de modelos: la lógica de evaluación es la misma para una regresión, un árbol, una red neuronal o cualquier otra regla de predicción.
-
-## Ajustar y evaluar son operaciones distintas
-
-::: {.pull-left}
-
-**Ajustar**
-
-Usar datos para aprender:
-
-$$
-\text{datos de entrenamiento}
-\longrightarrow \widehat f
-$$
-
-:::
-
-::: {.pull-right}
-
-**Evaluar**
-
-Aplicar la regla sin reestimarla:
-
-$$
-\widehat f(X_{\text{nuevo}})
-\longrightarrow \text{pérdida}
-$$
-
-:::
-
-. . .
-
-Si ajustamos y evaluamos con los mismos casos, el modelo ya conoce las respuestas del examen.
-
-# Overfitting {.inverse .center .middle}
-
-## Buen ajuste no implica buena predicción
-
-Un modelo flexible puede capturar:
-
-- patrones estables que volverán a aparecer;
-- ruido idiosincrático de la muestra de entrenamiento.
-
-. . .
-
-El segundo componente reduce el error de entrenamiento, pero deteriora la predicción en casos nuevos. Eso es **overfitting** o sobreajuste.
-
-## Tres regímenes de complejidad
-
-::: {.center}
-
-![Subajuste, ajuste adecuado y sobreajuste](underfit_right_overfit.png){width="78%"}
-
-:::
-
-- **Subajuste:** la regla es demasiado rígida y omite señal.
-- **Buen balance:** captura patrones reproducibles.
-- **Sobreajuste:** persigue fluctuaciones que no se repiten.
-
-## Sesgo y varianza describen errores distintos
-
-::: {.pull-left}
-
-**Sesgo alto**
-
-El modelo aprende una regla sistemáticamente equivocada.
-
-- poca flexibilidad;
-- errores parecidos en distintas muestras;
-- riesgo de subajuste.
-
-:::
-
-::: {.pull-right}
-
-**Varianza alta**
-
-Pequeños cambios en la muestra producen reglas muy diferentes.
-
-- mucha flexibilidad;
-- predicciones inestables;
-- riesgo de sobreajuste.
-
-:::
-
-. . .
-
-Reducir uno suele aumentar el otro: ese es el **trade-off sesgo–varianza**.
-
-## La descomposición del error
-
-En predicción con pérdida cuadrática:
-
-$$
-\underbrace{\mathbb{E}\left[(Y-\widehat f(X))^2\right]}_{\text{error esperado}}
-=
-\underbrace{\text{Sesgo}^2}_{\text{rigidez}}
-+
-\underbrace{\text{Varianza}}_{\text{inestabilidad}}
-+
-\underbrace{\sigma^2}_{\text{ruido irreducible}}.
-$$
-
-. . .
-
-La complejidad óptima no elimina todo error. Busca el punto donde agregar flexibilidad deja de recuperar señal y empieza a perseguir ruido.
-
-## El error de entrenamiento siempre sonríe
-
-```{r complexity-demo, echo=FALSE, fig.height=4.5}
-set.seed(3070)
-demo_id <- sample(seq_len(nrow(bikedata)), 600)
-demo_train <- bikedata[demo_id[1:300], ]
-demo_test <- bikedata[demo_id[301:600], ]
-
-complexity_results <- map_dfr(1:16, function(degree) {
-  model <- lm(bikers ~ poly(temp, degree, raw = TRUE), data = demo_train)
-  tibble(
-    complejidad = degree,
-    Entrenamiento = rmse(
-      demo_train$bikers,
-      predict(model, newdata = demo_train)
-    ),
-    Evaluación = rmse(
-      demo_test$bikers,
-      predict(model, newdata = demo_test)
-    )
-  )
-}) %>%
-  pivot_longer(
-    c(Entrenamiento, Evaluación),
-    names_to = "muestra",
-    values_to = "RMSE"
+```{r setup-continued, include=FALSE}
+
+bikedata <- course$data %>%
+  mutate(
+    hour = as.integer(hour),
+    month = as.integer(mnth),
+    weather = factor(weather)
   )
 
-ggplot(complexity_results, aes(complejidad, RMSE, color = muestra)) +
-  geom_line(linewidth = 1.2) +
-  geom_point(size = 2.5) +
-  scale_color_course(name = NULL) +
-  labs(x = "Flexibilidad de la regla", y = "RMSE")
-```
-
-En esta demostración con `bikers`, el error de entrenamiento cae al aumentar flexibilidad; el error en datos separados puede subir.
-
-## El error relevante es fuera de muestra
-
-- **Error de entrenamiento:** mide qué tan bien la regla reproduce los casos usados para ajustarla.
-- **Error de generalización:** mide qué tan bien predice casos generados por el mismo proceso, pero no usados para aprender.
-
-. . .
-
-El overfitting es la brecha:
-
-$$
-\text{error fuera de muestra}
--
-\text{error de entrenamiento}.
-$$
-
-No podemos diagnosticarla mirando solo el ajuste in-sample.
-
-# Separar para aprender {.inverse .center .middle}
-
-## La regla básica: no usar dos veces la respuesta
-
-::: {.center}
-
-![Separación entre entrenamiento y evaluación](train_test.png){width="72%"}
-
-:::
-
-1. Ajustamos el modelo en el **training set**.
-2. Congelamos la regla aprendida.
-3. Predecimos el **test set**.
-4. Comparamos predicción y resultado con una pérdida.
-
-## Un único split es frágil
-
-Separar una vez training y test evita el doble uso, pero:
-
-- el resultado depende de qué casos quedaron en cada lado;
-- una partición difícil puede hacer parecer malo a un buen modelo;
-- una partición fácil puede producir optimismo;
-- en muestras pequeñas reservamos demasiada información solo para evaluar.
-
-. . .
-
-Queremos repetir el examen con distintas particiones sin evaluar sobre casos usados para entrenar.
-
-# Validación cruzada {.inverse .center .middle}
-
-## Cada observación rinde examen una vez
-
-::: {.center}
-
-![Esquema de validación cruzada](kfold_cv.gif){width="70%"}
-
-:::
-
-En $k$-fold cross-validation, dividimos los datos en $k$ grupos. Cada fold actúa una vez como evaluación y $k-1$ veces como parte del entrenamiento.
-
-## El algoritmo es una envoltura genérica
-
-Para $j=1,\ldots,k$:
-
-1. reserve el fold $j$;
-2. ajuste la regla con los otros $k-1$ folds;
-3. prediga los casos del fold reservado;
-4. calcule la pérdida $E_j$.
-
-. . .
-
-Luego promediamos:
-
-$$
-\widehat E_{\text{CV}}=\frac{1}{k}\sum_{j=1}^{k}E_j.
-$$
-
-El interior de “ajuste la regla” puede ser cualquier algoritmo predictivo.
-
-## El resultado es una distribución, no solo un promedio
-
-Los $k$ errores $\{E_1,\ldots,E_k\}$ permiten estudiar:
-
-- desempeño promedio;
-- dispersión entre folds;
-- folds especialmente difíciles;
-- sensibilidad de la conclusión a la partición.
-
-. . .
-
-Dos modelos con el mismo error promedio pueden diferir mucho en estabilidad.
-
-## ¿Cuántos folds?
-
-::: {.pull-left}
-
-**$k$ pequeño**
-
-- entrenamientos más pequeños;
-- menor costo computacional;
-- estimación más sesgada del desempeño final.
-
-:::
-
-::: {.pull-right}
-
-**$k$ grande**
-
-- entrenamientos parecidos al dataset completo;
-- mayor costo;
-- errores entre folds más correlacionados.
-
-:::
-
-. . .
-
-$k=5$ o $k=10$ suele ofrecer un balance razonable.
-
-## LOOCV es el caso extremo
-
-Si $k=n$, cada fold contiene una sola observación:
-
-$$
-\text{LOOCV}=\text{Leave-One-Out Cross-Validation}.
-$$
-
-- Entrena $n$ veces con $n-1$ casos.
-- Usa casi todos los datos en cada ajuste.
-- Puede ser costoso y producir una estimación de error con alta varianza.
-
-. . .
-
-Usar más folds no garantiza una mejor decisión.
-
-# Cross-validation con `bikers` {.inverse .center .middle}
-
-## La partición debe parecerse al uso futuro
-
-Los datos contienen 24 horas dentro de cada día. Si repartimos horas al azar, el training set puede contener otras horas del mismo día que estamos evaluando.
-
-. . .
-
-Para predecir demanda en **días nuevos**, dejamos días completos fuera:
-
-```{r make-folds, echo=TRUE}
 set.seed(3070)
-folds <- group_vfold_cv(
-  bikedata,
-  group = day,
-  v = 10
+days <- sort(unique(bikedata$day))
+n_train_days <- floor(0.60 * length(days))
+n_valid_days <- floor(0.20 * length(days))
+train_days <- days[seq_len(n_train_days)]
+valid_days <- days[n_train_days + seq_len(n_valid_days)]
+test_days <- days[-seq_len(n_train_days + n_valid_days)]
+id_train <- which(bikedata$day %in% train_days)
+id_valid <- which(bikedata$day %in% valid_days)
+id_test <- which(bikedata$day %in% test_days)
+
+demand_cutoff <- quantile(bikedata$bikers[id_train], 0.75)
+bikedata <- bikedata %>%
+  mutate(high_demand = factor(
+    if_else(bikers > demand_cutoff, "alta", "baja"),
+    levels = c("baja", "alta")
+  ))
+train <- bikedata[id_train, ]
+valid <- bikedata[id_valid, ]
+test <- bikedata[id_test, ]
+dev <- bind_rows(train, valid)
+
+predictors <- c(
+  "temp", "hum", "windspeed", "workingday", "holiday",
+  "hour", "month", "weather"
 )
+reg_formula <- reformulate(predictors, "bikers")
+class_formula <- reformulate(predictors, "high_demand")
 
-folds %>%
-  select(id) %>%
-  slice_head(n = 3)
-```
-
-Mostramos tres de los diez folds. La unidad de partición es parte del estimando predictivo.
-
-## Dos reglas candidatas
-
-Para hacer visible el procedimiento, usamos dos reglas reproducibles:
-
-```{r candidate-formulas, echo=TRUE}
-simple_formula <- bikers ~
-  temp + hum + workingday + factor(hr)
-
-flexible_formula <- bikers ~
-  poly(temp, 5, raw = TRUE) +
-  poly(hum, 5, raw = TRUE) +
-  factor(mnth) +
-  factor(hr) * workingday +
-  factor(weekday) +
-  windspeed
-```
-
-El objetivo no es enseñar estas especificaciones. Son dos objetos `fit/predict` que la misma validación cruzada puede comparar.
-
-## Una función evalúa cualquier fórmula
-
-```{r cv-function, echo=TRUE}
-evaluate_fold <- function(split, formula) {
-  train_data <- analysis(split)
-  test_data <- assessment(split)
-  fit <- lm(formula, data = train_data)
-
-  tibble(
-    RMSE_train = rmse(
-      train_data$bikers, predict(fit, train_data)
-    ),
-    RMSE_test = rmse(
-      test_data$bikers, predict(fit, test_data)
-    )
-  )
+rmse <- function(y, p) sqrt(mean((y - p)^2))
+mae <- function(y, p) mean(abs(y - p))
+log_loss <- function(y, p) {
+  truth <- as.integer(y == "alta")
+  p <- pmin(pmax(p, 1e-8), 1 - 1e-8)
+  -mean(truth * log(p) + (1 - truth) * log(1 - p))
 }
 ```
+# Modelos basados en árboles {.inverse .center .middle}
 
-Cada ajuste conoce solo el training set de su fold.
+## Ruta de la clase
 
-## Repetimos el examen diez veces
+1. Construir y podar árboles.
+2. Usarlos para regresión y clasificación.
+3. Reducir varianza con Random Forest.
+4. Reducir sesgo con Gradient Boosting.
+5. Comparar desempeño e interpretación.
 
-```{r run-cv, echo=TRUE, results='hide'}
-candidate_models <- list(
-  Simple = simple_formula,
-  Flexible = flexible_formula
-)
+Referencia principal: James et al. (2021), *An Introduction to Statistical Learning*, 2ª ed., capítulo 8 ([sitio oficial](https://www.statlearning.com/)).
 
-cv_results <- imap_dfr(
-  candidate_models,
-  function(formula, model_name) {
-    map_dfr(folds$splits, evaluate_fold, formula) %>%
-      mutate(modelo = model_name, .before = 1)
-  }
+## Retomando la pregunta de la clase pasada
+
+La clase 16 terminó con una pregunta sin responder: regularización controla **cuánta** complejidad usar, pero seguimos siendo nosotros quienes escribimos a mano qué interacciones probar (`I(temp^2)`, `factor(hr)*workingday`...). Cuando agregamos la interacción completa hora×mes, no sabíamos de antemano cuáles de esas variables eran señal y cuáles ruido.
+
+. . .
+
+Hoy cambiamos de estrategia por completo: **¿puede el propio modelo aprender qué preguntas de sí/no —y en qué orden— separan mejor las horas de demanda alta?**
+
+En vez de una ecuación con términos que nosotros elegimos, construiremos reglas: *"¿es hora punta? → ¿hace calor? → ¿es día hábil?"*. Las interacciones emergen de los datos, no de nuestras hipótesis.
+
+## Configuración: outcome y partición
+
+Mantenemos el mismo outcome y la misma partición cronológica del módulo:
+
+```{r config-split-20, eval=FALSE}
+# Outcome binario: "alta demanda" = top 25% de las horas,
+# con el umbral (cuantil 0.75) aprendido SOLO en entrenamiento.
+demand_cutoff <- quantile(bikedata$bikers[id_train], 0.75)
+bikedata <- bikedata %>%
+  mutate(high_demand = factor(
+    if_else(bikers > demand_cutoff, "alta", "baja"),
+    levels = c("baja", "alta")
+  ))
+
+# Partición CRONOLÓGICA 60/20/20 por día
+train <- bikedata[id_train, ];  valid <- bikedata[id_valid, ]
+test  <- bikedata[id_test, ]
+dev   <- bind_rows(train, valid)   # train + valid, para el reajuste final
+```
+
+## Configuración: predictores y fórmulas
+
+A diferencia de la regresión regularizada, los árboles usan las variables **directamente**, sin expandirlas en una matriz de diseño:
+
+```{r config-formulas-20, eval=FALSE}
+predictors <- c("temp", "hum", "windspeed", "workingday",
+                "holiday", "hour", "month", "weather")
+
+reg_formula   <- reformulate(predictors, "bikers")       # regresión: conteo
+class_formula <- reformulate(predictors, "high_demand")  # clasificación: alta/baja
+```
+
+Sin `I(temp^2)` ni interacciones escritas a mano: el árbol las descubrirá solo.
+
+## Diseño de evaluación
+
+```{r}
+tibble(
+  conjunto = c("Entrenamiento", "Validación", "Test"),
+  días = c(length(train_days), length(valid_days), length(test_days)),
+  horas = c(nrow(train), nrow(valid), nrow(test)),
+  período = c(
+    paste0(min(train_days), "–", max(train_days)),
+    paste0(min(valid_days), "–", max(valid_days)),
+    paste0(min(test_days), "–", max(test_days))
+  )
 )
 ```
 
-El resultado contiene veinte evaluaciones: diez por regla. `RMSE_test` se calcula siempre fuera de muestra.
+La partición cronológica exige predecir períodos futuros. Además, el umbral de demanda alta se aprende sólo con entrenamiento.
 
-## El promedio importa; la variación también
+## Un árbol, en una frase
 
-```{r cv-plot, echo=FALSE, fig.height=4.5}
-ggplot(cv_results, aes(modelo, RMSE_test, color = modelo)) +
-  geom_boxplot(width = 0.45, outlier.shape = NA, alpha = 0.15) +
-  geom_jitter(width = 0.08, size = 3) +
-  stat_summary(
-    fun = mean, geom = "point", shape = 21, size = 4.5,
-    fill = "white", color = "black"
-  ) +
-  scale_color_course(guide = "none") +
-  labs(x = NULL, y = "RMSE en días reservados")
+Un árbol de decisión funciona como un **diagrama de flujo**: una secuencia de preguntas de sí/no que termina en una respuesta.
+
+![Diagrama de un árbol de decisión: nodo raíz, nodos internos, ramas y hojas.](https://media.geeksforgeeks.org/wp-content/uploads/20260221123946485692/decision_tree.webp){fig-align="center" width="55%"}
+
+::: {.footnote}
+Fuente: [GeeksforGeeks — Decision Tree in Machine Learning](https://www.geeksforgeeks.org/machine-learning/decision-tree-introduction-example/)
+:::
+
+## Vocabulario del árbol
+
+| Término | Significado |
+|---|---|
+| **Nodo raíz** | la primera pregunta; contiene todos los datos de entrenamiento |
+| **Nodo interno** | una pregunta intermedia sobre un predictor (p. ej. ¿`temp` < 20°C?) |
+| **Rama** | el camino que se sigue según la respuesta (sí/no) |
+| **Hoja** | el nodo final: ahí vive la predicción |
+
+Cada palabra técnica que sigue en esta clase (partición, poda, impureza) describe **cómo se eligen estas preguntas y dónde se detiene el árbol**.
+
+## La idea
+
+Un árbol divide recursivamente el espacio de predictores en regiones simples.
+
+- Cada nodo formula una pregunta binaria.
+- Cada rama representa una respuesta.
+- Cada hoja contiene una predicción.
+- Las interacciones aparecen sin escribirlas manualmente.
+
+## El modelo de un árbol
+
+Un árbol parte el espacio de predictores en regiones $R_1,\dots,R_M$ y predice una constante en cada una:
+
+$$\hat f(x)=\sum_{m=1}^{M}c_m\,\mathbb{1}(x\in R_m).$$
+
+| Símbolo | Significado |
+|---|---|
+| $R_1,\dots,R_M$ | las $M$ regiones (hojas) en que queda partido el espacio de predictores |
+| $\mathbb{1}(x\in R_m)$ | 1 si la observación $x$ cae en la región $m$; 0 en caso contrario |
+| $c_m$ | la predicción constante asignada a la región $R_m$ |
+
+- Las regiones son **rectángulos**: cada corte es perpendicular a un eje (una pregunta sobre **una** variable a la vez).
+- Regresión: $c_m=$ media de $y$ en $R_m$. Clasificación: proporción/clase mayoritaria en $R_m$.
+- Hallar la partición óptima (qué $R_m$ minimizan el error total) es NP-difícil, así que se construye de forma **greedy**: se elige la mejor pregunta *ahora*, sin planear varios pasos adelante.
+
+## Una partición
+
+Una división candidata tiene la forma $X_j < s$. Para regresión buscamos $j$ y $s$ que reduzcan:
+
+$$
+\sum_{i:x_{ij}<s}(y_i-\bar y_L)^2+
+\sum_{i:x_{ij}\ge s}(y_i-\bar y_R)^2.
+$$
+
+El algoritmo es **greedy**: elige la mejor división actual, sin garantizar el árbol globalmente óptimo.
+
+## Regresión versus clasificación
+
+| Tarea | Predicción en la hoja | Criterio frecuente |
+|---|---|---|
+| Regresión | media de `bikers` | suma de errores cuadrados |
+| Clasificación | proporción de demanda alta | Gini o entropía |
+
+Para dos clases, la impureza de Gini es:
+
+$$G=1-\left[p^2+(1-p)^2\right].$$
+
+## Tres medidas de impureza
+
+Intuición: si un nodo tiene 3 horas de demanda "alta" y 3 de "baja", no sabemos casi nada sobre qué esperar ahí — **impureza alta**. Si tiene 6 "altas" y 0 "bajas", el nodo es homogéneo — **impureza cero**. Las tres medidas de abajo formalizan esa misma idea.
+
+Para dos clases con proporción $p$ de "alta" en un nodo:
+
+$$
+E=1-\max(p,1-p),\quad
+G=2p(1-p),\quad
+D=-p\log p-(1-p)\log(1-p).
+$$
+
+```{r impurity-curves, echo=FALSE, fig.height=4.6}
+ent <- function(p) {
+  e <- -(p * log2(p) + (1 - p) * log2(1 - p))
+  e[!is.finite(e)] <- 0
+  e
+}
+tibble(p = seq(0, 1, length.out = 401)) %>%
+  mutate(
+    `Error de clasificación` = pmin(p, 1 - p),
+    Gini = 2 * p * (1 - p),
+    Entropía = ent(p) / 2
+  ) %>%
+  pivot_longer(-p, names_to = "medida", values_to = "impureza") %>%
+  ggplot(aes(p, impureza, color = medida)) +
+  geom_line(linewidth = 1.2) +
+  scale_color_course() +
+  labs(x = "Proporción de clase 'alta' en el nodo (p)",
+       y = "Impureza", color = NULL)
 ```
 
-Cada punto es un fold; el punto blanco es el promedio.
+## Por qué Gini o entropía, no el error
 
-## Resumimos desempeño y estabilidad
+- Las tres se minimizan en nodos **puros** ($p=0$ o $p=1$) y se maximizan en $p=0.5$.
+- El error de clasificación es **plano por tramos**: no distingue un nodo con $p=0.3$ de uno con $p=0.1$.
+- Gini y entropía son **suaves y cóncavas**: premian empujar $p$ hacia los extremos, así que guían mejor la búsqueda de cortes.
+- Gini $=2p(1-p)$ es también la **varianza de un Bernoulli**: mide la "mezcla" del nodo.
 
-```{r cv-summary, echo=FALSE}
-cv_summary <- cv_results %>%
-  group_by(modelo) %>%
-  summarise(
-    RMSE_promedio = mean(RMSE_test),
-    SD_entre_folds = sd(RMSE_test),
-    brecha_generalización = mean(RMSE_test - RMSE_train),
-    .groups = "drop"
+Para *podar* sí se puede usar el error de clasificación; para *crecer*, Gini o entropía funcionan mejor.
+
+# Árboles {.inverse .center .middle}
+
+## Árbol de regresión: ejemplo empírico
+
+```{r tree-reg}
+tree_reg <- rpart(
+  reg_formula,
+  data = train,
+  method = "anova",
+  control = rpart.control(cp = 0.001, minsplit = 70, xval = 8)
+)
+
+tree_reg
+```
+
+## Visualizar las reglas
+
+```{r tree-plot, fig.height=5.4}
+plot(tree_reg, uniform = TRUE, margin = 0.08)
+text(tree_reg, use.n = TRUE, cex = 0.72)
+```
+
+La figura representa una secuencia de decisiones, no una relación lineal promedio.
+
+## Complejidad y poda
+
+Un árbol profundo suele tener bajo error de entrenamiento y alta varianza. La poda minimiza:
+
+$$R_\alpha(T)=R(T)+\alpha|T|,$$
+
+donde $R(T)$ es el error del árbol y $|T|$ su número de hojas.
+
+`cp` controla el costo de agregar complejidad.
+
+## Poda por el eslabón más débil
+
+Variar $\alpha$ de $0$ a $\infty$ **no** genera todos los árboles posibles, sino una **secuencia anidada** única:
+
+$$T_0 \supset T_1 \supset \cdots \supset \{\text{raíz}\}.$$
+
+- En cada paso se colapsa el nodo interno con menor aumento de error por hoja (el "eslabón más débil").
+- Cada árbol de la secuencia es óptimo para un rango de $\alpha$.
+- Elegimos $\alpha$ (o `cp`) por **validación cruzada**, con la regla de 1 error estándar: el árbol más pequeño dentro de 1 SE del mínimo.
+- En `rpart`, `cp` es $\alpha$ reescalado por el error de la raíz; por eso es comparable entre problemas.
+
+## Elegir `cp`
+
+```{r cp-table}
+cp_table <- as_tibble(tree_reg$cptable) %>%
+  set_names(c("CP", "nsplit", "rel_error", "xerror", "xstd"))
+best_cp <- cp_table$CP[which.min(cp_table$xerror)]
+pruned_reg <- prune(tree_reg, cp = best_cp)
+
+cp_table %>%
+  transmute(cp = CP, splits = nsplit, relative_error = rel_error,
+            cv_error = xerror, cv_se = xstd)
+```
+
+## Curva de poda
+
+```{r cp-plot, fig.height=5}
+cp_table %>%
+  ggplot(aes(nsplit, xerror)) +
+  geom_ribbon(aes(ymin = xerror - xstd, ymax = xerror + xstd),
+              fill = course_palette[["primary"]], alpha = 0.18) +
+  geom_line(color = course_palette[["primary"]], linewidth = 1.2) +
+  geom_point(color = course_palette[["secondary"]], size = 2.8) +
+  labs(x = "Número de divisiones", y = "Error CV relativo")
+```
+
+## Desempeño de regresión
+
+```{r tree-reg-metrics}
+tree_reg_pred <- predict(pruned_reg, test)
+tibble(
+  modelo = "Árbol podado",
+  RMSE = rmse(test$bikers, tree_reg_pred),
+  MAE = mae(test$bikers, tree_reg_pred)
+)
+```
+
+## Árbol de clasificación: ejemplo empírico
+
+```{r tree-class}
+tree_class <- rpart(
+  class_formula,
+  data = train,
+  method = "class",
+  control = rpart.control(cp = 0.003, minsplit = 60, xval = 8)
+)
+
+tree_prob <- predict(tree_class, test, type = "prob")[, "alta"]
+tree_class_hat <- factor(if_else(tree_prob >= 0.5, "alta", "baja"),
+                         levels = c("baja", "alta"))
+table(observado = test$high_demand, predicho = tree_class_hat)
+```
+
+## Métricas de clasificación
+
+```{r}
+tibble(
+  accuracy = mean(tree_class_hat == test$high_demand),
+  sensitivity = mean(tree_class_hat[test$high_demand == "alta"] == "alta"),
+  specificity = mean(tree_class_hat[test$high_demand == "baja"] == "baja"),
+  log_loss = log_loss(test$high_demand, tree_prob)
+)
+```
+
+Las probabilidades de un árbol son constantes dentro de cada hoja.
+
+## Una familia con nombres propios
+
+`rpart` implementa una variante de **CART** (*Classification and Regression Trees*), el algoritmo que usamos hoy. No es el único:
+
+| Algoritmo | Idea distintiva |
+|---|---|
+| **ID3** (1986) | elige cortes solo por ganancia de información (entropía) |
+| **C4.5 / C5.0** | extiende ID3: variables continuas, datos faltantes, poda integrada |
+| **CART** (1984) | Gini o SSE; produce árboles binarios; base de `rpart` y de Random Forest/Boosting |
+
+Distintos nombres, misma lógica de fondo: particionar recursivamente para reducir impureza.
+
+## Ventajas y límites
+
+::: {.pull-left}
+
+**Ventajas**
+
+- reglas fáciles de comunicar;
+- no linealidades;
+- interacciones automáticas;
+- poca preparación de datos.
+
+:::
+
+::: {.pull-right}
+
+**Límites**
+
+- divisiones inestables;
+- predicción escalonada;
+- alta varianza;
+- un solo árbol suele predecir peor.
+
+:::
+
+## Por qué un árbol tiene alta varianza
+
+- Los cortes son **jerárquicos**: cambiar el corte raíz reconfigura todo lo de abajo.
+- La predicción es **escalonada**: constante por región, con saltos en los bordes.
+- Muestras parecidas producen árboles distintos.
+
+Esta inestabilidad es exactamente lo que atacan los ensambles: promediando (Random Forest) o corrigiendo por etapas (Boosting).
+
+# Random Forest {.inverse .center .middle}
+
+## La intuición: un comité de árboles
+
+Un solo árbol es inestable: cambia mucho si cambia la muestra. La solución, propuesta por Leo Breiman (2001), es simple: **en vez de confiar en un árbol, preguntarle a muchos y promediar**.
+
+![Muchos árboles entrenados con datos ligeramente distintos "votan" y el bosque combina sus respuestas.](https://media.geeksforgeeks.org/wp-content/uploads/20260221153154405165/random_forest_algorithm.webp){fig-align="center" width="55%"}
+
+::: {.footnote}
+Fuente: [GeeksforGeeks — Random Forest Algorithm](https://www.geeksforgeeks.org/machine-learning/random-forest-algorithm-in-machine-learning/)
+:::
+
+Es la misma lógica que consultar a varios expertos independientes en vez de a uno solo: los errores individuales tienden a cancelarse.
+
+## De un árbol a un bosque
+
+Random Forest combina dos fuentes de aleatoriedad:
+
+1. Cada árbol recibe una muestra bootstrap.
+2. Cada nodo considera solo `mtry` predictores candidatos.
+
+Promediar árboles poco correlacionados reduce varianza.
+
+## Algoritmo
+
+Para $b=1,\ldots,B$:
+
+1. extraer una muestra bootstrap;
+2. crecer un árbol sin podar;
+3. sortear `mtry` variables en cada nodo;
+4. guardar la predicción.
+
+La probabilidad final es $\hat p(x)=B^{-1}\sum_b\hat p_b(x)$.
+
+## Por qué promediar reduce la varianza
+
+El promedio de $B$ predicciones, cada una con varianza $\sigma^2$ y correlación media $\rho$ entre pares, tiene varianza:
+
+$$
+\mathrm{Var}\!\left(\frac1B\sum_{b}\widehat f_b\right)
+=\rho\,\sigma^2+\frac{1-\rho}{B}\,\sigma^2.
+$$
+
+| Símbolo | Significado |
+|---|---|
+| $B$ | número de árboles en el bosque |
+| $\sigma^2$ | varianza de un árbol individual |
+| $\rho$ | correlación promedio entre pares de árboles |
+
+```{r bagging-variance, echo=FALSE, fig.height=4.4}
+crossing(rho = c(0, 0.2, 0.5, 0.9), B = 1:200) %>%
+  mutate(var_rel = rho + (1 - rho) / B) %>%
+  ggplot(aes(B, var_rel, color = factor(rho))) +
+  geom_line(linewidth = 1.1) +
+  scale_color_course() +
+  labs(x = "Número de árboles (B)",
+       y = expression(Var / sigma^2), color = expression(rho))
+```
+
+- El segundo término $\to 0$ al crecer $B$: promediar ayuda.
+- El primero, $\rho\sigma^2$, es un **piso**: si los árboles están muy correlacionados, promediar rinde poco.
+
+## Random Forest = bagging + decorrelación
+
+Bagging usa bootstrap, que baja algo $\rho$. Random Forest **además** sortea `mtry` variables candidatas por nodo, lo que baja $\rho$ mucho más.
+
+- `mtry` chico → árboles menos correlacionados (piso más bajo), pero cada árbol algo más débil.
+- `mtry` grande → árboles más fuertes pero más parecidos (piso más alto).
+- Es el dial que equilibra **decorrelación** y **fuerza individual**: por eso se elige con validación.
+
+## Tuning de `mtry`
+
+```{r rf-tuning, cache=TRUE}
+rf_grid <- tibble(mtry = c(2, 4, 6, 8)) %>%
+  mutate(
+    model = map(mtry, ~ randomForest(
+      class_formula, data = train, ntree = 180, mtry = .x,
+      nodesize = 15, importance = TRUE
+    )),
+    probability = map(model, ~ predict(.x, valid, type = "prob")[, "alta"]),
+    validation_loss = map_dbl(probability, ~ log_loss(valid$high_demand, .x))
   )
 
-cv_summary
+rf_grid %>% select(mtry, validation_loss)
 ```
 
-En este ejercicio, la regla flexible predice mejor días nuevos. La brecha y la dispersión recuerdan que un único número no resume toda la incertidumbre predictiva.
+## Curva de validación
 
-## Cross-validation no está casada con RMSE
+```{r rf-tuning-plot, fig.height=5}
+rf_grid %>%
+  ggplot(aes(mtry, validation_loss)) +
+  geom_line(color = course_palette[["primary"]], linewidth = 1.2) +
+  geom_point(color = course_palette[["secondary"]], size = 3.5) +
+  scale_x_continuous(breaks = rf_grid$mtry) +
+  labs(x = "Predictores candidatos por nodo (mtry)",
+       y = "Log-loss de validación")
+```
 
-Podemos conservar los mismos folds y cambiar la pérdida:
+## Random Forest: ejemplo empírico
 
-| Tipo de outcome | Pérdidas posibles |
+```{r rf-final, cache=TRUE}
+best_mtry <- rf_grid %>% slice_min(validation_loss, n = 1) %>% pull(mtry)
+rf_final <- randomForest(
+  class_formula, data = dev, ntree = 350, mtry = best_mtry,
+  nodesize = 15, importance = TRUE
+)
+rf_prob <- predict(rf_final, test, type = "prob")[, "alta"]
+rf_class <- factor(if_else(rf_prob >= 0.5, "alta", "baja"),
+                   levels = c("baja", "alta"))
+
+tibble(
+  modelo = c("Árbol", "Random Forest"),
+  accuracy = c(mean(tree_class_hat == test$high_demand),
+               mean(rf_class == test$high_demand)),
+  log_loss = c(log_loss(test$high_demand, tree_prob),
+               log_loss(test$high_demand, rf_prob))
+)
+```
+
+## Error out-of-bag
+
+```{r rf-oob, fig.height=5}
+tibble(
+  trees = seq_len(nrow(rf_final$err.rate)),
+  oob_error = rf_final$err.rate[, "OOB"]
+) %>%
+  ggplot(aes(trees, oob_error)) +
+  geom_line(color = course_palette[["series-1"]], linewidth = 1) +
+  labs(x = "Número de árboles", y = "Error OOB")
+```
+
+Cada observación queda fuera de aproximadamente un tercio de los bootstrap. El error OOB permite verificar si agregar árboles todavía estabiliza el bosque; no reemplaza el test final.
+
+## De dónde sale el 36.8 %
+
+La probabilidad de que una observación **no** entre en una muestra bootstrap de tamaño $n$ es:
+
+$$
+\left(1-\frac1n\right)^{n}\;\xrightarrow[n\to\infty]{}\;e^{-1}\approx 0.368.
+$$
+
+```{r oob-fraction, echo=FALSE, fig.height=4.2}
+tibble(n = 1:200) %>%
+  mutate(fuera = (1 - 1 / n)^n) %>%
+  ggplot(aes(n, fuera)) +
+  geom_hline(yintercept = exp(-1), linetype = "dashed",
+             color = course_palette[["secondary"]]) +
+  geom_line(color = course_palette[["primary"]], linewidth = 1.2) +
+  scale_y_continuous(limits = c(0, 0.6)) +
+  labs(x = "Tamaño de muestra (n)",
+       y = "Proporción fuera del bootstrap")
+```
+
+Predecir cada observación con los árboles que **no** la vieron da el error OOB: una validación incorporada, casi gratis.
+
+## Importancia por permutación
+
+```{r rf-importance, fig.height=5.2}
+rf_importance <- importance(rf_final, type = 1) %>%
+  as.data.frame() %>%
+  rownames_to_column("variable") %>%
+  rename(importance = MeanDecreaseAccuracy) %>%
+  arrange(importance)
+
+rf_importance %>%
+  ggplot(aes(importance, reorder(variable, importance))) +
+  geom_col(fill = course_palette[["primary"]]) +
+  labs(x = "Caída de accuracy al permutar", y = NULL)
+```
+
+## Dos formas de medir importancia
+
+**Por impureza (Gini)**: suma, sobre los nodos que usan $X_j$, la reducción de impureza que produce. Rápida, pero **sesgada** hacia variables con muchos cortes posibles (continuas, alta cardinalidad).
+
+**Por permutación**: permuta $X_j$ en los datos OOB y mide cuánto **cae la accuracy**. Más fiel, más costosa:
+
+$$\text{Imp}_j=\text{Acc}_{\text{OOB}}-\text{Acc}_{\text{OOB},\,X_j\ \text{permutada}}.$$
+
+Usamos permutación (type = 1) precisamente para evitar el sesgo de la versión Gini.
+
+## La importancia no es causal
+
+- Variables correlacionadas pueden compartir importancia.
+- Una variable con muchos puntos de corte puede resultar favorecida.
+- La importancia mide aporte predictivo dentro de este modelo.
+- No identifica el efecto de intervenir sobre una variable.
+
+Use la importancia para diagnosticar el predictor, no para reemplazar teoría.
+
+## Perfil de demanda alta por hora
+
+```{r rf-profile, fig.height=5}
+rf_profile <- map_dfr(0:23, function(h) {
+  counterfactual <- valid
+  counterfactual$hour <- h
+  tibble(hour = h, probability = mean(
+    predict(rf_final, counterfactual, type = "prob")[, "alta"]
+  ))
+})
+
+rf_profile %>%
+  ggplot(aes(hour, probability)) +
+  geom_line(color = course_palette[["primary"]], linewidth = 1.3) +
+  geom_point(color = course_palette[["secondary"]], size = 2.4) +
+  scale_x_continuous(breaks = seq(0, 23, 3)) +
+  labs(x = "Hora fijada", y = "Probabilidad promedio predicha")
+```
+
+Es una descripción del modelo; supone que podemos fijar la hora manteniendo el resto de las filas.
+
+## Dependencia parcial, formalmente
+
+El perfil por hora es una **función de dependencia parcial**: promediamos la predicción sobre el resto de los predictores mientras fijamos $X_S$:
+
+$$
+\bar f_S(x_S)=\frac1n\sum_{i=1}^{n}\widehat f\big(x_S,\,x_{iC}\big).
+$$
+
+- $x_S$ = variable de interés (hora); $x_{iC}$ = resto de la fila $i$, tal como se observó.
+- Muestra el efecto **marginal** aprendido por el modelo, promediando interacciones.
+- Las curvas **ICE** (una por observación, sin promediar) revelan heterogeneidad que la PDP oculta.
+- Si `hora` está correlacionada con otras variables, fijarla crea combinaciones poco realistas: interpretar con cautela.
+
+## Dos formas de combinar árboles
+
+Random Forest no es la única manera de construir un ensamble. **AdaBoost** (Freund & Schapire, 1997) combina árboles muy pequeños ("stumps": una sola pregunta) de otra manera:
+
+![Random Forest promedia árboles completos con voto igualitario; AdaBoost combina stumps con voto ponderado, entrenados en secuencia.](https://media.geeksforgeeks.org/wp-content/cdn-uploads/20220518180116/random-forest-vs-adaboost.jpg){fig-align="center" width="65%"}
+
+::: {.footnote}
+Fuente: [GeeksforGeeks — Differences Between Random Forest and AdaBoost](https://www.geeksforgeeks.org/differences-between-random-forest-and-adaboost/)
+:::
+
+| | Random Forest | AdaBoost |
+|---|---|---|
+| Árboles | profundos | *stumps* (1 corte) |
+| Entrenamiento | en paralelo, independiente | en secuencia |
+| Voto final | igualitario | ponderado (mejores árboles pesan más) |
+| Ataca principalmente | varianza | sesgo |
+
+`gbm` (que usaremos a continuación) generaliza esta misma idea de "corregir secuencialmente" a cualquier función de pérdida, no solo clasificación.
+
+# Gradient Boosting {.inverse .center .middle}
+
+## Aprender secuencialmente
+
+La intuición de boosting es la de **aprender de los propios errores**: en vez de promediar árboles independientes, entrenamos uno a la vez y cada nuevo árbol se concentra en lo que el ensamble actual todavía predice mal.
+
+Formalmente, agrega árboles pequeños, cada uno concentrado en los errores del ensamble actual:
+
+$$\widehat f_M(x)=\widehat f_{M-1}(x)+\nu h_M(x).$$
+
+- $h_M$: árbol débil.
+- $\nu$: tasa de aprendizaje.
+- $M$: número de árboles.
+
+## ¿Qué es un gradiente?
+
+El **gradiente** de una función $f$ es el vector de sus derivadas parciales, $\nabla f(x) = \left(\frac{\partial f}{\partial x_1}, \dots, \frac{\partial f}{\partial x_p}\right)$. En una sola dimensión, es simplemente la pendiente de la tangente: $f'(x)$.
+
+```{r gradient-intuition, echo=FALSE, fig.height=4.4}
+f <- function(x) x^2
+df <- function(x) 2 * x
+xs <- seq(-3, 3, length.out = 200)
+puntos_x <- c(-2, 0.4, 2.3)
+
+tangentes <- map_dfr(puntos_x, function(x0) {
+  pendiente <- df(x0)
+  tibble(
+    x = c(x0 - 0.8, x0 + 0.8),
+    y = f(x0) + pendiente * (c(x0 - 0.8, x0 + 0.8) - x0),
+    x0 = factor(x0)
+  )
+})
+
+ggplot() +
+  geom_line(data = tibble(x = xs, y = f(xs)), aes(x, y),
+            linewidth = 1.2, color = course_palette[["primary"]]) +
+  geom_line(data = tangentes, aes(x, y, group = x0),
+            color = course_palette[["secondary"]], linewidth = 1.1) +
+  geom_point(data = tibble(x = puntos_x, y = f(puntos_x)), aes(x, y),
+             size = 3, color = course_palette[["secondary"]]) +
+  labs(x = "x", y = "f(x)")
+```
+
+- La pendiente (el gradiente) indica **cuánto y en qué dirección** cambia $f$ en ese punto.
+- Apunta hacia donde $f$ **crece** más rápido; su negativo, $-\nabla f$, apunta hacia donde $f$ **decrece** más rápido — hacia el mínimo.
+- "Descender por el gradiente" es, literalmente, dar pasos pequeños en la dirección $-\nabla f$ hasta acercarse a un mínimo de $f$.
+
+Esta idea reaparecerá hoy (boosting) y en la próxima clase (redes neuronales) — cada vez que se mencione, un recordatorio breve como este acompañará la lámina.
+
+## Boosting como descenso de gradiente
+
+En la etapa $m$, boosting ajusta un árbol al **gradiente negativo** de la pérdida y da un paso:
+
+$$
+\widehat f_m(x)=\widehat f_{m-1}(x)+\nu\, h_m(x),
+\qquad
+h_m \approx -\left[\frac{\partial L}{\partial f}\right]_{f=\widehat f_{m-1}}.
+$$
+
+Es descenso de gradiente en el **espacio de funciones**: cada árbol es un paso que corrige el error actual.
+
+## El gradiente es el residuo
+
+::: {.footnote}
+Recordatorio: el gradiente de la pérdida indica cuánto y hacia dónde hay que mover la predicción para reducir el error; boosting da un paso en la dirección de su negativo.
+:::
+
+Con pérdida cuadrática $L=\tfrac12\sum_i (y_i-f(x_i))^2$:
+
+$$
+-\frac{\partial L}{\partial f(x_i)}=y_i-f(x_i)=r_i.
+$$
+
+- Cada árbol se ajusta a los **residuos** del ensamble actual.
+- Con pérdida de Poisson (la que usamos para `bikers`) el gradiente es $y_i-e^{f(x_i)}$: mismo principio, distinta pérdida.
+- Por eso boosting reduce **sesgo**: corrige sistemáticamente lo que el modelo aún no captura.
+
+## La tasa de aprendizaje regulariza
+
+$$\widehat f_m=\widehat f_{m-1}+\nu\,h_m,\qquad 0<\nu\le 1.$$
+
+- $\nu$ pequeño = pasos cortos: menos sobreajuste, pero se necesitan **más árboles** $M$ — la combinación se elige junto, no cada parámetro por separado.
+- La **profundidad** de cada árbol fija el orden de interacción (stumps = modelo aditivo, sin interacciones).
+- `bag.fraction < 1` (submuestreo) añade aleatoriedad y baja varianza: *stochastic gradient boosting*.
+- Demasiados árboles, con $\nu$ alto, sí puede sobreajustar — a diferencia de Random Forest.
+
+## Bagging versus boosting
+
+| Dimensión | Random Forest | Gradient Boosting |
+|---|---|---|
+| Ajuste | árboles en paralelo | árboles secuenciales |
+| Objetivo principal | reducir varianza | reducir sesgo |
+| Árbol típico | profundo | pequeño |
+| Regularización | `mtry`, tamaño de hoja | profundidad, $\nu$, $M$ |
+| Sensibilidad a outliers | baja (el promedio los diluye) | alta (cada etapa persigue el error anterior) |
+
+## Sesgo y varianza en los ensambles
+
+| | Árbol profundo | Random Forest | Boosting |
+|---|---|---|---|
+| Sesgo | bajo | bajo | se reduce por etapas |
+| Varianza | alta | baja (promedio) | controlada por $\nu,M$ |
+| Ataca sobre todo | — | varianza | sesgo |
+| Riesgo principal | sobreajuste | escaso | sobreajuste si $M$ alto |
+
+Random Forest raramente sobreajusta al agregar árboles; boosting **sí** puede, porque cada árbol nuevo reduce el error de entrenamiento.
+
+## Tuning del boosting
+
+```{r boost-tuning, cache=TRUE}
+boost_grid <- crossing(depth = c(1, 2, 3), shrinkage = c(0.03, 0.08)) %>%
+  mutate(
+    model = map2(depth, shrinkage, ~ gbm(
+      reg_formula, data = train, distribution = "poisson",
+      n.trees = 260, interaction.depth = .x, shrinkage = .y,
+      n.minobsinnode = 20, bag.fraction = 0.7, verbose = FALSE
+    )),
+    prediction = map(model, ~ predict(.x, valid, n.trees = 260, type = "response")),
+    validation_rmse = map_dbl(prediction, ~ rmse(valid$bikers, .x))
+  )
+
+boost_grid %>% select(depth, shrinkage, validation_rmse) %>% arrange(validation_rmse)
+```
+
+## Gradient Boosting: ejemplo empírico
+
+```{r boost-final, cache=TRUE}
+best_boost <- boost_grid %>% slice_min(validation_rmse, n = 1)
+boost_final <- gbm(
+  reg_formula, data = dev, distribution = "poisson",
+  n.trees = 260,
+  interaction.depth = best_boost$depth,
+  shrinkage = best_boost$shrinkage,
+  n.minobsinnode = 20, bag.fraction = 0.7, verbose = FALSE
+)
+boost_pred <- predict(boost_final, test, n.trees = 260, type = "response")
+poisson_baseline <- glm(reg_formula, data = dev, family = poisson())
+poisson_pred <- predict(poisson_baseline, test, type = "response")
+
+tibble(
+  modelo = c("Poisson", "Árbol podado", "Gradient Boosting"),
+  RMSE = c(rmse(test$bikers, poisson_pred),
+           rmse(test$bikers, tree_reg_pred), rmse(test$bikers, boost_pred)),
+  MAE = c(mae(test$bikers, poisson_pred),
+          mae(test$bikers, tree_reg_pred), mae(test$bikers, boost_pred))
+)
+```
+
+## Observado versus predicho
+
+```{r boost-fit-plot, fig.height=5.2}
+tibble(observed = test$bikers, predicted = boost_pred) %>%
+  slice_sample(n = min(1400, nrow(test))) %>%
+  ggplot(aes(observed, predicted)) +
+  geom_point(color = course_palette[["primary"]], alpha = 0.35) +
+  geom_abline(slope = 1, intercept = 0,
+              color = course_palette[["secondary"]], linewidth = 1.2) +
+  coord_equal() +
+  labs(x = "Bikers observado", y = "Bikers predicho")
+```
+
+## Diagnóstico residual
+
+```{r boost-residuals, fig.height=5}
+tibble(predicted = boost_pred, residual = test$bikers - boost_pred) %>%
+  ggplot(aes(predicted, residual)) +
+  geom_hline(yintercept = 0, color = course_palette[["secondary"]]) +
+  geom_point(color = course_palette[["primary"]], alpha = 0.3) +
+  geom_smooth(se = FALSE) +
+  labs(x = "Predicción", y = "Residuo")
+```
+
+Patrones persistentes indican estructura que el ensamble todavía no captura.
+
+## Más allá de `gbm`
+
+`gbm` es pedagógico: implementa la idea de boosting con claridad, pero en la práctica se usan versiones optimizadas:
+
+- **XGBoost**: gradient boosting con regularización explícita sobre los árboles y paralelización — el estándar de facto en competencias y producción con datos tabulares.
+- **LightGBM**: variante orientada a velocidad en datasets grandes.
+- **Stacking**: una tercera familia de ensambles, distinta de bagging y boosting — entrena varios modelos distintos (p. ej. logit, Random Forest, boosting) y un **meta-modelo** aprende a combinar sus predicciones.
+
+La lógica de fondo —combinar modelos simples para predecir mejor que cualquiera por separado— no cambia; cambia la implementación.
+
+## Otros casos de uso
+
+Árboles y ensambles son, junto con los GLM, el caballo de batalla de datos tabulares en la práctica:
+
+| Dominio | Uso típico |
 |---|---|
-| continuo (`bikers`) | RMSE, MAE |
-| binario (`high_demand`) | log-loss, error de clasificación |
-| multinomial (`demand_level`) | cross-entropy, accuracy |
-| conteo | deviance, MAE, RMSE |
+| Salud | árboles de decisión clínica (reglas de diagnóstico interpretables) |
+| Finanzas | detección de fraude y scoring de crédito con Gradient Boosting |
+| Marketing | segmentación de clientes y predicción de *churn* con Random Forest |
+| Biología | clasificación de especies e identificación de genes relevantes |
+| Búsqueda / *ranking* | los motores de búsqueda usan variantes de boosting para ordenar resultados |
 
-. . .
+En todos los casos, el atractivo es el mismo que motivó la clase de hoy: capturar no linealidades e interacciones sin tener que especificarlas a mano.
 
-La métrica debe reflejar el uso sustantivo de la predicción y el costo de equivocarse.
+# Comparación {.inverse .center .middle}
 
-## Cross-validation también sirve para elegir
+## Qué método usar
 
-La usamos para comparar:
+| Prioridad | Candidato inicial |
+|---|---|
+| Reglas comunicables | árbol podado |
+| Clasificación robusta | Random Forest |
+| Máximo desempeño tabular | boosting |
+| Coeficientes interpretables | GLM regularizado |
 
-- algoritmos;
-- predictores;
-- transformaciones;
-- niveles de regularización;
-- hiperparámetros;
-- reglas de decisión.
+La elección depende de la tarea y del costo de errores, no de una jerarquía universal.
 
-. . .
+## Cuándo fallan árboles y ensambles
 
-Pero toda elección guiada por CV convierte esos folds en parte del entrenamiento del procedimiento completo.
+- **Relaciones suaves o lineales**: los escalones aproximan mal; un GLM las capta con menos parámetros.
+- **Extrapolación**: no predicen fuera del rango observado (hojas constantes).
+- **Fronteras oblicuas**: los cortes perpendiculares necesitan muchas divisiones para una diagonal.
+- **Alta cardinalidad**: la importancia por impureza favorece variables con muchos cortes.
+- **Interpretación causal**: importancia y PDP describen el modelo, no efectos de intervenir.
 
-## El test final se toca una sola vez
+## Frente a un GLM regularizado
 
-Un flujo limpio separa tres funciones:
+| Criterio | GLM regularizado | Ensamble de árboles |
+|---|---|---|
+| Forma funcional | lineal en log-odds | no lineal, interacciones automáticas |
+| Interpretación | coeficientes / odds ratios | importancia, PDP |
+| Datos pequeños | robusto | puede sobreajustar |
+| Estructura tabular compleja | limitado | suele ganar |
+| Extrapolación | razonable | pobre |
 
-1. **Training folds:** ajustar parámetros.
-2. **Validation folds:** comparar alternativas y elegir.
-3. **Test final:** estimar desempeño del procedimiento elegido.
+Los ensambles suelen ganar en desempeño tabular; el GLM gana en interpretabilidad y parsimonia.
 
-. . .
+## Síntesis conceptual
 
-Si miramos repetidamente el test para modificar el modelo, terminamos sobreajustando el test.
-
-## Fugas de información
-
-Hay *data leakage* cuando información del fold reservado influye en el ajuste:
-
-- estandarizar con media y desviación de todo el dataset;
-- imputar usando también los casos de evaluación;
-- seleccionar predictores antes de crear folds;
-- ajustar umbrales con las respuestas del test;
-- repartir observaciones relacionadas entre training y test.
-
-. . .
-
-Toda operación que “aprende” de los datos debe ocurrir dentro de cada fold.
-
-## Series de tiempo requieren otra partición
-
-Si el objetivo fuera predecir el futuro, folds aleatorios podrían dejar observaciones futuras en training y pasadas en evaluación.
-
-. . .
-
-En ese caso usaríamos validación temporal:
-
-$$
-\text{pasado}\longrightarrow\text{futuro},
-$$
-
-con ventanas móviles o acumulativas. La validación debe imitar las restricciones reales de despliegue.
+- Un árbol traduce los datos en **reglas**: no linealidades e interacciones sin especificarlas.
+- Su debilidad es la **varianza**; los ensambles la atacan de dos maneras.
+- **Random Forest**: promedia árboles decorrelacionados → baja varianza.
+- **Boosting**: suma árboles pequeños que corrigen errores → baja sesgo.
+- Cambia el modelo, no la disciplina: tuning, test y diagnóstico siguen separados.
 
 ## Ejercicio
 
-Con los mismos folds por `day`:
+1. Cambie `mtry` y `nodesize` sin mirar el test.
+2. Compare importancia Gini y permutación.
+3. Pruebe una profundidad mayor en boosting.
+4. Grafique errores por hora y tipo de día.
+5. Explique qué modelo usaría para planificación operativa.
 
-1. proponga una tercera regla de predicción;
-2. evalúela con MAE y RMSE;
-3. compare promedio y dispersión entre folds;
-4. identifique una posible fuga de información;
-5. explique cómo cambiaría los folds si el objetivo fuera predecir el mes siguiente.
+## La pregunta que queda abierta
+
+Resolvimos el problema de la clase 16 —ya no elegimos interacciones a mano—, pero a cambio heredamos una limitación nueva: la predicción de un árbol (o de un ensamble de árboles) es **escalonada**, constante dentro de cada región, con saltos en los bordes. No puede aproximar suavemente una relación continua, ni extrapolar más allá de los datos observados.
+
+. . .
+
+**¿Se puede aprender una función no lineal de los datos —interacciones incluidas— pero que sea suave en vez de escalonada?** Esa es la pregunta que abre la próxima clase: redes neuronales, que representan la predicción como capas de transformaciones continuas en vez de particiones. La disciplina de evaluación —baseline, validación, test, diagnóstico— no cambia; cambia solo la forma que puede tomar $\hat f$.
+
+El mismo Random Forest o Gradient Boosting que hoy predijo demanda de bicicletas es, en su forma, idéntico al que hoy decide límites de crédito o prioriza casos en un sistema judicial. La importancia de variables, la validación temporal, la desconfianza en la "importancia como causalidad" — todo eso que practicamos con datos inofensivos es exactamente lo que hay que exigir cuando el modelo decide sobre personas.
 
 ## En resumen
 
-- Predecir significa generalizar a casos nuevos.
-- El error de entrenamiento es optimista por construcción.
-- El overfitting surge cuando la flexibilidad captura ruido.
-- Validación cruzada repite evaluaciones fuera de muestra.
-- Folds y pérdidas deben imitar la tarea predictiva real.
-- El test final se reserva para una sola evaluación.
+- Los árboles capturan no linealidades e interacciones mediante reglas.
+- La poda controla la complejidad de un árbol.
+- Random Forest promedia árboles para reducir varianza.
+- Boosting aprende secuencialmente para reducir sesgo.
+- Tuning, test y diagnóstico deben permanecer separados.
 
 ## Gracias {.inverse .center .middle .closing}
 

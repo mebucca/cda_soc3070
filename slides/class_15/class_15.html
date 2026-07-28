@@ -32,6 +32,72 @@
       margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
       vertical-align: middle;
     }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      { color: #24292e;  }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #24292e; } /* Normal */
+    code span.al { color: #ff5555; font-weight: bold; } /* Alert */
+    code span.an { color: #6a737d; } /* Annotation */
+    code span.at { color: #d73a49; } /* Attribute */
+    code span.bn { color: #005cc5; } /* BaseN */
+    code span.bu { color: #d73a49; } /* BuiltIn */
+    code span.cf { color: #d73a49; } /* ControlFlow */
+    code span.ch { color: #032f62; } /* Char */
+    code span.cn { color: #005cc5; } /* Constant */
+    code span.co { color: #6a737d; } /* Comment */
+    code span.cv { color: #6a737d; } /* CommentVar */
+    code span.do { color: #6a737d; } /* Documentation */
+    code span.dt { color: #d73a49; } /* DataType */
+    code span.dv { color: #005cc5; } /* DecVal */
+    code span.er { color: #ff5555; text-decoration: underline; } /* Error */
+    code span.ex { color: #d73a49; font-weight: bold; } /* Extension */
+    code span.fl { color: #005cc5; } /* Float */
+    code span.fu { color: #6f42c1; } /* Function */
+    code span.im { color: #032f62; } /* Import */
+    code span.in { color: #6a737d; } /* Information */
+    code span.kw { color: #d73a49; } /* Keyword */
+    code span.op { color: #24292e; } /* Operator */
+    code span.ot { color: #6f42c1; } /* Other */
+    code span.pp { color: #d73a49; } /* Preprocessor */
+    code span.re { color: #6a737d; } /* RegionMarker */
+    code span.sc { color: #005cc5; } /* SpecialChar */
+    code span.ss { color: #032f62; } /* SpecialString */
+    code span.st { color: #032f62; } /* String */
+    code span.va { color: #e36209; } /* Variable */
+    code span.vs { color: #032f62; } /* VerbatimString */
+    code span.wa { color: #ff5555; } /* Warning */
   </style>
   <link rel="stylesheet" href="class_15_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
   <link rel="stylesheet" href="../_shared/course.css">
@@ -143,13 +209,13 @@
     }
   </style>
 </head>
-<body class="theme-benfica quarto-light">
+<body class="theme-milan quarto-light">
   <div class="reveal">
     <div class="slides">
 
-<section id="title-slide" data-background-color="#D3A000" class="quarto-title-block center">
+<section id="title-slide" data-background-color="#8B1E2D" class="quarto-title-block center">
   <h1 class="title">Análisis de Datos Categóricos (SOC3070)</h1>
-  <p class="subtitle">Sobre-dispersión y quasi-Poisson</p>
+  <p class="subtitle">Clasificador Logístico (Binomial y Multinomial)</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -166,256 +232,691 @@ Mauricio Bucca · Sociología UC
 <div class="full-width">
 <div class="content-box">
 <p><strong>Antes</strong></p>
-<p>regresión Poisson y modelos de conteo.</p>
+<p>predicción, overfitting y validación cruzada.</p>
 </div>
 <div class="content-box-primary">
 <p><strong>Hoy</strong></p>
-<p>sobre-dispersión y quasi-Poisson.</p>
+<p>clasificador logístico: métricas, umbrales y el caso multinomial.</p>
 </div>
 <div class="content-box-secondary">
 <p><strong>Después</strong></p>
-<p>causalidad.</p>
+<p>regularización: Ridge y LASSO.</p>
 </div>
 </div>
 </section>
-<section id="datos-de-recuento" class="slide level2 inverse center middle" data-background-color="#C7192D">
-<h2>Datos de recuento</h2>
-<h3 id="regresión-poisson-y-quasi-poisson">Regresión Poisson y Quasi-Poisson</h3>
+<section>
+<section id="regresión-logística-como-machine-learning" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
+<h1>Regresión Logística como Machine Learning</h1>
+
 </section>
-<section id="regresión-poisson" class="slide level2">
-<h2>Regresión Poisson</h2>
+<section id="regresión-logística-como-machine-learning-1" class="slide level2">
+<h2>Regresión Logística como Machine Learning</h2>
+<p><br><br></p>
+<div class="middle">
+<div class="center">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Énfasis inferencial</th>
+<th>Énfasis predictivo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>parámetros e incertidumbre</td>
+<td>desempeño fuera de muestra</td>
+</tr>
+<tr class="even">
+<td>interpretación del mecanismo</td>
+<td>generalización a casos nuevos</td>
+</tr>
+<tr class="odd">
+<td>supuestos explícitos</td>
+<td>validación y calibración</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section></section>
+<section>
+<section id="regresión-logística-el-hello-world-de-ml" class="title-slide slide level1 center">
+<h1>Regresión Logística: el <strong>“hello world”</strong> de ML</h1>
+<ul>
+<li><strong>Qué resuelve:</strong>
+<ul>
+<li>Estima la probabilidad de un evento binario (<span class="math inline">Y=0/1</span>).<br>
+</li>
+<li>Ejemplos: ¿un mail es spam? ¿una hora tendrá alta demanda de bicicletas?</li>
+</ul></li>
+<li><strong>Cómo funciona:</strong>
+<ul>
+<li>Ajusta una combinación lineal de predictores <span class="math inline">X\beta</span>.<br>
+</li>
+<li>Pasa ese valor por la <strong>curva sigmoide</strong> → convierte log-odds en probabilidades (0–1).<br>
+</li>
+<li>Aprende de los datos para <strong>generalizar</strong> a casos no observados (nuevos datos, futuro, etc.).</li>
+</ul></li>
+<li><strong>Por qué es importante:</strong>
+<ul>
+<li>Interpretable: cada predictor tiene un rol claro en la probabilidad.<br>
+</li>
+<li>Eficiente: funciona bien incluso con muestras pequeñas.<br>
+</li>
+<li>Fundacional: es la base sobre la cual se construyen modelos más complejos en ML.</li>
+</ul></li>
+</ul>
+</section>
+<section id="ejemplo-empírico" class="slide level2">
+<h2>Ejemplo empírico</h2>
+<p>Continuando con el ejemplo de clases anteriores, ajustamos el siguiente modelo: <span class="math display">\ln \frac{p_{i}}{1-p_{i}} = \beta_{0} + \beta_{1}\text{temp}_{i} + \beta_{2}\text{workingday}_{i} + \beta_{3}\text{hum}_{i} + \beta_{4}\text{hum}^{2}_{i}</span> Llamemos a este modelo, modelo <span class="math inline">M</span>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href=""></a>logit_demand <span class="ot">&lt;-</span>  <span class="fu">glm</span>(high_demand <span class="sc">~</span> temp <span class="sc">+</span> <span class="fu">factor</span>(workingday) <span class="sc">+</span> hum <span class="sc">+</span> <span class="fu">I</span>(hum<span class="sc">^</span><span class="dv">2</span>) ,<span class="at">family=</span><span class="fu">binomial</span>(<span class="at">link=</span><span class="st">"logit"</span>), <span class="at">data=</span>bikedata)</span>
+<span id="cb1-2"><a href=""></a><span class="fu">summary</span>(logit_demand)<span class="sc">$</span>coefficients</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                    Estimate Std. Error z value
+(Intercept)          -3.303    0.259 -12.736
+temp                  4.612    0.153  30.211
+factor(workingday)1  -0.344    0.058  -5.882
+hum                   3.107    0.850   3.655
+I(hum^2)             -4.607    0.700  -6.584
+                                                                                                                                                                                                                         Pr(&gt;|z|)
+(Intercept)         0.000
+temp                0.000
+factor(workingday)1 0.000
+hum                 0.000
+I(hum^2)            0.000</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href=""></a><span class="fu">print</span>(<span class="fu">paste0</span>(<span class="st">"log-likelihood: "</span>,<span class="fu">round</span>(<span class="fu">logLik</span>(logit_demand),<span class="dv">3</span>),</span>
+<span id="cb3-2"><a href=""></a>             <span class="st">" Deviance: "</span>, <span class="fu">round</span>(<span class="fu">summary</span>(logit_demand)<span class="sc">$</span>deviance,<span class="dv">3</span>) ))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "log-likelihood: -4068.340 Deviance: 8136.679"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href=""></a><span class="fu">print</span>(<span class="fu">paste0</span>(<span class="st">"AIC: "</span>, <span class="fu">round</span>(<span class="fu">summary</span>(logit_demand)<span class="sc">$</span>aic,<span class="dv">3</span>),</span>
+<span id="cb5-2"><a href=""></a>             <span class="st">" BIC: "</span>, <span class="fu">round</span>(<span class="fu">BIC</span>(logit_demand),<span class="dv">3</span>) ))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "AIC: 8146.679 BIC: 8182.003"</code></pre>
+</div>
+</div>
+</section>
+<section id="likelihood-como-función-de-pérdida" class="slide level2">
+<h2>Likelihood como función de pérdida</h2>
+<ul>
+<li>En ML, entrenar un modelo = encontrar parámetros que <strong>maximicen la verosimilitud</strong><br>
+(o equivalentemente <strong>minimicen la pérdida</strong>).</li>
+</ul>
+<div class="fragment">
+<ul>
+<li>En regresión logística, cada <span class="math inline">y_i</span> es Bernoulli con probabilidad <span class="math inline">p_i</span>:</li>
+</ul>
+<p><span class="math display">
+P(y_i \mid p_i) = p_i^{y_i}(1-p_i)^{1-y_i}
+</span></p>
+</div>
+<div class="fragment">
+<ul>
+<li>La probabilidad conjunta de todos los datos:</li>
+</ul>
+<p><span class="math display">
+\mathcal{L}(\beta) = \prod_{i=1}^{n} p_i^{y_i}(1-p_i)^{1-y_i}
+</span></p>
+</div>
+<div class="fragment">
+<ul>
+<li>Tomando logaritmos:</li>
+</ul>
+<p><span class="math display">
+\ell(\beta) = \sum_{i=1}^{n} \big[ y_i \ln p_i + (1-y_i) \ln(1-p_i) \big]
+</span></p>
+</div>
+<div class="fragment">
+<ul>
+<li>En ML a esto le llamamos <strong>log-loss</strong> o <strong>cross-entropy loss</strong>:</li>
+</ul>
+<p><span class="math display">
+\text{LogLoss} = -\ell(\beta)
+</span></p>
+</div>
+</section>
+<section id="likelihood-como-función-de-pérdida-1" class="slide level2">
+<h2>Likelihood como función de pérdida</h2>
+<ul>
+<li>Si las predicciones del modelo son correctas (<span class="math inline">y=1</span> y <span class="math inline">p</span> cercano a 1) → log-loss bajo.</li>
+<li>Si se equivocan (<span class="math inline">y=1</span> pero <span class="math inline">p</span> cercano a 0) → log-loss alto.</li>
+<li>Entrenar = <strong>ajustar <span class="math inline">\beta</span> para minimizar log-loss</strong> (= maximizar likelihood). Likelihood maximizada en nuestro ejemplo:</li>
+</ul>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>
-====================================================
-                         Dependent variable:        
-                  ----------------------------------
-                                bikers              
-                        (1)               (2)       
-----------------------------------------------------
-temp              2.194*** (0.005) 1.995*** (0.005) 
-hum                                -1.169*** (0.005)
-Constant          3.803*** (0.003) 4.633*** (0.004) 
-----------------------------------------------------
-Observations           8,645             8,645      
-Log Likelihood      -441,483.000     -409,717.000   
-Akaike Inf. Crit.   882,969.000       819,440.000   
-====================================================
-Note:                    *p&lt;0.100; **p&lt;0.050; ***p&lt;0.010</code></pre>
+<pre><code>    Likelihood log_likelihood 
+             0          -4068 </code></pre>
+</div>
+</div>
+<div class="fragment">
+<p><span class="bold">Versión ML: Log-loss promedio</span> En machine learning se suele trabajar con la <strong>log-loss promedio</strong> para obtener una pérdida por observación (comparable entre datasets de distinto tamaño).</p>
+<p><span class="math display">
+\text{LogLoss} = -\frac{1}{n}\,\ell(\beta)
+</span></p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.471</code></pre>
+</div>
 </div>
 </div>
 </section>
-<section id="over-dispersion-en-regresión-poisson" class="slide level2">
-<h2>Over-dispersion en regresión Poisson</h2>
+<section id="modelos-de-referencia-baselines" class="slide level2">
+<h2>Modelos de referencia (baselines)</h2>
+<p>En ML y estadística es común usar <strong>modelos de referencia</strong> para poner en contexto el desempeño de un modelo más complejo. Dos extremos:</p>
+<div class="fragment">
+<p><br><br></p>
+<ul>
+<li><strong>Modelo nulo (<span class="math inline">M_N</span>)</strong>
+<ul>
+<li>El más simple posible: siempre predice la probabilidad promedio global.<br>
+</li>
+<li>Ventaja: parsimonioso y fácil de interpretar.<br>
+</li>
+<li>Desventaja: genera las peores predicciones posibleså, ignora covariables.</li>
+</ul></li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href=""></a><span class="co"># modelo nulo</span></span>
+<span id="cb9-2"><a href=""></a>logit_demand_null <span class="ot">&lt;-</span> <span class="fu">glm</span>(high_demand <span class="sc">~</span> <span class="dv">1</span>,<span class="at">family=</span><span class="fu">binomial</span>(<span class="at">link=</span><span class="st">"logit"</span>), <span class="at">data=</span>bikedata)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
 <div class="fragment">
 <ul>
-<li>En un modelo de regresión Poisson cada <span class="math inline">i</span> sigue una distribución <span class="math inline">y_{i} \sim \text{Poisson}(\mu_{i} = e^{X_{i}\beta})</span></li>
+<li><strong>Modelo saturado (<span class="math inline">M_S</span>)</strong>
+<ul>
+<li>El más complejo posible: ajusta un parámetro distinto para cada observación.<br>
+</li>
+<li>Ventaja: fit perfecto (cero perdida).<br>
+</li>
+<li>Desventaja: no generaliza → memoriza los datos.</li>
+</ul></li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href=""></a><span class="co"># En Bernoulli, el modelo saturado reproduce cada observación y su log-likelihood es 0.</span></span>
+<span id="cb10-2"><a href=""></a><span class="co"># Evitamos ajustar miles de indicadores, que sería computacionalmente innecesario.</span></span>
+<span id="cb10-3"><a href=""></a>ll_saturated <span class="ot">&lt;-</span> <span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</section>
+<section id="baselines-vs-modelo-de-interés" class="slide level2">
+<h2>Baselines vs Modelo de Interés</h2>
+<div class="center">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="models.png"></p>
+<figcaption>dev</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="residual-deviance-y-null-deviance" class="slide level2">
+<h2>Residual Deviance y Null Deviance</h2>
+<p>En modelos logísticos, el <strong>log-likelihood ratio</strong> puede re-expresarse como <strong>Deviance</strong>, que es esencialmente una medida de <strong>pérdida (loss)</strong>. Dos tipos de deviance:</p>
+<ul>
+<li><strong>Residual Deviance:</strong> <span class="math inline">D = -2 \cdot (\log\mathcal{L}_{M} - \log \mathcal{L}_{S})</span>
+<ul>
+<li>Evalúa el ajuste de <span class="math inline">M</span> respecto al modelo saturado (fit perfecto).</li>
+</ul></li>
+<li><strong>Null Deviance:</strong> <span class="math inline">D_N = -2 \cdot (\log\mathcal{L}_{0} - \log \mathcal{L}_{S})</span>
+<ul>
+<li>Equivale al “total explicable”, similar a la varianza total en OLS.</li>
+</ul></li>
+</ul>
+<div class="fragment">
+<ul>
+<li><strong>Distribución muestral:</strong> <span class="math inline">D \sim \chi^{2}(df = n-k), \quad  \text{donde k es el número de parámetros en M}</span></li>
+</ul>
+<p>Interpretación:</p>
+<ul>
+<li><span class="math inline">D</span> alto (p-value bajo) → “mal ajuste” (alto error, modelo se queda corto).<br>
+</li>
+<li><span class="math inline">D</span> bajo (p-value alto) → “buen ajuste” (más parámetros no agregan valor.</li>
+</ul>
+</div>
+</section>
+<section id="residual-deviance-y-null-deviance-1" class="slide level2">
+<h2>Residual Deviance y Null Deviance</h2>
+<div class="center">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="deviances.png"></p>
+<figcaption>dev</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="residual-deviance-y-log-loss-promedio" class="slide level2">
+<h2>Residual Deviance y Log-loss promedio</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>                    Estimate Std. Error z value
+(Intercept)          -3.303    0.259 -12.736
+temp                  4.612    0.153  30.211
+factor(workingday)1  -0.344    0.058  -5.882
+hum                   3.107    0.850   3.655
+I(hum^2)             -4.607    0.700  -6.584
+                                                                                                                                                                                                                         Pr(&gt;|z|)
+(Intercept)         0.000
+temp                0.000
+factor(workingday)1 0.000
+hum                 0.000
+I(hum^2)            0.000</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Null Deviance: 9711.222 | Residual Deviance: 8136.679"</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href=""></a><span class="co"># Cálculo manual de la Residual Deviance</span></span>
+<span id="cb13-2"><a href=""></a>D <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">2</span> <span class="sc">*</span> (<span class="fu">logLik</span>(logit_demand)[<span class="dv">1</span>] <span class="sc">-</span> ll_saturated)</span>
+<span id="cb13-3"><a href=""></a></span>
+<span id="cb13-4"><a href=""></a><span class="co"># Relación con log-loss promedio</span></span>
+<span id="cb13-5"><a href=""></a>log_likelihood <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(<span class="fu">logLik</span>(logit_demand))</span>
+<span id="cb13-6"><a href=""></a>log_loss <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">1</span><span class="sc">/</span><span class="fu">length</span>(bikedata<span class="sc">$</span>high_demand) <span class="sc">*</span> log_likelihood</span>
+<span id="cb13-7"><a href=""></a><span class="fu">print</span>(<span class="fu">paste0</span>(<span class="st">"Log-loss promedio: "</span>, <span class="fu">round</span>(log_loss, <span class="dv">3</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Log-loss promedio: 0.471"</code></pre>
+</div>
+</div>
+</section>
+<section id="pseudo---r2" class="slide level2">
+<h2>Pseudo - <span class="math inline">R^2</span></h2>
+<div class="fragment">
+<ul>
+<li>En modelos OLS es común medir ajuste usando el coeficiente <span class="math inline">R^2</span>, es decir, % de varianza explicada por el modelo.</li>
 </ul>
 </div>
 <div class="fragment">
 <ul>
-<li>No hay un parámetro adicional para la varianza. Por definición: <span class="math inline">\operatorname{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}=e^{X_{i}\beta}</span></li>
+<li>En GLM’s la varianza no es separable de la media, por tanto no se puede descomponer.</li>
 </ul>
 </div>
 <div class="fragment">
 <ul>
-<li>Esto puede resultar en una sub-estimación o sobre-estimación de la varianza de los datos.
+<li>Existe una variedad de alternativas al <span class="math inline">R^2</span>, llamadas genéricamente pseudo - <span class="math inline">R^2</span>. Uno de los más comunes es:</li>
+</ul>
+</div>
+<div class="fragment">
+<p><span class="math display">\text{McFadden’s } R^{2} = 1 - \frac{D}{D_{0}} = 1 - \frac{(\log\mathcal{L}_{S} - \log \mathcal{L}_{M})}{ (\log\mathcal{L}_{S} - \log \mathcal{L}_{N})}</span></p>
+</div>
+<div class="fragment">
+<p><span class="bold">Intuición:</span> fracción del total del “explicable” del likelihood que es explicado por el modelo <span class="math inline">M</span>. - <span class="math inline">R^{2} \in [0,1]</span>, donde 0 indica el peor fit posible y 1 indica el mejor fit posible.</p>
+</div>
+</section>
+<section id="pseudo---r2-1" class="slide level2">
+<h2>Pseudo - <span class="math inline">R^2</span></h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>                    Estimate Std. Error z value
+(Intercept)          -3.303    0.259 -12.736
+temp                  4.612    0.153  30.211
+factor(workingday)1  -0.344    0.058  -5.882
+hum                   3.107    0.850   3.655
+I(hum^2)             -4.607    0.700  -6.584
+                                                                                                                                                                                                                         Pr(&gt;|z|)
+(Intercept)         0.000
+temp                0.000
+factor(workingday)1 0.000
+hum                 0.000
+I(hum^2)            0.000</code></pre>
+</div>
+</div>
+<div class="fragment">
+<p><span class="bold">Residual deviance</span>:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.162</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>McFadden 
+  0.162 </code></pre>
+</div>
+</div>
+</div>
+</section></section>
+<section>
+<section id="regresión-logística-como-clasificador" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
+<h1>Regresión Logística como clasificador</h1>
+
+</section>
+<section id="de-probabilidades-a-clases" class="slide level2">
+<h2>De Probabilidades a clases</h2>
 <ul>
-<li>Por lo general resulta en una subestimación de la varianza de los datos.</li>
+<li>La regresión logística entrega <strong>scores probabilísticos</strong>: <span class="math inline">\hat{p}_i = \Pr(Y_i=1\mid X_i,\hat\beta)</span></li>
+</ul>
+<div class="fragment">
+<ul>
+<li>Para convertir un score en decisión usamos un <strong>umbral de corte</strong> <span class="math inline">\tau</span>:</li>
+</ul>
+<p><span class="math display">
+\hat{y}_i =
+\begin{cases}
+1 &amp; \text{si } \hat{p}_i &gt; \tau \\
+0 &amp; \text{si } \hat{p}_i \leq \tau
+\end{cases}
+</span></p>
+</div>
+<div class="fragment">
+<ul>
+<li>Por defecto: <span class="math inline">\tau=0.5</span><br>
+</li>
+<li>En ML, el umbral se ajusta al problema:
+<ul>
+<li>Spam: es peor que se cuele spam → corte bajo.<br>
+</li>
+<li>Subsidio: es peor dejar fuera a quien lo necesita → corte bajo.<br>
+</li>
+<li>Examen de enfermedad peligrosa:
+<ul>
+<li>Detección temprana: es peor no encontrar la enfermedad → corte bajo.<br>
+</li>
+<li>Confirmación: es peor asustar a alguien sano → corte alto. <span class="bold">👉 Un clasificador es un modelo + una regla de decisión.</span></li>
+</ul></li>
 </ul></li>
 </ul>
 </div>
-<div class="fragment">
-<ul>
-<li>Este caso se conoce como “over-dispersion”. Los datos son más dispersos de lo esperado de acuerdo al modelo.
-<ul>
-<li>Over-dispersion no afecta la estimación de los coeficientes pero la inferencia demasiado “liberal”: errores estándar</li>
-</ul></li>
-</ul>
+</section>
+<section id="matriz-de-confusión" class="slide level2">
+<h2>Matriz de Confusión</h2>
+<div class="center">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="https://miro.medium.com/v2/resize:fit:4800/format:webp/1*mL-nYY6MFhiG0uoR5kJaCA.jpeg" class="quarto-figure quarto-figure-center" style="width:55.0%"></p>
+</figure>
+</div>
+</div>
+<div class="footnote">
+<p>Fuente: <a href="https://towardsdatascience.com/understanding-confusion-matrix-a9ad42dcfd62">Understanding Confusion Matrix — Towards Data Science</a></p>
 </div>
 </section>
-<section id="over-dispersion-en-regresión-poisson-1" class="slide level2">
-<h2>Over-dispersion en regresión Poisson</h2>
-<div class="fragment">
+<section id="matriz-de-confusión-1" class="slide level2">
+<h2>Matriz de Confusión</h2>
+<div class="pull-left">
+<p><img data-src="conf_mat.png"></p>
+</div>
+<div class="pull-right">
 <ul>
-<li>Es posible detectar over-dispersion inspeccionando los residuos “estandarizados” de un modelo Poisson. Formalmente: <span class="math display">z_{i} = \frac{y_{i} - \mu_{i}}{\sigma_{i}} = \frac{y_{i} - \mu_{i}}{\sqrt{\mu_{i}}} = \frac{y_{i} - e^{X_{i}\beta}}{\sqrt{e^{X_{i}\beta}}}</span></li>
+<li><p><strong>Accuracy</strong>: <span class="math inline">(TP+TN)/N</span><br>
+% de clasificaciones correctas</p></li>
+<li><p><strong>Misclassification Rate</strong>: <span class="math inline">(FP+FN)/N</span><br>
+% de clasificaciones incorrectas</p></li>
+<li><p><strong>True Positive Rate (Recall / Sensitivity)</strong>:<br>
+<span class="math inline">TP/(TP+FN)</span></p></li>
+<li><p><strong>True Negative Rate (Specificity)</strong>:<br>
+<span class="math inline">TN/(TN+FP)</span></p></li>
+<li><p><strong>Precision (PPV)</strong>:<br>
+<span class="math inline">TP/(TP+FP)</span></p></li>
+<li><p><strong>Prevalence</strong>:<br>
+<span class="math inline">(TP+FN)/N</span></p></li>
 </ul>
 </div>
 <div class="fragment">
-<ul>
-<li>Si los <span class="math inline">y_{i}</span>’s distribuyen Poisson entonces <span class="math inline">z_{i} \sim \mathcal{N}(0,1)</span>. Luego, la presencia de residuos grandes indican over-dispersion. La “suma de residuos al cuadrado” resume esta información: <span class="math display">\text{ssr} = \sum^{n}_{i=1} z^{2}_{i}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Si el modelo Poisson es correcto <span class="math inline">\text{ssr} \sim \chi^2_{\text{df}=n-k}</span>, con valor esperado <span class="math inline">\mathbb{E}(\text{ssr})=n-k</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>El ratio entre ambos, <span class="math inline">\frac{\text{ssr}}{n-k}</span>, es un estimado del “factor de dispersión”.</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Obtenemos la inferencia correcta multiplicando los SE’s por <span class="math inline">\sqrt{\frac{\text{ssr}}{n-k}}</span>.</li>
-</ul>
+<p>📌 Estas métricas capturan distintos aspectos del desempeño de un clasificador.<br>
+En ML es clave elegir métricas alineadas con el problema (ej: medicina ≠ marketing).</p>
 </div>
 </section>
-<section id="over-dispersion-en-regresión-poisson-2" class="slide level2">
-<h2>Over-dispersion en regresión Poisson</h2>
-<div class="fragment">
-<p>En nuestro modelo Poisson más complejo:</p>
+<section id="ejemplo-empírico-demanda-de-bicicletas" class="slide level2">
+<h2>Ejemplo empírico: demanda de bicicletas</h2>
+<p>Clasificamos como “baja demanda” a todas las horas cuya probabilidad predicha sea menor o igual a 0.5, y como “alta demanda” a aquellas cuya probabilidad predicha supere dicho umbral.</p>
+<p><span class="math display">
+\hat{y}_i =
+\begin{cases}
+1 &amp; \text{si } \hat{p}_i &gt; 0.5 \quad (\text{Alta demanda}) \\
+0 &amp; \text{si } \hat{p}_i \leq 0.5 \quad (\text{Baja demanda})
+\end{cases}
+</span></p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>rss =  794674  , rss esperado =  8642</code></pre>
+<pre><code>        Real
+Predicho    0    1
+       0 5984 1463
+       1  505  693</code></pre>
+</div>
+</div>
+</section>
+<section id="ejemplo-empírico-demanda-de-bicicletas-1" class="slide level2">
+<h2>Ejemplo empírico: demanda de bicicletas</h2>
+<div class="pull-left">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_15_files/figure-revealjs/unnamed-chunk-12-1.png" width="960"></p>
+</figure>
 </div>
 </div>
 </div>
-<div class="fragment">
-<p>En este caso el factor de over-dispersion es:</p>
+</div>
+<div class="pull-right">
+<p><strong>Métricas principales del clasificador logístico</strong></p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>factor de dispersión =  91.950</code></pre>
+<pre><code>            Métrica  Valor
+1       Sensitivity 0.321
+2       Specificity 0.922
+3         Precision 0.579
+4                F1 0.413
+5 Balanced Accuracy 0.622</code></pre>
 </div>
 </div>
 </div>
 </section>
-<section id="regresión-quasi-poisson" class="slide level2">
-<h2>Regresión Quasi-Poisson</h2>
-<p>La regresión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferencia del modelo.</p>
-<div class="fragment">
-<p><span class="math display">y_{i} \sim \text{quasi-Poisson}(\mu_{i} = e^{X_{i}\beta}, \sigma= \sqrt{\omega \cdot  e^{X_{i}\beta}})</span></p>
-<p>donde <span class="math inline">\omega</span> es el factor de dispersion.</p>
-</div>
-<div class="fragment">
+<section id="umbral-y-predicción" class="slide level2">
+<h2>Umbral y predicción</h2>
 <ul>
-<li>Regresión Poisson es un caso especial de quasi-Poisson ( <span class="math inline">\omega=1</span> ).</li>
+<li>Cada umbral <span class="math inline">\tau</span> genera un nivel de Especificidad y Sensibilidad: <span class="math inline">\{\text{Specificity}(\tau), \text{Sensitivity}(\tau)\}</span> para <span class="math inline">\tau \in [0,1]</span>.</li>
 </ul>
-</div>
-<div class="fragment">
-<p>Implementación en <code>R</code>:</p>
+<div class="pull-left">
 <div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>            Estimate Std. Error t value
-(Intercept)    4.633    0.040  115.840
-temp           1.995    0.044   45.140
-hum           -1.169    0.044  -26.360
-                                                                                                                                                            Pr(&gt;|t|)
-(Intercept) 0.000
-temp        0.000
-hum         0.000</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>dispersion =  91.960</code></pre>
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_15_files/figure-revealjs/plot_scores-1.png" width="576"></p>
+</figure>
 </div>
 </div>
 </div>
-</section>
-<section id="quasi-poisson" class="slide level2">
-<h2>Quasi-Poisson</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
-=====================================================
-                          Dependent variable:        
-                  -----------------------------------
-                                bikers               
-                       Poisson      glm: quasipoisson
-                                       link = log    
-                         (1)               (2)       
------------------------------------------------------
-temp              1.995*** (0.005)  1.995*** (0.044) 
-hum               -1.169*** (0.005) -1.169*** (0.044)
-Constant          4.633*** (0.004)  4.633*** (0.040) 
------------------------------------------------------
-Observations            8,645             8,645      
-Log Likelihood      -409,717.000                     
-Akaike Inf. Crit.    819,440.000                     
-=====================================================
-Note:                     *p&lt;0.100; **p&lt;0.050; ***p&lt;0.010</code></pre>
 </div>
-</div>
-</section>
-<section id="una-alternativa-binomial-negativa" class="slide level2">
-<h2>Una alternativa: binomial negativa</h2>
-<p>Quasi-Poisson <strong>corrige los errores estándar</strong> después de ajustar; no cambia el modelo de la media. Existe una alternativa que sí modela explícitamente el exceso de varianza: la <strong>regresión binomial negativa</strong>.</p>
-<div class="fragment">
-<p><span class="math display">\text{Var}(y_i) = \mu_i + \frac{\mu_i^2}{\theta}</span></p>
+<div class="pull-right">
 <ul>
-<li><span class="math inline">\theta</span>: parámetro de dispersión estimado por el propio modelo (no solo un factor de corrección post-hoc).</li>
-<li><span class="math inline">\theta \to \infty</span> recupera Poisson (<span class="math inline">\text{Var}=\mu</span>); <span class="math inline">\theta</span> chico implica sobre-dispersión fuerte.</li>
-</ul>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
-=====================================================
-                          Dependent variable:        
-                  -----------------------------------
-                                bikers               
-                  glm: quasipoisson     negative     
-                     link = log         binomial     
-                    Quasi-Poisson   Binomial Negativa
-                         (1)               (2)       
------------------------------------------------------
-temp              1.995*** (0.044)  2.309*** (0.053) 
-hum               -1.169*** (0.044) -1.304*** (0.053)
-Constant          4.633*** (0.040)  4.549*** (0.045) 
------------------------------------------------------
-Observations            8,645             8,645      
-Log Likelihood                         -50,505.000   
-theta                               1.076*** (0.015) 
-Akaike Inf. Crit.                      101,17.000   
-=====================================================
-Note:                     *p&lt;0.100; **p&lt;0.050; ***p&lt;0.010</code></pre>
-</div>
-</div>
-<p>Quasi-Poisson y binomial negativa suelen dar coeficientes similares; la binomial negativa además permite comparar el ajuste global (AIC, verosimilitud) entre modelos, algo que quasi-Poisson no ofrece por construcción.</p>
-</div>
-</section>
-<section id="un-problema-distinto-exceso-de-ceros" class="slide level2">
-<h2>Un problema distinto: exceso de ceros</h2>
-<p>Sobre-dispersión es un problema de <strong>varianza</strong> (más dispersión que la que Poisson permite). Existe un problema <em>distinto</em>, aunque relacionado: el <strong>exceso de ceros</strong> — más observaciones en cero de las que Poisson (o incluso binomial negativa) predicen.</p>
-<div class="fragment">
-<p>Ocurre cuando el proceso generador de datos mezcla dos mecanismos:</p>
-<ul>
-<li>un subgrupo que <strong>nunca</strong> puede generar el evento (ceros “estructurales”);</li>
-<li>el resto, que sigue un proceso de conteo normal (donde el cero es solo un resultado posible más).</li>
+<li>Umbrales bajos → más predicciones positivas</li>
+<li>Umbrales altos → más predicciones negativas</li>
 </ul>
 </div>
 </section>
-<section id="nos-pasa-esto-con-bikers" class="slide level2">
-<h2>¿Nos pasa esto con <code>bikers</code>?</h2>
-<p>Antes de aplicar cualquier corrección, conviene <strong>mirar los datos</strong>:</p>
+<section id="curva-roc" class="slide level2">
+<h2>Curva ROC</h2>
+<ul>
+<li>La <strong>curva ROC</strong> conecta todos los puntos <span class="math inline">\{1 - \text{Specificity}(\tau), \quad \text{Sensitivity}(\tau)\}</span> para <span class="math inline">\tau \in [0,1]</span>.</li>
+<li>La diagonal corresponde a un clasificador aleatorio.</li>
+<li>Mejor desempeño = curva más arriba a la izquierda.</li>
+</ul>
+<div class="pull-left">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_15_files/figure-revealjs/plot_scores2-1.png" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div class="pull-right">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_15_files/figure-revealjs/plot_roc-1.png" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="auc-área-bajo-la-curva" class="slide level2">
+<h2>AUC: Área bajo la curva</h2>
+<ul>
+<li>El <strong>AUC</strong> resume el desempeño en un solo número: <span class="math inline">AUC = \int_{0}^{1}\text{Sensibilidad}(\tau)\, d(1-\text{Especificidad}(\tau))</span></li>
+<li><strong>Interpretación</strong>: probabilidad de que el modelo asigne mayor score a un positivo que a un negativo (elegidos al azar).</li>
+</ul>
+<div class="pull-left">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_15_files/figure-revealjs/plot_auc-1.png" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div class="pull-right">
+<p><strong>Interpretación del AUC:</strong></p>
+<ul>
+<li><strong>AUC ≈ 0.5</strong>: Sin poder discriminatorio (como azar)</li>
+<li><strong>AUC ≈ 0.7-0.8</strong>: Discriminación aceptable</li>
+<li><strong>AUC &gt; 0.9</strong>: Discriminación excelente</li>
+<li><strong>AUC = 1</strong>: Clasificador perfecto 👉 Nuestro modelo tiene AUC = 0.776; ubíquelo en la escala anterior para juzgar su poder discriminatorio.</li>
+</ul>
+</div>
+</section>
+<section id="selección-del-umbral-óptimo" class="slide level2">
+<h2>Selección del umbral óptimo</h2>
+<ul>
+<li>No existe un único “mejor” umbral: depende del contexto y los costos de errar.</li>
+<li>Criterios comunes: <strong>Youden</strong>, <strong>punto más cercano a (0,1)</strong>, etc. Cómo extraer umbrales en R:</li>
+</ul>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0</code></pre>
+<pre><code>  threshold specificity sensitivity
+1    0.230      0.683      0.747</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  threshold specificity sensitivity
+1    0.230      0.683      0.747</code></pre>
 </div>
 </div>
+</section>
+<section id="selección-del-umbral-óptimo-1" class="slide level2">
+<h2>Selección del umbral óptimo</h2>
+<ul>
+<li>No existe un único “mejor” umbral: depende del contexto y los costos de errar.</li>
+<li>Criterios comunes: <strong>Youden</strong>, <strong>punto más cercano a (0,1)</strong>, etc. Cómo extraer umbrales en R:</li>
+</ul>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>   threshold specificity sensitivity
+1       -Inf   0.000      1.000
+2    0.013   0.000      1.000
+3    0.015   0.000      1.000
+4    0.015   0.000      1.000
+5    0.016   0.001      1.000
+6    0.017   0.001      1.000
+7    0.018   0.001      1.000
+8    0.018   0.003      1.000
+9    0.019   0.003      1.000
+10   0.020   0.004      1.000
+11   0.020   0.005      1.000
+12   0.021   0.005      1.000
+13   0.021   0.005      1.000</code></pre>
+</div>
+</div>
+</section></section>
+<section>
+<section id="clasificador-multinomial" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
+<h1>Clasificador multinomial</h1>
+
+</section>
+<section id="más-de-dos-clases" class="slide level2">
+<h2>Más de dos clases</h2>
+<p>Todo lo anterior asumió un outcome binario. Muchas veces el clasificador debe elegir entre <strong>más de dos categorías</strong> — por ejemplo, demanda “baja”, “media” o “alta”, en vez de solo “alta/baja”.</p>
 <div class="fragment">
-<p>Cero. En dos años de datos horarios, <code>bikers</code> nunca es exactamente 0 — siempre hay al menos un arriendo. Quasi-Poisson y binomial negativa alcanzan aquí precisamente porque <strong>no</strong> hay exceso de ceros que modelar.</p>
+<p>El modelo detrás ya lo conocemos: la regresión logística <strong>multinomial</strong> de la clase 9, ahora evaluada como clasificador en vez de interpretada como modelo explicativo.</p>
 </div>
-<div class="fragment">
-<p>El diagnóstico habría sido distinto con otro outcome: pensemos en “arriendos de bicicletas de carga” (un servicio de nicho, disponible solo en algunas estaciones). Ahí muchas horas en cero no reflejarían “poca demanda” sino “el servicio ni siquiera estaba disponible” — un mecanismo estructural mezclado con demanda genuina. Para ese tipo de outcome existen modelos <strong>Zero-Inflated Poisson (ZIP)</strong>, <strong>Zero-Inflated Negative Binomial (ZINB)</strong>, y modelos <strong>Hurdle</strong> (dos partes: ¿ocurre el evento?, y dado que ocurre, ¿cuánto?).</p>
-<p>La lección no es “siempre agregar un modelo de ceros inflados”: es <strong>revisar <code>mean(y == 0)</code> antes de elegir el modelo</strong>, igual como revisamos la dispersión antes de elegir entre Poisson y sus alternativas.</p>
+</section>
+<section id="un-outcome-de-tres-categorías" class="slide level2">
+<h2>Un outcome de tres categorías</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href=""></a><span class="fu">p_load</span>(nnet)</span>
+<span id="cb23-2"><a href=""></a></span>
+<span id="cb23-3"><a href=""></a>terciles <span class="ot">&lt;-</span> <span class="fu">quantile</span>(bikedata<span class="sc">$</span>bikers, <span class="at">probs =</span> <span class="fu">c</span>(<span class="dv">1</span><span class="sc">/</span><span class="dv">3</span>, <span class="dv">2</span><span class="sc">/</span><span class="dv">3</span>))</span>
+<span id="cb23-4"><a href=""></a>bikedata <span class="ot">&lt;-</span> bikedata <span class="sc">%&gt;%</span></span>
+<span id="cb23-5"><a href=""></a>  <span class="fu">mutate</span>(<span class="at">demand_level =</span> <span class="fu">cut</span>(</span>
+<span id="cb23-6"><a href=""></a>    bikers, <span class="at">breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, terciles, <span class="cn">Inf</span>),</span>
+<span id="cb23-7"><a href=""></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"baja"</span>, <span class="st">"media"</span>, <span class="st">"alta"</span>)</span>
+<span id="cb23-8"><a href=""></a>  ))</span>
+<span id="cb23-9"><a href=""></a></span>
+<span id="cb23-10"><a href=""></a>logit_multi <span class="ot">&lt;-</span> <span class="fu">multinom</span>(demand_level <span class="sc">~</span> temp <span class="sc">+</span> <span class="fu">factor</span>(workingday) <span class="sc">+</span> hum <span class="sc">+</span> <span class="fu">I</span>(hum<span class="sc">^</span><span class="dv">2</span>),</span>
+<span id="cb23-11"><a href=""></a>                        <span class="at">data =</span> bikedata, <span class="at">trace =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="la-matriz-de-confusión-se-generaliza" class="slide level2">
+<h2>La matriz de confusión se generaliza</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href=""></a>pred_clase <span class="ot">&lt;-</span> <span class="fu">predict</span>(logit_multi, <span class="at">type =</span> <span class="st">"class"</span>)</span>
+<span id="cb24-2"><a href=""></a></span>
+<span id="cb24-3"><a href=""></a>conf_mat_multi <span class="ot">&lt;-</span> <span class="fu">confusionMatrix</span>(pred_clase, bikedata<span class="sc">$</span>demand_level)</span>
+<span id="cb24-4"><a href=""></a>conf_mat_multi<span class="sc">$</span>table</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          Reference
+Prediction baja media alta
+     baja  1907  1071  422
+     media  529   927  552
+     alta   453   898 1886</code></pre>
+</div>
+</div>
+<p>La matriz sigue siendo “predicho × real”, pero ahora es <span class="math inline">3\times 3</span> (en general, <span class="math inline">J\times J</span>): la diagonal son aciertos, todo lo demás son errores de clasificación entre pares de categorías.</p>
+</section>
+<section id="métricas-promediar-sobre-las-clases" class="slide level2">
+<h2>Métricas: promediar sobre las clases</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href=""></a>conf_mat_multi<span class="sc">$</span>overall[<span class="st">"Accuracy"</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Accuracy 
+   0.546 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href=""></a>conf_mat_multi<span class="sc">$</span>byClass[, <span class="fu">c</span>(<span class="st">"Sensitivity"</span>, <span class="st">"Specificity"</span>, <span class="st">"Precision"</span>)]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>             Sensitivity Specificity Precision
+Class: baja       0.660      0.741    0.561
+Class: media      0.320      0.812    0.462
+Class: alta       0.659      0.766    0.583</code></pre>
+</div>
+</div>
+<ul>
+<li><strong>Accuracy</strong> sigue siendo “% de aciertos totales” — una sola cifra, igual que en el caso binario.</li>
+<li>Sensibilidad, especificidad y precisión ahora se calculan <strong>una vez por clase</strong> (cada clase “vs.&nbsp;el resto”) y típicamente se resumen promediándolas — el enfoque <strong>one-vs-rest</strong>.</li>
+</ul>
+</section>
+<section id="y-la-curva-roc" class="slide level2">
+<h2>¿Y la curva ROC?</h2>
+<p>La curva ROC y el AUC, tal como los definimos, son conceptos binarios. La generalización estándar es <strong>one-vs-rest</strong>: tratar cada clase, por turno, como “positivo” contra las demás como “negativo”, y calcular una curva ROC por clase.</p>
+<ul>
+<li>Ninguna curva única resume el desempeño multinomial completo — se reportan <span class="math inline">J</span> curvas, o un promedio (macro-AUC).</li>
+<li>Log-loss (clase 3), en cambio, se generaliza de forma inmediata al caso multinomial — es la misma cross-entropy que usamos para ajustar <code>logit_multi</code>, y sigue siendo una sola cifra comparable entre modelos.</li>
+</ul>
 </section>
 <section id="en-resumen" class="slide level2">
 <h2>En resumen</h2>
 <ul>
-<li>Poisson asume <span class="math inline">\operatorname{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}</span>; cuando los datos son más dispersos de lo esperado (“over-dispersion”), esto no sesga los coeficientes pero sí subestima los errores estándar.</li>
-<li>El factor de dispersión se estima con los residuos estandarizados: <span class="math inline">\text{ssr}/(n-k)</span>.</li>
-<li>Quasi-Poisson corrige los errores estándar multiplicando por <span class="math inline">\sqrt{\text{ssr}/(n-k)}</span>; la binomial negativa modela explícitamente el exceso de varianza mediante <span class="math inline">\theta</span>.</li>
-<li>Exceso de ceros es un problema <em>distinto</em> de la sobre-dispersión — conviene siempre revisar <code>mean(y==0)</code> antes de elegir el modelo.</li>
-<li>La próxima clase: causalidad.</li>
+<li>La regresión logística es también un clasificador de ML: ajusta <span class="math inline">X\beta</span> maximizando la verosimilitud, equivalente a minimizar el log-loss.</li>
+<li>Un umbral <span class="math inline">\tau</span> convierte probabilidades en clases; su elección depende del costo relativo de cada tipo de error, no de una convención fija.</li>
+<li>La matriz de confusión resume aciertos y errores; sensibilidad, especificidad, precisión y AUC capturan aspectos distintos del desempeño.</li>
+<li>La curva ROC recorre todos los umbrales posibles; el AUC resume ese trade-off en un solo número.</li>
+<li>El caso multinomial generaliza estas ideas: matriz <span class="math inline">J\times J</span>, métricas one-vs-rest, y un log-loss que se extiende sin cambios.</li>
+<li>La próxima clase pregunta qué hacer cuando ya no confiamos en la forma funcional elegida a mano: regularización con Ridge y LASSO.</li>
 </ul>
 </section>
-<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#D3A000">
+<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#8B1E2D">
 <h2>Gracias</h2>
 <p><strong>Hasta la próxima clase</strong></p>
 <p>Mauricio Bucca</p>
 
-</section>
+</section></section>
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">

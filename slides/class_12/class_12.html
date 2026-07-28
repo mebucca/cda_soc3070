@@ -143,13 +143,13 @@
     }
   </style>
 </head>
-<body class="theme-ajax quarto-light">
+<body class="theme-benfica quarto-light">
   <div class="reveal">
     <div class="slides">
 
-<section id="title-slide" data-background-color="#E0642B" class="quarto-title-block center">
+<section id="title-slide" data-background-color="#D3A000" class="quarto-title-block center">
   <h1 class="title">Análisis de Datos Categóricos (SOC3070)</h1>
-  <p class="subtitle">Regresión Logística Multinomial - Estructura Teórica</p>
+  <p class="subtitle">Sobre-dispersión y quasi-Poisson</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -166,487 +166,256 @@ Mauricio Bucca · Sociología UC
 <div class="full-width">
 <div class="content-box">
 <p><strong>Antes</strong></p>
-<p>regresión logística: inferencia.</p>
+<p>regresión Poisson y modelos de conteo.</p>
 </div>
 <div class="content-box-primary">
 <p><strong>Hoy</strong></p>
-<p>estructura teórica de la regresión multinomial.</p>
+<p>sobre-dispersión y quasi-Poisson.</p>
 </div>
 <div class="content-box-secondary">
 <p><strong>Después</strong></p>
-<p>interpretación de efectos multinomiales.</p>
+<p>causalidad.</p>
 </div>
 </div>
 </section>
-<section>
-<section id="regresión-logística-multinomial" class="title-slide slide level1 inverse center middle" data-background-color="#C1122F">
-<h1>Regresión Logística Multinomial</h1>
-
+<section id="datos-de-recuento" class="slide level2 inverse center middle" data-background-color="#C7192D">
+<h2>Datos de recuento</h2>
+<h3 id="regresión-poisson-y-quasi-poisson">Regresión Poisson y Quasi-Poisson</h3>
 </section>
-<section id="estructura-de-un-modelo-de-regresión-logística-multinomial" class="slide level2">
-<h2>Estructura de un modelo de regresión logística multinomial</h2>
-<p>Un modelo de regresión logística multinomial generaliza la regresión logística (binomial) a situaciones en que la variable dependiente es una <span class="bold">variable discreta con dos o más valores no ordenados</span> (ejemplo: voto entre tres candidatos, elección de barrio, etc).</p>
+<section id="regresión-poisson" class="slide level2">
+<h2>Regresión Poisson</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+====================================================
+                         Dependent variable:        
+                  ----------------------------------
+                                bikers              
+                        (1)               (2)       
+----------------------------------------------------
+temp              2.194*** (0.005) 1.995*** (0.005) 
+hum                                -1.169*** (0.005)
+Constant          3.803*** (0.003) 4.633*** (0.004) 
+----------------------------------------------------
+Observations           8,645             8,645      
+Log Likelihood      -441,483.000     -409,717.000   
+Akaike Inf. Crit.   882,969.000       819,440.000   
+====================================================
+Note:                    *p&lt;0.100; **p&lt;0.050; ***p&lt;0.010</code></pre>
+</div>
+</div>
+</section>
+<section id="over-dispersion-en-regresión-poisson" class="slide level2">
+<h2>Over-dispersion en regresión Poisson</h2>
 <div class="fragment">
-<p><span class="bold">Configuración</span></p>
 <ul>
-<li>Tenemos <span class="math inline">n</span> observaciones (individuos) independientes: <span class="math inline">i = 1, \dots, n</span></li>
+<li>En un modelo de regresión Poisson cada <span class="math inline">i</span> sigue una distribución <span class="math inline">y_{i} \sim \text{Poisson}(\mu_{i} = e^{X_{i}\beta})</span></li>
 </ul>
 </div>
 <div class="fragment">
 <ul>
-<li>Para cada observación observamos datos <span class="math inline">y_{i}, \dots , y_{n}</span> que actúan como variable dependiente, donde <span class="math inline">y_{i} \in \{1,2, \cdots, J\}</span>
+<li>No hay un parámetro adicional para la varianza. Por definición: <span class="math inline">\operatorname{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}=e^{X_{i}\beta}</span></li>
+</ul>
+</div>
+<div class="fragment">
 <ul>
-<li>Las <span class="math inline">J</span> categorías de <span class="math inline">y_{i}</span> no siguen necesariamente un orden.</li>
+<li>Esto puede resultar en una sub-estimación o sobre-estimación de la varianza de los datos.
+<ul>
+<li>Por lo general resulta en una subestimación de la varianza de los datos.</li>
 </ul></li>
 </ul>
 </div>
 <div class="fragment">
 <ul>
-<li>Asumimos que estos datos son realizaciones de <span class="math inline">n</span> variables aleatorias que siguen una distribución Multinomial con probabilidades desconocidas: <span class="math inline">Y_{i} \sim \text{Multinomial}(\boldsymbol{p_{i}}: p_{1}, \dots, p_{J})</span></li>
-</ul>
-</div>
-<div class="fragment">
+<li>Este caso se conoce como “over-dispersion”. Los datos son más dispersos de lo esperado de acuerdo al modelo.
 <ul>
-<li>Dichas probabilidades, <span class="math inline">\boldsymbol{p_{i}}</span>, varían de individuo en individuo en función de ciertas covariables.</li>
+<li>Over-dispersion no afecta la estimación de los coeficientes pero la inferencia demasiado “liberal”: errores estándar</li>
+</ul></li>
 </ul>
 </div>
 </section>
-<section id="distribución-multinomial" class="slide level2">
-<h2>Distribución Multinomial</h2>
-<p><span class="bold">Distribución Multinomial:</span></p>
-<ul>
-<li>Dado un experimento con resultados posibles <span class="math inline">\{1,2, \dots, J\}</span>, con respectiva probabilidad de “éxito” <span class="math inline">\{p_1,p_2, \dots, p_J\}</span></li>
-</ul>
+<section id="over-dispersion-en-regresión-poisson-1" class="slide level2">
+<h2>Over-dispersion en regresión Poisson</h2>
 <div class="fragment">
 <ul>
-<li>Si repetimos el experimento <span class="math inline">n</span> veces: ¿Cuál es la probabilidad de obtener la siguiente cantidad de éxitos en cada categoría: <span class="math inline">\{n_1,n_2, \dots, n_J\}</span>, donde <span class="math inline">n_1 + n_2 + \dots + n_J =n</span>?</li>
+<li>Es posible detectar over-dispersion inspeccionando los residuos “estandarizados” de un modelo Poisson. Formalmente: <span class="math display">z_{i} = \frac{y_{i} - \mu_{i}}{\sigma_{i}} = \frac{y_{i} - \mu_{i}}{\sqrt{\mu_{i}}} = \frac{y_{i} - e^{X_{i}\beta}}{\sqrt{e^{X_{i}\beta}}}</span></li>
 </ul>
 </div>
 <div class="fragment">
-<p><span class="bold">Ejemplo</span>: Al tirar un dado justo 12 veces, ¿cuál es la probabilidad de obtener cada lado 2 veces?</p>
+<ul>
+<li>Si los <span class="math inline">y_{i}</span>’s distribuyen Poisson entonces <span class="math inline">z_{i} \sim \mathcal{N}(0,1)</span>. Luego, la presencia de residuos grandes indican over-dispersion. La “suma de residuos al cuadrado” resume esta información: <span class="math display">\text{ssr} = \sum^{n}_{i=1} z^{2}_{i}</span></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Si el modelo Poisson es correcto <span class="math inline">\text{ssr} \sim \chi^2_{\text{df}=n-k}</span>, con valor esperado <span class="math inline">\mathbb{E}(\text{ssr})=n-k</span></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>El ratio entre ambos, <span class="math inline">\frac{\text{ssr}}{n-k}</span>, es un estimado del “factor de dispersión”.</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Obtenemos la inferencia correcta multiplicando los SE’s por <span class="math inline">\sqrt{\frac{\text{ssr}}{n-k}}</span>.</li>
+</ul>
+</div>
+</section>
+<section id="over-dispersion-en-regresión-poisson-2" class="slide level2">
+<h2>Over-dispersion en regresión Poisson</h2>
+<div class="fragment">
+<p>En nuestro modelo Poisson más complejo:</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.003</code></pre>
+<pre><code>rss =  794674  , rss esperado =  8642</code></pre>
 </div>
 </div>
-</div>
-</section>
-<section id="distribución-multinomial-n1" class="slide level2">
-<h2>Distribución Multinomial (n=1)</h2>
-<p><span class="bold">Distribución Multinoulli o Categórica:</span> Si la cantidad de intentos es igual a 1 (n=1), la probabilidad de éxito en una de las categorías (y fracaso en todas las otras) viene definida por la siguiente función de probabilidad:</p>
-<div class="fragment">
-<p><span class="math display">\quad \mathbb{P}(Y = j ) = p_{1}^{1[y=1]}p_{2}^{1[y=2]} \cdots p_{J}^{1[y=J]}    \quad \text{ donde } \quad y_{j} \in \{0,1\} \quad \text{y} \quad \sum^{J}_{j=1}1[y=j]=1</span></p>
 </div>
 <div class="fragment">
-<p><span class="bold">Ejemplo</span>: Al tirar un dado justo 1 vez, ¿cuál es la probabilidad de obtener el número 4?</p>
+<p>En este caso el factor de over-dispersion es:</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.167</code></pre>
+<pre><code>factor de dispersión =  91.950</code></pre>
 </div>
 </div>
+</div>
+</section>
+<section id="regresión-quasi-poisson" class="slide level2">
+<h2>Regresión Quasi-Poisson</h2>
+<p>La regresión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferencia del modelo.</p>
+<div class="fragment">
+<p><span class="math display">y_{i} \sim \text{quasi-Poisson}(\mu_{i} = e^{X_{i}\beta}, \sigma= \sqrt{\omega \cdot  e^{X_{i}\beta}})</span></p>
+<p>donde <span class="math inline">\omega</span> es el factor de dispersion.</p>
 </div>
 <div class="fragment">
 <ul>
-<li>En una regresión logística multinomial cada observación en la variable dependiente ( <span class="math inline">y_{i}</span> ) viene de una distribución Multinoulli.</li>
+<li>Regresión Poisson es un caso especial de quasi-Poisson ( <span class="math inline">\omega=1</span> ).</li>
 </ul>
 </div>
 <div class="fragment">
-<ul>
-<li>Observamos los resultados ( <span class="math inline">y_{i}=j</span> ) y queremos estimar las probabilidades que los generan, ( <span class="math inline">p_{ij}</span> ).</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Específicamente, queremos estimar ( <span class="math inline">p_{ij}</span> ) como una función de covariables, usando número de parámetros <span class="math inline">k</span>, tal que <span class="math inline">k&lt;n</span>.</li>
-</ul>
-</div>
-</section>
-<section id="regresión-logística-binomial" class="slide level2">
-<h2>Regresión logística binomial</h2>
-<p>Una regresión logística binomial <span class="math inline">y_{i} \in {0,1}</span></p>
-<div class="content-box-yellow">
-<p><span class="math display">\ln \frac{\mathbb{P}(y_{i}=1)}{\mathbb{P}(y_{i}=0)} =   \ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}</span></p>
-</div>
-<div class="fragment">
-<p>Equivalentemente, podemos re-escribir el modelo como</p>
-<p><span class="math display">\ln \frac{\mathbb{P}(y_{i}=1)}{\mathbb{P}(y_{i}=0)} =   \ln \frac{p_{1i}}{p_{0i}} =  \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}</span></p>
-</div>
-<div class="fragment">
-<p>Dado que <span class="math inline">p_{0} + p_{1} = 1</span>, sólo necesitamos estimar una equación.</p>
-</div>
-</section>
-<section id="regresión-logística-multinomial-3-categorías" class="slide level2">
-<h2>Regresión logística multinomial, 3 categorías</h2>
-<p>Si la variable dependiente toma tres valores, <span class="math inline">y \in \{1,2,3\}</span>, y las probabilidades de obtener estos resultados son <span class="math inline">p_{1},p_{2},p_{3}</span>, entonces podemos estimar estas tres probabilidades con dos modelos de regresión logística:</p>
-<div class="fragment">
-<p>Usando <span class="math inline">p_{3}</span> como categoría de referencia: <span class="math display">(1) \quad \ln \frac{\mathbb{P}(y_{i}=1)}{\mathbb{P}(y_{i}=3)} =   \ln \frac{p_{1i}}{p_{3i}} =  \beta_{10} + \beta_{11}x_{1i} + \dots + \beta_{1k}x_{ki}</span></p>
-</div>
-<div class="fragment">
-<p><br> y <span class="math display">(2) \quad \ln \frac{\mathbb{P}(y_{i}=2)}{\mathbb{P}(y_{i}=3)} =   \ln \frac{p_{2i}}{p_{3i}} =  \beta_{20} + \beta_{21}x_{1i} + \dots + \beta_{2k}x_{ki}</span></p>
-</div>
-<div class="fragment">
-<p>Describimos <span class="math inline">\{(p_{1},p_{2},p_{3})_{i}, \quad  \dots \quad ,(p_{1},p_{2},p_{3})_{n}\}</span> con <span class="math inline">2(k + 1)</span> parámetros.</p>
-</div>
-</section>
-<section id="regresión-logística-multinomial-j-categorías" class="slide level2">
-<h2>Regresión logística multinomial, J-categorías</h2>
-<p>Generalizando, si la variable dependiente toma, <span class="math inline">J</span> valores – <span class="math inline">y \in \{1,2,\dots,J\}</span> – , y las probabilidades de obtener estos resultados son <span class="math inline">p_{1},p_{2},\dots,p_{J}</span>, entonces podemos estimar estas <span class="math inline">J</span> probabilidades con <span class="math inline">J-1</span> modelos de regresión logística:</p>
-<div class="fragment">
-<p>Usando <span class="math inline">p_{J}</span> como categoría de referencia: <span class="math display">(1) \quad \ln \frac{\mathbb{P}(y_{i}=1)}{\mathbb{P}(y_{i}=J)} =   \ln \frac{p_{1i}}{p_{Ji}} =  \beta_{10} + \beta_{11}x_{1i} + \dots + \beta_{1k}x_{ki}</span></p>
-</div>
-<div class="fragment">
-<p><span class="math display">(2) \quad \ln \frac{\mathbb{P}(y_{i}=2)}{\mathbb{P}(y_{i}=J)} =   \ln \frac{p_{2i}}{p_{Ji}} =  \beta_{20} + \beta_{21}x_{1i} + \dots + \beta_{2k}x_{ki}</span></p>
-</div>
-<div class="fragment">
-<p><span class="math display">\vdots</span></p>
-</div>
-<div class="fragment">
-<p><span class="math display">(J-1) \quad \ln \frac{\mathbb{P}(y_{i}=J-1)}{\mathbb{P}(y_{i}=J)} =   \ln \frac{p_{(J-1)i}}{p_{Ji}} =  \beta_{(J-1)0} + \beta_{(J-1)1}x_{1i} + \dots + \beta_{(J-1)k}x_{ki}</span></p>
-</div>
-</section>
-<section id="regresión-logística-multinomial-j-categorías-1" class="slide level2">
-<h2>Regresión logística multinomial, J-categorías</h2>
-<p>Una versión más compacta de lo expresado anteriormente lleva a la formulación estándar de un modelo de regresión multinomial:</p>
-<div class="fragment">
-<div class="content-box-yellow">
-<p><span class="math display">\underbrace{\ln \frac{\mathbb{P}(y_{i}=j)}{\mathbb{P}(y_{i}=J)}}_{\text{log odds = log relative probability}}=   \ln \frac{p_{ji}}{p_{Ji}} = \overbrace{ \beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}^{\text{predictor lineal }j}</span></p>
-</div>
-</div>
-<div class="fragment">
-<p>Describimos <span class="math inline">\{(p_{1},\dots,p_{J})_{i}, \quad  \dots \quad ,(p_{1},\dots,p_{J})_{n}\}</span> con <span class="math inline">(J-1)(k+1)</span> parámetros.</p>
-</div>
-</section>
-<section id="regresión-logística-multinomial-j-categorías-2" class="slide level2">
-<h2>Regresión logística multinomial, J-categorías</h2>
-<p>De la formulación anterior es posible derivar el contraste en todos los restantes pares de categorías.</p>
-<div class="fragment">
-<p>Consideremos las categorías <span class="math inline">a</span> y <span class="math inline">b</span>:</p>
-</div>
-<div class="fragment">
-<p><span class="math display">\ln \frac{p_{ai}}{p_{bi}} =  \ln \frac{p_{ai}/p_{Ji}}{p_{bi}/p_{Ji}} = \ln \frac{p_{ai}}{p_{Ji}} - \ln \frac{p_{bi}}{p_{Ji}}</span></p>
-</div>
-<div class="fragment">
-<p>Por tanto, <span class="math display">\ln \frac{p_{ai}}{p_{bi}} =  (\beta_{a0} + \beta_{a1}x_{1i} + \dots + \beta_{ak}x_{ki}) - (\beta_{b0} + \beta_{b1}x_{1i} + \dots + \beta_{bk}x_{ki})</span></p>
-</div>
-<div class="fragment">
-<p>En resumen:</p>
-<div class="content-box-yellow">
-<p><span class="math display">\ln \frac{p_{ai}}{p_{bi}} =  (\beta_{a0} -\beta_{b0}) + (\beta_{a1} - \beta_{b1}) x_{1i} + \dots + (\beta_{ak} - \beta_{bk}) x_{ki}</span></p>
-</div>
-<p>donde cada <span class="math inline">(\beta_{ak} -\beta_{bk})</span> es un coeficiente en si mismo.</p>
-</div>
-</section>
-<section id="regresión-logística-multinomial-expresada-como-probabilidades" class="slide level2">
-<h2>Regresión logística multinomial expresada como probabilidades</h2>
-<p>Dado <span class="math display">\ln \frac{p_{ji}}{p_{Ji}} =  \beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}</span></p>
-<div class="fragment">
-<ul>
-<li>Exponenciando en ambos lados obtenemos la probabilidad “relativa” entre las categorías <span class="math inline">j</span> y <span class="math inline">J</span>: <span class="math display">\frac{p_{ji}}{p_{Ji}} =  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Luego, la probabilidad de obtener la categoría <span class="math inline">j</span> puede ser expresada como sigue: <span class="math display">p_{ji}  =  p_{Ji} \cdot e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}</span></li>
-</ul>
-</div>
-</section>
-<section id="regresión-logística-multinomial-expresada-como-probabilidades-1" class="slide level2">
-<h2>Regresión logística multinomial expresada como probabilidades</h2>
-<p>La expresión <span class="math inline">p_{ji}  =  p_{Ji} \cdot e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}</span> significa que:</p>
-<div class="fragment">
-<p><span class="math display">p_{1i}  =  p_{Ji} \cdot e^{\beta_{10} + \beta_{11}x_{1i} + \dots + \beta_{1k}x_{ki}}</span></p>
-</div>
-<div class="fragment">
-<p><span class="math display">p_{2i}  =  p_{Ji} \cdot e^{\beta_{20} + \beta_{21}x_{1i} + \dots + \beta_{2k}x_{ki}}</span></p>
-</div>
-<div class="fragment">
-<p><span class="math display">\vdots</span></p>
-</div>
-<div class="fragment">
-<p><span class="math display">p_{(J-1)i}  =  p_{Ji} \cdot e^{\beta_{(J-1)0} + \beta_{(J-1)1}x_{1i} + \dots + \beta_{(J-1)k}x_{ki}}</span></p>
-</div>
-<div class="fragment">
-<p>Luego, falta sólo determinar <span class="math inline">p_{Ji}</span>.</p>
-</div>
-</section>
-<section id="regresión-logística-multinomial-expresada-como-probabilidades-2" class="slide level2">
-<h2>Regresión logística multinomial expresada como probabilidades</h2>
-<p>Para determinar <span class="math inline">p_{Ji}</span> usamos los siguientes hechos:</p>
-<div class="fragment">
-<div class="pull-left">
-<p><span class="math display">\text{(1)} \quad p_{ji}  =  p_{Ji} \cdot e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}</span></p>
-</div>
-<div class="pull-right">
-<p><span class="math display">\text{(2)} \quad   p_{1i} + p_{2i} + \dots + p_{Ji} = 1</span></p>
-</div>
-</div>
-<div class="fragment">
-<p>Combinando (1) y (2) obtenemos que: <span class="math display">\sum^{J-1}_{j=1} p_{Ji} \cdot e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}} + p_{Ji} = 1, \quad \text{luego ... }</span></p>
-</div>
-<div class="fragment">
-<p><span class="math display">p_{Ji} \bigg(\sum^{J-1}_{j=1}  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}} + 1 \bigg) = 1, \quad \text{por tanto ... }</span></p>
-</div>
-<div class="fragment">
-<div class="content-box-yellow">
-<p><span class="math display">p_{Ji} =\frac{1}{1 + \sum^{J-1}_{j=1}  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}</span></p>
-</div>
-</div>
-</section>
-<section id="regresión-logística-multinomial-expresada-como-probabilidades-3" class="slide level2">
-<h2>Regresión logística multinomial expresada como probabilidades</h2>
-<p>Ahora sabemos que:</p>
-<div class="fragment">
-<ul>
-<li><span class="math inline">p_{Ji} =\frac{1}{1 + \sum^{J-1}_{j=1}  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}</span></li>
-<li><span class="math inline">p_{ji}  =  p_{Ji} \cdot e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<p>Combinando ambos resultados obtenemos:</p>
-<div class="content-box-yellow">
-<p><span class="math display">p_{ji} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1}  e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}</span></p>
-</div>
-</div>
-</section>
-<section id="estimación" class="slide level2 inverse center middle" data-background-color="#C1122F">
-<h2>Estimación</h2>
-</section>
-<section id="estimación-1" class="slide level2">
-<h2>Estimación</h2>
-<div class="fragment">
-<ul>
-<li>Parámetros son estimados via MLE</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Alternativamente, minimizando función <span class="math inline">softmax</span> (ej, paquete <code>nnet</code> en <code>R</code>)</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Las <span class="math inline">J-1</span> equaciones del modelo de regresión logística son estimadas simultáneamente, imponiendo la restricción: <span class="math inline">\sum_{j}p_{i} = 1</span> (“constrained optimization”)</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Es posible estimar <span class="math inline">J-1</span> regresiones logísticas separadamente pero no garantiza que <span class="math inline">\sum_{j}p_{i} = 1</span>.</li>
-</ul>
-</div>
-</section>
-<section id="regresión-logística-multinomial-en-la-práctica" class="slide level2 inverse center middle" data-background-color="#C1122F">
-<h2>Regresión logística multinomial en la práctica</h2>
-</section>
-<section id="regresión-logística-multinomial-en-la-práctica-1" class="slide level2">
-<h2>Regresión logística multinomial en la práctica</h2>
-<p>Para ejemplificar el uso de regresión logística multinomial trabajaremos con los datos de intención de voto en el plebiscito de 1988.</p>
+<p>Implementación en <code>R</code>:</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2,700 × 8
-   region population sex     age education income statusquo vote 
-   &lt;fct&gt;       &lt;int&gt; &lt;fct&gt; &lt;int&gt; &lt;fct&gt;      &lt;int&gt;     &lt;dbl&gt; &lt;fct&gt;
- 1 C          175000 F        64 P             NA     -1.800 U    
- 2 M           25000 M        27 S           7500     -1.740 &lt;NA&gt; 
- 3 SA         250000 F        21 PS         35000     -1.730 N    
- 4 SA         250000 F        42 S          35000     -1.480 &lt;NA&gt; 
- 5 SA         250000 M        27 S           7500     -1.340 N    
- 6 C          250000 F        22 S           7500     -1.330 N    
- 7 M           15000 M        34 P          15000     -1.330 N    
- 8 SA         250000 M        66 S          35000     -1.310 &lt;NA&gt; 
- 9 SA         250000 F        25 S          15000     -1.310 A    
-10 S          250000 F        39 S          15000     -1.310 N    
-# ℹ 2,690 more rows</code></pre>
+<pre><code>            Estimate Std. Error t value
+(Intercept)    4.633    0.040  115.840
+temp           1.995    0.044   45.140
+hum           -1.169    0.044  -26.360
+                                                                                                                                                            Pr(&gt;|t|)
+(Intercept) 0.000
+temp        0.000
+hum         0.000</code></pre>
 </div>
-</div>
-<p><code>vote</code>: (A) Abstención; (N) NO; (U) Indecisa; (Y) SI <code>statusquo</code>: apoyo al status-quo (+)</p>
-</section>
-<section id="regresión-logística-multinomial-en-la-práctica-2" class="slide level2">
-<h2>Regresión logística multinomial en la práctica</h2>
-<div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>Call:
-multinom(formula = vote ~ statusquo, data = plebs_1988, trace = F)
-
-Coefficients:
-  (Intercept) statusquo
-N      0.494   -1.733
-U      1.168    0.328
-Y      0.727    1.893
-
-Std. Errors:
-  (Intercept) statusquo
-N     0.111    0.127
-U     0.086    0.103
-Y     0.101    0.118
-
-Residual Deviance: 4384 
-AIC: 4396 </code></pre>
-</div>
-</div>
-</section>
-<section id="regresión-logística-multinomial-en-la-práctica-3" class="slide level2">
-<h2>Regresión logística multinomial en la práctica</h2>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2,700 × 2
-   intercept statusquo
-       &lt;dbl&gt;     &lt;dbl&gt;
- 1         1     1.010 
- 2         1    -1.300 
- 3         1     1.230 
- 4         1    -1.030 
- 5         1    -1.100 
- 6         1    -1.050 
- 7         1    -0.786
- 8         1    -1.110 
- 9         1    -1.010 
-10         1    -1.300 
-# ℹ 2,690 more rows</code></pre>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>  (Intercept) statusquo
-N      0.494   -1.733
-U      1.168    0.328
-Y      0.727    1.893</code></pre>
+<pre><code>dispersion =  91.960</code></pre>
 </div>
 </div>
 </div>
 </section>
-<section id="regresión-logística-multinomial-en-la-práctica-4" class="slide level2">
-<h2>Regresión logística multinomial en la práctica</h2>
-<p><span class="math display">
-\hat{\eta} = X\beta  =
-\begin{bmatrix}
-1 &amp; x_{11} &amp; x_{12} &amp; \dots &amp; x_{1p} \\
-1 &amp; x_{21} &amp; x_{22} &amp; \dots &amp; x_{2p} \\
-\vdots &amp; \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
-1 &amp; x_{n1} &amp; x_{n2} &amp; \dots &amp; x_{np}
-\end{bmatrix}
-\begin{bmatrix}
-\beta_{01} &amp; \beta_{02} &amp; \dots &amp; \beta_{0(J-1)} \\
-\beta_{11} &amp; \beta_{12} &amp; \dots &amp; \beta_{1(J-1)} \\
-\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
-\beta_{p1} &amp; \beta_{p2} &amp; \dots &amp; \beta_{p(J-1)}
-\end{bmatrix}
-</span></p>
+<section id="quasi-poisson" class="slide level2">
+<h2>Quasi-Poisson</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>     N      U      Y 
--1.253  1.499  2.636 </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>      N       U       Y 
-0.014 0.227 0.708 </code></pre>
+<pre><code>
+=====================================================
+                          Dependent variable:        
+                  -----------------------------------
+                                bikers               
+                       Poisson      glm: quasipoisson
+                                       link = log    
+                         (1)               (2)       
+-----------------------------------------------------
+temp              1.995*** (0.005)  1.995*** (0.044) 
+hum               -1.169*** (0.005) -1.169*** (0.044)
+Constant          4.633*** (0.004)  4.633*** (0.040) 
+-----------------------------------------------------
+Observations            8,645             8,645      
+Log Likelihood      -409,717.000                     
+Akaike Inf. Crit.    819,440.000                     
+=====================================================
+Note:                     *p&lt;0.100; **p&lt;0.050; ***p&lt;0.010</code></pre>
 </div>
 </div>
 </section>
-<section id="regresión-logística-multinomial-en-la-práctica-5" class="slide level2">
-<h2>Regresión logística multinomial en la práctica</h2>
+<section id="una-alternativa-binomial-negativa" class="slide level2">
+<h2>Una alternativa: binomial negativa</h2>
+<p>Quasi-Poisson <strong>corrige los errores estándar</strong> después de ajustar; no cambia el modelo de la media. Existe una alternativa que sí modela explícitamente el exceso de varianza: la <strong>regresión binomial negativa</strong>.</p>
+<div class="fragment">
+<p><span class="math display">\text{Var}(y_i) = \mu_i + \frac{\mu_i^2}{\theta}</span></p>
+<ul>
+<li><span class="math inline">\theta</span>: parámetro de dispersión estimado por el propio modelo (no solo un factor de corrección post-hoc).</li>
+<li><span class="math inline">\theta \to \infty</span> recupera Poisson (<span class="math inline">\text{Var}=\mu</span>); <span class="math inline">\theta</span> chico implica sobre-dispersión fuerte.</li>
+</ul>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>            A         N       U        Y
-1    0.051 0.014 0.227 0.708
-2    0.053 0.825 0.112 0.009
-3    0.037 0.007 0.177 0.780
-4    0.075 0.732 0.171 0.022
-5    0.068 0.761 0.153 0.017
-6    0.073 0.738 0.167 0.021
-7    0.097 0.618 0.240 0.045
-8    0.068 0.764 0.151 0.017
-9    0.076 0.724 0.176 0.023
-10   0.053 0.825 0.112 0.009
-11   0.030 0.005 0.150 0.816
-12   0.049 0.014 0.222 0.715
-13   0.027 0.004 0.137 0.833
-14   0.024 0.003 0.125 0.849
-16   0.065 0.775 0.144 0.016
-17   0.090 0.653 0.220 0.037
-18   0.086 0.677 0.205 0.032
-19   0.032 0.005 0.158 0.805
-20   0.072 0.743 0.165 0.020
-21   0.029 0.004 0.146 0.821
-22   0.026 0.003 0.133 0.837
-23   0.022 0.002 0.118 0.857
-24   0.020 0.002 0.108 0.870
-25   0.023 0.003 0.122 0.853
-26   0.088 0.055 0.339 0.518
-27   0.031 0.005 0.155 0.808
-28   0.119 0.149 0.402 0.330
-29   0.087 0.671 0.209 0.033
-30   0.053 0.825 0.112 0.009
-31   0.024 0.003 0.124 0.849
-32   0.054 0.017 0.238 0.692
-33   0.119 0.149 0.402 0.330
-34   0.040 0.009 0.190 0.761
-35   0.053 0.825 0.112 0.009
-36   0.126 0.379 0.361 0.134
-37   0.027 0.004 0.138 0.832
-38   0.112 0.116 0.392 0.381
-39   0.121 0.164 0.405 0.310
-40   0.073 0.034 0.299 0.594
-41   0.051 0.015 0.229 0.706
-42   0.065 0.778 0.142 0.015
-43   0.028 0.004 0.143 0.825
-44   0.091 0.060 0.346 0.503
-45   0.067 0.027 0.279 0.627
-46   0.090 0.059 0.344 0.508
-47   0.024 0.003 0.128 0.845
-48   0.093 0.064 0.351 0.492
-49   0.032 0.005 0.157 0.806
-50   0.022 0.002 0.118 0.857
-51   0.031 0.005 0.156 0.807
- [ reached 'max' / getOption("max.print") -- omitted 2469 rows ]</code></pre>
+<pre><code>
+=====================================================
+                          Dependent variable:        
+                  -----------------------------------
+                                bikers               
+                  glm: quasipoisson     negative     
+                     link = log         binomial     
+                    Quasi-Poisson   Binomial Negativa
+                         (1)               (2)       
+-----------------------------------------------------
+temp              1.995*** (0.044)  2.309*** (0.053) 
+hum               -1.169*** (0.044) -1.304*** (0.053)
+Constant          4.633*** (0.040)  4.549*** (0.045) 
+-----------------------------------------------------
+Observations            8,645             8,645      
+Log Likelihood                         -50,505.000   
+theta                               1.076*** (0.015) 
+Akaike Inf. Crit.                      101,17.000   
+=====================================================
+Note:                     *p&lt;0.100; **p&lt;0.050; ***p&lt;0.010</code></pre>
 </div>
+</div>
+<p>Quasi-Poisson y binomial negativa suelen dar coeficientes similares; la binomial negativa además permite comparar el ajuste global (AIC, verosimilitud) entre modelos, algo que quasi-Poisson no ofrece por construcción.</p>
 </div>
 </section>
-<section id="regresión-logística-multinomial-en-la-práctica-6" class="slide level2">
-<h2>Regresión logística multinomial en la práctica</h2>
-<div class="pull-left">
+<section id="un-problema-distinto-exceso-de-ceros" class="slide level2">
+<h2>Un problema distinto: exceso de ceros</h2>
+<p>Sobre-dispersión es un problema de <strong>varianza</strong> (más dispersión que la que Poisson permite). Existe un problema <em>distinto</em>, aunque relacionado: el <strong>exceso de ceros</strong> — más observaciones en cero de las que Poisson (o incluso binomial negativa) predicen.</p>
+<div class="fragment">
+<p>Ocurre cuando el proceso generador de datos mezcla dos mecanismos:</p>
+<ul>
+<li>un subgrupo que <strong>nunca</strong> puede generar el evento (ceros “estructurales”);</li>
+<li>el resto, que sigue un proceso de conteo normal (donde el cero es solo un resultado posible más).</li>
+</ul>
+</div>
+</section>
+<section id="nos-pasa-esto-con-bikers" class="slide level2">
+<h2>¿Nos pasa esto con <code>bikers</code>?</h2>
+<p>Antes de aplicar cualquier corrección, conviene <strong>mirar los datos</strong>:</p>
 <div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_12_files/figure-revealjs/unnamed-chunk-10-1.png" width="960"></p>
-</figure>
-</div>
-</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0</code></pre>
 </div>
 </div>
 <div class="fragment">
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_12_files/figure-revealjs/unnamed-chunk-11-1.png" width="960"></p>
-</figure>
+<p>Cero. En dos años de datos horarios, <code>bikers</code> nunca es exactamente 0 — siempre hay al menos un arriendo. Quasi-Poisson y binomial negativa alcanzan aquí precisamente porque <strong>no</strong> hay exceso de ceros que modelar.</p>
 </div>
-</div>
-</div>
-</div>
+<div class="fragment">
+<p>El diagnóstico habría sido distinto con otro outcome: pensemos en “arriendos de bicicletas de carga” (un servicio de nicho, disponible solo en algunas estaciones). Ahí muchas horas en cero no reflejarían “poca demanda” sino “el servicio ni siquiera estaba disponible” — un mecanismo estructural mezclado con demanda genuina. Para ese tipo de outcome existen modelos <strong>Zero-Inflated Poisson (ZIP)</strong>, <strong>Zero-Inflated Negative Binomial (ZINB)</strong>, y modelos <strong>Hurdle</strong> (dos partes: ¿ocurre el evento?, y dado que ocurre, ¿cuánto?).</p>
+<p>La lección no es “siempre agregar un modelo de ceros inflados”: es <strong>revisar <code>mean(y == 0)</code> antes de elegir el modelo</strong>, igual como revisamos la dispersión antes de elegir entre Poisson y sus alternativas.</p>
 </div>
 </section>
 <section id="en-resumen" class="slide level2">
 <h2>En resumen</h2>
 <ul>
-<li>La regresión logística multinomial generaliza el modelo binomial cuando <span class="math inline">y_{i}</span> toma <span class="math inline">J</span> valores no ordenados: se estiman <span class="math inline">J-1</span> logits, cada uno comparando una categoría <span class="math inline">j</span> contra una categoría de referencia <span class="math inline">J</span>.</li>
-<li>Cada <span class="math inline">y_{i}</span> es una realización de una distribución Multinomial (o Multinoulli si <span class="math inline">n=1</span>) con probabilidades <span class="math inline">p_{i1}, \dots, p_{iJ}</span>.</li>
-<li>De los <span class="math inline">J-1</span> logits se despeja <span class="math inline">p_{ji}</span> como una función softmax de los predictores lineales: <span class="math inline">p_{ji} = \dfrac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1} e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}</span>.</li>
-<li>Los parámetros se estiman via MLE, imponiendo la restricción <span class="math inline">\sum_{j}p_{ij} = 1</span> (optimización simultánea, no <span class="math inline">J-1</span> regresiones separadas).</li>
-<li>La próxima clase aborda la interpretación de estos coeficientes: efectos sobre el logit, odds ratios, y efectos marginales sobre las probabilidades.</li>
+<li>Poisson asume <span class="math inline">\operatorname{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}</span>; cuando los datos son más dispersos de lo esperado (“over-dispersion”), esto no sesga los coeficientes pero sí subestima los errores estándar.</li>
+<li>El factor de dispersión se estima con los residuos estandarizados: <span class="math inline">\text{ssr}/(n-k)</span>.</li>
+<li>Quasi-Poisson corrige los errores estándar multiplicando por <span class="math inline">\sqrt{\text{ssr}/(n-k)}</span>; la binomial negativa modela explícitamente el exceso de varianza mediante <span class="math inline">\theta</span>.</li>
+<li>Exceso de ceros es un problema <em>distinto</em> de la sobre-dispersión — conviene siempre revisar <code>mean(y==0)</code> antes de elegir el modelo.</li>
+<li>La próxima clase: causalidad.</li>
 </ul>
 </section>
-<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#E0642B">
+<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#D3A000">
 <h2>Gracias</h2>
 <p><strong>Hasta la próxima clase</strong></p>
 <p>Mauricio Bucca</p>
 
-</section></section>
+</section>
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">

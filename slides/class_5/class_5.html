@@ -143,13 +143,13 @@
     }
   </style>
 </head>
-<body class="theme-man-city quarto-light">
+<body class="theme-river quarto-light">
   <div class="reveal">
     <div class="slides">
 
-<section id="title-slide" data-background-color="#6CABDD" class="quarto-title-block center">
+<section id="title-slide" data-background-color="#C4162A" class="quarto-title-block center">
   <h1 class="title">Análisis de Datos Categóricos (SOC3070)</h1>
-  <p class="subtitle">Momentos</p>
+  <p class="subtitle">Modelos Lineales Generalizados</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -166,188 +166,416 @@ Mauricio Bucca · Sociología UC
 <div class="full-width">
 <div class="content-box">
 <p><strong>Antes</strong></p>
-<p>variables aleatorias y distribuciones discretas.</p>
+<p>modelo lineal de probabilidad y sus límites.</p>
 </div>
 <div class="content-box-primary">
 <p><strong>Hoy</strong></p>
-<p>valor esperado y varianza.</p>
+<p>componentes de un GLM y funciones de enlace.</p>
 </div>
 <div class="content-box-secondary">
 <p><strong>Después</strong></p>
-<p>estimación, MLE y funciones de pérdida.</p>
+<p>regresión logística: estructura teórica y estimación.</p>
 </div>
 </div>
 </section>
 <section>
-<section id="valor-esperado-de-variables-discretas" class="title-slide slide level1 inverse center middle" data-background-color="#1C2C5B">
-<h1>Valor Esperado de variables discretas</h1>
+<section id="modelos-lineales-generalizados-glm" class="title-slide slide level1 inverse center middle" data-background-color="#1D3461">
+<h1>Modelos Lineales Generalizados (GLM)</h1>
 
 </section>
-<section id="valor-esperado" class="slide level2">
-<h2>Valor Esperado</h2>
-<p>El valor esperado de una variable es el análogo teórico de un promedio. Los posibles valores de la variable se ponderan por su probabilidad de ocurrencia. En el caso de variables discretas:</p>
+<section id="más-allá-del-modelo-de-regresión-lineal-lm" class="slide level2">
+<h2>Más allá del modelo de regresión lineal (LM)</h2>
+<p>LM es un marco muy útil y productivo, pero hay situaciones en las que no proporciona una descripción adecuada de los datos. En particular:</p>
 <div class="fragment">
-<p><span class="math display">\begin{align}
-\mathbb{E}(X) &amp;= \sum_{i} x_{i} \times \mathbb{P}(X=x_{i}) \\
-&amp;\equiv  \sum_{i} x_{i} \times f(x_{i})
-\end{align}</span></p>
+<ul>
+<li>Cuando <span class="math inline">y_i</span>’s no distribuyen normal</li>
+</ul>
 </div>
 <div class="fragment">
-<p>Es teórico porque esta información la podemos saber <em>a priori</em>, sin necesidad de datos.</p>
+<ul>
+<li>Cuando el rango de <span class="math inline">y_i</span>’s está restringido (por ejemplo, binario, recuento)</li>
+</ul>
 </div>
 <div class="fragment">
-<p>Análogamente, para variables continuas:</p>
-<p><span class="math display">\begin{align}
-\mathbb{E}(X) =  \int x f(x)dx
-\end{align}</span></p>
+<ul>
+<li>Cuando la varianza de los <span class="math inline">y_i</span>’s no es independiente de su valor esperado.</li>
+</ul>
 </div>
-</section>
-<section id="valor-esperado-1" class="slide level2">
-<h2>Valor Esperado</h2>
-<p>Por ejemplo, supongamos que <span class="math inline">Y</span> es una variable que resulta de tirar un dado “justo”. ¿Cuál es el valor esperado de <span class="math inline">Y</span>?</p>
 <div class="fragment">
-<p><span class="math display">\begin{align}
-\mathbb{E}(Y) &amp;= \sum_{i}y_{i} \times \mathbb{P}(Y=y_{i})  \\ \\
-     &amp;=  1 \times  \frac{1}{6}+ 2 \times \frac{1}{6} + \dots + 6 \times \frac{1}{6}  \\ \\
-     &amp;= 3.5
-\end{align}</span></p>
+<p><span class="bold">GLM</span> ofrece un marco mucho más general y flexible que incorpora y amplía el LM para abordar estas cuestiones.</p>
 </div>
 </section>
-<section id="valor-esperado-algunas-propiedades-útiles" class="slide level2">
-<h2>Valor Esperado, algunas propiedades útiles</h2>
-<div class="fragment">
-<ol type="1">
-<li>El valor esperado de una constante es una constante. <span class="math display">\mathbb{E}(c)=c</span></li>
-</ol>
+<section id="estructura-de-los-modelos-lineales-generalizados" class="slide level2">
+<h2>Estructura de los modelos lineales generalizados</h2>
+<p>Un modelo lineal generalizado tiene cuatro componentes:</p>
+<div class="pull-left">
+<ul>
+<li>Un <em>componente aleatorio</em></li>
+<li>Un <em>componente sistemático</em></li>
+<li>Una <em>función de enlace</em> (link).</li>
+<li>Una <em>función de varianza</em></li>
+</ul>
 </div>
-<div class="fragment">
-<ol start="2" type="1">
-<li>Si <span class="math inline">X</span> es una variable aleatoria y <span class="math inline">c</span> una constante, entonces <span class="math display">\mathbb{E}(X + c)= \mathbb{E}(X) + c</span></li>
-</ol>
+<div class="pull-right">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="nelder.png"></p>
+<figcaption>nelder</figcaption>
+</figure>
 </div>
-<div class="fragment">
-<ol start="3" type="1">
-<li>Si <span class="math inline">X</span> es una variable aleatoria y <span class="math inline">c</span> una constante, entonces <span class="math display">\mathbb{E}(c X)= c \mathbb{E}(X)</span></li>
-</ol>
 </div>
+</section></section>
+<section>
+<section id="componente-aleatorio" class="title-slide slide level1 inverse center middle" data-background-color="#1D3461">
+<h1>Componente Aleatorio</h1>
+
+</section>
+<section id="componente-aleatorio-1" class="slide level2">
+<h2>Componente Aleatorio</h2>
+<p>El componente aleatorio de un GLM identifica la distribución de probabilidad de la variable dependiente</p>
+<ul>
+<li>Al igual que con LM, los datos que queremos modelar son una colección de observaciones <span class="math inline">y_{1}, \dots, y_{n}</span>, donde cada observación es la manifestación de una variable aleatoria.</li>
+</ul>
 <div class="fragment">
-<ol start="4" type="1">
-<li>Si <span class="math inline">X</span> e <span class="math inline">Y</span> son variables aleatorias (sin importar si <span class="math inline">X \bot Y</span> o no), entonces <span class="math display">\mathbb{E}(X + Y)=  \mathbb{E}(X) + \mathbb{E}(Y)</span></li>
-</ol>
+<ul>
+<li>Estas variables aleatorias <span class="math inline">y_{1}, \dots, y_{n}</span> son independientes entre si y provienen de la misma <em>familia</em> de distribución: <span class="bold">iid</span></li>
+<li>La distribución de los datos nos da una pista sobre la distribución de probabilidad subyacente</li>
+<li>Muestreo aleatorio garantiza que supuesto de independencia se cumpla</li>
+</ul>
 </div>
 </section>
-<section id="valor-esperado-ejemplo" class="slide level2">
-<h2>Valor Esperado, ejemplo</h2>
-<p>Por ejemplo, supongamos que <span class="math inline">X_{i}</span> es la variable que resulta de tirar un dado “justo”. Participamos de un concurso que consiste en tirar el mismo dado 10 veces. El premio (G) es $ <span class="math inline">1000</span> de base, más el resultado de cada dado <span class="math inline">i</span> multiplicado por 100.</p>
-<div class="fragment">
-<p>¿Cuánto es el premio esperado?</p>
-</div>
+<section id="componente-aleatorio-2" class="slide level2">
+<h2>Componente Aleatorio</h2>
+<p>Mientras que la LM asume que la variable dependiente sigue una distribución normal, GLM abarca un conjunto más amplio de distribuciones, <span class="bold">tanto continuas como discretas</span>, siempre y cuando pertenezcan a la clase más general de la <a href="https://en.wikipedia.org/wiki/Exponential_family"><em>familia exponencial de distribuciones</em></a>.<br>
+<br><br></p>
 <div class="fragment">
 <div class="center">
-<div class="cell">
-<div class="cell-output-display">
-<div>
+<div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="class_5_files/figure-revealjs/unnamed-chunk-1-1.png" width="960"></p>
+<p><img data-src="expo_fam.png"></p>
+<figcaption>Some distributions of the exponential family and their relationship</figcaption>
 </figure>
 </div>
 </div>
 </div>
-</div>
-</div>
+</section></section>
+<section>
+<section id="componente-sistemático" class="title-slide slide level1 inverse center middle" data-background-color="#1D3461">
+<h1>Componente Sistemático</h1>
+
 </section>
-<section id="valor-esperado-ejemplo-1" class="slide level2">
-<h2>Valor Esperado, ejemplo</h2>
-<p>Por ejemplo, supongamos que <span class="math inline">X_{i}</span> es la variable que resulta de tirar un dado “justo”. Participamos de un concurso que consiste en tirar el mismo dado 10 veces. El premio (G) es $ <span class="math inline">1000</span> de base, más el resultado de cada dado <span class="math inline">i</span> multiplicado por 100. ¿Cuánto es el premio esperado?</p>
+<section id="componente-sistemático-1" class="slide level2">
+<h2>Componente Sistemático</h2>
+<p>El componente sistemático de un GLM especifica las variables explicativas, es decir, las <span class="math inline">x</span>’s en el lado derecho de la ecuación</p>
+<div class="content-box-primary">
+<p><span class="math display">\color{white}{\eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}</span></p>
+</div>
+<p><br><br></p>
 <div class="fragment">
-<p><span class="math display">G = 1000 + \sum_{i=1}^{10} X_{i} \times 100 \quad \text{ por tanto,}</span></p>
+<ul>
+<li>En terminología GLM <span class="math inline">\eta</span> se denomina <span class="bold">predictor lineal</span>.</li>
+</ul>
 </div>
 <div class="fragment">
-<p><span class="math display">\mathbb{E}(G) = \mathbb{E}(1000 + \sum_{i=1}^{10} X_{i} \times 100)</span></p>
+<ul>
+<li><span class="math inline">\eta</span> es lineal “en parámetros”: no vamos a encontrar términos del tipo <span class="math inline">\beta_{0}*\beta_{1}</span> o <span class="math inline">\beta_{1}^{\beta_{0}}</span>.</li>
+</ul>
 </div>
 <div class="fragment">
-<p><span class="math display">\mathbb{E}(G) = 1000 + 100 \times \sum_{i=1}^{10}\mathbb{E}(X_{i})</span></p>
+<ul>
+<li>pero puede ser no lineal “en variables” (por ejemplo, interacciones, términos cuadrados, etc.): <span class="math inline">\beta_{1}x_{1} + \beta_{2}x_{1}^2</span></li>
+</ul>
 </div>
 <div class="fragment">
-<p><span class="math display">\mathbb{E}(G) = 1000 + 100(3.5 + 3.5 + \dots + 3.5) = 1000 + 100 \times 10 \times 3.5 = \$4500</span></p>
-</div>
-</section>
-<section id="valor-esperado-de-variables-discretas-1" class="slide level2">
-<h2>Valor Esperado de variables discretas</h2>
-<h3 id="bernoulli">Bernoulli</h3>
-<p>Si X es una variable Bernoulli, su valor esperado viene dado por:</p>
-<p><span class="math display">\begin{align}
-\mathbb{E}(X) = \sum_{i} x_{i} \times \mathbb{P}(X=x_{i}) &amp;= \sum_{i} x_{i} \times p^{x_{i}}(1-p)^{1 - x_{i}} \\
-     &amp;= 1 \times p + 0 \times (1-p) \\
-     &amp;= p
-\end{align}</span></p>
-<div class="fragment">
-<h3 id="binomial">Binomial</h3>
-<p>Si X es una variable Binomial, su valor esperado viene dado por:</p>
-<p><span class="math display">\begin{align}
-\mathbb{E}(X) = np
-\end{align}</span></p>
-</div>
-<div class="fragment">
-<p><span class="bold">Pregunta</span>: ¿Cuántas “Caras” debo esperar si tiro 200 monedas “justas”?</p>
-</div>
-<div class="fragment">
-<p><span class="bold">Respuesta</span>: <span class="math inline">np = 200 \times 0.5 = 100</span></p>
+<ul>
+<li>Las <span class="math inline">x</span>’s son tratadas como fijas, no como variables aleatorias.</li>
+</ul>
 </div>
 </section></section>
 <section>
-<section id="varianza-de-variables-discretas" class="title-slide slide level1 inverse center middle" data-background-color="#1C2C5B">
-<h1>Varianza de variables discretas</h1>
+<section id="función-de-enlace" class="title-slide slide level1 inverse center middle" data-background-color="#1D3461">
+<h1>Función de Enlace</h1>
 
 </section>
-<section id="varianza" class="slide level2">
-<h2>Varianza</h2>
-<p>La varianza de una variable aleatoria es el análogo teórico de la varianza de los datos.</p>
+<section id="función-de-enlace-link" class="slide level2">
+<h2>Función de enlace (link)</h2>
+<p>En el <span class="bold">LM estándar</span>, la media condicional del resultado <span class="math inline">\mu_{i}</span> está linealmente relacionada con los predictores del modelo. <span class="math display">\underbrace{\mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k} )}_{\mu_{i}} = \underbrace{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}_{\eta_{i}}</span></p>
 <div class="fragment">
-<p>Mide cuánta dispersión existe en torno al centro (la media). Formalmente, en el caso de variables aleatorias discretas:</p>
-<p><span class="math display">\operatorname{Var}(X) = \sum_{i} \bigg( x_{i} - \mathbb{E}(X) \bigg)^{2} \times f(x_{i})</span></p>
+<ul>
+<li><span class="bold">GLM</span> permiten una relación más general y flexible entre estos dos términos.</li>
+</ul>
 </div>
 <div class="fragment">
-<p>Análogamente, para variables continuas:</p>
+<ul>
+<li>En un GLM el componente sistemático <span class="math inline">\eta_{i}</span> debe estar relacionado linealmente (en parámetros) con una función <span class="math inline">g(\cdot)</span> de <span class="math inline">\mu_{i}</span>. Dicha función se denomina <em>función de enlace</em>. Formalmente,</li>
+</ul>
+<div class="content-box-primary">
+<p><span class="math display">\color{white}{g\Big(\mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k})\Big) =  g(\mu_{i}) = \eta_{i}}</span></p>
+</div>
+</div>
+<div class="fragment">
+<p>Ejemplo, si <span class="math inline">g(\cdot) = \ln(\cdot)</span>, entonces <span class="math display">\ln \mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k}) =  \ln \mu_{i} = \eta_{i}</span></p>
+</div>
+</section>
+<section id="función-de-enlace-link-1" class="slide level2">
+<h2>Función de Enlace (link)</h2>
+<ul>
+<li>El inverso de esta expresión es la llamada <span class="bold">función media</span>, que expresa la media condicional de <span class="math inline">y_{i}</span> como una función potencialmente no lineal de los predictores:</li>
+</ul>
+<div class="content-box-primary">
+<p><span class="math display">\color{white}{\mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k}) = \mu_{i} = g^{-1}(\eta_{i})}</span></p>
+</div>
+<div class="fragment">
+<p>Ejemplo, si <span class="math inline">g(\cdot) = \ln(\cdot)</span>, entonces <span class="math display">\ln \mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k}) =  \ln \mu_{i} = \eta_{i}</span></p>
+</div>
+<div class="fragment">
+<p>En consecuencia, <span class="math inline">g^{-1}(\cdot) = e^{(\cdot)}</span> y, <span class="math display">\mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k}) = \mu_{i} = e^{\eta_{i}}</span></p>
+</div>
+<div class="fragment">
+<ul>
+<li>La <em>función de enlace</em> cumple un objetivo importante: mantener <span class="math inline">\mu_{i}</span> dentro de su rango natural.
+<ul>
+<li>Ejemplo: si <span class="math inline">y_{i}</span> es estrictamente positivo (ingreso), <span class="math inline">\eta_{i} \in (-\infty, \infty+)</span> pero <span class="math inline">\mu_{i} = e^{\eta_{i}} \in  (0, \infty+)</span></li>
+</ul></li>
+</ul>
+</div>
+</section>
+<section id="función-de-enlace-link-2" class="slide level2">
+<h2>Función de Enlace (link)</h2>
+<p>Más allá de este ejemplo, hay una variedad de posibles funciones de enlace:</p>
+<div class="center">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="link_fn.png"></p>
+<figcaption>Some commonly used link functions</figcaption>
+</figure>
+</div>
+</div>
+<ul>
+<li><span class="math inline">g(\cdot)</span> debe ser “smooth” y monotónica</li>
+</ul>
+</section>
+<section id="el-enlace-natural-de-cada-distribución" class="slide level2">
+<h2>El enlace “natural” de cada distribución</h2>
+<p>La elección de <span class="math inline">g(\cdot)</span> no es arbitraria: cada distribución de la familia exponencial tiene un <strong>enlace canónico</strong>, aquel para el cual el parámetro natural de la distribución coincide exactamente con <span class="math inline">\eta_{i}</span>.</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Distribución</th>
+<th>Enlace canónico</th>
+<th><span class="math inline">g(\mu)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Normal</td>
+<td>identidad</td>
+<td><span class="math inline">\mu</span></td>
+</tr>
+<tr class="even">
+<td>Poisson</td>
+<td>log</td>
+<td><span class="math inline">\ln(\mu)</span></td>
+</tr>
+<tr class="odd">
+<td>Binomial</td>
+<td>logit</td>
+<td><span class="math inline">\ln\!\left(\frac{\mu}{1-\mu}\right)</span></td>
+</tr>
+</tbody>
+</table>
+<p>Usar el enlace canónico simplifica la estimación (MLE), pero <strong>no es obligatorio</strong>: cualquier <span class="math inline">g(\cdot)</span> monotónica y “smooth” define un GLM válido.</p>
+</section></section>
+<section>
+<section id="función-de-varianza" class="title-slide slide level1 inverse center middle" data-background-color="#1D3461">
+<h1>Función de Varianza</h1>
+
+</section>
+<section id="función-de-varianza-1" class="slide level2">
+<h2>Función de varianza</h2>
+<p>La función de varianza describe cómo la varianza <span class="math inline">\operatorname{Var}(y_{i})</span> depende de la media <span class="math inline">\mu_{i}</span>. Formalmente:</p>
+<div class="content-box-primary">
+<p><span class="math display">\color{white}{\operatorname{Var}(y_{i}) = \phi V(\mu_{i})}</span></p>
+</div>
+<p>donde</p>
+<ul>
+<li><span class="math inline">\phi</span> es una constante llamada “parámetro de dispersión”</li>
+<li><span class="math inline">V(\cdot)</span> es la función de varianza, definida como: <span class="math inline">V(\mu) = \frac{d\mu}{d \eta}</span></li>
+</ul>
+<div class="fragment">
+<p>Por ejemplo, si <span class="math inline">\mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k}) =  \mu_{i} = e^{\eta_{i}}</span>, entonces, <span class="math display">V(\mu_i) = \frac{d\mu_i}{d \eta_i} = e^{\eta_{i}} \quad \to \quad \operatorname{Var}(y_{i}) = \phi e^{\eta_{i}}</span></p>
+</div>
+</section></section>
+<section>
+<section id="definiendo-un-glm-.." class="title-slide slide level1 inverse middle center" data-background-color="#1D3461">
+<h1>………. Definiendo un GLM …..</h1>
+<div class="img-right">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="mixer.png"></p>
+<figcaption>mizer</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="definiendo-un-glm" class="slide level2">
+<h2>Definiendo un GLM</h2>
+<p>La estructura básica de un GLM se especifica mediante la elección de dos componentes: (1) <span class="bold">componente sistemático</span> (la distribución de la variable dependiente ) y (2) la <span class="bold">función de enlace</span>.</p>
 <p><span class="math display">\begin{align}
-\operatorname{Var}(X) =  \int \bigg(x -  \mathbb{E}(X)\bigg)^{2} f(x)dx
+  GLM:
+    \begin{cases}
+    &amp;y_{i} \sim f(\mu_{i},\sigma_{i}) \\ \\
+    &amp; g(\mu_{i}) = \eta_{i}
+    \end{cases}
 \end{align}</span></p>
-</div>
 <div class="fragment">
-<p>Equivalentemente, <span class="math display">\operatorname{Var}(X)  = \mathbb{E}\bigg( [ X -\mathbb{E}(X)]^{2}\bigg)</span></p>
+<p>Cualquier combinación de estos componentes definirá un GLM diferente. Algunas de estas combinaciones son especialmente relevantes:</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 23%">
+<col style="width: 27%">
+<col style="width: 26%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Distribution</th>
+<th>Canonical Link: <span class="math inline">\eta = g(\mu)</span></th>
+<th>Link name</th>
+<th>Model name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Normal (Gaussian)</td>
+<td><span class="math inline">\eta = \mu</span></td>
+<td>identity</td>
+<td>Standard regression</td>
+</tr>
+<tr class="even">
+<td>Poisson</td>
+<td><span class="math inline">\eta = \log(\mu)</span></td>
+<td>logarithm</td>
+<td>Poisson regression</td>
+</tr>
+<tr class="odd">
+<td>Bernoulli / Binomial</td>
+<td><span class="math inline">\eta = \log(\mu/(1-\mu))</span></td>
+<td>logit</td>
+<td>Logistic regression</td>
+</tr>
+<tr class="even">
+<td>Gamma</td>
+<td><span class="math inline">\eta = (1/\mu)</span></td>
+<td>reciprocal</td>
+<td>Gamma regression</td>
+</tr>
+</tbody>
+</table>
 </div>
 </section>
-<section id="varianza-algunas-propiedades-útiles" class="slide level2">
-<h2>Varianza, algunas propiedades útiles</h2>
+<section id="lm-es-un-caso-particular-de-glm" class="slide level2">
+<h2>LM es un caso particular de GLM</h2>
+<p>El tipo más simple de GLM es el que tiene un componente aleatorio normal y una función de enlace de identidad, en cuyo caso obtenemos el modelo estándar de regresión lineal. Formalmente:</p>
 <div class="fragment">
-<ol type="1">
-<li>La varianza de una constante es cero. <span class="math display">\operatorname{Var}(c)=0</span></li>
-</ol>
+<ul>
+<li>Componente aleatorio: <span class="math inline">y_{1}, \dots y_{n}</span> son <span class="math inline">n</span> variables independientes con distribución <span class="math inline">\text{Normal}(\mu_{i},\sigma_{i})</span></li>
+</ul>
 </div>
 <div class="fragment">
-<ol start="2" type="1">
-<li>Si <span class="math inline">X</span> es una variable aleatoria y <span class="math inline">c</span> una constante, entonces <span class="math display">\operatorname{Var}(X + c)= \operatorname{Var}(X)</span></li>
-</ol>
+<ul>
+<li>Función de enlace “identidad”: <span class="math inline">g(x) = x</span></li>
+</ul>
 </div>
 <div class="fragment">
-<ol start="3" type="1">
-<li>Si <span class="math inline">X</span> es una variable aleatoria y <span class="math inline">c</span> una constante, entonces</li>
-</ol>
-<p><span class="math display">\operatorname{Var}(c X)= c^{2} \operatorname{Var}(X)</span></p>
+<ul>
+<li>Componente sistemático: <span class="math inline">\mu_{i} = \eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></li>
+</ul>
 </div>
 <div class="fragment">
-<ol start="4" type="1">
-<li>Si <span class="math inline">X</span> e <span class="math inline">Y</span> son dos variables aleatorias <span class="bold">independientes</span>, entonces <span class="math display">\operatorname{Var}(X \pm Y) =  \operatorname{Var}(X) + \operatorname{Var}(Y)</span></li>
-</ol>
+<ul>
+<li>Función media: <span class="math inline">\mu_{i} = g^{-1}(\eta_{i}) = \eta_{i}</span></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Varianza <span class="math inline">\operatorname{Var}(y_{i}) = \phi V(\mu_{i}) = \sigma^2</span>,</li>
+</ul>
+</div>
+<div class="fragment">
+<p>con <span class="math inline">\phi=\sigma^2</span> y <span class="math inline">V(\mu_{i})= \frac{d\mu_{i}}{d\eta_{i}}=1</span>. <br><br></p>
+</div>
+<div class="fragment">
+<p>Por tanto, <span class="math display">y_{i} \sim \text{Normal}(\mu_{i} = \eta_{i}, \sigma_{i} = \sqrt{\phi})</span></p>
+<ul>
+<li>En nomenclatura GLM <span class="math inline">\phi</span> (parámetro de dispersión) es un modo más general de expresar el componente constante de la varianza ( <span class="math inline">\sigma^2</span> en LM)</li>
+</ul>
+</div>
+</section></section>
+<section>
+<section id="ejemplo-empírico" class="title-slide slide level1 inverse center middle" data-background-color="#1D3461">
+<h1>Ejemplo empírico</h1>
+
+</section>
+<section id="glm-log-lineal" class="slide level2">
+<h2>GLM log-lineal</h2>
+</section>
+<section id="glm-log-lineal-ejemplo-de-modelo-híbrido" class="slide level2">
+<h2>GLM log-lineal: ejemplo de modelo “híbrido”</h2>
+<p>Ejemplo:</p>
+<div class="fragment">
+<ul>
+<li><span class="math inline">y_{1}, \dots y_{n}</span> son <span class="math inline">n</span> variables independientes con distribución <span class="math inline">\text{Normal}(\mu_{i},\sigma_{i})</span></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>La función de enlace es <span class="math inline">g(\cdot) = \ln(\cdot)</span></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li><span class="math inline">\ln(\mu_{i}) = \eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li><span class="math inline">\mu_{i} = e^{\eta_{i}}</span></li>
+</ul>
+</div>
+<div class="fragment">
+<p>Se sigue de lo anterior que:</p>
+<ul>
+<li><span class="math inline">\operatorname{Var}(y_{i}) = \phi V(\mu) = \phi \frac{d\mu_{i}}{d\eta_{i}} = \phi e^{\eta_{i}} = \phi \mu_{i}</span></li>
+</ul>
+</div>
+<div class="fragment">
+<p>Obtenemos un <span class="bold">modelo log-lineal</span>, que es apropiado cuando las predicciones deben ser estrictamente positivas. <span class="math display">y_{i} \sim \text{Normal}(\mu_{i} = e^{\eta_{i}}, \sigma_{i} = \sqrt{\phi \mu_{i}})</span></p>
 </div>
 </section>
-<section id="varianza-ejemplo" class="slide level2">
-<h2>Varianza, ejemplo</h2>
-<p>Por ejemplo, supongamos que <span class="math inline">X_{i}</span> es la variable que resulta de tirar un dado “justo”. Participamos de un concurso que consiste en tirar el mismo dado 10 veces. El premio (G) es $ <span class="math inline">1000</span> de base, más el resultado de cada dado <span class="math inline">i</span> multiplicado por 100.</p>
+<section id="enlace-vs.-transformaciones" class="slide level2">
+<h2>Enlace vs.&nbsp;transformaciones</h2>
+<p>Usar una función de enlance <span class="bold">es distinto</span> de transformar la variable dependiente!</p>
 <div class="fragment">
-<p>¿Cuánto es la desviación estándar del premio?</p>
+<p><span class="bold">Ejemplo:</span> es un práctica común trabajar con la variable dependiente transforma a logs (ej. ingresos).</p>
+<ul>
+<li><span class="math inline">y_{1}, \dots y_{n}</span> son <span class="math inline">n</span> variables que no distribuyen normal pero <span class="math inline">\ln(y_{1}), \dots \ln(y_{n})</span> si.</li>
+<li>Estimar LM con variable dependiente transformada:</li>
+</ul>
+<p><span class="math display">\ln y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}}^{\mathbb{E}(\ln y_{i} \mid x_{1}, \dots, x_{k} )  } + \underbrace{e_{i}}_{\text{Normal}(0,\sigma)}</span></p>
 </div>
 <div class="fragment">
+<p>Notar diferencia:</p>
+<div class="pull-left">
+<p><span class="bold">GLM con log-link</span> <span class="math display">\ln \mathbb{E} (y_{i} \mid x_{1}, \dots, x_{k}  ) = \beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}</span></p>
+</div>
+<div class="pull-right">
+<p><span class="bold">LM con variable dependiente log(y)</span> <span class="math display">\mathbb{E}( \ln y_{i} \mid x_{1}, \dots, x_{k} ) = \beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}</span></p>
+</div>
+</div>
+</section>
+<section id="glm-con-log-link-demanda-horaria-de-bicicletas" class="slide level2">
+<h2>GLM con log-link: demanda horaria de bicicletas</h2>
 <div class="center">
 <div class="cell">
 <div class="cell-output-display">
@@ -359,112 +587,98 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 </div>
-</div>
+<p>Datos horarios de Capital Bikeshare en Washington DC. <code>bikers</code> es un conteo positivo y fuertemente asimétrico.</p>
 </section>
-<section id="varianza-ejemplo-1" class="slide level2">
-<h2>Varianza, ejemplo</h2>
-<p>Por ejemplo, supongamos que <span class="math inline">X_{i}</span> es la variable que resulta de tirar un dado “justo”. Participamos de un concurso que consiste en tirar el mismo dado 10 veces. El premio (G) es $ <span class="math inline">1000</span> de base, más el resultado de cada dado <span class="math inline">i</span> multiplicado por 100. ¿Cuánto es la desviación estándar del premio?</p>
-<div class="fragment">
-<p><span class="math display">G = 1000 + \sum_{i=1}^{10} X_{i} \times 100 \quad \text{ por tanto,}</span></p>
-</div>
-<div class="fragment">
-<p><span class="math display">\operatorname{Var}(G) = \operatorname{Var}(1000 + \sum_{i=1}^{10} X_{i} \times 100)</span></p>
-</div>
-<div class="fragment">
-<p><span class="math display">\operatorname{Var}(G) = \operatorname{Var}(1000) + 100^{2} \times \sum_{i=1}^{10}\operatorname{Var}(X_{i})</span></p>
-</div>
-<div class="fragment">
-<p><span class="math display">\operatorname{Var}(G) = 100^{2} \times 10 \times \frac{35}{12} = 291\,666.667</span></p>
-</div>
-<div class="fragment">
-<p><span class="math display">\sigma_{G} = \sqrt{100^{2} \times 10 \times \frac{35}{12}} = \sqrt{291\,666.667} \approx \$ 540.06</span></p>
-</div>
-</section>
-<section id="varianza-de-variables-discretas-1" class="slide level2">
-<h2>Varianza de variables discretas</h2>
-<h3 id="bernoulli-1">Bernoulli</h3>
-<p>Si X es una variable Bernoulli, su varianza viene dada por:</p>
-<p><span class="math display">\begin{align}
-\operatorname{Var}(X) &amp;= \sum_{i} \bigg( x_{i} - \mathbb{E}(X) \bigg)^{2} \times f(x_{i})  \\ \\
-&amp;= (1 - \mathbb{E}(X))^{2} \times \mathbb{P}(X=1) + (0 - \mathbb{E}(X))^{2} \times \mathbb{P}(X=0) \\ \\
-&amp;= (1 - p)^{2} \times p +  (0 - p)^{2} \times (1-p) \\ \\
-&amp;=p^{2} − p^{3} + p − 2p^{2} + p^{3} \\ \\
-&amp;=p(1-p)
-\end{align}</span></p>
-</section>
-<section id="varianza-de-variables-discretas-2" class="slide level2">
-<h2>Varianza de variables discretas</h2>
-<h3 id="binomial-1">Binomial</h3>
-<p>Si X es una variable Binomial, su varianza viene dada por:</p>
-<p><span class="math display">\begin{align}
-\operatorname{Var}(X) = n \times p(1-p)
-\end{align}</span></p>
-<div class="fragment">
-<p><span class="bold">Pregunta</span>: ¿Cuánta variabilidad debo esperar en el número de “Caras” si tiro 200 monedas “justas”?</p>
-</div>
-<div class="fragment">
-<p><span class="bold">Respuesta</span>: varianza es <span class="math inline">n \times p(1-p) = 200 \times 0.5 \times 0.5 = 50</span>. La desviación estándar es <span class="math inline">\sqrt{50} = 7.01</span>.</p>
-</div>
-</section>
-<section id="varianza-de-variables-binomial" class="slide level2">
-<h2>Varianza de variables Binomial</h2>
-<p><span class="bold">Ilustración via Monte Carlo simulation</span></p>
+<section id="lm-con-log-en-variable-dependiente" class="slide level2">
+<h2>LM con log en variable dependiente</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code> int [1:10000] 103 86 92 112 99 105 94 112 95 95 ...</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>$mean
-[1] 100
+<pre><code>
+Call:
+lm(formula = log(bikers) ~ factor(workingday), data = bikedata)
 
-$var
-[1] 49.680</code></pre>
+Residuals:
+   Min     1Q Median     3Q    Max 
+-4.289 -0.854  0.403  1.064  2.190 
+
+Coefficients:
+                     Estimate Std. Error t value            Pr(&gt;|t|)    
+(Intercept)          4.289   0.028  154.600 &lt;0.000 ***
+factor(workingday)1 -0.000   0.034   -0.010                0.990    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
+
+Residual standard error: 1.450 on 8643 degrees of freedom
+Multiple R-squared:  0.000, Adjusted R-squared:  -0.000 
+F-statistic: 0.000 on 1 and 8643 DF,  p-value: 0.990</code></pre>
 </div>
 </div>
 </section>
-<section id="varianza-variable-bernoullibinomial" class="slide level2">
-<h2>Varianza variable Bernoulli/Binomial</h2>
-<div class="center">
+<section id="gaussian-glm-con-log-link" class="slide level2">
+<h2>Gaussian GLM con log-link</h2>
 <div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_5_files/figure-revealjs/unnamed-chunk-4-1.png" width="1152"></p>
-</figure>
-</div>
-</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = bikers ~ factor(workingday), family = gaussian(link = "log"), 
+    data = bikedata)
+
+Coefficients:
+                    Estimate Std. Error t value            Pr(&gt;|t|)    
+(Intercept)           4.952     0.018  273.830 &lt;0.000 ***
+factor(workingday)1   0.024     0.022    1.080                0.280    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
+
+(Dispersion parameter for gaussian family taken to be 17901)
+
+    Null deviance: 154743728  on 8644  degrees of freedom
+Residual deviance: 154722529  on 8643  degrees of freedom
+AIC: 109195
+
+Number of Fisher Scoring iterations: 6</code></pre>
 </div>
 </div>
 </section>
-<section id="varianza-variable-binomial" class="slide level2">
-<h2>Varianza variable Binomial</h2>
-<div class="center">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_5_files/figure-revealjs/unnamed-chunk-5-1.png" width="1152"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="distribución-binomial-es-asintóticamente-normal" class="slide level2">
-<h2>Distribución Binomial es asintóticamente Normal</h2>
-<div class="pull-left">
+<section id="gaussian-glm-con-log-link-1" class="slide level2">
+<h2>Gaussian GLM con log-link</h2>
+<p><span class="math display">\ln \mu_{i} = \ln \mathbb{E}(\text{bikers}_{i} \mid \text{workingday}_{i})
+= \beta_{0} + \beta_{1}\text{workingday}_{i}</span></p>
+<div class="fragment">
+<p>Por tanto,</p>
 <ul>
-<li><p>Si <span class="math inline">X \sim \text{Binomial}(n,p)</span>, entonces: <span class="math display"> X \xrightarrow[]{d} \text{Normal}(\mu=np, \quad \sigma= \sqrt{np(1-p)})</span> (cuando <span class="math inline">n \to \infty</span> )</p></li>
-<li><p>Resultado muy conveniente</p></li>
+<li><span class="math inline">\mathbb{E}(\text{bikers}_{i} \mid \text{workingday}=1) = e^{\beta_{0} + \beta_{1}}</span>.</li>
+<li><span class="math inline">\mathbb{E}(\text{bikers}_{i} \mid \text{workingday}=0) = e^{\beta_{0}}</span>.</li>
 </ul>
 </div>
+<div class="fragment">
+<p>Interpretación coeficientes <span class="math inline">\beta_{1} = \ln \frac{\mathbb{E}(\text{bikers}_{i} \mid \text{workingday}=1)}{\mathbb{E}(\text{bikers}_{i} \mid \text{workingday}=0)}</span></p>
+</div>
+<div class="fragment">
+<p><span class="math inline">\quad \implies  \quad e^{\beta_{1}} =  \frac{\mathbb{E}(\text{bikers}_{i} \mid \text{workingday}=1)}{\mathbb{E}(\text{bikers}_{i} \mid \text{workingday}=0)}</span></p>
+</div>
+<div class="fragment">
+<p><span class="bold">Razón de demanda</span>: <span class="math inline">e^{\beta_1}</span> compara la demanda horaria esperada entre días hábiles y no hábiles.</p>
+</div>
+</section>
+<section id="gaussian-glm-con-log-link-2" class="slide level2">
+<h2>Gaussian GLM con log-link</h2>
+<div class="pull-left">
+<p>Dispersión estimada: <span class="math inline">\hat\phi=</span> 17901.487 <span class="math inline">\operatorname{Var}(y_{i}) = \phi V(\mu) = \phi \frac{d\mu_{i}}{d\eta_{i}} = \phi e^{\eta_{i}} = \phi \mu_{i}</span> <span class="math inline">\operatorname{Var}(y_{i})  = \phi\mu_{i} = \phi e^{\beta_0 + \beta_1\text{workingday}_{i}}</span> <br><br> Por tanto, <span class="math display">y_{i} \sim \text{Normal}(\mu_{i},\sigma_{i}) \quad \text{ donde}</span></p>
+<ul>
+<li><span class="math inline">\mu_{i}=e^{\beta_{0} +  \beta_{1}\text{workingday}_{i}}</span></li>
+<li><span class="math inline">\sigma_{i} = \sqrt{\phi\mu_{i}}</span></li>
+</ul>
+</div>
+<div class="fragment">
 <div class="pull-right">
 <div class="cell">
 <div class="cell-output-display">
 <div>
 <figure>
-<p><img data-src="class_5_files/figure-revealjs/unnamed-chunk-6-1.png" width="768"></p>
+<p><img data-src="class_5_files/figure-revealjs/unnamed-chunk-5-1.png" width="768"></p>
 </figure>
+</div>
 </div>
 </div>
 </div>
@@ -473,14 +687,14 @@ $var
 <section id="en-resumen" class="slide level2">
 <h2>En resumen</h2>
 <ul>
-<li>El valor esperado y la varianza son los “momentos” que resumen una variable aleatoria.</li>
-<li>Para Bernoulli: <span class="math inline">\mathbb{E}(X)=p</span>, <span class="math inline">\operatorname{Var}(X)=p(1-p)</span>.</li>
-<li>Para Binomial: <span class="math inline">\mathbb{E}(X)=np</span>, <span class="math inline">\operatorname{Var}(X)=np(1-p)</span>.</li>
-<li>La Binomial se aproxima a una Normal cuando <span class="math inline">n</span> es grande — un resultado que usaremos más adelante.</li>
-<li>La próxima clase usa estos momentos para preguntar: ¿cómo estimamos los parámetros (<span class="math inline">p</span>, <span class="math inline">\beta</span>) que no observamos directamente?</li>
+<li>Un GLM se define por cuatro piezas: componente aleatorio (familia exponencial), componente sistemático <span class="math inline">\eta_{i}</span>, función de enlace <span class="math inline">g(\mu_{i})=\eta_{i}</span> y función de varianza <span class="math inline">\operatorname{Var}(y_{i})=\phi V(\mu_{i})</span>.</li>
+<li>La función de enlace mantiene <span class="math inline">\mu_{i}</span> dentro de su rango natural; cada distribución tiene un enlace “canónico” (Normal: identidad, Poisson: log, Binomial: logit).</li>
+<li>LM es el caso particular de GLM con componente Normal y enlace identidad.</li>
+<li>Usar una función de enlace (ej. log) no es lo mismo que transformar la variable dependiente: cambian tanto la interpretación de los coeficientes como los supuestos sobre la varianza.</li>
+<li>La próxima clase: regresión logística — estructura teórica y estimación.</li>
 </ul>
 </section>
-<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#6CABDD">
+<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#C4162A">
 <h2>Gracias</h2>
 <p><strong>Hasta la próxima clase</strong></p>
 <p>Mauricio Bucca</p>

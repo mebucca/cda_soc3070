@@ -32,72 +32,6 @@
       margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
       vertical-align: middle;
     }
-    /* CSS for syntax highlighting */
-    html { -webkit-text-size-adjust: 100%; }
-    pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-    pre > code.sourceCode > span:empty { height: 1.2em; }
-    .sourceCode { overflow: visible; }
-    code.sourceCode > span { color: inherit; text-decoration: inherit; }
-    div.sourceCode { margin: 1em 0; }
-    pre.sourceCode { margin: 0; }
-    @media screen {
-    div.sourceCode { overflow: auto; }
-    }
-    @media print {
-    pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-    }
-    pre.numberSource code
-      { counter-reset: source-line 0; }
-    pre.numberSource code > span
-      { position: relative; left: -4em; counter-increment: source-line; }
-    pre.numberSource code > span > a:first-child::before
-      { content: counter(source-line);
-        position: relative; left: -1em; text-align: right; vertical-align: baseline;
-        border: none; display: inline-block;
-        -webkit-touch-callout: none; -webkit-user-select: none;
-        -khtml-user-select: none; -moz-user-select: none;
-        -ms-user-select: none; user-select: none;
-        padding: 0 4px; width: 4em;
-      }
-    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-    div.sourceCode
-      { color: #24292e;  }
-    @media screen {
-    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-    }
-    code span { color: #24292e; } /* Normal */
-    code span.al { color: #ff5555; font-weight: bold; } /* Alert */
-    code span.an { color: #6a737d; } /* Annotation */
-    code span.at { color: #d73a49; } /* Attribute */
-    code span.bn { color: #005cc5; } /* BaseN */
-    code span.bu { color: #d73a49; } /* BuiltIn */
-    code span.cf { color: #d73a49; } /* ControlFlow */
-    code span.ch { color: #032f62; } /* Char */
-    code span.cn { color: #005cc5; } /* Constant */
-    code span.co { color: #6a737d; } /* Comment */
-    code span.cv { color: #6a737d; } /* CommentVar */
-    code span.do { color: #6a737d; } /* Documentation */
-    code span.dt { color: #d73a49; } /* DataType */
-    code span.dv { color: #005cc5; } /* DecVal */
-    code span.er { color: #ff5555; text-decoration: underline; } /* Error */
-    code span.ex { color: #d73a49; font-weight: bold; } /* Extension */
-    code span.fl { color: #005cc5; } /* Float */
-    code span.fu { color: #6f42c1; } /* Function */
-    code span.im { color: #032f62; } /* Import */
-    code span.in { color: #6a737d; } /* Information */
-    code span.kw { color: #d73a49; } /* Keyword */
-    code span.op { color: #24292e; } /* Operator */
-    code span.ot { color: #6f42c1; } /* Other */
-    code span.pp { color: #d73a49; } /* Preprocessor */
-    code span.re { color: #6a737d; } /* RegionMarker */
-    code span.sc { color: #005cc5; } /* SpecialChar */
-    code span.ss { color: #032f62; } /* SpecialString */
-    code span.st { color: #032f62; } /* String */
-    code span.va { color: #e36209; } /* Variable */
-    code span.vs { color: #032f62; } /* VerbatimString */
-    code span.wa { color: #ff5555; } /* Warning */
   </style>
   <link rel="stylesheet" href="class_9_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
   <link rel="stylesheet" href="../_shared/course.css">
@@ -209,13 +143,13 @@
     }
   </style>
 </head>
-<body class="theme-liverpool quarto-light">
+<body class="theme-ajax quarto-light">
   <div class="reveal">
     <div class="slides">
 
-<section id="title-slide" data-background-color="#007A75" class="quarto-title-block center">
+<section id="title-slide" data-background-color="#E0642B" class="quarto-title-block center">
   <h1 class="title">Análisis de Datos Categóricos (SOC3070)</h1>
-  <p class="subtitle">GLM, Regresión Logística &amp; MLE</p>
+  <p class="subtitle">Regresión Logística Multinomial - Estructura Teórica</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -232,60 +166,26 @@ Mauricio Bucca · Sociología UC
 <div class="full-width">
 <div class="content-box">
 <p><strong>Antes</strong></p>
-<p>componentes de un GLM y funciones de enlace.</p>
+<p>regresión logística: inferencia.</p>
 </div>
 <div class="content-box-primary">
 <p><strong>Hoy</strong></p>
-<p>regresión logística y máxima verosimilitud.</p>
+<p>estructura teórica de la regresión multinomial.</p>
 </div>
 <div class="content-box-secondary">
 <p><strong>Después</strong></p>
-<p>regresión logística: interpretación de parámetros.</p>
+<p>interpretación de efectos multinomiales.</p>
 </div>
 </div>
 </section>
 <section>
-<section id="modelos-lineales-generalizados-glm" class="title-slide slide level1 inverse center middle" data-background-color="#C8102E">
-<h1>Modelos Lineales Generalizados (GLM)</h1>
+<section id="regresión-logística-multinomial" class="title-slide slide level1 inverse center middle" data-background-color="#C1122F">
+<h1>Regresión Logística Multinomial</h1>
 
 </section>
-<section id="recordando-qué-es-un-glm" class="slide level2">
-<h2>Recordando: ¿qué es un GLM?</h2>
-<p>La clase anterior definimos un GLM por tres piezas — repasemos antes de usarlas hoy con un caso concreto:</p>
-<div class="pull-left">
-<ul>
-<li><strong>Componente aleatorio</strong>: distribución de <span class="math inline">y_i</span> (familia exponencial).</li>
-<li><strong>Componente sistemático</strong>: <span class="math inline">\eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span>.</li>
-<li><strong>Función de enlace</strong>: <span class="math inline">g(\mu_{i}) = \eta_{i}</span>.</li>
-</ul>
-</div>
-<div class="pull-right">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="nelder.png"></p>
-<figcaption>nelder</figcaption>
-</figure>
-</div>
-</div>
-<div class="fragment">
-<p><span class="math display">
-GLM:
-\begin{cases}
-&amp;y_{i} \sim f(\mu_{i},\sigma_{i}) \\ \\
-&amp; g(\mu_{i}) = \eta_{i}
-\end{cases}
-</span></p>
-<p>Hoy fijamos <span class="math inline">y_{i} \sim \text{Bernoulli}(p_{i})</span> y <span class="math inline">g(\cdot) = \text{logit}(\cdot)</span>: la regresión logística es exactamente un GLM con esa combinación particular.</p>
-</div>
-</section></section>
-<section>
-<section id="regresión-logística" class="title-slide slide level1 inverse center middle" data-background-color="#C8102E">
-<h1>Regresión Logística</h1>
-
-</section>
-<section id="estructura-de-un-modelo-de-regresión-logística" class="slide level2">
-<h2>Estructura de un modelo de regresión logística</h2>
-<p>Podemos pensar en un modelo de regresión logística de la siguiente forma:</p>
+<section id="estructura-de-un-modelo-de-regresión-logística-multinomial" class="slide level2">
+<h2>Estructura de un modelo de regresión logística multinomial</h2>
+<p>Un modelo de regresión logística multinomial generaliza la regresión logística (binomial) a situaciones en que la variable dependiente es una <span class="bold">variable discreta con dos o más valores no ordenados</span> (ejemplo: voto entre tres candidatos, elección de barrio, etc).</p>
 <div class="fragment">
 <p><span class="bold">Configuración</span></p>
 <ul>
@@ -294,376 +194,418 @@ GLM:
 </div>
 <div class="fragment">
 <ul>
-<li>Para cada observación observamos datos <span class="math inline">y_{i}, \dots , y_{n}</span> que actuan como variable dependiente, donde <span class="math inline">y_{i} \in \{0,1\}</span></li>
-</ul>
-</div>
-<div class="fragment">
+<li>Para cada observación observamos datos <span class="math inline">y_{i}, \dots , y_{n}</span> que actúan como variable dependiente, donde <span class="math inline">y_{i} \in \{1,2, \cdots, J\}</span>
 <ul>
-<li>Asumimos que estos datos son realizaciones de <span class="math inline">n</span> variables aleatorias Bernoulli con probabilidades desconocidas: <span class="math inline">Y_{i} \sim \text{Bernoulli}(p_{i})</span>
-<ul>
-<li>Alternativamente, recuento de éxitos puede tratarse como una variable Binomial.</li>
+<li>Las <span class="math inline">J</span> categorías de <span class="math inline">y_{i}</span> no siguen necesariamente un orden.</li>
 </ul></li>
 </ul>
 </div>
 <div class="fragment">
 <ul>
-<li>Asumimos que dichas probabilidades pueden variar de individuo en individuo.
+<li>Asumimos que estos datos son realizaciones de <span class="math inline">n</span> variables aleatorias que siguen una distribución Multinomial con probabilidades desconocidas: <span class="math inline">Y_{i} \sim \text{Multinomial}(\boldsymbol{p_{i}}: p_{1}, \dots, p_{J})</span></li>
+</ul>
+</div>
+<div class="fragment">
 <ul>
-<li>Un modelo con un <span class="math inline">p_{i}</span> para cada observación <span class="math inline">i</span> es un modelo “just-identified” (o saturado). Posible, pero no es un “modelo”.</li>
-</ul></li>
+<li>Dichas probabilidades, <span class="math inline">\boldsymbol{p_{i}}</span>, varían de individuo en individuo en función de ciertas covariables.</li>
 </ul>
 </div>
 </section>
-<section id="estructura-de-un-modelo-de-regresión-logística-1" class="slide level2">
-<h2>Estructura de un modelo de regresión logística</h2>
-<p>Formalmente, <span class="math display">Y_{i} \sim \text{Bernoulli}(p_{i})</span> es decir <span class="math display">\quad \mathbb{P}(Y_{i}= y) = p_{i}^{y}(1-p_{i})^{1-y} \quad \text{ donde } \quad y \in \{0,1\}</span></p>
+<section id="distribución-multinomial" class="slide level2">
+<h2>Distribución Multinomial</h2>
+<p><span class="bold">Distribución Multinomial:</span></p>
+<ul>
+<li>Dado un experimento con resultados posibles <span class="math inline">\{1,2, \dots, J\}</span>, con respectiva probabilidad de “éxito” <span class="math inline">\{p_1,p_2, \dots, p_J\}</span></li>
+</ul>
 <div class="fragment">
-<p>La pregunta es: ¿como estimamos <span class="math inline">p_{i}</span> de tal manera que … ?</p>
+<ul>
+<li>Si repetimos el experimento <span class="math inline">n</span> veces: ¿Cuál es la probabilidad de obtener la siguiente cantidad de éxitos en cada categoría: <span class="math inline">\{n_1,n_2, \dots, n_J\}</span>, donde <span class="math inline">n_1 + n_2 + \dots + n_J =n</span>?</li>
+</ul>
+</div>
+<div class="fragment">
+<p><span class="bold">Ejemplo</span>: Al tirar un dado justo 12 veces, ¿cuál es la probabilidad de obtener cada lado 2 veces?</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.003</code></pre>
+</div>
+</div>
+</div>
+</section>
+<section id="distribución-multinomial-n1" class="slide level2">
+<h2>Distribución Multinomial (n=1)</h2>
+<p><span class="bold">Distribución Multinoulli o Categórica:</span> Si la cantidad de intentos es igual a 1 (n=1), la probabilidad de éxito en una de las categorías (y fracaso en todas las otras) viene definida por la siguiente función de probabilidad:</p>
+<div class="fragment">
+<p><span class="math display">\quad \mathbb{P}(Y = j ) = p_{1}^{1[y=1]}p_{2}^{1[y=2]} \cdots p_{J}^{1[y=J]}    \quad \text{ donde } \quad y_{j} \in \{0,1\} \quad \text{y} \quad \sum^{J}_{j=1}1[y=j]=1</span></p>
+</div>
+<div class="fragment">
+<p><span class="bold">Ejemplo</span>: Al tirar un dado justo 1 vez, ¿cuál es la probabilidad de obtener el número 4?</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.167</code></pre>
+</div>
+</div>
 </div>
 <div class="fragment">
 <ul>
-<li>Describamos <span class="math inline">p_{i}</span> con un número de parámetros <span class="math inline">k&lt;n</span></li>
+<li>En una regresión logística multinomial cada observación en la variable dependiente ( <span class="math inline">y_{i}</span> ) viene de una distribución Multinoulli.</li>
 </ul>
 </div>
 <div class="fragment">
 <ul>
-<li><span class="math inline">\hat{p}_{i} \in [0,1]</span></li>
+<li>Observamos los resultados ( <span class="math inline">y_{i}=j</span> ) y queremos estimar las probabilidades que los generan, ( <span class="math inline">p_{ij}</span> ).</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Específicamente, queremos estimar ( <span class="math inline">p_{ij}</span> ) como una función de covariables, usando número de parámetros <span class="math inline">k</span>, tal que <span class="math inline">k&lt;n</span>.</li>
 </ul>
 </div>
 </section>
-<section id="estructura-de-un-modelo-de-regresión-logística-2" class="slide level2">
-<h2>Estructura de un modelo de regresión logística</h2>
-<p>El modelo de regresión logística aborda este problema de la siguiente manera:</p>
-<div class="content-box-blue">
-<p><span class="math display">p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}} \quad \quad  \text{donde} \quad \quad \eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}</span></p>
+<section id="regresión-logística-binomial" class="slide level2">
+<h2>Regresión logística binomial</h2>
+<p>Una regresión logística binomial <span class="math inline">y_{i} \in {0,1}</span></p>
+<div class="content-box-yellow">
+<p><span class="math display">\ln \frac{\mathbb{P}(y_{i}=1)}{\mathbb{P}(y_{i}=0)} =   \ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}</span></p>
 </div>
 <div class="fragment">
-<p><span class="bold">Importante</span> notar que:</p>
+<p>Equivalentemente, podemos re-escribir el modelo como</p>
+<p><span class="math display">\ln \frac{\mathbb{P}(y_{i}=1)}{\mathbb{P}(y_{i}=0)} =   \ln \frac{p_{1i}}{p_{0i}} =  \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}</span></p>
 </div>
 <div class="fragment">
+<p>Dado que <span class="math inline">p_{0} + p_{1} = 1</span>, sólo necesitamos estimar una equación.</p>
+</div>
+</section>
+<section id="regresión-logística-multinomial-3-categorías" class="slide level2">
+<h2>Regresión logística multinomial, 3 categorías</h2>
+<p>Si la variable dependiente toma tres valores, <span class="math inline">y \in \{1,2,3\}</span>, y las probabilidades de obtener estos resultados son <span class="math inline">p_{1},p_{2},p_{3}</span>, entonces podemos estimar estas tres probabilidades con dos modelos de regresión logística:</p>
+<div class="fragment">
+<p>Usando <span class="math inline">p_{3}</span> como categoría de referencia: <span class="math display">(1) \quad \ln \frac{\mathbb{P}(y_{i}=1)}{\mathbb{P}(y_{i}=3)} =   \ln \frac{p_{1i}}{p_{3i}} =  \beta_{10} + \beta_{11}x_{1i} + \dots + \beta_{1k}x_{ki}</span></p>
+</div>
+<div class="fragment">
+<p><br> y <span class="math display">(2) \quad \ln \frac{\mathbb{P}(y_{i}=2)}{\mathbb{P}(y_{i}=3)} =   \ln \frac{p_{2i}}{p_{3i}} =  \beta_{20} + \beta_{21}x_{1i} + \dots + \beta_{2k}x_{ki}</span></p>
+</div>
+<div class="fragment">
+<p>Describimos <span class="math inline">\{(p_{1},p_{2},p_{3})_{i}, \quad  \dots \quad ,(p_{1},p_{2},p_{3})_{n}\}</span> con <span class="math inline">2(k + 1)</span> parámetros.</p>
+</div>
+</section>
+<section id="regresión-logística-multinomial-j-categorías" class="slide level2">
+<h2>Regresión logística multinomial, J-categorías</h2>
+<p>Generalizando, si la variable dependiente toma, <span class="math inline">J</span> valores – <span class="math inline">y \in \{1,2,\dots,J\}</span> – , y las probabilidades de obtener estos resultados son <span class="math inline">p_{1},p_{2},\dots,p_{J}</span>, entonces podemos estimar estas <span class="math inline">J</span> probabilidades con <span class="math inline">J-1</span> modelos de regresión logística:</p>
+<div class="fragment">
+<p>Usando <span class="math inline">p_{J}</span> como categoría de referencia: <span class="math display">(1) \quad \ln \frac{\mathbb{P}(y_{i}=1)}{\mathbb{P}(y_{i}=J)} =   \ln \frac{p_{1i}}{p_{Ji}} =  \beta_{10} + \beta_{11}x_{1i} + \dots + \beta_{1k}x_{ki}</span></p>
+</div>
+<div class="fragment">
+<p><span class="math display">(2) \quad \ln \frac{\mathbb{P}(y_{i}=2)}{\mathbb{P}(y_{i}=J)} =   \ln \frac{p_{2i}}{p_{Ji}} =  \beta_{20} + \beta_{21}x_{1i} + \dots + \beta_{2k}x_{ki}</span></p>
+</div>
+<div class="fragment">
+<p><span class="math display">\vdots</span></p>
+</div>
+<div class="fragment">
+<p><span class="math display">(J-1) \quad \ln \frac{\mathbb{P}(y_{i}=J-1)}{\mathbb{P}(y_{i}=J)} =   \ln \frac{p_{(J-1)i}}{p_{Ji}} =  \beta_{(J-1)0} + \beta_{(J-1)1}x_{1i} + \dots + \beta_{(J-1)k}x_{ki}</span></p>
+</div>
+</section>
+<section id="regresión-logística-multinomial-j-categorías-1" class="slide level2">
+<h2>Regresión logística multinomial, J-categorías</h2>
+<p>Una versión más compacta de lo expresado anteriormente lleva a la formulación estándar de un modelo de regresión multinomial:</p>
+<div class="fragment">
+<div class="content-box-yellow">
+<p><span class="math display">\underbrace{\ln \frac{\mathbb{P}(y_{i}=j)}{\mathbb{P}(y_{i}=J)}}_{\text{log odds = log relative probability}}=   \ln \frac{p_{ji}}{p_{Ji}} = \overbrace{ \beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}^{\text{predictor lineal }j}</span></p>
+</div>
+</div>
+<div class="fragment">
+<p>Describimos <span class="math inline">\{(p_{1},\dots,p_{J})_{i}, \quad  \dots \quad ,(p_{1},\dots,p_{J})_{n}\}</span> con <span class="math inline">(J-1)(k+1)</span> parámetros.</p>
+</div>
+</section>
+<section id="regresión-logística-multinomial-j-categorías-2" class="slide level2">
+<h2>Regresión logística multinomial, J-categorías</h2>
+<p>De la formulación anterior es posible derivar el contraste en todos los restantes pares de categorías.</p>
+<div class="fragment">
+<p>Consideremos las categorías <span class="math inline">a</span> y <span class="math inline">b</span>:</p>
+</div>
+<div class="fragment">
+<p><span class="math display">\ln \frac{p_{ai}}{p_{bi}} =  \ln \frac{p_{ai}/p_{Ji}}{p_{bi}/p_{Ji}} = \ln \frac{p_{ai}}{p_{Ji}} - \ln \frac{p_{bi}}{p_{Ji}}</span></p>
+</div>
+<div class="fragment">
+<p>Por tanto, <span class="math display">\ln \frac{p_{ai}}{p_{bi}} =  (\beta_{a0} + \beta_{a1}x_{1i} + \dots + \beta_{ak}x_{ki}) - (\beta_{b0} + \beta_{b1}x_{1i} + \dots + \beta_{bk}x_{ki})</span></p>
+</div>
+<div class="fragment">
+<p>En resumen:</p>
+<div class="content-box-yellow">
+<p><span class="math display">\ln \frac{p_{ai}}{p_{bi}} =  (\beta_{a0} -\beta_{b0}) + (\beta_{a1} - \beta_{b1}) x_{1i} + \dots + (\beta_{ak} - \beta_{bk}) x_{ki}</span></p>
+</div>
+<p>donde cada <span class="math inline">(\beta_{ak} -\beta_{bk})</span> es un coeficiente en si mismo.</p>
+</div>
+</section>
+<section id="regresión-logística-multinomial-expresada-como-probabilidades" class="slide level2">
+<h2>Regresión logística multinomial expresada como probabilidades</h2>
+<p>Dado <span class="math display">\ln \frac{p_{ji}}{p_{Ji}} =  \beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}</span></p>
+<div class="fragment">
 <ul>
-<li>Esta función (llamada <em>sigmoide</em>) tiene la propiedad clave de estar restringida al intervalo <span class="math inline">[0, 1]</span>.
-<ul>
-<li><span class="math inline">e^{\eta_{i}} &gt; 0</span>, de tal manera que el numerador es siempre menor que el denominador. Por lo tanto, <span class="math inline">0 &lt; p_{i} &lt;1</span>.</li>
-</ul></li>
+<li>Exponenciando en ambos lados obtenemos la probabilidad “relativa” entre las categorías <span class="math inline">j</span> y <span class="math inline">J</span>: <span class="math display">\frac{p_{ji}}{p_{Ji}} =  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}</span></li>
 </ul>
 </div>
 <div class="fragment">
 <ul>
-<li><span class="math inline">x_{1} \dots x_{k}</span> son predictores o variables independientes</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="math inline">\beta_{1} \dots \beta_{k}</span> son los respectivos “efectos” de los predictores sobre <span class="math inline">\eta_{i}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="math inline">p_{i}</span> <span class="bold">no está relacionado linealmente</span> con sus predictores</li>
+<li>Luego, la probabilidad de obtener la categoría <span class="math inline">j</span> puede ser expresada como sigue: <span class="math display">p_{ji}  =  p_{Ji} \cdot e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}</span></li>
 </ul>
 </div>
 </section>
-<section id="estructura-de-un-modelo-de-regresión-logística-3" class="slide level2">
-<h2>Estructura de un modelo de regresión logística</h2>
-<p>Sin embargo, <span class="math inline">\eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}</span> si es una función lineal de los predictores.</p>
+<section id="regresión-logística-multinomial-expresada-como-probabilidades-1" class="slide level2">
+<h2>Regresión logística multinomial expresada como probabilidades</h2>
+<p>La expresión <span class="math inline">p_{ji}  =  p_{Ji} \cdot e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}</span> significa que:</p>
 <div class="fragment">
-<p>Por tanto, es conveniente expresar <span class="math inline">\eta</span> en función de <span class="math inline">p</span> …</p>
-</div>
-<div class="fragment">
-<p>Paso a paso:</p>
-<div class="img-right">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="mostaza-merlo.jpg"></p>
-<figcaption>mostaza</figcaption>
-</figure>
-</div>
-</div>
+<p><span class="math display">p_{1i}  =  p_{Ji} \cdot e^{\beta_{10} + \beta_{11}x_{1i} + \dots + \beta_{1k}x_{ki}}</span></p>
 </div>
 <div class="fragment">
-<p><span class="math inline">p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}} = \frac{1}{e^{- \eta_{i}} + 1}</span></p>
+<p><span class="math display">p_{2i}  =  p_{Ji} \cdot e^{\beta_{20} + \beta_{21}x_{1i} + \dots + \beta_{2k}x_{ki}}</span></p>
 </div>
 <div class="fragment">
-<p><span class="math inline">e^{-\eta_{i}} + 1 = \frac{1}{p_{i}}</span></p>
+<p><span class="math display">\vdots</span></p>
 </div>
 <div class="fragment">
-<p><span class="math inline">e^{- \eta_{i}} = \frac{1}{p_{i}} - 1 =  \frac{1 - p_{i}}{p_{i}}</span></p>
+<p><span class="math display">p_{(J-1)i}  =  p_{Ji} \cdot e^{\beta_{(J-1)0} + \beta_{(J-1)1}x_{1i} + \dots + \beta_{(J-1)k}x_{ki}}</span></p>
 </div>
 <div class="fragment">
-<p><span class="math inline">e^{\eta_{i}} = \frac{p_{i}}{1 - p_{i}}</span></p>
+<p>Luego, falta sólo determinar <span class="math inline">p_{Ji}</span>.</p>
+</div>
+</section>
+<section id="regresión-logística-multinomial-expresada-como-probabilidades-2" class="slide level2">
+<h2>Regresión logística multinomial expresada como probabilidades</h2>
+<p>Para determinar <span class="math inline">p_{Ji}</span> usamos los siguientes hechos:</p>
+<div class="fragment">
+<div class="pull-left">
+<p><span class="math display">\text{(1)} \quad p_{ji}  =  p_{Ji} \cdot e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}</span></p>
+</div>
+<div class="pull-right">
+<p><span class="math display">\text{(2)} \quad   p_{1i} + p_{2i} + \dots + p_{Ji} = 1</span></p>
+</div>
 </div>
 <div class="fragment">
-<p><span class="math inline">\eta_{i} = \ln \frac{p_{i}}{1 - p_{i}} \quad \quad</span></p>
+<p>Combinando (1) y (2) obtenemos que: <span class="math display">\sum^{J-1}_{j=1} p_{Ji} \cdot e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}} + p_{Ji} = 1, \quad \text{luego ... }</span></p>
 </div>
 <div class="fragment">
-<p>es decir, el log de las odds o log-odds</p>
+<p><span class="math display">p_{Ji} \bigg(\sum^{J-1}_{j=1}  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}} + 1 \bigg) = 1, \quad \text{por tanto ... }</span></p>
 </div>
 <div class="fragment">
 <div class="content-box-yellow">
-<p><span class="math display">\text{Por tanto} \quad \quad  \ln \frac{p_{i}}{1 - p_{i}} = \eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}</span></p>
+<p><span class="math display">p_{Ji} =\frac{1}{1 + \sum^{J-1}_{j=1}  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}</span></p>
 </div>
 </div>
 </section>
-<section id="estructura-de-un-modelo-de-regresión-logística-4" class="slide level2">
-<h2>Estructura de un modelo de regresión logística</h2>
-
-<img data-src="class_9_files/figure-revealjs/unnamed-chunk-1-1.png" width="1152" class="r-stretch"></section>
-<section id="regresión-logística-es-un-tipo-de-glm" class="slide level2">
-<h2>Regresión Logística es un tipo de GLM</h2>
-<p>Regresión Logística es un GLM con componente aleatorio <span class="bold">Bernoulli/Binomial</span> y función de enlace <span class="bold">logit</span>.</p>
+<section id="regresión-logística-multinomial-expresada-como-probabilidades-3" class="slide level2">
+<h2>Regresión logística multinomial expresada como probabilidades</h2>
+<p>Ahora sabemos que:</p>
 <div class="fragment">
 <ul>
-<li>Componente aleatorio: <span class="math inline">y_{1}, \dots y_{n}</span> son <span class="math inline">n</span> variables independientes con distribución <span class="math inline">\text{Bernoulli}(p_{i})</span>
-<ul>
-<li>donde <span class="math inline">p_{i} \equiv \mu_{i}</span></li>
-</ul></li>
+<li><span class="math inline">p_{Ji} =\frac{1}{1 + \sum^{J-1}_{j=1}  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}</span></li>
+<li><span class="math inline">p_{ji}  =  p_{Ji} \cdot e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}</span></li>
 </ul>
 </div>
 <div class="fragment">
-<ul>
-<li>Función de enlace: <span class="math inline">\text{logit}(x) = \ln \frac{x}{1 - x}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Componente sistemático: <span class="math inline">\ln \frac{p_{i}}{1 - p_{i}} = \eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Función media: <span class="math inline">p_{i} = \text{logit}^{-1}(\eta_{i}) = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}}</span></li>
-</ul>
-</div>
-</section>
-<section id="regresión-logística-es-un-tipo-de-glm-1" class="slide level2">
-<h2>Regresión Logística es un tipo de GLM</h2>
-<ul>
-<li>Varianza <span class="math inline">\operatorname{Var}(y_{i}) = \phi V(p_{i}), \quad</span></li>
-</ul>
-<div class="fragment">
-<p><span class="math inline">\text{donde} \quad V(p_{i})= \frac{dp_{i}}{d\eta_{i}}</span>.</p>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="math inline">\eta_{i} = \ln \frac{p_{i}}{1 - p_{i}}  =  \ln(p_{i}) - \ln(1 - p_{i})</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="math inline">\frac{d \eta_{i}}{d p_{i}} = \frac{1}{p_{i}} + \frac{1}{1 - p_{i}} = \frac{1}{p_{i}(1 - p_{i})}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="math inline">\frac{d p_{i}}{d \eta_{i}} = p_{i}(1 - p_{i})</span></li>
-</ul>
-</div>
-<div class="fragment">
-<p>Por tanto, <span class="math inline">\operatorname{Var}(y_{i}) = \phi V(p_{i}) = \phi p_{i}(1 - p_{i})</span>, con <span class="math inline">\phi=1</span></p>
-<p>En resumen, en un modelo de regresión logística</p>
-<div class="content-box-blue">
-<p><span class="math display">y_{i} \sim \text{Bernoulli}\Bigg(p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}}\Bigg)</span></p>
+<p>Combinando ambos resultados obtenemos:</p>
+<div class="content-box-yellow">
+<p><span class="math display">p_{ji} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1}  e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}</span></p>
 </div>
 </div>
 </section>
-<section id="regresión-logística-en-la-práctica" class="slide level2">
-<h2>Regresión Logística en la práctica</h2>
-<p>Para ejemplificar el uso de regresión logística trabajaremos con los datos de demanda de bicicletas de <em>Capital Bikeshare</em>.</p>
+<section id="estimación" class="slide level2 inverse center middle" data-background-color="#C1122F">
+<h2>Estimación</h2>
+</section>
+<section id="estimación-1" class="slide level2">
+<h2>Estimación</h2>
+<div class="fragment">
+<ul>
+<li>Parámetros son estimados via MLE</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Alternativamente, minimizando función <span class="math inline">softmax</span> (ej, paquete <code>nnet</code> en <code>R</code>)</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Las <span class="math inline">J-1</span> equaciones del modelo de regresión logística son estimadas simultáneamente, imponiendo la restricción: <span class="math inline">\sum_{j}p_{i} = 1</span> (“constrained optimization”)</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Es posible estimar <span class="math inline">J-1</span> regresiones logísticas separadamente pero no garantiza que <span class="math inline">\sum_{j}p_{i} = 1</span>.</li>
+</ul>
+</div>
+</section>
+<section id="regresión-logística-multinomial-en-la-práctica" class="slide level2 inverse center middle" data-background-color="#C1122F">
+<h2>Regresión logística multinomial en la práctica</h2>
+</section>
+<section id="regresión-logística-multinomial-en-la-práctica-1" class="slide level2">
+<h2>Regresión logística multinomial en la práctica</h2>
+<p>Para ejemplificar el uso de regresión logística multinomial trabajaremos con los datos de intención de voto en el plebiscito de 1988.</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 15 × 6
-   bikers high_demand demand  temp   hum weathersit
-    &lt;dbl&gt;       &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;fct&gt;     
- 1     90           0 baja    0.380  0.760 clear     
- 2    128           0 baja    0.400   0.760 clear     
- 3    217           1 alta    0.420  0.710 clear     
- 4    273           1 alta    0.520  0.390 clear     
- 5    313           1 alta    0.500   0.420 clear     
- 6    300           1 alta    0.460  0.510 clear     
- 7    253           1 alta    0.460  0.470 clear     
- 8    195           0 baja    0.440  0.510 clear     
- 9    129           0 baja    0.420  0.540 clear     
-10     93           0 baja    0.420  0.540 clear     
-11     92           0 baja    0.420  0.540 clear     
-12     71           0 baja    0.420  0.540 clear     
-13     52           0 baja    0.400   0.580 clear     
-14     38           0 baja    0.380  0.620 clear     
-15     31           0 baja    0.360  0.660 clear     </code></pre>
+<pre><code># A tibble: 2,700 × 8
+   region population sex     age education income statusquo vote 
+   &lt;fct&gt;       &lt;int&gt; &lt;fct&gt; &lt;int&gt; &lt;fct&gt;      &lt;int&gt;     &lt;dbl&gt; &lt;fct&gt;
+ 1 C          175000 F        64 P             NA     -1.800 U    
+ 2 M           25000 M        27 S           7500     -1.740 &lt;NA&gt; 
+ 3 SA         250000 F        21 PS         35000     -1.730 N    
+ 4 SA         250000 F        42 S          35000     -1.480 &lt;NA&gt; 
+ 5 SA         250000 M        27 S           7500     -1.340 N    
+ 6 C          250000 F        22 S           7500     -1.330 N    
+ 7 M           15000 M        34 P          15000     -1.330 N    
+ 8 SA         250000 M        66 S          35000     -1.310 &lt;NA&gt; 
+ 9 SA         250000 F        25 S          15000     -1.310 A    
+10 S          250000 F        39 S          15000     -1.310 N    
+# ℹ 2,690 more rows</code></pre>
 </div>
 </div>
+<p><code>vote</code>: (A) Abstención; (N) NO; (U) Indecisa; (Y) SI <code>statusquo</code>: apoyo al status-quo (+)</p>
 </section>
-<section id="regresión-logística-en-la-práctica-1" class="slide level2">
-<h2>Regresión Logística en la práctica</h2>
-<p>Ajustaremos el siguiente modelo: <span class="math inline">\text{logit(alta demanda}_{i}) = \beta_{0} + \beta_{1}*\text{temp}_{i}</span>, que modela el log de la odd de que una hora sea de alta demanda como función de la temperatura (normalizada).</p>
+<section id="regresión-logística-multinomial-en-la-práctica-2" class="slide level2">
+<h2>Regresión logística multinomial en la práctica</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-glm(formula = high_demand ~ temp, family = binomial(link = "logit"), 
-    data = bikedata)
+<pre><code>Call:
+multinom(formula = vote ~ statusquo, data = plebs_1988, trace = F)
 
 Coefficients:
-            Estimate Std. Error z value            Pr(&gt;|z|)    
-(Intercept)  -3.676     0.092   -39.800 &lt;0.000 ***
-temp          4.827     0.154    31.300 &lt;0.000 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
+  (Intercept) statusquo
+N      0.494   -1.733
+U      1.168    0.328
+Y      0.727    1.893
 
-(Dispersion parameter for binomial family taken to be 1)
+Std. Errors:
+  (Intercept) statusquo
+N     0.111    0.127
+U     0.086    0.103
+Y     0.101    0.118
 
-    Null deviance: 9711.200  on 8644  degrees of freedom
-Residual deviance: 8513.400  on 8643  degrees of freedom
-AIC: 8517
-
-Number of Fisher Scoring iterations: 4</code></pre>
+Residual Deviance: 4384 
+AIC: 4396 </code></pre>
 </div>
 </div>
 </section>
-<section id="regresión-logística-en-la-práctica-2" class="slide level2">
-<h2>Regresión Logística en la práctica</h2>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_9_files/figure-revealjs/unnamed-chunk-4-1.png" width="960"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="fragment">
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_9_files/figure-revealjs/unnamed-chunk-5-1.png" width="960"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="estimación-mle" class="slide level2 inverse center middle" data-background-color="#C8102E">
-<h2>Estimación (MLE)</h2>
-</section>
-<section id="estimación-mle-1" class="slide level2">
-<h2>Estimación (MLE)</h2>
-<p>Retomando nuestro ejemplo anterior,</p>
+<section id="regresión-logística-multinomial-en-la-práctica-3" class="slide level2">
+<h2>Regresión logística multinomial en la práctica</h2>
 <div class="pull-left">
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-glm(formula = high_demand ~ temp, family = binomial(link = "logit"), 
-    data = bikedata)
-
-Coefficients:
-            Estimate Std. Error z value            Pr(&gt;|z|)    
-(Intercept)  -3.676     0.092   -39.800 &lt;0.000 ***
-temp          4.827     0.154    31.300 &lt;0.000 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
-
-(Dispersion parameter for binomial family taken to be 1)
-
-    Null deviance: 9711.200  on 8644  degrees of freedom
-Residual deviance: 8513.400  on 8643  degrees of freedom
-AIC: 8517
-
-Number of Fisher Scoring iterations: 4</code></pre>
+<pre><code># A tibble: 2,700 × 2
+   intercept statusquo
+       &lt;dbl&gt;     &lt;dbl&gt;
+ 1         1     1.010 
+ 2         1    -1.300 
+ 3         1     1.230 
+ 4         1    -1.030 
+ 5         1    -1.100 
+ 6         1    -1.050 
+ 7         1    -0.786
+ 8         1    -1.110 
+ 9         1    -1.010 
+10         1    -1.300 
+# ℹ 2,690 more rows</code></pre>
 </div>
 </div>
 </div>
-<div class="fragment">
 <div class="pull-right">
-<p><span class="bold">¿De donde vienen estos números?</span></p>
-</div>
-</div>
-</section>
-<section id="estimación-mle-2" class="slide level2">
-<h2>Estimación (MLE)</h2>
-<p>Recordar que cada observación es una manifestación de una variable Bernoulli:</p>
-<div class="fragment">
-<p><span class="math inline">Y_{i} \sim \text{Bernoulli}(p_{i}) \quad \text{ es decir } \quad \mathbb{P}(Y_{i}= y) = p_{i}^{y}(1-p_{i})^{1-y} \quad \text{ donde } \quad y \in \{0,1\}</span></p>
-</div>
-<div class="fragment">
-<p>Por tanto, la probabilidad de observar estos datos es descrita por la siguiente función: <span class="math display">\mathbb{P}(y_{1}, \dots, y_{n}) = \prod_{i=1}^{n} p_{i}^{y_{i}}(1-p_{i})^{1-y_{i}}</span></p>
-</div>
-<div class="fragment">
-<p>En consecuencia, la <span class="bold">likelihood function</span> de <span class="math inline">p_{i}</span> es: <span class="math display">\mathcal{L}(\boldsymbol{p} \mid y_{1}, \dots, y_{n}) = \prod_{i=1}^{n} p_{i}^{y_{i}}(1-p_{i})^{1-y_{i}}</span></p>
-</div>
-<div class="fragment">
-<p>y la <span class="bold">log likelihood function</span> de <span class="math inline">p_{i}</span> es: <span class="math display">\ell(\boldsymbol{p} \mid y_{1}, \dots, y_{n}) = \sum_{i=1}^{n} \bigg( y_{i} \ln p_{i} + (1-y_{i}) \ln(1-p_{i}) \bigg)</span></p>
-</div>
-</section>
-<section id="estimación-mle-3" class="slide level2">
-<h2>Estimación (MLE)</h2>
-<p>La <span class="bold">log likelihood function</span> de <span class="math inline">p</span> es: <span class="math display">\ell(\boldsymbol{p} \mid y_{1}, \dots, y_{n}) = \sum_{i=1}^{n} \bigg( y_{i} \ln p_{i} + (1-y_{i}) \ln(1-p_{i}) \bigg)</span></p>
-<div class="fragment">
-<p>Pero no estamos estimando <span class="math inline">p_{i}</span> directamente, sino que lo modelamos como un función de otros predictores.</p>
-</div>
-<div class="fragment">
-<p>específicamente: <span class="math inline">p_{i} =\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}</span></p>
-</div>
-<div class="fragment">
-<p>por tanto, <span class="math display">\ell(\beta_{0},\beta_{1} \mid y_{1}, \dots, y_{n}) = \sum_{i=1}^{n} \bigg( y_{i} \ln \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}} + (1-y_{i}) \ln(1-\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}) \bigg)</span> En definitiva, nuestros MLE son: <span class="math display">\hat{\beta_{0}},\hat{\beta_{1}} = \underset{\beta_{0},\beta_{1}}{\arg\max\ } \sum_{i=1}^{n} \bigg( y_{i} \ln \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}} + (1-y_{i}) \ln(1-\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}) \bigg)</span></p>
-</div>
-</section>
-<section id="estimación-mle-4" class="slide level2">
-<h2>Estimación (MLE)</h2>
-<ul>
-<li>No hay solución analítica (en general) para esta maximización. Típicamente se usa Fisher’s Scoring Method (un algoritmo de búsqueda) para obtener los MLE.</li>
-<li>Para ejemplificar podemos implementar una optimización numérica simple e ineficiente para buscar los MLE.</li>
-</ul>
-<div class="fragment">
-<p>Para acelerar la búsqueda usaremos valores en la proximidad de las estimaciones reportadas arriba (que normalmente no conoceríamos): <span class="bold">Implementación en</span> <code>R</code>:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a>ll <span class="ot">&lt;-</span> <span class="cf">function</span>(b0,b1) {</span>
-<span id="cb4-2"><a href=""></a>  y <span class="ot">=</span> bikedata<span class="sc">$</span>high_demand</span>
-<span id="cb4-3"><a href=""></a>  eta <span class="ot">=</span> b0 <span class="sc">+</span> b1<span class="sc">*</span>bikedata<span class="sc">$</span>temp</span>
-<span id="cb4-4"><a href=""></a>  ell <span class="ot">=</span> <span class="fu">sum</span>( y<span class="sc">*</span><span class="fu">log</span>(<span class="dv">1</span><span class="sc">/</span>(<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(<span class="sc">-</span>eta))) <span class="sc">+</span>  (<span class="dv">1</span><span class="sc">-</span>y)<span class="sc">*</span><span class="fu">log</span>(<span class="dv">1</span> <span class="sc">-</span> (<span class="dv">1</span><span class="sc">/</span>(<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(<span class="sc">-</span>eta)))))</span>
-<span id="cb4-5"><a href=""></a>  <span class="fu">return</span>(<span class="at">ll =</span> ell)</span>
-<span id="cb4-6"><a href=""></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</div>
-<div class="fragment">
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] -5992</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] -5580</code></pre>
+<pre><code>  (Intercept) statusquo
+N      0.494   -1.733
+U      1.168    0.328
+Y      0.727    1.893</code></pre>
 </div>
 </div>
 </div>
 </section>
-<section id="estimación-mle-5" class="slide level2">
-<h2>Estimación (MLE)</h2>
-<p><span class="bold">Implementación en</span> <code>R</code>:</p>
+<section id="regresión-logística-multinomial-en-la-práctica-4" class="slide level2">
+<h2>Regresión logística multinomial en la práctica</h2>
+<p><span class="math display">
+\hat{\eta} = X\beta  =
+\begin{bmatrix}
+1 &amp; x_{11} &amp; x_{12} &amp; \dots &amp; x_{1p} \\
+1 &amp; x_{21} &amp; x_{22} &amp; \dots &amp; x_{2p} \\
+\vdots &amp; \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+1 &amp; x_{n1} &amp; x_{n2} &amp; \dots &amp; x_{np}
+\end{bmatrix}
+\begin{bmatrix}
+\beta_{01} &amp; \beta_{02} &amp; \dots &amp; \beta_{0(J-1)} \\
+\beta_{11} &amp; \beta_{12} &amp; \dots &amp; \beta_{1(J-1)} \\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+\beta_{p1} &amp; \beta_{p2} &amp; \dots &amp; \beta_{p(J-1)}
+\end{bmatrix}
+</span></p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href=""></a><span class="co"># Evaluar la log-likelihood function  para muchas combinaciones de posibles valores de  b0 y b1</span></span>
-<span id="cb7-2"><a href=""></a><span class="co"># centramos la grilla en torno a las estimaciones del modelo</span></span>
-<span id="cb7-3"><a href=""></a>b0_hat <span class="ot">&lt;-</span> <span class="fu">coef</span>(logit_demand_temp)[<span class="dv">1</span>]</span>
-<span id="cb7-4"><a href=""></a>b1_hat <span class="ot">&lt;-</span> <span class="fu">coef</span>(logit_demand_temp)[<span class="dv">2</span>]</span>
-<span id="cb7-5"><a href=""></a>parameter_space <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">beta0 =</span> <span class="fu">seq</span>(b0_hat<span class="dv">-1</span>, b0_hat<span class="sc">+</span><span class="dv">1</span>, <span class="at">length.out=</span><span class="dv">500</span>), <span class="at">beta1 =</span> <span class="fu">seq</span>(b1_hat<span class="dv">-1</span>, b1_hat<span class="sc">+</span><span class="dv">1</span>, <span class="at">length.out=</span><span class="dv">500</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb7-6"><a href=""></a>  <span class="fu">rowwise</span>() <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">loglik =</span> <span class="fu">ll</span>(beta0,beta1))</span>
-<span id="cb7-7"><a href=""></a></span>
-<span id="cb7-8"><a href=""></a><span class="co"># Encuentra el par de valores b0,b1 que dan el mayor valor para la log-likelihood function</span></span>
-<span id="cb7-9"><a href=""></a></span>
-<span id="cb7-10"><a href=""></a>m <span class="ot">&lt;-</span> parameter_space <span class="sc">%&gt;%</span> <span class="fu">as.matrix</span>()</span>
-<span id="cb7-11"><a href=""></a>m[<span class="fu">which.max</span>(m[,<span class="dv">3</span>]),]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>    beta0     beta1    loglik 
-   -3.678     4.829 -4256.678 </code></pre>
+<pre><code>     N      U      Y 
+-1.253  1.499  2.636 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      N       U       Y 
+0.014 0.227 0.708 </code></pre>
 </div>
 </div>
 </section>
-<section id="estimación-mle-6" class="slide level2">
-<h2>Estimación (MLE)</h2>
+<section id="regresión-logística-multinomial-en-la-práctica-5" class="slide level2">
+<h2>Regresión logística multinomial en la práctica</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>            A         N       U        Y
+1    0.051 0.014 0.227 0.708
+2    0.053 0.825 0.112 0.009
+3    0.037 0.007 0.177 0.780
+4    0.075 0.732 0.171 0.022
+5    0.068 0.761 0.153 0.017
+6    0.073 0.738 0.167 0.021
+7    0.097 0.618 0.240 0.045
+8    0.068 0.764 0.151 0.017
+9    0.076 0.724 0.176 0.023
+10   0.053 0.825 0.112 0.009
+11   0.030 0.005 0.150 0.816
+12   0.049 0.014 0.222 0.715
+13   0.027 0.004 0.137 0.833
+14   0.024 0.003 0.125 0.849
+16   0.065 0.775 0.144 0.016
+17   0.090 0.653 0.220 0.037
+18   0.086 0.677 0.205 0.032
+19   0.032 0.005 0.158 0.805
+20   0.072 0.743 0.165 0.020
+21   0.029 0.004 0.146 0.821
+22   0.026 0.003 0.133 0.837
+23   0.022 0.002 0.118 0.857
+24   0.020 0.002 0.108 0.870
+25   0.023 0.003 0.122 0.853
+26   0.088 0.055 0.339 0.518
+27   0.031 0.005 0.155 0.808
+28   0.119 0.149 0.402 0.330
+29   0.087 0.671 0.209 0.033
+30   0.053 0.825 0.112 0.009
+31   0.024 0.003 0.124 0.849
+32   0.054 0.017 0.238 0.692
+33   0.119 0.149 0.402 0.330
+34   0.040 0.009 0.190 0.761
+35   0.053 0.825 0.112 0.009
+36   0.126 0.379 0.361 0.134
+37   0.027 0.004 0.138 0.832
+38   0.112 0.116 0.392 0.381
+39   0.121 0.164 0.405 0.310
+40   0.073 0.034 0.299 0.594
+41   0.051 0.015 0.229 0.706
+42   0.065 0.778 0.142 0.015
+43   0.028 0.004 0.143 0.825
+44   0.091 0.060 0.346 0.503
+45   0.067 0.027 0.279 0.627
+46   0.090 0.059 0.344 0.508
+47   0.024 0.003 0.128 0.845
+48   0.093 0.064 0.351 0.492
+49   0.032 0.005 0.157 0.806
+50   0.022 0.002 0.118 0.857
+51   0.031 0.005 0.156 0.807
+ [ reached 'max' / getOption("max.print") -- omitted 2469 rows ]</code></pre>
+</div>
+</div>
+</section>
+<section id="regresión-logística-multinomial-en-la-práctica-6" class="slide level2">
+<h2>Regresión logística multinomial en la práctica</h2>
 <div class="pull-left">
 <div class="cell">
 <div class="cell-output-display">
@@ -678,26 +620,12 @@ Number of Fisher Scoring iterations: 4</code></pre>
 <div class="fragment">
 <div class="pull-right">
 <div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-glm(formula = high_demand ~ temp, family = binomial(link = "logit"), 
-    data = bikedata)
-
-Coefficients:
-            Estimate Std. Error z value            Pr(&gt;|z|)    
-(Intercept)  -3.676     0.092   -39.800 &lt;0.000 ***
-temp          4.827     0.154    31.300 &lt;0.000 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
-
-(Dispersion parameter for binomial family taken to be 1)
-
-    Null deviance: 9711.200  on 8644  degrees of freedom
-Residual deviance: 8513.400  on 8643  degrees of freedom
-AIC: 8517
-
-Number of Fisher Scoring iterations: 4</code></pre>
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_9_files/figure-revealjs/unnamed-chunk-11-1.png" width="960"></p>
+</figure>
+</div>
 </div>
 </div>
 </div>
@@ -706,14 +634,14 @@ Number of Fisher Scoring iterations: 4</code></pre>
 <section id="en-resumen" class="slide level2">
 <h2>En resumen</h2>
 <ul>
-<li>Regresión logística es un GLM con componente aleatorio Bernoulli/Binomial y enlace logit: <span class="math inline">\ln \frac{p_{i}}{1-p_{i}} = \eta_{i}</span>.</li>
-<li>La función media (sigmoide) <span class="math inline">p_{i} = \frac{e^{\eta_{i}}}{1+e^{\eta_{i}}}</span> mantiene <span class="math inline">p_{i}</span> restringido a <span class="math inline">[0,1]</span>.</li>
-<li>Los parámetros <span class="math inline">\beta</span> se estiman por máxima verosimilitud (MLE): no hay solución analítica cerrada, se usa un algoritmo de búsqueda numérica (ej. Fisher Scoring).</li>
-<li>La log-likelihood de una Bernoulli es <span class="math inline">\ell(\boldsymbol\beta \mid y) = \sum_{i=1}^{n}\big(y_{i}\ln p_{i} + (1-y_{i})\ln(1-p_{i})\big)</span>.</li>
-<li>La próxima clase: regresión logística — interpretación de parámetros.</li>
+<li>La regresión logística multinomial generaliza el modelo binomial cuando <span class="math inline">y_{i}</span> toma <span class="math inline">J</span> valores no ordenados: se estiman <span class="math inline">J-1</span> logits, cada uno comparando una categoría <span class="math inline">j</span> contra una categoría de referencia <span class="math inline">J</span>.</li>
+<li>Cada <span class="math inline">y_{i}</span> es una realización de una distribución Multinomial (o Multinoulli si <span class="math inline">n=1</span>) con probabilidades <span class="math inline">p_{i1}, \dots, p_{iJ}</span>.</li>
+<li>De los <span class="math inline">J-1</span> logits se despeja <span class="math inline">p_{ji}</span> como una función softmax de los predictores lineales: <span class="math inline">p_{ji} = \dfrac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1} e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}</span>.</li>
+<li>Los parámetros se estiman via MLE, imponiendo la restricción <span class="math inline">\sum_{j}p_{ij} = 1</span> (optimización simultánea, no <span class="math inline">J-1</span> regresiones separadas).</li>
+<li>La próxima clase aborda la interpretación de estos coeficientes: efectos sobre el logit, odds ratios, y efectos marginales sobre las probabilidades.</li>
 </ul>
 </section>
-<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#007A75">
+<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#E0642B">
 <h2>Gracias</h2>
 <p><strong>Hasta la próxima clase</strong></p>
 <p>Mauricio Bucca</p>

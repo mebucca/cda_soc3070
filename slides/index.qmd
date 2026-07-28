@@ -24,10 +24,10 @@ format:
 
 | Clase | Tema | Presentación | Notebook |
 |---|---|:---:|:---:|
-| 3 | Presentación del curso | [Ver](class_3/class_3.html) | — |
-| 4 | Variables Aleatorias y Distribuciones Discretas | [Ver](class_4/class_4.html) | [Ver](class_4/nb_4.html) |
-| 5 | Momentos | [Ver](class_5/class_5.html) | — |
-| 6 | Estimación, MLE y Funciones de Pérdida | [Ver](class_6/class_6.html) | [Ver](class_6/nb_6.html) |
+| 0 | Presentación del curso | [Ver](class_0/class_0.html) | — |
+| 1 | Variables Aleatorias y Distribuciones Discretas | [Ver](class_1/class_1.html) | [Ver](class_1/nb_1.html) |
+| 2 | Momentos | [Ver](class_2/class_2.html) | — |
+| 3 | Estimación, MLE y Funciones de Pérdida | [Ver](class_3/class_3.html) | [Ver](class_3/nb_3.html) |
 
 Los dos bloques siguientes presentan el **mismo conjunto de modelos** — LPM, GLM, logit, logit multinomial, Poisson — usados primero con fines **explicativos/inferenciales** (¿cuál es el efecto de cada predictor?) y luego con fines **predictivos/clasificatorios** (¿qué tan bien anticipan casos nuevos?). No son modelos distintos: es la misma matemática, aplicada a dos preguntas distintas.
 
@@ -35,27 +35,27 @@ Los dos bloques siguientes presentan el **mismo conjunto de modelos** — LPM, G
 
 | Clase | Tema | Presentación | Notebook |
 |---|---|:---:|:---:|
-| 7 | Regresión Lineal y el Modelo Lineal de Probabilidad | [Ver](class_7/class_7.html) | [Ver](class_7/notebook_7.html) |
-| 8 | Modelos Lineales Generalizados | [Ver](class_8/class_8.html) | — |
-| 9 | Regresión Logística: Estructura Teórica y Estimación | [Ver](class_9/class_9.html) | — |
-| 10 | Regresión Logística: Interpretación de Parámetros | [Ver](class_10/class_10.html) | [Ver](class_10/notebook_10.html) |
-| 11 | Regresión Logística: Inferencia | [Ver](class_11/class_11.html) | [Ver](class_11/nb_11.html) |
-| 12 | Regresión Logística Multinomial: Estructura Teórica | [Ver](class_12/class_12.html) | — |
-| 13 | Regresión Logística Multinomial: Interpretación de Parámetros | [Ver](class_13/class_13.html) | — |
-| 14 | Regresión de Poisson para Recuentos | [Ver](class_14/class_14.html) | [Ver](class_14/nb_14.html) |
-| 15 | Sobre-dispersión y Quasi-Poisson | [Ver](class_15/class_15.html) | — |
-| 16 | Causalidad | [Ver](class_16/class_16.html) | — |
+| 4 | Regresión Lineal y el Modelo Lineal de Probabilidad | [Ver](class_4/class_4.html) | [Ver](class_4/notebook_4.html) |
+| 5 | Modelos Lineales Generalizados | [Ver](class_5/class_5.html) | — |
+| 6 | Regresión Logística: Estructura Teórica y Estimación | [Ver](class_6/class_6.html) | — |
+| 7 | Regresión Logística: Interpretación de Parámetros | [Ver](class_7/class_7.html) | [Ver](class_7/notebook_7.html) |
+| 8 | Regresión Logística: Inferencia | [Ver](class_8/class_8.html) | [Ver](class_8/nb_8.html) |
+| 9 | Regresión Logística Multinomial: Estructura Teórica | [Ver](class_9/class_9.html) | — |
+| 10 | Regresión Logística Multinomial: Interpretación de Parámetros | [Ver](class_10/class_10.html) | — |
+| 11 | Regresión de Poisson para Recuentos | [Ver](class_11/class_11.html) | [Ver](class_11/nb_11.html) |
+| 12 | Sobre-dispersión y Quasi-Poisson | [Ver](class_12/class_12.html) | — |
+| 13 | Causalidad | [Ver](class_13/class_13.html) | — |
 
 ## Modelos para datos categóricos — clasificación
 
 | Clase | Tema | Presentación | Notebook |
 |---|---|:---:|:---:|
-| 17 | Predicción, Overfitting y Cross-Validation | [Ver](class_17/class_17.html) | [Ver](class_17/nb_17.html) |
-| 18 | Clasificador Logístico (Binomial y Multinomial) | [Ver](class_18/class_18.html) | — |
-| 19 | Regularización: Ridge y LASSO | [Ver](class_19/class_19.html) | — |
-| 20 | Árboles, Random Forest y Gradient Boosting | [Ver](class_20/class_20.html) | — |
-| 21 | Introducción a Neural Networks | [Ver](class_21/class_21.html) | — |
-| 22 | Un "Flavor" de LLMs (usando Regresión Logística) | [Ver](class_22/class_22.html) | — |
+| 14 | Predicción, Overfitting y Cross-Validation | [Ver](class_14/class_14.html) | [Ver](class_14/nb_14.html) |
+| 15 | Clasificador Logístico (Binomial y Multinomial) | [Ver](class_15/class_15.html) | — |
+| 16 | Regularización: Ridge y LASSO | [Ver](class_16/class_16.html) | — |
+| 17 | Árboles, Random Forest y Gradient Boosting | [Ver](class_17/class_17.html) | — |
+| 18 | Introducción a Neural Networks | [Ver](class_18/class_18.html) | — |
+| 19 | Un "Flavor" de LLMs (usando Regresión Logística) | [Ver](class_19/class_19.html) | — |
 
 ## Bonus
 

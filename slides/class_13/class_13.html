@@ -32,6 +32,72 @@
       margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
       vertical-align: middle;
     }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      { color: #24292e;  }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #24292e; } /* Normal */
+    code span.al { color: #ff5555; font-weight: bold; } /* Alert */
+    code span.an { color: #6a737d; } /* Annotation */
+    code span.at { color: #d73a49; } /* Attribute */
+    code span.bn { color: #005cc5; } /* BaseN */
+    code span.bu { color: #d73a49; } /* BuiltIn */
+    code span.cf { color: #d73a49; } /* ControlFlow */
+    code span.ch { color: #032f62; } /* Char */
+    code span.cn { color: #005cc5; } /* Constant */
+    code span.co { color: #6a737d; } /* Comment */
+    code span.cv { color: #6a737d; } /* CommentVar */
+    code span.do { color: #6a737d; } /* Documentation */
+    code span.dt { color: #d73a49; } /* DataType */
+    code span.dv { color: #005cc5; } /* DecVal */
+    code span.er { color: #ff5555; text-decoration: underline; } /* Error */
+    code span.ex { color: #d73a49; font-weight: bold; } /* Extension */
+    code span.fl { color: #005cc5; } /* Float */
+    code span.fu { color: #6f42c1; } /* Function */
+    code span.im { color: #032f62; } /* Import */
+    code span.in { color: #6a737d; } /* Information */
+    code span.kw { color: #d73a49; } /* Keyword */
+    code span.op { color: #24292e; } /* Operator */
+    code span.ot { color: #6f42c1; } /* Other */
+    code span.pp { color: #d73a49; } /* Preprocessor */
+    code span.re { color: #6a737d; } /* RegionMarker */
+    code span.sc { color: #005cc5; } /* SpecialChar */
+    code span.ss { color: #032f62; } /* SpecialString */
+    code span.st { color: #032f62; } /* String */
+    code span.va { color: #e36209; } /* Variable */
+    code span.vs { color: #032f62; } /* VerbatimString */
+    code span.wa { color: #ff5555; } /* Warning */
   </style>
   <link rel="stylesheet" href="class_13_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
   <link rel="stylesheet" href="../_shared/course.css">
@@ -143,13 +209,13 @@
     }
   </style>
 </head>
-<body class="theme-ajax quarto-light">
+<body class="theme-roma quarto-light">
   <div class="reveal">
     <div class="slides">
 
-<section id="title-slide" data-background-color="#E0642B" class="quarto-title-block center">
+<section id="title-slide" data-background-color="#8E1B3D" class="quarto-title-block center">
   <h1 class="title">Análisis de Datos Categóricos (SOC3070)</h1>
-  <p class="subtitle">Regresión Logística Multinomial</p>
+  <p class="subtitle">Causalidad y asociación</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -166,575 +232,453 @@ Mauricio Bucca · Sociología UC
 <div class="full-width">
 <div class="content-box">
 <p><strong>Antes</strong></p>
-<p>estructura teórica de la regresión multinomial.</p>
+<p>sobre-dispersión y quasi-Poisson.</p>
 </div>
 <div class="content-box-primary">
 <p><strong>Hoy</strong></p>
-<p>interpretación de efectos multinomiales.</p>
+<p>asociación, contrafactuales y causalidad.</p>
 </div>
 <div class="content-box-secondary">
 <p><strong>Después</strong></p>
-<p>regresión de Poisson para recuentos.</p>
+<p>predicción, overfitting y validación cruzada.</p>
 </div>
 </div>
 </section>
-<section id="regresión-logística-multinomial-interpretación-de-efectos" class="slide level2 inverse center middle" data-background-color="#C1122F">
-<h2>Regresión Logística Multinomial: interpretación de efectos</h2>
-</section>
-<section id="efectos-marginales-sobre-el-logit" class="slide level2 center middle">
-<h2>Efectos marginales sobre el logit</h2>
-</section>
-<section id="un-ejemplo-empírico" class="slide level2">
-<h2>Un ejemplo empírico</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2,700 × 8
-   region population sex     age education income statusquo vote 
-   &lt;fct&gt;       &lt;int&gt; &lt;fct&gt; &lt;int&gt; &lt;fct&gt;      &lt;int&gt;     &lt;dbl&gt; &lt;fct&gt;
- 1 C          175000 F        64 P             NA     -1.800 U    
- 2 M           25000 M        27 S           7500     -1.740 &lt;NA&gt; 
- 3 SA         250000 F        21 PS         35000     -1.730 N    
- 4 SA         250000 F        42 S          35000     -1.480 &lt;NA&gt; 
- 5 SA         250000 M        27 S           7500     -1.340 N    
- 6 C          250000 F        22 S           7500     -1.330 N    
- 7 M           15000 M        34 P          15000     -1.330 N    
- 8 SA         250000 M        66 S          35000     -1.310 &lt;NA&gt; 
- 9 SA         250000 F        25 S          15000     -1.310 A    
-10 S          250000 F        39 S          15000     -1.310 N    
-# ℹ 2,690 more rows</code></pre>
-</div>
-</div>
-<div class="pull-left">
-<p>Continuando con los datos del plebiscito de 1988, ajustaremos el siguiente modelo: <span class="math display">\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}</span> donde:</p>
-<ul>
-<li><span class="math inline">p_{iJ} =\mathbb{P}(\text{vote}_{i}=\text{A})</span></li>
-<li><span class="math inline">p_{ij} =\mathbb{P}(\text{vote}_{i}=j), \quad j \in \{\text{N},\text{U},\text{Y}\}</span></li>
-<li><span class="math inline">\text{logit}(p_{ij})</span> es el <span class="bold">log odds</span> de votar N/U/Y vs A.</li>
-<li><span class="math inline">p_{ij}</span>’s son una función de apoyo al status-quo (<code>statusquo</code>) y género (<code>sex</code>)</li>
-</ul>
-</div>
-<div class="fragment">
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>Call:
-multinom(formula = vote ~ statusquo + sex, data = plebs_1988, 
-    trace = F)
+<section>
+<section id="causalidad" class="title-slide slide level1 inverse center middle" data-background-color="#F0B323">
+<h1>Causalidad</h1>
 
-Coefficients:
-  (Intercept) statusquo    sexM
-N      0.110   -1.764  0.698
-U      1.290    0.336 -0.292
-Y      0.777    1.895 -0.114
+</section>
+<section id="las-preguntas-causales-comparan-mundos" class="slide level2">
+<h2>Las preguntas causales comparan mundos</h2>
+<p>Las ciencias sociales están llenas de preguntas aparentemente sencillas:</p>
+<div class="fragment">
+<ul>
+<li>¿Una política de transporte cambia el uso de bicicletas?</li>
+<li>¿Un día despejado hace que más personas arrienden una bicicleta?</li>
+<li>¿Trabajar desde casa reduce los viajes en hora punta?</li>
+</ul>
+</div>
+<div class="fragment">
+<p>Todas preguntan qué <strong>cambiaría</strong> en un resultado si interviniéramos sobre una causa.</p>
+</div>
+</section>
+<section id="nuestro-caso-clima-despejado-y-demanda" class="slide level2">
+<h2>Nuestro caso: clima despejado y demanda</h2>
+<p>Vamos a estudiar una hipótesis concreta:</p>
+<blockquote>
+<p>Un cielo despejado aumenta la probabilidad de demanda alta.</p>
+</blockquote>
+<p>Definimos un predictor binario:</p>
+<p><span class="math display">
+D_i =
+\begin{cases}
+1 &amp; \text{si el clima de la hora } i \text{ está despejado}\\
+0 &amp; \text{si hay nubes, lluvia o nieve}
+\end{cases}
+</span></p>
+<p>El resultado también es binario:</p>
+<p><span class="math display">
+Y_i =
+\begin{cases}
+1 &amp; \text{si la hora tiene demanda alta}\\
+0 &amp; \text{si la hora no tiene demanda alta}
+\end{cases}
+</span></p>
+<p><code>high_demand = 1</code> identifica las horas sobre el percentil 75 de <code>bikers</code>.</p>
+</section>
+<section id="primero-vemos-una-asociación" class="slide level2">
+<h2>Primero vemos una asociación</h2>
 
-Std. Errors:
-  (Intercept) statusquo   sexM
-N      0.144    0.129 0.173
-U      0.114    0.104 0.172
-Y      0.129    0.118 0.179
+<img data-src="class_13_files/figure-revealjs/observed-association-1.png" width="960" class="r-stretch"><p>Las horas despejadas tienen mayor probabilidad de demanda alta. Eso es un hecho descriptivo; todavía no es una conclusión causal.</p>
+</section>
+<section id="la-diferencia-observada" class="slide level2">
+<h2>La diferencia observada</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  weather_label horas prob_demanda_alta
+  &lt;fct&gt;         &lt;int&gt;             &lt;dbl&gt;
+1 Otro clima     3000             0.189
+2 Despejado      5645             0.282</code></pre>
+</div>
+</div>
+<p>La diferencia observada es de 9,3 puntos porcentuales.</p>
+<div class="fragment">
+<p><strong>Pregunta:</strong> ¿cuánto de esa diferencia se debe al clima y cuánto a que las horas despejadas son distintas en otros aspectos?</p>
+</div>
+</section>
+<section id="el-coeficiente-del-logit-resume-la-asociación" class="slide level2">
+<h2>El coeficiente del logit resume la asociación</h2>
+<p>Ajustamos:</p>
+<p><span class="math display">
+\operatorname{logit}\{\Pr(Y_i=1\mid D_i)\}
+=\beta_0+\beta_1D_i.
+</span></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href=""></a>logit_crudo <span class="ot">&lt;-</span> <span class="fu">glm</span>(</span>
+<span id="cb2-2"><a href=""></a>  high_demand <span class="sc">~</span> clear_weather,</span>
+<span id="cb2-3"><a href=""></a>  <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>),</span>
+<span id="cb2-4"><a href=""></a>  <span class="at">data =</span> bikedata</span>
+<span id="cb2-5"><a href=""></a>)</span>
+<span id="cb2-6"><a href=""></a></span>
+<span id="cb2-7"><a href=""></a><span class="fu">coef</span>(logit_crudo)[[<span class="st">"clear_weather"</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.522</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a><span class="fu">exp</span>(<span class="fu">coef</span>(logit_crudo)[[<span class="st">"clear_weather"</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1.686</code></pre>
+</div>
+</div>
+<p>En estos datos, <span class="math inline">\hat\beta_1=0,522</span> y <span class="math inline">e^{\hat\beta_1}=1,69</span>.</p>
+<div class="fragment">
+<p>Las <em>odds</em> de demanda alta son aproximadamente 69% mayores bajo clima despejado. Por ahora, esta es una <strong>asociación</strong>.</p>
+</div>
+</section>
+<section id="predicciones-del-logit" class="slide level2">
+<h2>Predicciones del logit</h2>
 
-Residual Deviance: 4323 
-AIC: 4341 </code></pre>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-el-logit-1" class="slide level2">
-<h2>Efectos marginales sobre el logit</h2>
-<p>Un modelo de regresión logística multinomial consiste de <span class="math inline">J-1</span> ecuaciones: <span class="math display">\text{logit}(p_{ij}) = \ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}</span></p>
-<div class="fragment">
-<ul>
-<li>El intercepto <span class="math inline">\beta_{j0}</span> corresponde al log del ratio entre la probabilidad de obtener <span class="math inline">j</span> en vez de <span class="math inline">J</span> – <span class="math inline">\text{logit}(p_{j})</span> –, cuando <span class="math inline">x_{1} = \dots = x_{k} = 0</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>El efecto marginal de <span class="math inline">x_{k}</span> sobre el <span class="math inline">\text{logit}(p_{j})</span> por:</li>
-</ul>
-<div class="pull-left">
-<div class="content-box-blue">
-<p><span class="math display">\frac{\partial\text{logit}(p_{ij})}{\partial x_{k}} = \beta_{jk}</span></p>
-</div>
-</div>
-<div class="pull-right">
-<div class="content-box-yellow">
-<p>“Un cambio infinitesimal en <span class="math inline">x_{k}</span> ( <span class="math inline">\partial x_{k}</span> ) se traduce en un cambio en <span class="math inline">\partial x_{k} \beta_{jk}</span> unidades en el <span class="math inline">\text{logit}(p_{j})</span>”</p>
-</div>
-</div>
-</div>
-<div class="fragment">
-<p><span class="bold">Importante:</span> los coeficientes y sus transformaciones entregan información sobre las probabilidades <span class="bold">relativas</span> de los diferentes <span class="math inline">j</span>’s (con respecto a categoría de referencia).</p>
-</div>
-</section>
-<section id="efectos-marginales-sobre-el-logit-2" class="slide level2">
-<h2>Efectos marginales sobre el logit</h2>
-<p>En nuestro ejemplo: <span class="math inline">\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}</span></p>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>  (Intercept) statusquo    sexM
-N      0.110   -1.764  0.698
-U      1.290    0.336 -0.292
-Y      0.777    1.895 -0.114</code></pre>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_13_files/figure-revealjs/unnamed-chunk-4-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-el-logit-3" class="slide level2">
-<h2>Efectos marginales sobre el logit</h2>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>  (Intercept) statusquo    sexM
-N      0.110   -1.764  0.698
-U      1.290    0.336 -0.292
-Y      0.777    1.895 -0.114</code></pre>
-</div>
-</div>
-<p>Por tanto, <span class="math inline">\beta_{N1}</span> y <span class="math inline">\beta_{Y1}</span> son=</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>betaN1 betaY1 
- -1.760   1.900 </code></pre>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<p>Si <code>male=1</code> y <code>statusquo=0</code>, entonces <code>logit(p_N)</code> y <code>logit(p_Y)</code> son=</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>   N    Y 
-0.810 0.670 </code></pre>
-</div>
-</div>
-<p>Si <code>male=1</code> y <code>statusquo=1</code>, entonces <code>logit(p_N)</code> y <code>logit(p_Y)</code> son=</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>    N     Y 
--0.950  2.570 </code></pre>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-multiplicativos-sobre-las-odds" class="slide level2 center middle">
-<h2>Efectos multiplicativos sobre las odds</h2>
-</section>
-<section id="efectos-multiplicativos-sobre-las-odds-1" class="slide level2">
-<h2>Efectos multiplicativos sobre las odds</h2>
-<p>Dado el siguiente modelo de regresión logística multinomial: <span class="math display">\text{logit}(p_{ij}) = \ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}</span></p>
-<div class="fragment">
-<p>exponenciando a ambos lados obtenemos <span class="math display">\frac{p_{ij}}{p_{iJ}} = e^{\beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}}</span></p>
-</div>
-<div class="fragment">
-<p>equivalentemente</p>
-<div class="content-box-blue">
-<p><span class="math display">\frac{p_{ij}}{p_{iJ}} =  e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i1}}  \dots e^{\beta_{jk} x_{ik}}</span></p>
-</div>
-</div>
-</section>
-<section id="efectos-multiplicativos-sobre-las-odds-odds-ratios" class="slide level2">
-<h2>Efectos multiplicativos sobre las odds: odds ratios</h2>
-<p>Considera la situación en que <span class="math inline">i</span> y <span class="math inline">i^{´}</span> son dos observaciones con <span class="math inline">x_{k}=c</span> y <span class="math inline">x_{k}=c+1</span>, respectivamente. El resto de las covariables toman valores idénticos.</p>
-<div class="fragment">
-<p>Las odds de observar <span class="math inline">j</span> en vez de <span class="math inline">J</span> son:</p>
-<ul>
-<li><span class="math inline">p_{ij}/(p_{iJ}) = e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i1}}  \dots (e^{\beta_{jk}})^{c}</span></li>
-<li><span class="math inline">p_{i^{´}j}/(p_{i^{´}J}) = e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i^{´}1}}  \dots (e^{\beta_{jk}})^{c+1}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<p>El ratio de las odd de éxito entre <span class="math inline">i^{´}</span> e <span class="math inline">i</span> está dado por:</p>
-<p><span class="math display">\begin{align}
-\frac{p_{i^{´}j}/p_{i^{´}J}}{p_{ij}/p_{iJ}} &amp;= \frac{e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i^{´}1}}  \dots (e^{\beta_{jk}})^{c+1}}{e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i1}}  \dots (e^{\beta_{jk}})^{c}} = e^{\beta_{jk}}
-\end{align}</span></p>
-<p>En otras palabras, manteniendo otros factores constantes, <span class="math inline">e^{\beta_{jk}}</span> representa la odds ratio de <span class="math inline">j</span> vs <span class="math inline">J</span> entre el caso con <span class="math inline">x_{k}</span> aumentado en una unidad, y el caso con <span class="math inline">x_{k}</span> en un nivel basal dado.</p>
-</div>
-</section>
-<section id="efectos-multiplicativos-sobre-las-odds-2" class="slide level2">
-<h2>Efectos multiplicativos sobre las odds</h2>
-<div class="content-box-yellow">
-<p>“Un cambio en <span class="math inline">\Delta</span> unidades de <span class="math inline">x_{k}</span> multiplica el ratio entre las probabilidad de obtener <span class="math inline">j</span> vs <span class="math inline">J</span> por <span class="math inline">e^{\Delta \beta_{jk}}</span>”</p>
-</div>
-<p><span class="bold">Propiedades</span>:</p>
-<div class="fragment">
-<ul>
-<li><span class="math inline">e^{\beta_{jk}}</span> está restringido al rango <span class="math inline">[0,\infty+)</span>. Es una constante que “comprime” o amplifica el ratio entre las probabilidades de <span class="math inline">j</span> vs <span class="math inline">J</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Si <span class="math inline">\beta_{jk} &lt; 0  \to  (0 &lt; e^{\beta_{jk}} &lt; 1)</span>. Es decir, un aumento en <span class="math inline">x_{k}</span> está asociado con una reducción (multiplicativa) del ratio entre las probabilidades de <span class="math inline">j</span> vs <span class="math inline">J</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Si <span class="math inline">\beta_{jk} = 0  \to  (e^{\beta_{jk}} =1)</span>. Es decir, un cambio en <span class="math inline">x_{k}</span> está asociado a un cambio nulo en el ratio entre las probabilidades de <span class="math inline">j</span> vs <span class="math inline">J</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Si <span class="math inline">\beta_{jk} &gt; 0  \to  (e^{\beta_{jk}} &gt; 1)</span>. Es decir, un aumento en <span class="math inline">x_{k}</span> está asociado a aumento (multiplicativo) en el ratio entre las probabilidades de <span class="math inline">j</span> vs <span class="math inline">J</span></li>
-</ul>
-</div>
-</section>
-<section id="efectos-multiplicativos-sobre-las-odds-3" class="slide level2">
-<h2>Efectos multiplicativos sobre las odds</h2>
-<p>En nuestro ejemplo: <span class="math inline">\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}</span>, por tanto:</p>
-<div class="pull-left">
-<p><span class="math inline">\frac{p_{ij}}{p_{iJ}} = e^{\beta_{j0}} \cdot  e^{\beta_{j1}\text{statusquo}_{i}} \cdot e^{ \beta_{j2}\text{male}_{i} }</span></p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>  (Intercept) statusquo    sexM
-N      0.110   -1.764  0.698
-U      1.290    0.336 -0.292
-Y      0.777    1.895 -0.114</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  (Intercept) statusquo   sexM
-N       1.116    0.171 2.010
-U       3.635    1.399 0.747
-Y       2.176    6.652 0.892</code></pre>
-</div>
-</div>
-</div>
-<div class="fragment">
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_13_files/figure-revealjs/unnamed-chunk-10-1.png" width="960"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-multiplicativos-sobre-las-odds-4" class="slide level2">
-<h2>Efectos multiplicativos sobre las odds</h2>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>    beta1 exp.beta1
-N -1.764    0.171
-U  0.336    1.399
-Y  1.895    6.652</code></pre>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<p>Si <code>male=1</code> y <code>statusquo=0</code>, entonces las odds de N e Y son=</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>    N     Y 
-2.248 1.954 </code></pre>
-</div>
-</div>
-<p>Si <code>male=1</code> y <code>statusquo=1</code>, entonces las odds de N e Y son=</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>      N       Y 
- 0.387 13.066 </code></pre>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-multiplicativos-sobre-las-odds-5" class="slide level2">
-<h2>Efectos multiplicativos sobre las odds</h2>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>    beta1 exp.beta1
-N -1.764    0.171
-U  0.336    1.399
-Y  1.895    6.652</code></pre>
-</div>
-</div>
-<p>Por tanto, <span class="math inline">e^{\beta_{N1}}</span> y <span class="math inline">e^{\beta_{Y1}}</span> son=</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>betaN1 betaY1 
- 0.172  6.686 </code></pre>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<p>Si <code>male=1</code> y <code>statusquo=0</code>, entonces las odds de N e Y son=</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>    N     Y 
-2.248 1.954 </code></pre>
-</div>
-</div>
-<p>Si <code>male=1</code> y <code>statusquo=1</code>, entonces las odds de N e Y son=</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>      N       Y 
- 0.387 13.066 </code></pre>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j" class="slide level2 center middle">
-<h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j-1" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
-<div class="fragment">
-<p>Dado el siguiente modelo de regresión logística multinomial: <span class="math display">\text{logit}(p_{ij}) = \ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}</span></p>
-</div>
-<div class="fragment">
-<p>Queremos saber el <span class="bold">efecto marginal</span> de los predictores sobre la <span class="bold">probabilidad</span> de observar cada categoría <span class="math inline">j: \{1, \dots, J\}</span>. Formalmente</p>
-</div>
-<div class="fragment">
-<p><span class="math display">\frac{\partial p_{ij}}{\partial x_{k}}</span></p>
-</div>
-<div class="fragment">
-<p><span class="math display">\vdots</span></p>
-</div>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j-2" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
-<p>Después de varios pasos, obtenemos:</p>
-<div class="content-box-yellow">
-<p><span class="math display">\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)</span></p>
-</div>
-<p>donde <span class="math display">p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1}  e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}</span></p>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j-3" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
-<div class="pull-left">
-<p>Analizando <span class="math display">\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)</span></p>
-</div>
-<div class="fragment">
-<div class="pull-right">
-<p>podemos notar que <span class="math inline">\sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk} \equiv \overline{\beta_{k}}, \quad</span> el “efecto promedio de” <span class="math inline">x_k</span> (no depende de <span class="math inline">j</span>). Se desprende que:</p>
-</div>
-</div>
-<div class="fragment">
-<ul>
-<li>El signo del efecto marginal de los predictores <span class="bold">no necesariamente</span> corresponde al signo del parámetro estimado en la regresión.</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="math inline">\frac{\partial p_{ij}}{\partial x_{k}} &gt; 0 \quad</span> si <span class="math inline">\quad \beta_{jk} &gt; \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}</span></li>
-<li><span class="math inline">\frac{\partial p_{ij}}{\partial x_{k}} = 0 \quad</span> si <span class="math inline">\quad \beta_{jk} = \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}</span></li>
-<li><span class="math inline">\frac{\partial p_{ij}}{\partial x_{k}} &lt; 0 \quad</span> si <span class="math inline">\quad \beta_{jk} &lt; \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<p><span class="bold">Nota</span>: No tiene mucho sentido testear si efectos marginales son distintos de cero.</p>
-</div>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j-4" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
-<div class="pull-left">
-<p>si <span class="math display">\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)</span></p>
-</div>
-<div class="fragment">
-<div class="pull-right">
-<p>y <span class="math display">p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1}  e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}</span></p>
-</div>
-</div>
-<div class="fragment">
-<ul>
-<li>Es claro que el efecto marginal de <span class="math inline">x_{k}</span> varía dependiendo del valor de <span class="math inline">x_{k}</span>, de su coeficiente <span class="math inline">\beta_{jk}</span>, y de todas las otras covariables con sus respectivos coeficientes.</li>
-</ul>
-</div>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j-5" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
-<p>En nuestro ejemplo: <span class="math inline">\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}</span>, por tanto:</p>
-<div class="pull-left">
-<p><span class="math display">p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{l=1} e^{\beta_{l0} + \beta_{l1}\text{statusquo}_{i} + \beta_{l2}\text{male}_{i}}}</span></p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>  (Intercept) statusquo    sexM
-N      0.110   -1.764  0.698
-U      1.290    0.336 -0.292
-Y      0.777    1.895 -0.114</code></pre>
-</div>
-</div>
-</div>
-<div class="fragment">
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_13_files/figure-revealjs/unnamed-chunk-19-1.png" width="960"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j-6" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
-<div class="pull-left">
-<p><span class="math display">p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{l=1} e^{\beta_{l0} + \beta_{l1}\text{statusquo}_{i} + \beta_{l2}\text{male}_{i}}}</span></p>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_13_files/figure-revealjs/unnamed-chunk-20-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<p><span class="math display">\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)</span></p>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_13_files/figure-revealjs/unnamed-chunk-21-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j-7" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
-<ul>
-<li>Efectos marginales son <em>esencialmente</em> heterogéneos. No hay un efecto sino muchos.</li>
-</ul>
-<div class="fragment">
-<ul>
-<li>Heterogeneidad crece con la complejidad del modelo: número de predictores, interacciones, etc.</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Más aún, en el caso de modelos de regresión logística multinomial, los efectos marginales no son necesariamente monotónicos (pueden cambiar de signo).</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>En la práctica, muchas veces queremos UN número que resuma el efecto marginal.</li>
-</ul>
-</div>
-<div class="fragment">
-<div class="pull-left">
-<p><strong>Objetivo:</strong> resumir la heterogeneidad sin confundir un promedio con un efecto universal.</p>
-</div>
-</div>
-<div class="fragment">
-<p>Cantidades de interes:</p>
-<div class="pull-right">
-<ul>
-<li>Average Marginal Effects (AME)</li>
-<li>Marginal Effects at the Mean (MEM)</li>
-<li>Marginal Effects at Representative Values (MER)</li>
-</ul>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j-mem" class="slide level2">
-<h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span>: MEM</h2>
-<div class="fragment">
-<p>Usando el paquete <code>marginaleffects</code>:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
- Group Estimate Std. Error      z Pr(&gt;|z|)     S   2.500 %   97.500 %
-     A  -0.023     0.011  -2.160  0.031   5.000 -0.045 -0.002
-     N  -0.437     0.014 -31.440  &lt; 0.001 718.400 -0.465 -0.410
-     U   0.050     0.016   3.170  0.002   9.400  0.019  0.082
-     Y   0.410     0.014  29.310  &lt; 0.001 625.100  0.383  0.438
+<img data-src="class_13_files/figure-revealjs/logit-predictions-1.png" width="960" class="r-stretch"><p>Con un único predictor binario, el logit produce dos probabilidades predichas: una para <span class="math inline">D=0</span> y otra para <span class="math inline">D=1</span>.</p>
+</section></section>
+<section>
+<section id="mundos-paralelos" class="title-slide slide level1 inverse center middle" data-background-color="#F0B323">
+<h1>Mundos paralelos</h1>
 
-Term: statusquo
-Type: probs
-Comparison: dY/dX</code></pre>
-</div>
-</div>
+</section>
+<section id="dos-resultados-potenciales-para-cada-hora" class="slide level2">
+<h2>Dos resultados potenciales para cada hora</h2>
+<p>Para cada hora <span class="math inline">i</span> imaginamos dos resultados:</p>
+<p><span class="math display">
+Y_i(1): \text{demanda alta o no si esa hora estuviera despejada}
+</span></p>
+<p><span class="math display">
+Y_i(0): \text{demanda alta o no si esa misma hora tuviera otro clima}
+</span></p>
+<p>El efecto causal individual es:</p>
+<p><span class="math display">\tau_i = Y_i(1)-Y_i(0)\in\{-1,0,1\}.</span></p>
+<p>Esta comparación mantiene fija la unidad y cambia solo el tratamiento.</p>
+</section>
+<section id="en-el-multiverso-veríamos-ambas-columnas" class="slide level2">
+<h2>En el multiverso veríamos ambas columnas</h2>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Hora</th>
+<th style="text-align: right;"><span class="math inline">Y_i(1)</span>: despejado</th>
+<th style="text-align: right;"><span class="math inline">Y_i(0)</span>: otro clima</th>
+<th style="text-align: right;">Efecto</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Lunes, 08:00</td>
+<td style="text-align: right;">Alta (1)</td>
+<td style="text-align: right;">No alta (0)</td>
+<td style="text-align: right;">+1</td>
+</tr>
+<tr class="even">
+<td>Martes, 14:00</td>
+<td style="text-align: right;">No alta (0)</td>
+<td style="text-align: right;">No alta (0)</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td>Viernes, 18:00</td>
+<td style="text-align: right;">Alta (1)</td>
+<td style="text-align: right;">Alta (1)</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td>Domingo, 11:00</td>
+<td style="text-align: right;">No alta (0)</td>
+<td style="text-align: right;">Alta (1)</td>
+<td style="text-align: right;">−1</td>
+</tr>
+</tbody>
+</table>
+<p>Si pudiéramos observar ambas columnas, calcular el efecto causal sería trivial.</p>
+<div class="fragment">
+<p>Pero estos valores son una <strong>ilustración</strong>: en los datos reales nunca vemos las dos columnas para la misma hora.</p>
 </div>
 </section>
-<section id="independence-of-irrelevant-alternatives-iia" class="slide level2 inverse center middle" data-background-color="#C1122F">
-<h2>Independence of Irrelevant Alternatives (IIA)</h2>
+<section id="en-el-mundo-observado-falta-un-contrafactual" class="slide level2">
+<h2>En el mundo observado falta un contrafactual</h2>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Hora</th>
+<th>Clima observado</th>
+<th style="text-align: right;"><span class="math inline">Y_i(1)</span></th>
+<th style="text-align: right;"><span class="math inline">Y_i(0)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Lunes, 08:00</td>
+<td>despejado</td>
+<td style="text-align: right;">Alta (1)</td>
+<td style="text-align: right;"><strong>?</strong></td>
+</tr>
+<tr class="even">
+<td>Martes, 14:00</td>
+<td>otro clima</td>
+<td style="text-align: right;"><strong>?</strong></td>
+<td style="text-align: right;">No alta (0)</td>
+</tr>
+<tr class="odd">
+<td>Viernes, 18:00</td>
+<td>despejado</td>
+<td style="text-align: right;">Alta (1)</td>
+<td style="text-align: right;"><strong>?</strong></td>
+</tr>
+<tr class="even">
+<td>Domingo, 11:00</td>
+<td>otro clima</td>
+<td style="text-align: right;"><strong>?</strong></td>
+<td style="text-align: right;">Alta (1)</td>
+</tr>
+</tbody>
+</table>
+<p>Para cada unidad observamos:</p>
+<p><span class="math display">Y_i = D_iY_i(1)+(1-D_i)Y_i(0).</span></p>
+<p>El otro resultado potencial es contrafactual. Este es el <strong>problema fundamental de la inferencia causal</strong>.</p>
 </section>
-<section id="independence-of-irrelevant-alternatives-iia-1" class="slide level2">
-<h2>Independence of Irrelevant Alternatives (IIA)</h2>
+<section id="del-efecto-individual-al-efecto-promedio" class="slide level2">
+<h2>Del efecto individual al efecto promedio</h2>
+<p>Como no observamos <span class="math inline">\tau_i</span> para ninguna hora, apuntamos al <strong>efecto promedio del tratamiento</strong>:</p>
+<p><span class="math display">
+\text{ATE}=\mathbb{E}[Y_i(1)-Y_i(0)]
+=\mathbb{E}[Y_i(1)]-\mathbb{E}[Y_i(0)].
+</span></p>
 <div class="fragment">
-<ul>
-<li>Cuando regresión logística Multinomial es utilizada para modelar decisiones (choice), el modelo descansa en el supuesto implícito de IIA</li>
-</ul>
+<p>En cambio, los datos entregan la diferencia entre dos grupos de horas:</p>
+<p><span class="math display">
+\mathbb{E}[Y_i\mid D_i=1]-\mathbb{E}[Y_i\mid D_i=0].
+</span></p>
+<p>Una comparación es entre <strong>mundos posibles para las mismas unidades</strong>; la otra es entre <strong>unidades diferentes en el mundo observado</strong>.</p>
+<p>Como <span class="math inline">Y</span> es binario, ambas expresiones son diferencias de probabilidades. El ATE es un efecto causal promedio medido en puntos porcentuales.</p>
+</div>
+</section>
+<section id="asociación-no-es-causalidad" class="slide level2">
+<h2>Asociación no es causalidad</h2>
+<div class="pull-left">
+<p><strong>Asociación observada</strong></p>
+<p><span class="math display">
+\mathbb{E}[Y\mid D=1]-
+\mathbb{E}[Y\mid D=0]
+</span></p>
+<p>Compara horas despejadas con horas no despejadas.</p>
+</div>
+<div class="pull-right">
+<p><strong>Efecto causal</strong></p>
+<p><span class="math display">
+\mathbb{E}[Y(1)-Y(0)]
+</span></p>
+<p>Compara cada hora consigo misma bajo dos climas posibles.</p>
 </div>
 <div class="fragment">
-<ul>
-<li>IIA: las odds (probabilidades relativas) de seleccionar cualquiera de las <span class="math inline">J</span> alternativas no son afectadas por la existencia de alternativas irrelavantes.</li>
-</ul>
+<p>La asociación identifica el efecto causal solo bajo supuestos adicionales.</p>
+</div>
+</section></section>
+<section>
+<section id="por-qué-pueden-diferir" class="title-slide slide level1 inverse center middle" data-background-color="#F0B323">
+<h1>¿Por qué pueden diferir?</h1>
+
+</section>
+<section id="el-mes-cambia-el-clima-y-también-la-demanda" class="slide level2">
+<h2>El mes cambia el clima y también la demanda</h2>
+
+<img data-src="class_13_files/figure-revealjs/clear-by-month-1.png" width="960" class="r-stretch"><p>Los meses no tienen la misma probabilidad de estar despejados. Además, estación, vacaciones y horas de luz afectan la probabilidad de demanda alta.</p>
+</section>
+<section id="confusión-una-causa-común-abre-un-camino-alternativo" class="slide level2">
+<h2>Confusión: una causa común abre un camino alternativo</h2>
+
+<img data-src="class_13_files/figure-revealjs/dag-confound-1.png" width="960" class="r-stretch"><p>El camino <span class="math inline">D \leftarrow X \rightarrow Y</span> mezcla el efecto del clima con diferencias estacionales.</p>
+</section>
+<section id="ajustar-por-el-confusor-cambia-el-coeficiente" class="slide level2">
+<h2>Ajustar por el confusor cambia el coeficiente</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  modelo                 beta_clima odds_ratio
+  &lt;chr&gt;                       &lt;dbl&gt;      &lt;dbl&gt;
+1 Logit crudo                 0.522       1.690
+2 Logit ajustado por mes      0.443       1.560</code></pre>
+</div>
+</div>
+<p>El coeficiente cambia al comparar horas dentro del mismo mes: parte de la asociación cruda reflejaba composición estacional.</p>
+<div class="fragment">
+<p>Esto <strong>no prueba</strong> que el coeficiente ajustado sea causal. Solo elimina la confusión explicada por <code>month</code> bajo la forma funcional elegida.</p>
+</div>
+</section>
+<section id="el-mismo-coeficiente-admite-dos-lecturas" class="slide level2">
+<h2>El mismo coeficiente admite dos lecturas</h2>
+<div class="pull-left">
+<p><strong>Lectura asociacional</strong></p>
+<p><span class="math display">
+\beta_1=
+\log\frac{\operatorname{odds}(Y=1\mid D=1,X)}
+{\operatorname{odds}(Y=1\mid D=0,X)}
+</span></p>
+<p>Describe una comparación condicional en los datos observados.</p>
+</div>
+<div class="pull-right">
+<p><strong>Lectura causal</strong></p>
+<p><span class="math display">
+\beta_1=
+\log\frac{\operatorname{odds}\{Y(1)=1\mid X\}}
+{\operatorname{odds}\{Y(0)=1\mid X\}}
+</span></p>
+<p>Compara resultados potenciales bajo dos intervenciones.</p>
 </div>
 <div class="fragment">
-<p><span class="bold">Ejemplo</span> (McFadden’s 1974):</p>
+<p>La segunda lectura necesita diseño y supuestos causales. La ecuación logística, por sí sola, solo garantiza la primera.</p>
+</div>
+</section>
+<section id="la-causalidad-no-está-en-la-complejidad" class="slide level2">
+<h2>La causalidad no está en la complejidad</h2>
+<p>El mismo logit puede ser:</p>
 <ul>
-<li>Una persona puede viajar al trabajo en: <span class="math inline">\{\text{auto}, \text{ bus rojo}\}</span></li>
-<li><span class="math inline">\mathbb{P}(\text{auto}) =  \mathbb{P}(\text{ bus rojo}) = 1/2</span>. Odds=1.</li>
+<li><strong>asociacional</strong>, si el tratamiento está confundido;</li>
+<li><strong>causal</strong>, si el diseño hace creíble la comparación contrafactual.</li>
 </ul>
+<div class="fragment">
+<p>Un modelo más complejo puede ajustar mejor la asociación, pero no fabrica el contrafactual faltante.</p>
 </div>
 <div class="fragment">
-<ul>
-<li>Supongamos se amplía el conjunto de alternativas: <span class="math inline">\{\text{auto}, \text{ bus rojo},  \text{ bus azul}\}</span></li>
-</ul>
+<p>Una muestra más grande reduce el error estándar:</p>
+<p><span class="math display">
+n\uparrow \quad\Longrightarrow\quad SE(\hat\beta_1)\downarrow
+</span></p>
+<p>pero no elimina el sesgo por confusión. Podemos estimar una asociación no causal con enorme precisión.</p>
 </div>
+</section>
+<section id="el-supuesto-decisivo-no-viene-de-la-regresión" class="slide level2">
+<h2>El supuesto decisivo no viene de la regresión</h2>
+<p>La <strong>intercambiabilidad condicional</strong> o no-confusión exige:</p>
+<p><span class="math display">
+\{Y_i(1),Y_i(0)\}\perp D_i\mid X_i.
+</span></p>
+<p>En palabras: dentro de grupos con igual <span class="math inline">X</span>, recibir <span class="math inline">D=1</span> o <span class="math inline">D=0</span> es “como si” fuera aleatorio respecto de los resultados potenciales.</p>
 <div class="fragment">
+<p>Este supuesto:</p>
 <ul>
-<li>Dado que los buses sólo difieren en color, esperaríamos que <span class="math inline">\mathbb{P}(\text{ bus rojo}) = \mathbb{P}(\text{bus azul})</span></li>
-<li>Único modo de retener Odds entre auto y bus rojo es si: <span class="math inline">\mathbb{P}(\text{auto}) =  \mathbb{P}(\text{ bus rojo}) = \mathbb{P}(\text{bus azul}) = 1/3</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Sería más realista esperar que <span class="math inline">\mathbb{P}(\text{auto}) = 1/2)</span> y <span class="math inline">\quad \mathbb{P}(\text{ bus rojo}) = \mathbb{P}(\text{bus azul}) = 1/4</span></li>
-<li>Sin embargo, violaría IIA porque las odds entre auto y bus rojo serían (1/2)/(1/4)=2.</li>
+<li>no se demuestra con un <span class="math inline">p</span>-value;</li>
+<li>no aparece automáticamente al aumentar <span class="math inline">n</span>;</li>
+<li>requiere teoría, conocimiento del proceso y un buen diseño.</li>
 </ul>
 </div>
 </section>
-<section id="independence-of-irrelevant-alternatives-iia-2" class="slide level2">
-<h2>Independence of Irrelevant Alternatives (IIA)</h2>
-<p>Existe una variedad de tests para el supuesto de IIA, pero ninguno ha mostrado ser concluyente:</p>
-<div class="center">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="iia.png"></p>
-<figcaption>iia</figcaption>
-</figure>
+<section id="también-necesitamos-comparaciones-posibles" class="slide level2">
+<h2>También necesitamos comparaciones posibles</h2>
+<p>Para cada combinación de confusores debe existir alguna posibilidad de observar ambos tratamientos:</p>
+<p><span class="math display">
+0&lt;\Pr(D_i=1\mid X_i=x)&lt;1.
+</span></p>
+<p>Este supuesto se llama <strong>positividad</strong> u <strong>overlap</strong>.</p>
+<div class="fragment">
+<p>Si en cierto mes nunca hubiera horas despejadas, los datos no permitirían estimar qué ocurriría bajo clima despejado para ese mes: el contrafactual requeriría extrapolación.</p>
 </div>
+</section>
+<section id="consistencia-el-tratamiento-debe-estar-bien-definido" class="slide level2">
+<h2>Consistencia: el tratamiento debe estar bien definido</h2>
+<p>La <strong>consistencia</strong> conecta el resultado observado con el potencial:</p>
+<p><span class="math display">
+D_i=d \quad\Longrightarrow\quad Y_i=Y_i(d).
+</span></p>
+<p>Pero “otro clima” mezcla nubes, lluvia y nieve. ¿Son realmente la misma intervención?</p>
+<div class="fragment">
+<p>Cuanto más heterogénea sea la definición de <span class="math inline">D=0</span>, más difícil es interpretar un único efecto. Definir con precisión el tratamiento es parte del análisis causal.</p>
 </div>
+</section></section>
+<section>
+<section id="el-dag-guía-los-controles" class="title-slide slide level1 inverse center middle" data-background-color="#F0B323">
+<h1>El DAG guía los controles</h1>
+
+</section>
+<section id="no-todas-las-covariables-son-confusores" class="slide level2">
+<h2>No todas las covariables son confusores</h2>
+<ul>
+<li><strong>Confusor:</strong> causa tanto <span class="math inline">D</span> como <span class="math inline">Y</span>. Controlarlo puede bloquear una asociación espuria.</li>
+<li><strong>Mediador:</strong> está en el camino <span class="math inline">D\rightarrow M\rightarrow Y</span>. Controlarlo elimina parte del efecto total.</li>
+<li><strong>Colisionador:</strong> recibe flechas <span class="math inline">D\rightarrow C\leftarrow Y</span>. Controlarlo puede crear una asociación espuria.</li>
+</ul>
+<div class="fragment">
+<p>El DAG representa supuestos sustantivos; no se “descubre” mirando significancia estadística.</p>
+</div>
+</section>
+<section id="más-controles-no-garantizan-causalidad" class="slide level2">
+<h2>Más controles no garantizan causalidad</h2>
+<p>Agregar variables a una regresión ayuda solo si esas variables cumplen el rol causal correcto.</p>
+<div class="fragment">
+<ul>
+<li>Omitir un confusor deja abierto un camino no causal.</li>
+<li>Incluir un mediador cambia el estimando: pasamos del efecto total a un efecto directo.</li>
+<li>Incluir un colisionador puede introducir sesgo.</li>
+<li>Ajustar por una variable medida después del tratamiento suele ser especialmente riesgoso.</li>
+</ul>
+</div>
+<div class="fragment">
+<p>La lista de controles se decide con un argumento causal <strong>antes</strong> de mirar qué especificación entrega el coeficiente preferido.</p>
+</div>
+</section>
+<section id="diseño-antes-que-sofisticación" class="slide level2">
+<h2>Diseño antes que sofisticación</h2>
+<p>La diferencia entre asociación y causalidad:</p>
+<ul>
+<li><strong>no</strong> es principalmente un problema de estimación;</li>
+<li><strong>no</strong> desaparece con una muestra más grande;</li>
+<li><strong>sí</strong> depende de cómo se asigna el tratamiento y cómo se construye la comparación.</li>
+</ul>
+<div class="fragment">
+<p>Experimentos aleatorizados, experimentos naturales y diseños cuasi-experimentales buscan hacer creíble la comparación contrafactual.</p>
+</div>
+</section>
+<section id="cómo-leer-los-coeficientes-desde-ahora" class="slide level2">
+<h2>Cómo leer los coeficientes desde ahora</h2>
+<p>Sin supuestos causales, el coeficiente de un logit describe una asociación condicional:</p>
+<blockquote>
+<p>Entre observaciones con iguales covariables, ¿cómo cambian las log-odds de <span class="math inline">Y=1</span> cuando cambia <span class="math inline">D</span>?</p>
+</blockquote>
+<div class="fragment">
+<p>Ese mismo coeficiente <strong>puede</strong> interpretarse como un efecto causal condicional si además:</p>
+<ol type="1">
+<li>definimos tratamiento, outcome, población y estimando;</li>
+<li>explicitamos un DAG;</li>
+<li>justificamos no-confusión, positividad y consistencia;</li>
+<li>evitamos controles que abran sesgos nuevos.</li>
+</ol>
+</div>
+</section>
+<section id="ejercicio-construya-el-argumento-causal" class="slide level2">
+<h2>Ejercicio: construya el argumento causal</h2>
+<p>Suponga que queremos estimar el efecto de <code>workingday</code> sobre la probabilidad de <code>high_demand</code>.</p>
+<ol type="1">
+<li>Defina <span class="math inline">Y_i(1)</span> y <span class="math inline">Y_i(0)</span> y precise cuál es la unidad <span class="math inline">i</span>.</li>
+<li>Dibuje un DAG con al menos un confusor plausible.</li>
+<li>Identifique una variable que <strong>no</strong> debería controlarse y explique su rol.</li>
+<li>Proponga un diseño que haga más creíble la comparación causal.</li>
+<li>Evalúe dónde podría fallar la positividad.</li>
+</ol>
 </section>
 <section id="en-resumen" class="slide level2">
 <h2>En resumen</h2>
 <ul>
-<li>El efecto marginal de <span class="math inline">x_{k}</span> sobre <span class="math inline">\text{logit}(p_{ij})</span> es constante e igual a <span class="math inline">\beta_{jk}</span>; exponenciando, <span class="math inline">e^{\beta_{jk}}</span> es la odds ratio de <span class="math inline">j</span> vs <span class="math inline">J</span> asociada a un aumento de una unidad en <span class="math inline">x_{k}</span>.</li>
-<li>El efecto marginal sobre la <strong>probabilidad</strong> <span class="math inline">p_{ij}</span> no es <span class="math inline">\beta_{jk}</span>: <span class="math inline">\partial p_{ij}/\partial x_{k} = p_{ij}(\beta_{jk} - \overline{\beta_{k}})</span>, por lo que su signo y magnitud dependen de <span class="math inline">p_{ij}</span> y pueden variar entre observaciones (e incluso cambiar de signo).</li>
-<li>En la práctica se resume esta heterogeneidad con AME, MEM o MER (ej., <code>avg_slopes()</code> del paquete <code>marginaleffects</code>).</li>
-<li>El modelo logit multinomial supone Independencia de Alternativas Irrelevantes (IIA); no existe un test concluyente para verificarlo.</li>
-<li>La próxima clase aborda la regresión de Poisson, usada para modelar variables de conteo.</li>
+<li>Causalidad compara resultados potenciales de la misma unidad.</li>
+<li>Solo observamos uno: el otro es contrafactual.</li>
+<li>Un coeficiente logístico es asociacional por defecto; puede ser causal bajo un diseño y supuestos adecuados.</li>
+<li>Los confusores crean caminos alternativos entre tratamiento y resultado.</li>
+<li>Más datos reducen incertidumbre, pero no eliminan confusión.</li>
+<li>La causalidad depende del diseño, no de la complejidad del modelo.</li>
 </ul>
 </section>
-<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#E0642B">
+<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#8E1B3D">
 <h2>Gracias</h2>
 <p><strong>Hasta la próxima clase</strong></p>
 <p>Mauricio Bucca</p>
 
-</section>
+</section></section>
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">

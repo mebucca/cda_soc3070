@@ -1,39 +1,147 @@
 ---
-title: "Notebook clase #16: Regresión Poisson & Quasi-Poisson"
-output:
-  html_document:
-    df_print: paged
+title: "Práctica: Evaluación de Modelos Logísticos y Cross-Validation"
+author: "SOC3070 · Mauricio Bucca"
+date: today
+format:
+  html:
+    theme: default
+    highlight: tango
+    code-copy: true
+    code-fold: show
 ---
 
-## Problema
+```{r, echo=FALSE, message=FALSE,warning=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  comment = "#>",
+  prompt = TRUE,
+  class.source = "python-code",
+  class.output = "python-output"
+)
 
-```{r, echo=TRUE, message=F, warning=F}
-# Cargar las librerías necesarias
+# Packages
 library(pacman)
-p_load(tidyverse)
-p_load(carData)
-p_load(modelr)
+p_load("tidyverse", "broom", "ggplot2", "caret", "rsample", "viridis", "cowplot", "ISLR2")
 
-# Cargar el conjunto de datos
-data_arrest <- carData::Arrests
-
-contingency_table <- data_arrest %>% with(ftable(released,colour,sex,year))
-
-grouped_data <- contingency_table %>% as_tibble() %>% group_by(colour,sex,year) %>% mutate(n = sum(Freq))
-
-print(grouped_data)
-
-
-data_yes <- grouped_data %>% filter(released == "Yes")
-
-glm(Freq ~ colour + sex + year, family = "quasipoisson", offset = log(n) , data=data_yes) %>% summary()
-
-exp(-0.27631 )
-
-
-glm(factor(released=="Yes") ~ colour + sex, family = "binomial", weights = Freq/sum(Freq), data=grouped_data) %>% summary()
-
-exp(1.20533)/(1 + exp(1.20533))
-
+source("../_shared/bikeshare.R")
+course <- use_course_data("celtic")
+course_palette <- course$palette
 ```
 
+### 1. Contexto y objetivos
+
+Evaluar el desempeño predictivo de un modelo logístico con cross-validation.
+
+### 2. Cargar y preparar los datos
+
+```{r, echo=FALSE, message=FALSE,warning=FALSE}
+bikedata <- course$data %>%
+  mutate(high_demand_class = factor(
+    if_else(high_demand == 1, "alta", "baja"),
+    levels = c("alta", "baja")
+  ))
+
+glimpse(bikedata)
+```
+
+### 3. Dos modelos de distinta complejidad
+
+```{r, echo=FALSE, message=FALSE,warning=FALSE}
+m0 <- glm(high_demand_class ~ temp + factor(holiday) + hum,
+          data = bikedata, family = binomial)
+m1 <- glm(high_demand_class ~ factor(holiday) * temp * hum +
+            factor(holiday) * I(temp^2) * hum + factor(hr),
+          data = bikedata, family = binomial)
+
+summary(m0)$coefficients[,1:2]
+summary(m1)$coefficients[,1:2]
+```
+
+### 4. Evaluación in-sample: AIC y BIC
+
+```{r, echo=FALSE, message=FALSE,warning=FALSE}
+
+inf_crit <- function(m){
+  aic <- AIC(m)
+  bic <- BIC(m)
+  tibble(Modelo = deparse(formula(m)), AIC = aic, BIC = bic)
+}
+
+bind_rows(inf_crit(m0), inf_crit(m1))
+```
+
+### 5. Limitación: posible overfitting
+
+Usamos cross-validation para evaluar fuera de muestra.
+
+### 6. Cross-validation con caret
+
+```{r, echo=TRUE, message=FALSE,warning=FALSE}
+
+ctrl <- trainControl(
+  method = "repeatedcv",
+  number = 10,
+  savePredictions = TRUE,
+  classProbs = TRUE,
+  summaryFunction = twoClassSummary
+)
+
+set.seed(123)
+
+cv_m0 <- train(
+  high_demand_class ~ temp + factor(holiday) + hum,
+  data = bikedata, method = "glm",
+  family = "binomial", trControl = ctrl,
+  metric = "ROC"
+)
+
+cv_m1 <- train(
+  high_demand_class ~ factor(holiday) * temp * hum +
+    factor(holiday) * I(temp^2) * hum + factor(hr),
+  data = bikedata, method = "glm",
+  family = "binomial", trControl = ctrl,
+  metric = "ROC"
+)
+```
+
+### 7. Resultados del cross-validation
+
+```{r, echo=TRUE, message=FALSE,warning=FALSE}
+cv_m0$results
+cv_m1$results
+```
+
+### 8. Matrices de confusión promedio
+
+```{r, echo=TRUE, message=FALSE,warning=FALSE}
+confusionMatrix(cv_m0)
+confusionMatrix(cv_m1)
+```
+
+### 9. Visualización del desempeño cruzado
+
+```{r, echo=TRUE, message=FALSE,warning=FALSE}
+
+resamps <- resamples(list(Simple = cv_m0, Complejo = cv_m1))
+bwplot(resamps, metric = "ROC", main = "Comparación de desempeño (10-fold CV)")
+
+cv_compare <- bind_rows(
+  cv_m0$resample %>% mutate(modelo = "Simple"),
+  cv_m1$resample %>% mutate(modelo = "Complejo")
+)
+
+ggplot(cv_compare, aes(x = modelo, y = ROC, fill = modelo)) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = unname(course_palette[c("primary", "secondary")])) +
+  labs(
+    title = "Desempeño en validación cruzada",
+    subtitle = "Comparación del área bajo la curva (ROC)",
+    x = "", y = "ROC promedio"
+  ) +
+  theme_course()
+```
+
+### 10. Conclusión
+Cross-validation permite estimar error fuera de muestra y evitar sobreajuste. En regresión logística, guía la selección de modelos con verdadero poder clasificador.
