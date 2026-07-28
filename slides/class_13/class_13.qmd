@@ -407,18 +407,18 @@ Después de varios pasos, obtenemos:
 
 ::: {.content-box-yellow}
 
-$$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{j=1}p_{ij} \cdot \beta_{jk}\bigg)$$
+$$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)$$
 
 :::
 
 donde
-$$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{j=1}  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}$$
+$$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1}  e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}$$
 
 ## Efectos marginales sobre la probabilidad de la categoría $j$
 
 ::: {.pull-left}
 
-Analizando $$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{j=1}p_{ij} \cdot \beta_{jk}\bigg)$$
+Analizando $$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)$$
 
 :::
 
@@ -426,7 +426,7 @@ Analizando $$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{
 
 ::: {.pull-right}
 
-podemos notar que  $\sum^{J-1}_{j=1}p_{ij} \cdot \beta_{jk} \equiv \overline{\beta_{jk}}, \quad$ el "efecto promedio de" $x_k$. Se desprende que:
+podemos notar que  $\sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk} \equiv \overline{\beta_{k}}, \quad$ el "efecto promedio de" $x_k$ (no depende de $j$). Se desprende que:
 
 :::
 
@@ -436,9 +436,9 @@ podemos notar que  $\sum^{J-1}_{j=1}p_{ij} \cdot \beta_{jk} \equiv \overline{\be
 
 . . .
 
-  - $\frac{\partial p_{ij}}{\partial x_{k}} > 0 \quad$  si  $\quad \beta_{jk} > \sum^{J-1}_{j=1}p_{j} \cdot \beta_{jk}$
-  - $\frac{\partial p_{ij}}{\partial x_{k}} = 0 \quad$  si  $\quad \beta_{jk} = \sum^{J-1}_{j=1}p_{j} \cdot \beta_{jk}$
-  - $\frac{\partial p_{ij}}{\partial x_{k}} < 0 \quad$  si  $\quad \beta_{jk} < \sum^{J-1}_{j=1}p_{j} \cdot \beta_{jk}$
+  - $\frac{\partial p_{ij}}{\partial x_{k}} > 0 \quad$  si  $\quad \beta_{jk} > \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}$
+  - $\frac{\partial p_{ij}}{\partial x_{k}} = 0 \quad$  si  $\quad \beta_{jk} = \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}$
+  - $\frac{\partial p_{ij}}{\partial x_{k}} < 0 \quad$  si  $\quad \beta_{jk} < \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}$
 
 . . .
 
@@ -448,7 +448,7 @@ podemos notar que  $\sum^{J-1}_{j=1}p_{ij} \cdot \beta_{jk} \equiv \overline{\be
 
 ::: {.pull-left}
 
-si $$\frac{\partial p_{ij}}{\partial x_{k}} = p_{j} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{j=1}p_{j} \cdot \beta_{jk}\bigg)$$
+si $$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)$$
 
 :::
 
@@ -456,7 +456,7 @@ si $$\frac{\partial p_{ij}}{\partial x_{k}} = p_{j} \cdot \bigg(\beta_{jk} - \su
 
 ::: {.pull-right}
 
-y $$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{j=1}  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}$$
+y $$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1}  e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}$$
 
 :::
 
@@ -469,7 +469,7 @@ En nuestro ejemplo: $\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{st
 
 ::: {.pull-left}
 
-  $$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{j=1} e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}$$
+  $$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{l=1} e^{\beta_{l0} + \beta_{l1}\text{statusquo}_{i} + \beta_{l2}\text{male}_{i}}}$$
 
 ```{r}
 summary(mlogit_vote_sq_sex)$coefficients
@@ -508,7 +508,7 @@ predictions %>% filter(str_detect(quant, "^p")) %>% separate(quant,sep="_", into
 
 ::: {.pull-left}
 
-$$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{j=1} e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}$$
+$$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{l=1} e^{\beta_{l0} + \beta_{l1}\text{statusquo}_{i} + \beta_{l2}\text{male}_{i}}}$$
 ```{r, echo=FALSE, fig.width=6, fig.height=5}
 predictions %>% filter(str_detect(quant, "^p")) %>% separate(quant,sep="_", into=c("quant","vote")) %>%
   ggplot(aes(x=statusquo, y=est, colour=vote, group=interaction(vote,sex))) +
@@ -524,7 +524,7 @@ predictions %>% filter(str_detect(quant, "^p")) %>% separate(quant,sep="_", into
 
 ::: {.pull-right}
 
-$$\frac{\partial p_{ij}}{\partial x_{k}} = p_{j} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{j=1}p_{j} \cdot \beta_{jk}\bigg)$$
+$$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)$$
 ```{r, echo=FALSE, fig.width=6, fig.height=5, warning=F}
 
 predictions <- predictions %>% filter(str_detect(quant, "^p")) %>% separate(quant,sep="_", into=c("quant","vote"))
@@ -629,7 +629,7 @@ avg_slopes(mlogit_vote_sq_sex, variables="statusquo", newdata=grid)
 - Sería más realista esperar que $\mathbb{P}(\text{auto}) = 1/2)$ y $\quad \mathbb{P}(\text{ bus rojo}) = \mathbb{P}(\text{bus azul}) = 1/4$
  - Sin embargo, violaría IIA porque las odds entre auto y bus rojo serían (1/2)/(1/4)=2.
 
-## Independence of Irrelevante Alternatives (IIA)
+## Independence of Irrelevant Alternatives (IIA)
 Existe una variedad de tests para el supuesto de IIA, pero ninguno ha mostrado ser concluyente:
 
 ::: {.center}
@@ -637,6 +637,14 @@ Existe una variedad de tests para el supuesto de IIA, pero ninguno ha mostrado s
 ![iia](iia.png)
 
 :::
+
+## En resumen
+
+- El efecto marginal de $x_{k}$ sobre $\text{logit}(p_{ij})$ es constante e igual a $\beta_{jk}$; exponenciando, $e^{\beta_{jk}}$ es la odds ratio de $j$ vs $J$ asociada a un aumento de una unidad en $x_{k}$.
+- El efecto marginal sobre la **probabilidad** $p_{ij}$ no es $\beta_{jk}$: $\partial p_{ij}/\partial x_{k} = p_{ij}(\beta_{jk} - \overline{\beta_{k}})$, por lo que su signo y magnitud dependen de $p_{ij}$ y pueden variar entre observaciones (e incluso cambiar de signo).
+- En la práctica se resume esta heterogeneidad con AME, MEM o MER (ej., `avg_slopes()` del paquete `marginaleffects`).
+- El modelo logit multinomial supone Independencia de Alternativas Irrelevantes (IIA); no existe un test concluyente para verificarlo.
+- La próxima clase aborda la regresión de Poisson, usada para modelar variables de conteo.
 
 ## Gracias {.inverse .center .middle .closing}
 

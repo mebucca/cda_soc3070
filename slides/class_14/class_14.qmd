@@ -117,8 +117,7 @@ ggplot(data = mydata, mapping = aes(x = x)) +
       geom_vline(xintercept = rate, color = course_palette[["series-3"]], linewidth = 1.5) +
       theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
       axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
-      legend.text = element_text(size = 18), legend.position = "none") 
-       #annotate(geom="text", x= rate + 800, y=0.0001, label=expression(mu), color="black", parse=TRUE, size=8) 
+      legend.text = element_text(size = 18), legend.position = "none")
 ```
 
 :::
@@ -152,8 +151,7 @@ ggplot(data = mydata, mapping = aes(x = x)) +
       geom_vline(xintercept = 300, color = course_palette[["series-3"]], linewidth = 1.5) +
       theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
       axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
-      legend.text = element_text(size = 18), legend.position = "none") 
-  #annotate(geom="text", x= 1961122 - 40000, y=0.0002, label=expression(paste(y[i]," = 1.961.122")), color="black", parse=TRUE, size=8) 
+      legend.text = element_text(size = 18), legend.position = "none")
 ```
 
 :::
@@ -164,8 +162,7 @@ ggplot(data = mydata, mapping = aes(x = x)) +
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=8, fig.width=10}
 
-mydata <- data_frame(x = seq(from = 0, to = 150)) %>%
-          mutate(across())
+mydata <- tibble(x = seq(from = 0, to = 150))
 
 for (i in c(10,30,50,100)) {
   col <- sym(paste0("y_",i))
@@ -234,7 +231,7 @@ Regresión Poisson es la herramienta estándar para modelar variables de conteo 
 
 . . .
 
-- Para cada observación observamos datos $y_{i}, \dots , y_{n}$ que actúan como variable dependiente.
+- Para cada observación observamos datos $y_{1}, \dots , y_{n}$ que actúan como variable dependiente.
 
 . . .
 
@@ -303,7 +300,7 @@ $$\quad \quad  \ln \mu_{i} = \eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \b
 
 ::: {.pull-right}
 
-- En resumen, un modelo de regressión Poisson describe $\ln \mathbb{E}(y_{i} \mid x_{1i}, \dots, x_{ki}) = \ln \mu_{i}$.
+- En resumen, un modelo de regresión Poisson describe $\ln \mathbb{E}(y_{i} \mid x_{1i}, \dots, x_{ki}) = \ln \mu_{i}$.
 - Recordar que esto es distinto de  modelar el logaritmo de la variable dependiente: $\mathbb{E}(\ln y_{i} \mid x_{1i}, \dots, x_{ki})$
 
 :::
@@ -336,7 +333,7 @@ Usando la definición de tasa: $\theta_{i} = \frac{\mu_{i}}{n_{i}}$
 
 . . .
 
-Podemos modelar la tasa de occurrencia de un evento de la siguiente manera:
+Podemos modelar la tasa de ocurrencia de un evento de la siguiente manera:
 
 . . .
 
@@ -475,8 +472,7 @@ predictions %>%
 
 ```{r, echo=FALSE, fig.height=5, fig.width=6}
 
-grid <- covid_subdata %>% data_grid(median_age=seq_range(median_age,n=50),.model = poisson_death_age)
-
+# reutiliza `grid`, calculado en el chunk anterior (misma lámina)
 predictions <- grid %>% mutate(log_mu = predict(poisson_death_age, newdata=grid, type="response"))
 
 predictions %>%
@@ -544,8 +540,7 @@ predictions %>%
 
 ```{r, echo=FALSE, fig.height=5, fig.width=6}
 
-grid <- covid_subdata %>% data_grid(median_age=seq_range(median_age,n=50),population=1,.model = poisson_death_age_rate )
-
+# reutiliza `grid`, calculado en el chunk anterior (misma lámina)
 predictions <- grid %>% mutate(log_mu = predict(poisson_death_age_rate , newdata=grid, type="response"))
 
 predictions %>%
@@ -572,7 +567,7 @@ predictions %>%
 . . .
 
 - Coeficientes del modelo de regresión Poisson son estimados via MLE
-  - maximización via algoritmo Newton-Rapson 
+  - maximización via algoritmo Newton-Raphson
 
 . . .
 
@@ -1017,7 +1012,7 @@ predictions %>%
 ```{r, echo=FALSE, fig.width=6, fig.height=5.5}
 
 beta_age_mean  = poisson_death_agecont_mean$coefficients["median_age"]
-grid <- covid_subdata %>% data_grid(median_age=seq_range(median_age,n=50),continent,.model = poisson_death_agecont_mean)
+# reutiliza `grid`, calculado en el chunk anterior (misma lámina)
 
 predictions <- grid %>% mutate(mu = predict(poisson_death_agecont_mean, newdata=grid, type="response")) %>%
   mutate(me = beta_age_mean*mu)
@@ -1029,7 +1024,7 @@ predictions %>%
   theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
   axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
   legend.text = element_text(size = 18), legend.position = "bottom") +
-  labs(x="median age", y="efecto marginal de temperatura", title =expression(paste(mu, ": cantidad de muertes predichas")))
+  labs(x="median age", y="efecto marginal de median age", title =expression(paste(mu, ": cantidad de muertes predichas")))
 ```
 
 :::
@@ -1103,7 +1098,7 @@ $$\mu_{i}= n_{i} \cdot e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik
 
 ::: {.pull-right}
 
-$$\frac{\partial \mu_{i}}{\partial x_{k}} =  n_{i} \cdot \theta_{k} \cdot  \mu_{i}$$
+$$\frac{\partial \mu_{i}}{\partial x_{k}} =  \beta_{k} \cdot  \mu_{i}$$
 
 :::
 
@@ -1132,18 +1127,17 @@ predictions %>%
 ```{r, echo=FALSE, fig.width=6, fig.height=5.5}
 
 beta_age_rate  = poisson_death_agecont_rate$coefficients["median_age"]
-
-grid <- covid_subdata %>% data_grid(median_age=seq_range(median_age,n=50),population=1,continent,.model = poisson_death_agecont_rate)
+# reutiliza `grid`, calculado en el chunk anterior (misma lámina)
 
 predictions <- grid %>% mutate(mu = predict(poisson_death_agecont_rate, newdata=grid, type="response"),
                                me = beta_age_rate*mu)
 
-predictions %>% 
+predictions %>%
   ggplot(aes(x=median_age, y=me, colour=continent)) +
   geom_path(alpha=0.5, size=1.5) +
   scale_color_course() +  scale_fill_course() +
   theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
   legend.text = element_text(size = 18), legend.position = "bottom") +
   labs(x="median age", y=expression( mu ), title =expression(paste(mu, ": tasa de muertes por hab. (n=1)")))
 ```
@@ -1165,7 +1159,7 @@ $$\mu_{i}= n_{i} \cdot e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik
 
 ::: {.pull-right}
 
-$$\frac{\partial \mu_{i}}{\partial x_{k}} =  n_{i} \cdot \theta_{k} \cdot  \mu_{i}$$
+$$\frac{\partial \mu_{i}}{\partial x_{k}} =  \beta_{k} \cdot  \mu_{i}$$
 
 :::
 
@@ -1194,8 +1188,7 @@ predictions %>%
 ```{r, echo=FALSE, fig.width=6, fig.height=5.5}
 
 beta_age_rate  = poisson_death_agecont_rate$coefficients["median_age"]
-
-grid <- covid_subdata %>% data_grid(median_age=seq_range(median_age,n=50),population=1000000,continent,.model = poisson_death_agecont_rate)
+# reutiliza `grid`, calculado en el chunk anterior (misma lámina)
 
 predictions <- grid %>% mutate(mu = predict(poisson_death_agecont_rate, newdata=grid, type="response"),
                                me = beta_age_rate*mu)
@@ -1314,8 +1307,8 @@ stargazer(poisson_1, poisson_2, type = "text", single.row = TRUE)
 
 . . .
 
-- Este caso se conocer como "over-dispersion". Los datos son más dispersos de lo esperando de acuerdo al modelo.
-  - Over-dispersion no afecta la estimación de los coeficientes pero la inferencia demasiado "liberal": errores estándar
+- Este caso se conoce como "over-dispersion". Los datos son más dispersos de lo esperado de acuerdo al modelo.
+  - Over-dispersion no afecta la estimación de los coeficientes pero vuelve la inferencia demasiado "liberal": errores estándar subestimados
 
 ## Over-dispersion en regresión Poisson
 
@@ -1363,8 +1356,8 @@ En este caso el factor de over-dispersion es:
 cat("factor de dispersión = ", rss/(n-k))
 ```
 
-## Regressión Quasi-Poisson
-La regressión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferenciadel modelo.
+## Regresión Quasi-Poisson
+La regresión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferencia del modelo.
 
 . . .
 
@@ -1374,7 +1367,7 @@ donde $\omega$ es el factor de dispersion.
 
 . . .
 
-  - Regressión Poisson es un caso especial de quasi-Poisson ( $\omega=1$ ).
+  - Regresión Poisson es un caso especial de quasi-Poisson ( $\omega=1$ ).
 
 . . .
 
@@ -1388,13 +1381,19 @@ cat("dispersion = ", summary(qpoisson_2)$dispersion)
 ```
 
 ## Quasi-Poisson
-```{r, warning=F, message=F}
-qpoisson_2 <- glm(bikers ~ temp + hum, family=quasipoisson(link="log"), data=bikedata)
-```
-
+Comparando ambos modelos (mismos coeficientes, errores estándar corregidos por sobre-dispersión):
 ```{r, echo=F}
 stargazer(poisson_2, qpoisson_2, type = "text", single.row = TRUE)
 ```
+
+## En resumen
+
+- Regresión Poisson modela conteos: $\mathbb{E}(y_{i}\mid x_{i}) = \mu_{i} = e^{\eta_{i}}$, con $\ln(\mu_{i})=\eta_{i}$ como componente sistemático (función de enlace log).
+- Para modelar tasas se agrega un "offset" $\ln(n_{i})$, con $n_{i}$ la exposición.
+- $\beta_{k}$ es el efecto marginal de $x_{k}$ sobre $\ln(\mu)$; $e^{\beta_{k}}$ es la razón de tasas de incidencia (IRR), el efecto multiplicativo sobre $\mu$.
+- El modelo Poisson impone $\operatorname{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}$; cuando esto no se cumple hay over-dispersion.
+- Quasi-Poisson corrige los errores estándar con un factor de dispersión $\omega$, sin cambiar los coeficientes estimados.
+- La próxima clase pasa de la asociación a la causalidad: qué supuestos adicionales se necesitan para interpretar un coeficiente como un efecto causal.
 
 ## Gracias {.inverse .center .middle .closing}
 

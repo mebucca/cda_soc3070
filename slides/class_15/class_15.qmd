@@ -53,37 +53,14 @@ causalidad.
 library(pacman)
 p_load("ISLR2")
 p_load("tidyverse")
-p_load("viridis")
-p_load("modelr")
 p_load("MASS")
-p_load("cowplot")
-p_load("margins")
-p_load("sjPlot")
 p_load("stargazer")
-p_load("sjmisc")
-p_load("sjlabelled")
-p_load("nnet")
-p_load("lmtest")
 
 theme_set(theme_julia())
 
 # datos de demanda horaria de bicicletas (Capital Bikeshare, DC 2011-2012)
+# outcome: bikers, un conteo horario de arriendos (se usa directamente)
 bikedata <- Bikeshare %>% as_tibble()
-
-# outcome sustantivo: demanda horaria (bikers), operacionalizada de 3 formas
-p75 <- quantile(bikedata$bikers, 0.75)
-cortes <- quantile(bikedata$bikers, probs = c(0, 1/3, 2/3, 1))
-
-bikedata <- bikedata %>%
-  mutate(
-    # binaria: alta demanda = top 25% de las horas (umbral P75)
-    high_demand  = if_else(bikers > p75, 1, 0),
-    demand       = if_else(high_demand == 1, "alta", "baja"),
-    # ordinal: baja / media / alta por terciles
-    demand_level = cut(bikers, breaks = cortes,
-                       labels = c("baja","media","alta"),
-                       include.lowest = TRUE, ordered_result = TRUE))
-    # conteo: se usa `bikers` directamente
 ```
 
 ## Datos de recuento {.inverse .center .middle}
@@ -117,7 +94,7 @@ stargazer(poisson_1, poisson_2, type = "text", single.row = TRUE)
 
 . . .
 
-- Este caso se conocer como "over-dispersion". Los datos son más dispersos de lo esperando de acuerdo al modelo.
+- Este caso se conoce como "over-dispersion". Los datos son más dispersos de lo esperado de acuerdo al modelo.
   - Over-dispersion no afecta la estimación de los coeficientes pero la inferencia demasiado "liberal": errores estándar
 
 ## Over-dispersion en regresión Poisson
@@ -166,8 +143,8 @@ En este caso el factor de over-dispersion es:
 cat("factor de dispersión = ", rss/(n-k))
 ```
 
-## Regressión Quasi-Poisson
-La regressión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferenciadel modelo.
+## Regresión Quasi-Poisson
+La regresión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferencia del modelo.
 
 . . .
 
@@ -177,7 +154,7 @@ donde $\omega$ es el factor de dispersion.
 
 . . .
 
-  - Regressión Poisson es un caso especial de quasi-Poisson ( $\omega=1$ ).
+  - Regresión Poisson es un caso especial de quasi-Poisson ( $\omega=1$ ).
 
 . . .
 
@@ -211,7 +188,6 @@ $$\text{Var}(y_i) = \mu_i + \frac{\mu_i^2}{\theta}$$
 - $\theta \to \infty$ recupera Poisson ($\text{Var}=\mu$); $\theta$ chico implica sobre-dispersión fuerte.
 
 ```{r, warning=F, message=F}
-p_load("MASS")
 nb_2 <- glm.nb(bikers ~ temp + hum, data = bikedata)
 stargazer(qpoisson_2, nb_2, type = "text", single.row = TRUE,
           column.labels = c("Quasi-Poisson", "Binomial Negativa"))
@@ -247,6 +223,14 @@ Cero. En dos años de datos horarios, `bikers` nunca es exactamente 0 — siempr
 El diagnóstico habría sido distinto con otro outcome: pensemos en "arriendos de bicicletas de carga" (un servicio de nicho, disponible solo en algunas estaciones). Ahí muchas horas en cero no reflejarían "poca demanda" sino "el servicio ni siquiera estaba disponible" — un mecanismo estructural mezclado con demanda genuina. Para ese tipo de outcome existen modelos **Zero-Inflated Poisson (ZIP)**, **Zero-Inflated Negative Binomial (ZINB)**, y modelos **Hurdle** (dos partes: ¿ocurre el evento?, y dado que ocurre, ¿cuánto?).
 
 La lección no es "siempre agregar un modelo de ceros inflados": es **revisar `mean(y == 0)` antes de elegir el modelo**, igual como revisamos la dispersión antes de elegir entre Poisson y sus alternativas.
+
+## En resumen
+
+- Poisson asume $\operatorname{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}$; cuando los datos son más dispersos de lo esperado ("over-dispersion"), esto no sesga los coeficientes pero sí subestima los errores estándar.
+- El factor de dispersión se estima con los residuos estandarizados: $\text{ssr}/(n-k)$.
+- Quasi-Poisson corrige los errores estándar multiplicando por $\sqrt{\text{ssr}/(n-k)}$; la binomial negativa modela explícitamente el exceso de varianza mediante $\theta$.
+- Exceso de ceros es un problema *distinto* de la sobre-dispersión — conviene siempre revisar `mean(y==0)` antes de elegir el modelo.
+- La próxima clase: causalidad.
 
 ## Gracias {.inverse .center .middle .closing}
 

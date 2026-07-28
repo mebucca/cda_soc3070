@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-23">
+  <meta name="dcterms.date" content="2026-07-28">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -159,7 +159,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-23</p>
+  <p class="date">2026-07-28</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -514,7 +514,7 @@ temp                  4.894    0.155</code></pre>
 </ul>
 <div class="fragment">
 <ul>
-<li><span class="bold">Paso 4</span>: re-ordebando los términos obtenemos el efecto marginal que buscamos:</li>
+<li><span class="bold">Paso 4</span>: re-ordenando los términos obtenemos el efecto marginal que buscamos:</li>
 </ul>
 <div class="content-box-blue">
 <p><span class="math display">\frac{\partial p_{i}}{\partial x_{k}}= \beta_{k} \cdot p_{i}(1 - p_{i})</span></p>
@@ -742,7 +742,7 @@ Type: response</code></pre>
 </section>
 <section id="efectos-marginales-sobre-la-probabilidad-de-éxito-mem-1" class="slide level2">
 <h2>Efectos marginales sobre la probabilidad de éxito: MEM</h2>
-<p>Implentamos la tercera opción usando <code>marginaleffects</code> en <code>R</code>: efecto marginal para temperatura y tipo de día fijos a su promedio global.</p>
+<p>Implementamos la tercera opción usando <code>marginaleffects</code> en <code>R</code>: efecto marginal para temperatura y tipo de día fijos a su promedio global.</p>
 <div class="fragment">
 <div class="cell">
 <div class="cell-output cell-output-stdout">
@@ -825,6 +825,15 @@ Comparison: dY/dX</code></pre>
 </tr>
 </tbody>
 </table>
+</section>
+<section id="en-resumen" class="slide level2">
+<h2>En resumen</h2>
+<ul>
+<li>Un mismo coeficiente <span class="math inline">\beta_{k}</span> admite tres lecturas: efecto aditivo sobre el logit (<span class="math inline">\beta_{k}</span>), efecto multiplicativo sobre las odds (<span class="math inline">e^{\beta_{k}}</span> = odds ratio), y efecto marginal (no lineal) sobre la probabilidad (<span class="math inline">\beta_{k} \cdot p_{i}(1-p_{i})</span>).</li>
+<li>El efecto marginal sobre la probabilidad no es constante: depende de <span class="math inline">p_{i}</span>, y por tanto de los valores de todas las covariables — es máximo cuando <span class="math inline">p_{i} \approx 0.5</span> y se aproxima a 0 en los extremos.</li>
+<li>Para resumir esta heterogeneidad en un solo número usamos AME, MEM o MER, según la pregunta sustantiva.</li>
+<li>La próxima clase: inferencia y bootstrap.</li>
+</ul>
 </section>
 <section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#6B2D5C">
 <h2>Gracias</h2>

@@ -300,7 +300,7 @@ El tipo más simple de GLM es el que tiene un componente aleatorio normal y una 
 Por tanto,
 $$y_{i} \sim \text{Normal}(\mu_{i} = \eta_{i}, \sigma_{i} = \sqrt{\phi})$$
 
-- En nomenclatura GLM $\phi$ (parámetro de dispersión) es un modo más general de expesar el componente constante de la varianza ( $\sigma^2$ en LM)
+- En nomenclatura GLM $\phi$ (parámetro de dispersión) es un modo más general de expresar el componente constante de la varianza ( $\sigma^2$ en LM)
 
 # Ejemplo empírico {.inverse .center .middle}
 ## GLM log-lineal
@@ -343,7 +343,7 @@ Usar una función de enlance [es distinto]{.bold} de transformar la variable dep
 [Ejemplo:]{.bold} es un práctica común trabajar con la variable dependiente transforma a logs (ej. ingresos).
 
 - $y_{1}, \dots y_{n}$ son $n$ variables que no distribuyen normal  pero $\ln(y_{1}), \dots \ln(y_{n})$ si.
-- Estimar LM con variable dependendiente transformada:
+- Estimar LM con variable dependiente transformada:
 
 $$\ln y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}}^{\mathbb{E}(\ln y_{i} \mid x_{1}, \dots, x_{k} )  } + \underbrace{e_{i}}_{\text{Normal}(0,\sigma)}$$
 
@@ -369,11 +369,7 @@ $$\mathbb{E}( \ln y_{i} \mid x_{1}, \dots, x_{k} ) = \beta_{0} + \beta_{1}x_{1i}
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 library(pacman)
 p_load("tidyverse")
-p_load("reshape2")
-source("../_shared/bikeshare.R")
-course <- use_course_data("river")
-bikedata <- course$data
-course_palette <- course$palette
+bikedata <- prepare_bikeshare()
 ```
 
 ::: {.center}
@@ -489,6 +485,14 @@ print(plot)
 ```
 
 :::
+
+## En resumen
+
+- Un GLM se define por cuatro piezas: componente aleatorio (familia exponencial), componente sistemático $\eta_{i}$, función de enlace $g(\mu_{i})=\eta_{i}$ y función de varianza $\operatorname{Var}(y_{i})=\phi V(\mu_{i})$.
+- La función de enlace mantiene $\mu_{i}$ dentro de su rango natural; cada distribución tiene un enlace "canónico" (Normal: identidad, Poisson: log, Binomial: logit).
+- LM es el caso particular de GLM con componente Normal y enlace identidad.
+- Usar una función de enlace (ej. log) no es lo mismo que transformar la variable dependiente: cambian tanto la interpretación de los coeficientes como los supuestos sobre la varianza.
+- La próxima clase: regresión logística — estructura teórica y estimación.
 
 ## Gracias {.inverse .center .middle .closing}
 

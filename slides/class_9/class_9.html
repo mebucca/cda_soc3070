@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-23">
+  <meta name="dcterms.date" content="2026-07-28">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -225,7 +225,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-23</p>
+  <p class="date">2026-07-28</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -620,7 +620,7 @@ Number of Fisher Scoring iterations: 4</code></pre>
 <li>Para ejemplificar podemos implementar una optimización numérica simple e ineficiente para buscar los MLE.</li>
 </ul>
 <div class="fragment">
-<p>Para acelerar la búsqueda usaremos valores en la proximidad de las estimaciones reportadas arriba (que normalmente no conoceríamos): <span class="bold">Implentación en</span> <code>R</code>:</p>
+<p>Para acelerar la búsqueda usaremos valores en la proximidad de las estimaciones reportadas arriba (que normalmente no conoceríamos): <span class="bold">Implementación en</span> <code>R</code>:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a>ll <span class="ot">&lt;-</span> <span class="cf">function</span>(b0,b1) {</span>
 <span id="cb4-2"><a href=""></a>  y <span class="ot">=</span> bikedata<span class="sc">$</span>high_demand</span>
@@ -643,7 +643,7 @@ Number of Fisher Scoring iterations: 4</code></pre>
 </section>
 <section id="estimación-mle-5" class="slide level2">
 <h2>Estimación (MLE)</h2>
-<p><span class="bold">Implentación en</span> <code>R</code>:</p>
+<p><span class="bold">Implementación en</span> <code>R</code>:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href=""></a><span class="co"># Evaluar la log-likelihood function  para muchas combinaciones de posibles valores de  b0 y b1</span></span>
 <span id="cb7-2"><a href=""></a><span class="co"># centramos la grilla en torno a las estimaciones del modelo</span></span>
@@ -702,6 +702,16 @@ Number of Fisher Scoring iterations: 4</code></pre>
 </div>
 </div>
 </div>
+</section>
+<section id="en-resumen" class="slide level2">
+<h2>En resumen</h2>
+<ul>
+<li>Regresión logística es un GLM con componente aleatorio Bernoulli/Binomial y enlace logit: <span class="math inline">\ln \frac{p_{i}}{1-p_{i}} = \eta_{i}</span>.</li>
+<li>La función media (sigmoide) <span class="math inline">p_{i} = \frac{e^{\eta_{i}}}{1+e^{\eta_{i}}}</span> mantiene <span class="math inline">p_{i}</span> restringido a <span class="math inline">[0,1]</span>.</li>
+<li>Los parámetros <span class="math inline">\beta</span> se estiman por máxima verosimilitud (MLE): no hay solución analítica cerrada, se usa un algoritmo de búsqueda numérica (ej. Fisher Scoring).</li>
+<li>La log-likelihood de una Bernoulli es <span class="math inline">\ell(\boldsymbol\beta \mid y) = \sum_{i=1}^{n}\big(y_{i}\ln p_{i} + (1-y_{i})\ln(1-p_{i})\big)</span>.</li>
+<li>La próxima clase: regresión logística — interpretación de parámetros.</li>
+</ul>
 </section>
 <section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#007A75">
 <h2>Gracias</h2>

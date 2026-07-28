@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-23">
+  <meta name="dcterms.date" content="2026-07-28">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -159,7 +159,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-23</p>
+  <p class="date">2026-07-28</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -254,20 +254,18 @@ Mauricio Bucca · Sociología UC
 <div class="pull-right">
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 11 × 2
-   y     `P(X=x)`
-   &lt;chr&gt;    &lt;dbl&gt;
- 1 2        0.028
- 2 3        0.056
- 3 4        0.083
- 4 5        0.111
- 5 6        0.139
- 6 7        0.167
- 7 8        0.139
- 8 9        0.111
- 9 10       0.083
-10 11       0.056
-11 12       0.028</code></pre>
+<pre><code>    x P(X=x)
+1   2  0.028
+2   3  0.056
+3   4  0.083
+4   5  0.111
+5   6  0.139
+6   7  0.167
+7   8  0.139
+8   9  0.111
+9  10  0.083
+10 11  0.056
+11 12  0.028</code></pre>
 </div>
 </div>
 </div>
@@ -423,17 +421,17 @@ f(x) =
 <p><span class="bold">Ilustración via simulación en</span> <code>R</code> Tiremos una moneda con probabilidad de obtener “Cara” ( <span class="math inline">1</span> ) de 70% ( <span class="math inline">p=0.7</span> )</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0</code></pre>
+<pre><code>[1] 1</code></pre>
 </div>
 </div>
 <div class="fragment">
 <p>Repitamos el proceso 1000 veces …</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code> [1] 1 1 1 1 1 0 0 1 1 1 0 1 1 1 0 1 1 0 1 0</code></pre>
+<pre><code> [1] 0 0 1 1 0 0 1 1 1 1 0 1 1 1 1 0 1 0 0 0</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] "P(Cara) =  0.710"</code></pre>
+<pre><code>[1] "P(Cara) =  0.685"</code></pre>
 </div>
 </div>
 </div>
@@ -625,7 +623,7 @@ f(x) =
 <p><span class="math display">\begin{align}
 F(k; n, p) &amp;= \mathbb{P}(X \leq k) \\ \\
            &amp;= \sum_{i=0}^{k} \mathbb{P}(X=i) \\ \\
-           &amp;= \frac{n!}{i! (n-i)!}  p^i (1-p)^{n-i}
+           &amp;= \sum_{i=0}^{k} \frac{n!}{i! (n-i)!}  p^i (1-p)^{n-i}
 \end{align}</span> En este caso,</p>
 <p><span class="math display">\begin{align}
 F(k=5; n=10, p=0.6) &amp;=  \mathbb{P}(X=0) + \dots + \mathbb{P}(X=5) \\ \\
@@ -657,13 +655,23 @@ F(k=5; n=10, p=0.6) &amp;=  \mathbb{P}(X=0) + \dots + \mathbb{P}(X=5) \\ \\
 <p><span class="math display">\begin{align}
 F(k; n, p) &amp;= \mathbb{P}(X \leq k) \\ \\
            &amp;= \sum_{i=0}^{k} \mathbb{P}(X=i) \\ \\
-           &amp;= \frac{n!}{i! (n-i)!}  p^i (1-p)^{n-i}
+           &amp;= \sum_{i=0}^{k} \frac{n!}{i! (n-i)!}  p^i (1-p)^{n-i}
 \end{align}</span> En este caso,</p>
 <p><span class="math display">\begin{align}
 F(k=5; n=10, p=0.6) &amp;=  \mathbb{P}(X=0) + \dots + \mathbb{P}(X=5) \\ \\
                     &amp;\approx 0.366
 \end{align}</span></p>
 </div>
+</section>
+<section id="en-resumen" class="slide level2">
+<h2>En resumen</h2>
+<ul>
+<li>Una variable aleatoria mapea el espacio muestral a los números reales; su distribución asigna una probabilidad a cada valor posible.</li>
+<li>Variables discretas: PMF <span class="math inline">f(x)=\mathbb{P}(X=x)</span>; CDF <span class="math inline">F(x)=\mathbb{P}(X \leq x)</span>.</li>
+<li>Bernoulli: un ensayo, dos resultados, <span class="math inline">\mathbb{P}(X=1)=p</span>.</li>
+<li>Binomial: suma de <span class="math inline">n</span> Bernoulli iid, <span class="math inline">\mathbb{P}(Y=y) = {n \choose y} p^{y}(1-p)^{n-y}</span>.</li>
+<li>La próxima clase usa estas distribuciones para introducir sus “momentos”: valor esperado y varianza.</li>
+</ul>
 </section>
 <section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#5B2C83">
 <h2>Gracias</h2>

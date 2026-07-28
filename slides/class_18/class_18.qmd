@@ -49,7 +49,7 @@ regularización: Ridge y LASSO.
 
 
 
-## Regresión Logística como Machine Learning {.inverse .center .middle}
+# Regresión Logística como Machine Learning {.inverse .center .middle}
 
 ## Regresión Logística como Machine Learning
 <br><br>
@@ -389,7 +389,7 @@ Clasificamos como “baja demanda” a todas las horas cuya probabilidad predich
 $$
 \hat{y}_i =
 \begin{cases}
-1 & \text{si } \hat{p}_i > 0.5 \quad (\text{Alta demanda}) \\\\
+1 & \text{si } \hat{p}_i > 0.5 \quad (\text{Alta demanda}) \\
 0 & \text{si } \hat{p}_i \leq 0.5 \quad (\text{Baja demanda})
 \end{cases}
 $$
@@ -447,10 +447,8 @@ data.frame(Métrica = names(metrics), Valor = as.numeric(metrics),
 
 ## Umbral y predicción
 
-- Cada umbral $\tau$ genera un nivel de Especificidad y Sensibilidad: $:\{\text{Specificity}(\tau), \text{Sensitivity}(\tau)\}$ para $\tau \in [0,1]$.
+- Cada umbral $\tau$ genera un nivel de Especificidad y Sensibilidad: $\{\text{Specificity}(\tau), \text{Sensitivity}(\tau)\}$ para $\tau \in [0,1]$.
 ```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
-p_load(ISLR2)
-p_load(tidyverse)
 p_load(pROC)
 p_load(ggrepel)
 
@@ -473,17 +471,11 @@ COLORS <- list(
   neutral = course_palette[["series-6"]]
 )
 
-# Preparar datos
-df <- as_tibble(Bikeshare) %>%
-  mutate(y = if_else(bikers > quantile(bikers, 0.75), 1L, 0L))
-
-# Modelo logístico
-m_logit <- glm(y ~ temp + factor(workingday) + hum + I(hum^2),
-               data = df, family = binomial)
-p_hat <- predict(m_logit, type = "response")
+# Reutiliza logit_demand, bikedata y p_hat ya calculados más arriba
+# (mismo modelo y mismos datos: no hace falta reajustar nada aquí)
 
 # ROC
-roc_obj <- roc(response = df$y, predictor = p_hat, quiet = TRUE)
+roc_obj <- roc(response = bikedata$high_demand, predictor = p_hat, quiet = TRUE)
 roc_df <- coords(roc_obj, x = "all",
                  ret = c("specificity", "sensitivity", "threshold"),
                  transpose = FALSE) %>%
@@ -494,10 +486,10 @@ roc_df <- coords(roc_obj, x = "all",
 # Umbrales de ejemplo
 calc_rates <- function(tau) {
   yhat <- as.integer(p_hat > tau)
-  TP <- sum(yhat == 1 & df$y == 1)
-  TN <- sum(yhat == 0 & df$y == 0)
-  FP <- sum(yhat == 1 & df$y == 0)
-  FN <- sum(yhat == 0 & df$y == 1)
+  TP <- sum(yhat == 1 & bikedata$high_demand == 1)
+  TN <- sum(yhat == 0 & bikedata$high_demand == 0)
+  FP <- sum(yhat == 1 & bikedata$high_demand == 0)
+  FN <- sum(yhat == 0 & bikedata$high_demand == 1)
   tibble(tau = tau, TPR = TP/(TP+FN), FPR = FP/(FP+TN))
 }
 
@@ -510,7 +502,7 @@ pts <- map_dfr(taus, calc_rates)
 ```{r plot_scores, echo=FALSE, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
 
 # Panel A: Distribución de scores
-ggplot(df, aes(x = p_hat, fill = factor(y))) +
+ggplot(bikedata, aes(x = p_hat, fill = factor(high_demand))) +
   geom_histogram(aes(y = after_stat(count)), 
                  alpha = 0.7, bins = 30, position = "identity") +
   geom_vline(data = tibble(tau = taus, 
@@ -547,7 +539,7 @@ ggplot(df, aes(x = p_hat, fill = factor(y))) +
 
 ## Curva ROC
 
-- La **curva ROC** conecta todos los puntos $:\{1 - \text{Specificity}(\tau), \quad \text{Sensitivity}(\tau)\}$ para $\tau \in [0,1]$.
+- La **curva ROC** conecta todos los puntos $\{1 - \text{Specificity}(\tau), \quad \text{Sensitivity}(\tau)\}$ para $\tau \in [0,1]$.
 - La diagonal corresponde a un clasificador aleatorio.
 - Mejor desempeño = curva más arriba a la izquierda.
 
@@ -598,8 +590,8 @@ ggplot(roc_df, aes(x = FPR, y = TPR)) +
 
 # Modelo aleatorio para comparación
 set.seed(123)
-random_scores <- runif(nrow(df))
-roc_random <- roc(df$y, random_scores, quiet = TRUE)
+random_scores <- runif(nrow(bikedata))
+roc_random <- roc(bikedata$high_demand, random_scores, quiet = TRUE)
 
 # Crear data frames para plotting
 roc_model_df <- coords(roc_obj, x = "all", transpose = FALSE) %>%
@@ -725,6 +717,15 @@ La curva ROC y el AUC, tal como los definimos, son conceptos binarios. La genera
 
 - Ninguna curva única resume el desempeño multinomial completo — se reportan $J$ curvas, o un promedio (macro-AUC).
 - Log-loss (clase 6), en cambio, se generaliza de forma inmediata al caso multinomial — es la misma cross-entropy que usamos para ajustar `logit_multi`, y sigue siendo una sola cifra comparable entre modelos.
+
+## En resumen
+
+- La regresión logística es también un clasificador de ML: ajusta $X\beta$ maximizando la verosimilitud, equivalente a minimizar el log-loss.
+- Un umbral $\tau$ convierte probabilidades en clases; su elección depende del costo relativo de cada tipo de error, no de una convención fija.
+- La matriz de confusión resume aciertos y errores; sensibilidad, especificidad, precisión y AUC capturan aspectos distintos del desempeño.
+- La curva ROC recorre todos los umbrales posibles; el AUC resume ese trade-off en un solo número.
+- El caso multinomial generaliza estas ideas: matriz $J\times J$, métricas one-vs-rest, y un log-loss que se extiende sin cambios.
+- La próxima clase pregunta qué hacer cuando ya no confiamos en la forma funcional elegida a mano: regularización con Ridge y LASSO.
 
 ## Gracias {.inverse .center .middle .closing}
 

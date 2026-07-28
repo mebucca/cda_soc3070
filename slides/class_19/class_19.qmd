@@ -781,7 +781,7 @@ Un coeficiente igual a cero no demuestra irrelevancia sustantiva: solo dice que,
 | Paso a paso (stepwise) | agrega/quita una variable a la vez | dura | *greedy*, inestable |
 | Ridge / LASSO / Elastic Net | penalización continua | según método | convexo, reproducible |
 
-La regularización reemplaza la selección **discreta** (combinatoria, inestable, la que un GLM clásico haría "a mano" comparando AIC entre modelos) por una **continua** — el mismo objetivo del stepwise selection de la clase 17, resuelto de forma más estable.
+La regularización reemplaza la selección **discreta** (combinatoria, inestable, la que un GLM clásico haría "a mano" comparando AIC entre modelos) por una **continua** — el mismo objetivo del stepwise selection de la clase 18, resuelto de forma más estable.
 
 ## Cuándo puede engañar
 

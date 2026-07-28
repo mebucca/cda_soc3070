@@ -23,6 +23,17 @@ source("../_shared/bikeshare.R")
 course_palette <- use_course_style("real_madrid")
 ```
 
+```{r dice-setup, include=FALSE}
+library(pacman)
+p_load("tidyverse", "knitr", "RColorBrewer")
+
+dist_dice <- expand.grid(d1 = 1:6, d2 = 1:6) %>%
+  mutate(X = d1 + d2) %>%
+  count(X) %>%
+  mutate(p = round(n / sum(n), 3)) %>%
+  select(x = X, `P(X=x)` = p)
+```
+
 ## Antes · Hoy · Después {.class-rhythm}
 
 ::: {.full-width}
@@ -133,23 +144,7 @@ Continuando con nuestro ejemplo, podemos caracterizar la distribución de X con 
 ::: {.pull-right}
 
 ```{r, echo=FALSE,message=FALSE, warning=FALSE}
-library(pacman)
-p_load("tidyverse", "knitr")
-
-d1 = 1:6
-d2 = 1:6
-
-X = NULL
-for (i in d1) {
-  for (j in d2) {
-    sum_ij = i + j
-    X <- c(X,sum_ij)
-  }
-}
-
-ditrib_X <- table(X) %>% as_tibble() %>% mutate(p=round(n/sum(n), 3)) %>% select(-n)
-names(ditrib_X) <- c("y","P(X=x)")
-ditrib_X
+dist_dice
 ```
 
 :::
@@ -180,32 +175,13 @@ Podemos caracterizar la distribución de X con una función:
 ::: {.pull-right}
 
 ```{r, echo=FALSE,message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
-p_load(tidyverse,knitr)
-p_load(RColorBrewer)
-
-d1 = 1:6
-d2 = 1:6
-
-X = NULL
-for (i in d1) {
-  for (j in d2) {
-    sum_ij = i + j
-    X <- c(X,sum_ij)
-  }
-}
-
-table(X) %>% 
-  as_tibble() %>% 
-  mutate(p=round(n/sum(n), 3)) %>% 
-  select(-n) %>%
-  ggplot(aes(x=factor(as.numeric(X)), y=p, fill="hola", color="black")) +
-  geom_bar(stat= "identity", width=1, alpha=0.8) +
-  labs(x="X", y="P(X=x)") +
-  scale_color_manual(values = "black") +
-  scale_fill_manual(values = course_palette[["primary"]]) +
+dist_dice %>%
+  ggplot(aes(x = factor(x), y = `P(X=x)`)) +
+  geom_bar(stat = "identity", width = 1, alpha = 0.8, color = "black", fill = course_palette[["primary"]]) +
+  labs(x = "X", y = "P(X=x)") +
   theme_julia() +
-  theme(legend.position="none",
-        panel.border = element_blank()) # Esta línea agrega el recuadro interior
+  theme(legend.position = "none",
+        panel.border = element_blank())
 
 ```
 
@@ -598,14 +574,7 @@ $n=10$ y $p=0.6$
 - ¿Cual es la probabilidad de obtener 5 monedas o menos?
 ```{r, echo=FALSE,message=FALSE, warning=FALSE, fig.width=8, fig.height=6}
 
-# Parámetros de la distribución binomial
-n <- 10       # Número de ensayos
-p <- 0.6      # Probabilidad de éxito
-
-# Crear un data frame para graficar la PMF
-x_values <- 0:n  # Possible outcomes range from 0 to n
-PMF_values <- dbinom(x_values, n, p)  # PMF for binomial distribution
-PMF_df <- data.frame(x = x_values, PMF = PMF_values)
+# Reutiliza n, p y PMF_df calculados en el chunk anterior
 
 # Filtrar el data frame para obtener barras de 0 a 5
 overlay_df <- subset(PMF_df, x <= 5)
@@ -635,7 +604,7 @@ X es una variable aleatoria Binomial, es decir
 \begin{align}
 F(k; n, p) &= \mathbb{P}(X \leq k) \\ \\
            &= \sum_{i=0}^{k} \mathbb{P}(X=i) \\ \\
-           &= \frac{n!}{i! (n-i)!}  p^i (1-p)^{n-i} 
+           &= \sum_{i=0}^{k} \frac{n!}{i! (n-i)!}  p^i (1-p)^{n-i}
 \end{align}
 En este caso,
 
@@ -656,11 +625,7 @@ F(k=5; n=10, p=0.6) &=  \mathbb{P}(X=0) + \dots + \mathbb{P}(X=5) \\ \\
 - ¿Cual es la probabilidad de obtener 5 monedas o menos?
 ```{r, echo=FALSE,message=FALSE, warning=FALSE, fig.width=8, fig.height=6}
 
-# Parámetros de la distribución binomial
-n <- 10       # Número de ensayos
-p <- 0.6      # Probabilidad de éxito
-
-# Crear un data frame para graficar la CDF
+# Reutiliza n, p ya calculados; crea el data frame de la CDF
 x_values <- 0:n  # Possible outcomes range from 0 to n
 CDF_values <- pbinom(x_values, n, p)  # CDF for binomial distribution
 CDF_df <- data.frame(x = x_values, CDF = CDF_values)
@@ -669,16 +634,17 @@ CDF_df <- data.frame(x = x_values, CDF = CDF_values)
 CDF_df$start_x <- c(NA, head(CDF_df$x, -1))
 CDF_df$start_CDF <- c(0, head(CDF_df$CDF, -1))
 
-# Filtrar valores de 0 a 5 para la superposición
-overlay_df <- subset(CDF_df, x <= 5)
+# Valor de F(5), destacado en el gráfico
+F5 <- pbinom(5, n, p)
 
 # Crear el ggplot
 ggplot() +
-  # Horizontal segments for CDF
-  geom_hline(yintercept=0.1501822, linetype = "dashed",  size = 1) + 
+  # Línea punteada marcando F(k=5)
+  geom_hline(yintercept = F5, linetype = "dashed", size = 1) +
   geom_segment(data = CDF_df, aes(x = start_x, y = CDF, xend = x, yend = CDF), color = course_palette[["primary"]], size = 1.2) +
   # Vertical segments for CDF
   geom_segment(data = CDF_df, aes(x = x-1, y = start_CDF, xend = x-1, yend = CDF), color = course_palette[["primary"]], size = 1.2) +
+  geom_point(aes(x = 5, y = F5), color = course_palette[["secondary"]], size = 4) +
   labs(x = "Number of Successes", y = "P(X ≤ x)") +
   scale_x_continuous(breaks = 0:n) +
   theme_julia() +
@@ -697,7 +663,7 @@ X es una variable aleatoria Binomial, es decir
 \begin{align}
 F(k; n, p) &= \mathbb{P}(X \leq k) \\ \\
            &= \sum_{i=0}^{k} \mathbb{P}(X=i) \\ \\
-           &= \frac{n!}{i! (n-i)!}  p^i (1-p)^{n-i} 
+           &= \sum_{i=0}^{k} \frac{n!}{i! (n-i)!}  p^i (1-p)^{n-i}
 \end{align}
 En este caso,
 
@@ -707,6 +673,14 @@ F(k=5; n=10, p=0.6) &=  \mathbb{P}(X=0) + \dots + \mathbb{P}(X=5) \\ \\
 \end{align}
 
 :::
+
+## En resumen
+
+- Una variable aleatoria mapea el espacio muestral a los números reales; su distribución asigna una probabilidad a cada valor posible.
+- Variables discretas: PMF $f(x)=\mathbb{P}(X=x)$; CDF $F(x)=\mathbb{P}(X \leq x)$.
+- Bernoulli: un ensayo, dos resultados, $\mathbb{P}(X=1)=p$.
+- Binomial: suma de $n$ Bernoulli iid, $\mathbb{P}(Y=y) = {n \choose y} p^{y}(1-p)^{n-y}$.
+- La próxima clase usa estas distribuciones para introducir sus "momentos": valor esperado y varianza.
 
 ## Gracias {.inverse .center .middle .closing}
 

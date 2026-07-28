@@ -23,6 +23,28 @@ source("../_shared/bikeshare.R")
 course_palette <- use_course_style("man_city")
 ```
 
+```{r prize-setup, include=FALSE}
+library(pacman)
+p_load("tidyverse")
+
+n <- 10  # Número de tiros de dado
+simulations <- 10000  # Número de veces que se simula el juego
+
+# Simular lanzar un dado n veces, repetido 'simulations' veces
+set.seed(123)  # Para reproducibilidad
+results <- replicate(simulations, sum(sample(1:6, n, replace = TRUE)))
+
+# Calcular el premio de cada simulación
+prizes <- 1000 + 100 * results
+
+# Crear data frame para graficar
+df <- tibble(prize = prizes)
+
+# Calcular media y desviación estándar de los premios
+mean_prize <- mean(prizes)
+std_dev <- sd(prizes)
+```
+
 ## Antes · Hoy · Después {.class-rhythm}
 
 ::: {.full-width}
@@ -118,25 +140,7 @@ Por ejemplo, supongamos que $X_{i}$ es la variable que resulta de tirar un dado 
 ::: {.center}
 
 ```{r, echo=FALSE, fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
-library(pacman)
-p_load("tidyverse")
-
-n <- 10  # Número de tiros de dado
-simulations <- 10000  # Número de veces que se simula el juego
-
-# Simular lanzar un dado n veces, repetido 'simulations' veces
-set.seed(123)  # Para reproducibilidad
-results <- replicate(simulations, sum(sample(1:6, n, replace = TRUE)))
-
-# Calcular el premio de cada simulación
-prizes <- 1000 + 100 * results
-
-# Crear data frame para graficar
-df <- tibble(prize = prizes)
-
-# Calcular media y desviación estándar de los premios
-mean_prize <- mean(prizes)
-std_dev <- sd(prizes)
+# Reutiliza df, mean_prize y std_dev calculados en el chunk "prize-setup"
 
 # Gráfico de barras de los premios
 plot <- ggplot(df, aes(x = prize)) +
@@ -270,24 +274,7 @@ Por ejemplo, supongamos que $X_{i}$ es la variable que resulta de tirar un dado 
 ::: {.center}
 
 ```{r, echo=FALSE, fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
-p_load("tidyverse")
-
-n <- 10  # Número de tiros de dado
-simulations <- 10000  # Número de veces que se simula el juego
-
-# Simular lanzar un dado n veces, repetido 'simulations' veces
-set.seed(123)  # Para reproducibilidad
-results <- replicate(simulations, sum(sample(1:6, n, replace = TRUE)))
-
-# Calcular el premio de cada simulación
-prizes <- 1000 + 100 * results
-
-# Crear data frame para graficar
-df <- tibble(prize = prizes)
-
-# Calcular media y desviación estándar de los premios
-mean_prize <- mean(prizes)
-std_dev <- sd(prizes)
+# Reutiliza df, mean_prize y std_dev calculados en el chunk "prize-setup"
 
 # Gráfico de barras de los premios
 plot <- ggplot(df, aes(x = prize)) +
@@ -345,7 +332,7 @@ $$\operatorname{Var}(G) = 100^{2} \times 10 \times \frac{35}{12} = 291\,666.667$
 
 . . .
 
-$$\sigma_{G} = \sqrt{0 + 100 \times 100 \times 2.91670} = \$ 539.88$$
+$$\sigma_{G} = \sqrt{100^{2} \times 10 \times \frac{35}{12}} = \sqrt{291\,666.667} \approx \$ 540.06$$
 
 ## Varianza de variables discretas
 

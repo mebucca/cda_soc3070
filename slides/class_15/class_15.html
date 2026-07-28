@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-23">
+  <meta name="dcterms.date" content="2026-07-28">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -159,7 +159,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-23</p>
+  <p class="date">2026-07-28</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -227,7 +227,7 @@ Note:                    *p&lt;0.100; **p&lt;0.050; ***p&lt;0.010</code></pre>
 </div>
 <div class="fragment">
 <ul>
-<li>Este caso se conocer como “over-dispersion”. Los datos son más dispersos de lo esperando de acuerdo al modelo.
+<li>Este caso se conoce como “over-dispersion”. Los datos son más dispersos de lo esperado de acuerdo al modelo.
 <ul>
 <li>Over-dispersion no afecta la estimación de los coeficientes pero la inferencia demasiado “liberal”: errores estándar</li>
 </ul></li>
@@ -281,16 +281,16 @@ Note:                    *p&lt;0.100; **p&lt;0.050; ***p&lt;0.010</code></pre>
 </div>
 </div>
 </section>
-<section id="regressión-quasi-poisson" class="slide level2">
-<h2>Regressión Quasi-Poisson</h2>
-<p>La regressión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferenciadel modelo.</p>
+<section id="regresión-quasi-poisson" class="slide level2">
+<h2>Regresión Quasi-Poisson</h2>
+<p>La regresión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferencia del modelo.</p>
 <div class="fragment">
 <p><span class="math display">y_{i} \sim \text{quasi-Poisson}(\mu_{i} = e^{X_{i}\beta}, \sigma= \sqrt{\omega \cdot  e^{X_{i}\beta}})</span></p>
 <p>donde <span class="math inline">\omega</span> es el factor de dispersion.</p>
 </div>
 <div class="fragment">
 <ul>
-<li>Regressión Poisson es un caso especial de quasi-Poisson ( <span class="math inline">\omega=1</span> ).</li>
+<li>Regresión Poisson es un caso especial de quasi-Poisson ( <span class="math inline">\omega=1</span> ).</li>
 </ul>
 </div>
 <div class="fragment">
@@ -399,6 +399,16 @@ Note:                     *p&lt;0.100; **p&lt;0.050; ***p&lt;0.010</code></pre>
 <p>El diagnóstico habría sido distinto con otro outcome: pensemos en “arriendos de bicicletas de carga” (un servicio de nicho, disponible solo en algunas estaciones). Ahí muchas horas en cero no reflejarían “poca demanda” sino “el servicio ni siquiera estaba disponible” — un mecanismo estructural mezclado con demanda genuina. Para ese tipo de outcome existen modelos <strong>Zero-Inflated Poisson (ZIP)</strong>, <strong>Zero-Inflated Negative Binomial (ZINB)</strong>, y modelos <strong>Hurdle</strong> (dos partes: ¿ocurre el evento?, y dado que ocurre, ¿cuánto?).</p>
 <p>La lección no es “siempre agregar un modelo de ceros inflados”: es <strong>revisar <code>mean(y == 0)</code> antes de elegir el modelo</strong>, igual como revisamos la dispersión antes de elegir entre Poisson y sus alternativas.</p>
 </div>
+</section>
+<section id="en-resumen" class="slide level2">
+<h2>En resumen</h2>
+<ul>
+<li>Poisson asume <span class="math inline">\operatorname{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}</span>; cuando los datos son más dispersos de lo esperado (“over-dispersion”), esto no sesga los coeficientes pero sí subestima los errores estándar.</li>
+<li>El factor de dispersión se estima con los residuos estandarizados: <span class="math inline">\text{ssr}/(n-k)</span>.</li>
+<li>Quasi-Poisson corrige los errores estándar multiplicando por <span class="math inline">\sqrt{\text{ssr}/(n-k)}</span>; la binomial negativa modela explícitamente el exceso de varianza mediante <span class="math inline">\theta</span>.</li>
+<li>Exceso de ceros es un problema <em>distinto</em> de la sobre-dispersión — conviene siempre revisar <code>mean(y==0)</code> antes de elegir el modelo.</li>
+<li>La próxima clase: causalidad.</li>
+</ul>
 </section>
 <section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#D3A000">
 <h2>Gracias</h2>

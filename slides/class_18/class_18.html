@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-27">
+  <meta name="dcterms.date" content="2026-07-28">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -225,7 +225,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-27</p>
+  <p class="date">2026-07-28</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -244,8 +244,10 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 </section>
-<section id="regresión-logística-como-machine-learning" class="slide level2 inverse center middle" data-background-color="#4A1942">
-<h2>Regresión Logística como Machine Learning</h2>
+<section>
+<section id="regresión-logística-como-machine-learning" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
+<h1>Regresión Logística como Machine Learning</h1>
+
 </section>
 <section id="regresión-logística-como-machine-learning-1" class="slide level2">
 <h2>Regresión Logística como Machine Learning</h2>
@@ -276,7 +278,7 @@ Mauricio Bucca · Sociología UC
 </table>
 </div>
 </div>
-</section>
+</section></section>
 <section>
 <section id="regresión-logística-el-hello-world-de-ml" class="title-slide slide level1 center">
 <h1>Regresión Logística: el <strong>“hello world”</strong> de ML</h1>
@@ -662,7 +664,7 @@ En ML es clave elegir métricas alineadas con el problema (ej: medicina ≠ mark
 <p><span class="math display">
 \hat{y}_i =
 \begin{cases}
-1 &amp; \text{si } \hat{p}_i &gt; 0.5 \quad (\text{Alta demanda}) \\\\
+1 &amp; \text{si } \hat{p}_i &gt; 0.5 \quad (\text{Alta demanda}) \\
 0 &amp; \text{si } \hat{p}_i \leq 0.5 \quad (\text{Baja demanda})
 \end{cases}
 </span></p>
@@ -705,7 +707,7 @@ Predicho    0    1
 <section id="umbral-y-predicción" class="slide level2">
 <h2>Umbral y predicción</h2>
 <ul>
-<li>Cada umbral <span class="math inline">\tau</span> genera un nivel de Especificidad y Sensibilidad: <span class="math inline">:\{\text{Specificity}(\tau), \text{Sensitivity}(\tau)\}</span> para <span class="math inline">\tau \in [0,1]</span>.</li>
+<li>Cada umbral <span class="math inline">\tau</span> genera un nivel de Especificidad y Sensibilidad: <span class="math inline">\{\text{Specificity}(\tau), \text{Sensitivity}(\tau)\}</span> para <span class="math inline">\tau \in [0,1]</span>.</li>
 </ul>
 <div class="pull-left">
 <div class="cell">
@@ -728,7 +730,7 @@ Predicho    0    1
 <section id="curva-roc" class="slide level2">
 <h2>Curva ROC</h2>
 <ul>
-<li>La <strong>curva ROC</strong> conecta todos los puntos <span class="math inline">:\{1 - \text{Specificity}(\tau), \quad \text{Sensitivity}(\tau)\}</span> para <span class="math inline">\tau \in [0,1]</span>.</li>
+<li>La <strong>curva ROC</strong> conecta todos los puntos <span class="math inline">\{1 - \text{Specificity}(\tau), \quad \text{Sensitivity}(\tau)\}</span> para <span class="math inline">\tau \in [0,1]</span>.</li>
 <li>La diagonal corresponde a un clasificador aleatorio.</li>
 <li>Mejor desempeño = curva más arriba a la izquierda.</li>
 </ul>
@@ -896,6 +898,17 @@ Class: alta       0.659      0.766    0.583</code></pre>
 <ul>
 <li>Ninguna curva única resume el desempeño multinomial completo — se reportan <span class="math inline">J</span> curvas, o un promedio (macro-AUC).</li>
 <li>Log-loss (clase 6), en cambio, se generaliza de forma inmediata al caso multinomial — es la misma cross-entropy que usamos para ajustar <code>logit_multi</code>, y sigue siendo una sola cifra comparable entre modelos.</li>
+</ul>
+</section>
+<section id="en-resumen" class="slide level2">
+<h2>En resumen</h2>
+<ul>
+<li>La regresión logística es también un clasificador de ML: ajusta <span class="math inline">X\beta</span> maximizando la verosimilitud, equivalente a minimizar el log-loss.</li>
+<li>Un umbral <span class="math inline">\tau</span> convierte probabilidades en clases; su elección depende del costo relativo de cada tipo de error, no de una convención fija.</li>
+<li>La matriz de confusión resume aciertos y errores; sensibilidad, especificidad, precisión y AUC capturan aspectos distintos del desempeño.</li>
+<li>La curva ROC recorre todos los umbrales posibles; el AUC resume ese trade-off en un solo número.</li>
+<li>El caso multinomial generaliza estas ideas: matriz <span class="math inline">J\times J</span>, métricas one-vs-rest, y un log-loss que se extiende sin cambios.</li>
+<li>La próxima clase pregunta qué hacer cuando ya no confiamos en la forma funcional elegida a mano: regularización con Ridge y LASSO.</li>
 </ul>
 </section>
 <section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#8B1E2D">

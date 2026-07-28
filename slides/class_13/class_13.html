@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-23">
+  <meta name="dcterms.date" content="2026-07-28">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -159,7 +159,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-23</p>
+  <p class="date">2026-07-28</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -510,18 +510,18 @@ Y  1.895    6.652</code></pre>
 <h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
 <p>Después de varios pasos, obtenemos:</p>
 <div class="content-box-yellow">
-<p><span class="math display">\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{j=1}p_{ij} \cdot \beta_{jk}\bigg)</span></p>
+<p><span class="math display">\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)</span></p>
 </div>
-<p>donde <span class="math display">p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{j=1}  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}</span></p>
+<p>donde <span class="math display">p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1}  e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}</span></p>
 </section>
 <section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j-3" class="slide level2">
 <h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
 <div class="pull-left">
-<p>Analizando <span class="math display">\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{j=1}p_{ij} \cdot \beta_{jk}\bigg)</span></p>
+<p>Analizando <span class="math display">\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)</span></p>
 </div>
 <div class="fragment">
 <div class="pull-right">
-<p>podemos notar que <span class="math inline">\sum^{J-1}_{j=1}p_{ij} \cdot \beta_{jk} \equiv \overline{\beta_{jk}}, \quad</span> el “efecto promedio de” <span class="math inline">x_k</span>. Se desprende que:</p>
+<p>podemos notar que <span class="math inline">\sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk} \equiv \overline{\beta_{k}}, \quad</span> el “efecto promedio de” <span class="math inline">x_k</span> (no depende de <span class="math inline">j</span>). Se desprende que:</p>
 </div>
 </div>
 <div class="fragment">
@@ -531,9 +531,9 @@ Y  1.895    6.652</code></pre>
 </div>
 <div class="fragment">
 <ul>
-<li><span class="math inline">\frac{\partial p_{ij}}{\partial x_{k}} &gt; 0 \quad</span> si <span class="math inline">\quad \beta_{jk} &gt; \sum^{J-1}_{j=1}p_{j} \cdot \beta_{jk}</span></li>
-<li><span class="math inline">\frac{\partial p_{ij}}{\partial x_{k}} = 0 \quad</span> si <span class="math inline">\quad \beta_{jk} = \sum^{J-1}_{j=1}p_{j} \cdot \beta_{jk}</span></li>
-<li><span class="math inline">\frac{\partial p_{ij}}{\partial x_{k}} &lt; 0 \quad</span> si <span class="math inline">\quad \beta_{jk} &lt; \sum^{J-1}_{j=1}p_{j} \cdot \beta_{jk}</span></li>
+<li><span class="math inline">\frac{\partial p_{ij}}{\partial x_{k}} &gt; 0 \quad</span> si <span class="math inline">\quad \beta_{jk} &gt; \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}</span></li>
+<li><span class="math inline">\frac{\partial p_{ij}}{\partial x_{k}} = 0 \quad</span> si <span class="math inline">\quad \beta_{jk} = \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}</span></li>
+<li><span class="math inline">\frac{\partial p_{ij}}{\partial x_{k}} &lt; 0 \quad</span> si <span class="math inline">\quad \beta_{jk} &lt; \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}</span></li>
 </ul>
 </div>
 <div class="fragment">
@@ -543,11 +543,11 @@ Y  1.895    6.652</code></pre>
 <section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j-4" class="slide level2">
 <h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
 <div class="pull-left">
-<p>si <span class="math display">\frac{\partial p_{ij}}{\partial x_{k}} = p_{j} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{j=1}p_{j} \cdot \beta_{jk}\bigg)</span></p>
+<p>si <span class="math display">\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)</span></p>
 </div>
 <div class="fragment">
 <div class="pull-right">
-<p>y <span class="math display">p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{j=1}  e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}</span></p>
+<p>y <span class="math display">p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1}  e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}</span></p>
 </div>
 </div>
 <div class="fragment">
@@ -560,7 +560,7 @@ Y  1.895    6.652</code></pre>
 <h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
 <p>En nuestro ejemplo: <span class="math inline">\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}</span>, por tanto:</p>
 <div class="pull-left">
-<p><span class="math display">p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{j=1} e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}</span></p>
+<p><span class="math display">p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{l=1} e^{\beta_{l0} + \beta_{l1}\text{statusquo}_{i} + \beta_{l2}\text{male}_{i}}}</span></p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>  (Intercept) statusquo    sexM
@@ -587,7 +587,7 @@ Y      0.777    1.895 -0.114</code></pre>
 <section id="efectos-marginales-sobre-la-probabilidad-de-la-categoría-j-6" class="slide level2">
 <h2>Efectos marginales sobre la probabilidad de la categoría <span class="math inline">j</span></h2>
 <div class="pull-left">
-<p><span class="math display">p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{j=1} e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}</span></p>
+<p><span class="math display">p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{l=1} e^{\beta_{l0} + \beta_{l1}\text{statusquo}_{i} + \beta_{l2}\text{male}_{i}}}</span></p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -599,7 +599,7 @@ Y      0.777    1.895 -0.114</code></pre>
 </div>
 </div>
 <div class="pull-right">
-<p><span class="math display">\frac{\partial p_{ij}}{\partial x_{k}} = p_{j} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{j=1}p_{j} \cdot \beta_{jk}\bigg)</span></p>
+<p><span class="math display">\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)</span></p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
@@ -707,8 +707,8 @@ Comparison: dY/dX</code></pre>
 </ul>
 </div>
 </section>
-<section id="independence-of-irrelevante-alternatives-iia" class="slide level2">
-<h2>Independence of Irrelevante Alternatives (IIA)</h2>
+<section id="independence-of-irrelevant-alternatives-iia-2" class="slide level2">
+<h2>Independence of Irrelevant Alternatives (IIA)</h2>
 <p>Existe una variedad de tests para el supuesto de IIA, pero ninguno ha mostrado ser concluyente:</p>
 <div class="center">
 <div class="quarto-figure quarto-figure-center">
@@ -718,6 +718,16 @@ Comparison: dY/dX</code></pre>
 </figure>
 </div>
 </div>
+</section>
+<section id="en-resumen" class="slide level2">
+<h2>En resumen</h2>
+<ul>
+<li>El efecto marginal de <span class="math inline">x_{k}</span> sobre <span class="math inline">\text{logit}(p_{ij})</span> es constante e igual a <span class="math inline">\beta_{jk}</span>; exponenciando, <span class="math inline">e^{\beta_{jk}}</span> es la odds ratio de <span class="math inline">j</span> vs <span class="math inline">J</span> asociada a un aumento de una unidad en <span class="math inline">x_{k}</span>.</li>
+<li>El efecto marginal sobre la <strong>probabilidad</strong> <span class="math inline">p_{ij}</span> no es <span class="math inline">\beta_{jk}</span>: <span class="math inline">\partial p_{ij}/\partial x_{k} = p_{ij}(\beta_{jk} - \overline{\beta_{k}})</span>, por lo que su signo y magnitud dependen de <span class="math inline">p_{ij}</span> y pueden variar entre observaciones (e incluso cambiar de signo).</li>
+<li>En la práctica se resume esta heterogeneidad con AME, MEM o MER (ej., <code>avg_slopes()</code> del paquete <code>marginaleffects</code>).</li>
+<li>El modelo logit multinomial supone Independencia de Alternativas Irrelevantes (IIA); no existe un test concluyente para verificarlo.</li>
+<li>La próxima clase aborda la regresión de Poisson, usada para modelar variables de conteo.</li>
+</ul>
 </section>
 <section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#E0642B">
 <h2>Gracias</h2>

@@ -207,7 +207,6 @@ $$\text{Por tanto} \quad \quad  \ln \frac{p_{i}}{1 - p_{i}} = \eta_{i} = \beta_{
 ```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=8, fig.width=12}
 library(pacman)
 p_load("tidyverse")
-p_load("cowplot")
 
 theme_set(theme_julia())
 
@@ -308,7 +307,6 @@ Para ejemplificar el uso de regresión logística trabajaremos con los datos de 
 
 # datos de Capital Bikeshare (arriendos horarios de bicicletas), paquete "ISLR2"
 p_load("ISLR2")
-p_load("viridis")
 p_load("modelr")
 
 bikedata <- Bikeshare %>% as_tibble()
@@ -453,7 +451,7 @@ $$\hat{\beta_{0}},\hat{\beta_{1}} = \underset{\beta_{0},\beta_{1}}{\arg\max\ } \
 . . .
 
  Para acelerar la búsqueda usaremos valores en la proximidad de las estimaciones reportadas arriba (que normalmente no conoceríamos):
-[Implentación en]{.bold} `R`:
+[Implementación en]{.bold} `R`:
 ```{r, include=TRUE, echo=TRUE, warning=FALSE, message=FALSE}
 
 ll <- function(b0,b1) {
@@ -471,7 +469,7 @@ ll(b0=0,b1=0); ll(b0=-1,b1=2)
 ```
 
 ## Estimación (MLE)
-[Implentación en]{.bold} `R`:
+[Implementación en]{.bold} `R`:
 ```{r, include=TRUE, echo=TRUE, warning=FALSE, message=FALSE}
 
 # Evaluar la log-likelihood function  para muchas combinaciones de posibles valores de  b0 y b1
@@ -514,6 +512,14 @@ summary(logit_demand_temp)
 ```
 
 :::
+
+## En resumen
+
+- Regresión logística es un GLM con componente aleatorio Bernoulli/Binomial y enlace logit: $\ln \frac{p_{i}}{1-p_{i}} = \eta_{i}$.
+- La función media (sigmoide) $p_{i} = \frac{e^{\eta_{i}}}{1+e^{\eta_{i}}}$ mantiene $p_{i}$ restringido a $[0,1]$.
+- Los parámetros $\beta$ se estiman por máxima verosimilitud (MLE): no hay solución analítica cerrada, se usa un algoritmo de búsqueda numérica (ej. Fisher Scoring).
+- La log-likelihood de una Bernoulli es $\ell(\boldsymbol\beta \mid y) = \sum_{i=1}^{n}\big(y_{i}\ln p_{i} + (1-y_{i})\ln(1-p_{i})\big)$.
+- La próxima clase: regresión logística — interpretación de parámetros.
 
 ## Gracias {.inverse .center .middle .closing}
 
