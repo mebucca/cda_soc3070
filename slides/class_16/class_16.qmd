@@ -37,8 +37,25 @@ bikedata <- course$data %>%
       clear_weather,
       levels = c(0, 1),
       labels = c("Otro clima", "Despejado")
+    ),
+    demand_label = factor(
+      high_demand,
+      levels = c(0, 1),
+      labels = c("Demanda no alta", "Demanda alta")
     )
   )
+
+logit_crudo <- glm(
+  high_demand ~ clear_weather,
+  family = binomial(link = "logit"),
+  data = bikedata
+)
+
+logit_mes <- glm(
+  high_demand ~ clear_weather + factor(month),
+  family = binomial(link = "logit"),
+  data = bikedata
+)
 ```
 
 ## Antes · Hoy · Después {.class-rhythm}
@@ -85,7 +102,7 @@ Todas preguntan qué **cambiaría** en un resultado si interviniéramos sobre un
 
 Vamos a estudiar una hipótesis concreta:
 
-> Un cielo despejado aumenta la cantidad de ciclistas por hora.
+> Un cielo despejado aumenta la probabilidad de demanda alta.
 
 Definimos un predictor binario:
 
@@ -97,23 +114,39 @@ D_i =
 \end{cases}
 $$
 
-El resultado es continuo: $Y_i=$ número de `bikers` en esa hora.
+El resultado también es binario:
+
+$$
+Y_i =
+\begin{cases}
+1 & \text{si la hora tiene demanda alta}\\
+0 & \text{si la hora no tiene demanda alta}
+\end{cases}
+$$
+
+`high_demand = 1` identifica las horas sobre el percentil 75 de `bikers`.
 
 ## Primero vemos una asociación
 
 ```{r observed-association, echo=FALSE, fig.height=4.5}
 bikedata %>%
-  ggplot(aes(weather_label, bikers, fill = weather_label)) +
-  geom_boxplot(width = 0.58, outlier.alpha = 0.05) +
-  stat_summary(
-    fun = mean, geom = "point", shape = 21, size = 4,
-    fill = "white", color = "black"
+  group_by(weather_label) %>%
+  summarise(prop_high = mean(high_demand), .groups = "drop") %>%
+  ggplot(aes(weather_label, prop_high, fill = weather_label)) +
+  geom_col(width = 0.58) +
+  geom_text(
+    aes(label = scales::percent(prop_high, accuracy = 0.1)),
+    vjust = -0.45, size = 5
   ) +
   scale_fill_course(guide = "none") +
-  labs(x = NULL, y = "Bikers por hora")
+  scale_y_continuous(
+    labels = scales::percent_format(accuracy = 1),
+    limits = c(0, 0.34)
+  ) +
+  labs(x = NULL, y = "Probabilidad observada de demanda alta")
 ```
 
-Las horas despejadas registran más ciclistas en promedio. Eso es un hecho descriptivo; todavía no es una conclusión causal.
+Las horas despejadas tienen mayor probabilidad de demanda alta. Eso es un hecho descriptivo; todavía no es una conclusión causal.
 
 ## La diferencia observada
 
@@ -122,7 +155,7 @@ observed_means <- bikedata %>%
   group_by(weather_label) %>%
   summarise(
     horas = n(),
-    media_bikers = mean(bikers),
+    prob_demanda_alta = mean(high_demand),
     .groups = "drop"
   )
 
@@ -132,15 +165,87 @@ observed_means
 ```{r observed-difference, echo=FALSE}
 raw_difference <- with(
   bikedata,
-  mean(bikers[clear_weather == 1]) - mean(bikers[clear_weather == 0])
+  mean(high_demand[clear_weather == 1]) -
+    mean(high_demand[clear_weather == 0])
 )
 ```
 
-La diferencia es de `r round(raw_difference, 1)` ciclistas por hora.
+La diferencia observada es de `r sub("\\.", ",", formatC(100 * raw_difference, format = "f", digits = 1))` puntos porcentuales.
 
 . . .
 
 **Pregunta:** ¿cuánto de esa diferencia se debe al clima y cuánto a que las horas despejadas son distintas en otros aspectos?
+
+## El coeficiente del logit resume la asociación
+
+Ajustamos:
+
+$$
+\operatorname{logit}\{\Pr(Y_i=1\mid D_i)\}
+=\beta_0+\beta_1D_i.
+$$
+
+```{r crude-logit, echo=TRUE}
+logit_crudo <- glm(
+  high_demand ~ clear_weather,
+  family = binomial(link = "logit"),
+  data = bikedata
+)
+
+coef(logit_crudo)[["clear_weather"]]
+exp(coef(logit_crudo)[["clear_weather"]])
+```
+
+En estos datos, $\hat\beta_1=`r sub("\\.", ",", formatC(coef(logit_crudo)[["clear_weather"]], format = "f", digits = 3))`$ y $e^{\hat\beta_1}=`r sub("\\.", ",", formatC(exp(coef(logit_crudo)[["clear_weather"]]), format = "f", digits = 2))`$.
+
+. . .
+
+Las *odds* de demanda alta son aproximadamente `r formatC(100 * (exp(coef(logit_crudo)[["clear_weather"]]) - 1), format = "f", digits = 0)`% mayores bajo clima despejado. Por ahora, esta es una **asociación**.
+
+## Predicciones del logit
+
+```{r logit-predictions, echo=FALSE, fig.height=4.6}
+prediction_data <- tibble(
+  clear_weather = c(0, 1),
+  weather_label = factor(
+    c(0, 1),
+    levels = c(0, 1),
+    labels = c("Otro clima", "Despejado")
+  )
+)
+
+pred_link <- predict(
+  logit_crudo,
+  newdata = prediction_data,
+  type = "link",
+  se.fit = TRUE
+)
+
+prediction_data <- prediction_data %>%
+  mutate(
+    probability = plogis(pred_link$fit),
+    lower = plogis(pred_link$fit - 1.96 * pred_link$se.fit),
+    upper = plogis(pred_link$fit + 1.96 * pred_link$se.fit)
+  )
+
+ggplot(
+  prediction_data,
+  aes(weather_label, probability, group = 1, color = weather_label)
+) +
+  geom_line(linewidth = 1, color = course_palette[["secondary"]]) +
+  geom_pointrange(
+    aes(ymin = lower, ymax = upper),
+    linewidth = 1, size = 1.2
+  ) +
+  scale_color_course(guide = "none") +
+  scale_y_continuous(
+    labels = scales::percent_format(accuracy = 1),
+    limits = c(0.15, 0.31)
+  ) +
+  labs(x = NULL, y = "Probabilidad predicha de demanda alta")
+```
+
+Con un único predictor binario, el logit produce dos probabilidades predichas: una para $D=0$ y otra para $D=1$.
 
 # Mundos paralelos {.inverse .center .middle}
 
@@ -149,16 +254,16 @@ La diferencia es de `r round(raw_difference, 1)` ciclistas por hora.
 Para cada hora $i$ imaginamos dos resultados:
 
 $$
-Y_i(1): \text{bikers si esa hora estuviera despejada}
+Y_i(1): \text{demanda alta o no si esa hora estuviera despejada}
 $$
 
 $$
-Y_i(0): \text{bikers si esa misma hora tuviera otro clima}
+Y_i(0): \text{demanda alta o no si esa misma hora tuviera otro clima}
 $$
 
 El efecto causal individual es:
 
-$$\tau_i = Y_i(1)-Y_i(0).$$
+$$\tau_i = Y_i(1)-Y_i(0)\in\{-1,0,1\}.$$
 
 Esta comparación mantiene fija la unidad y cambia solo el tratamiento.
 
@@ -166,10 +271,10 @@ Esta comparación mantiene fija la unidad y cambia solo el tratamiento.
 
 | Hora | $Y_i(1)$: despejado | $Y_i(0)$: otro clima | Efecto |
 |---|---:|---:|---:|
-| Lunes, 08:00 | 180 | 130 | +50 |
-| Martes, 14:00 | 95 | 80 | +15 |
-| Viernes, 18:00 | 310 | 230 | +80 |
-| Domingo, 11:00 | 220 | 205 | +15 |
+| Lunes, 08:00 | Alta (1) | No alta (0) | +1 |
+| Martes, 14:00 | No alta (0) | No alta (0) | 0 |
+| Viernes, 18:00 | Alta (1) | Alta (1) | 0 |
+| Domingo, 11:00 | No alta (0) | Alta (1) | −1 |
 
 Si pudiéramos observar ambas columnas, calcular el efecto causal sería trivial.
 
@@ -181,10 +286,10 @@ Pero estos valores son una **ilustración**: en los datos reales nunca vemos las
 
 | Hora | Clima observado | $Y_i(1)$ | $Y_i(0)$ |
 |---|---|---:|---:|
-| Lunes, 08:00 | despejado | 180 | **?** |
-| Martes, 14:00 | otro clima | **?** | 80 |
-| Viernes, 18:00 | despejado | 310 | **?** |
-| Domingo, 11:00 | otro clima | **?** | 205 |
+| Lunes, 08:00 | despejado | Alta (1) | **?** |
+| Martes, 14:00 | otro clima | **?** | No alta (0) |
+| Viernes, 18:00 | despejado | Alta (1) | **?** |
+| Domingo, 11:00 | otro clima | **?** | Alta (1) |
 
 Para cada unidad observamos:
 
@@ -210,6 +315,8 @@ $$
 $$
 
 Una comparación es entre **mundos posibles para las mismas unidades**; la otra es entre **unidades diferentes en el mundo observado**.
+
+Como $Y$ es binario, ambas expresiones son diferencias de probabilidades. El ATE es un efecto causal promedio medido en puntos porcentuales.
 
 ## Asociación no es causalidad
 
@@ -251,7 +358,7 @@ bikedata %>%
   group_by(mnth) %>%
   summarise(
     prop_clear = mean(clear_weather),
-    mean_bikers = mean(bikers),
+    prop_high = mean(high_demand),
     .groups = "drop"
   ) %>%
   ggplot(aes(mnth, prop_clear, group = 1)) +
@@ -261,14 +368,14 @@ bikedata %>%
   labs(x = "Mes", y = "Proporción de horas despejadas")
 ```
 
-Los meses no tienen la misma probabilidad de estar despejados. Además, estación, vacaciones y horas de luz afectan la demanda por bicicletas.
+Los meses no tienen la misma probabilidad de estar despejados. Además, estación, vacaciones y horas de luz afectan la probabilidad de demanda alta.
 
 ## Confusión: una causa común abre un camino alternativo
 
 ```{r dag-confound, echo=FALSE, fig.height=4.2}
 nodes <- tibble(
   x = c(1, 3, 2), y = c(1, 1, 2.45),
-  label = c("D\nClima despejado", "Y\nBikers", "X\nMes")
+  label = c("D\nClima despejado", "Y\nDemanda alta", "X\nMes")
 )
 edges <- tibble(
   x = c(2, 2, 1), y = c(2.28, 2.28, 1),
@@ -295,26 +402,82 @@ ggplot() +
 
 El camino $D \leftarrow X \rightarrow Y$ mezcla el efecto del clima con diferencias estacionales.
 
-## Ajustar por el confusor cambia la comparación
+## Ajustar por el confusor cambia el coeficiente
 
 ```{r control-demo, echo=FALSE}
-sin_ajuste <- lm(bikers ~ clear_weather, data = bikedata)
-con_ajuste <- lm(bikers ~ clear_weather + factor(month), data = bikedata)
-
 tibble(
-  comparación = c("Cruda", "Dentro del mismo mes"),
-  diferencia_estimada = c(
-    coef(sin_ajuste)[["clear_weather"]],
-    coef(con_ajuste)[["clear_weather"]]
-  )
+  modelo = c("Logit crudo", "Logit ajustado por mes"),
+  beta_clima = c(
+    coef(logit_crudo)[["clear_weather"]],
+    coef(logit_mes)[["clear_weather"]]
+  ),
+  odds_ratio = exp(c(
+    coef(logit_crudo)[["clear_weather"]],
+    coef(logit_mes)[["clear_weather"]]
+  ))
 )
 ```
 
-La diferencia estimada cae al comparar horas dentro del mismo mes: parte de la asociación cruda reflejaba composición estacional.
+El coeficiente cambia al comparar horas dentro del mismo mes: parte de la asociación cruda reflejaba composición estacional.
 
 . . .
 
-Esto **no prueba** que el valor ajustado sea causal. Solo elimina la confusión explicada por `month` bajo la forma funcional elegida.
+Esto **no prueba** que el coeficiente ajustado sea causal. Solo elimina la confusión explicada por `month` bajo la forma funcional elegida.
+
+## El mismo coeficiente admite dos lecturas
+
+::: {.pull-left}
+
+**Lectura asociacional**
+
+$$
+\beta_1=
+\log\frac{\operatorname{odds}(Y=1\mid D=1,X)}
+{\operatorname{odds}(Y=1\mid D=0,X)}
+$$
+
+Describe una comparación condicional en los datos observados.
+
+:::
+
+::: {.pull-right}
+
+**Lectura causal**
+
+$$
+\beta_1=
+\log\frac{\operatorname{odds}\{Y(1)=1\mid X\}}
+{\operatorname{odds}\{Y(0)=1\mid X\}}
+$$
+
+Compara resultados potenciales bajo dos intervenciones.
+
+:::
+
+. . .
+
+La segunda lectura necesita diseño y supuestos causales. La ecuación logística, por sí sola, solo garantiza la primera.
+
+## La causalidad no está en la complejidad
+
+El mismo logit puede ser:
+
+- **asociacional**, si el tratamiento está confundido;
+- **causal**, si el diseño hace creíble la comparación contrafactual.
+
+. . .
+
+Un modelo más complejo puede ajustar mejor la asociación, pero no fabrica el contrafactual faltante.
+
+. . .
+
+Una muestra más grande reduce el error estándar:
+
+$$
+n\uparrow \quad\Longrightarrow\quad SE(\hat\beta_1)\downarrow
+$$
+
+pero no elimina el sesgo por confusión. Podemos estimar una asociación no causal con enorme precisión.
 
 ## El supuesto decisivo no viene de la regresión
 
@@ -403,22 +566,22 @@ Experimentos aleatorizados, experimentos naturales y diseños cuasi-experimental
 
 ## Cómo leer los coeficientes desde ahora
 
-Los modelos del curso describen asociaciones condicionales:
+Sin supuestos causales, el coeficiente de un logit describe una asociación condicional:
 
-> Entre observaciones con iguales covariables, ¿cómo cambia en promedio $Y$ cuando cambia $X$?
+> Entre observaciones con iguales covariables, ¿cómo cambian las log-odds de $Y=1$ cuando cambia $D$?
 
 . . .
 
-Para hablar de un efecto causal necesitamos además:
+Ese mismo coeficiente **puede** interpretarse como un efecto causal condicional si además:
 
-1. definir tratamiento, outcome, población y estimando;
-2. explicitar un DAG;
-3. justificar no-confusión, positividad y consistencia;
-4. evitar controles que abran sesgos nuevos.
+1. definimos tratamiento, outcome, población y estimando;
+2. explicitamos un DAG;
+3. justificamos no-confusión, positividad y consistencia;
+4. evitamos controles que abran sesgos nuevos.
 
 ## Ejercicio: construya el argumento causal
 
-Suponga que queremos estimar el efecto de `workingday` sobre `bikers`.
+Suponga que queremos estimar el efecto de `workingday` sobre la probabilidad de `high_demand`.
 
 1. Defina $Y_i(1)$ y $Y_i(0)$ y precise cuál es la unidad $i$.
 2. Dibuje un DAG con al menos un confusor plausible.
@@ -430,9 +593,10 @@ Suponga que queremos estimar el efecto de `workingday` sobre `bikers`.
 
 - Causalidad compara resultados potenciales de la misma unidad.
 - Solo observamos uno: el otro es contrafactual.
-- Una diferencia entre grupos es asociación; no es automáticamente un efecto.
+- Un coeficiente logístico es asociacional por defecto; puede ser causal bajo un diseño y supuestos adecuados.
 - Los confusores crean caminos alternativos entre tratamiento y resultado.
-- La identificación causal requiere diseño y supuestos, no solo una regresión.
+- Más datos reducen incertidumbre, pero no eliminan confusión.
+- La causalidad depende del diseño, no de la complejidad del modelo.
 
 ## Gracias {.inverse .center .middle .closing}
 

@@ -32,6 +32,72 @@
       margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
       vertical-align: middle;
     }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      { color: #24292e;  }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #24292e; } /* Normal */
+    code span.al { color: #ff5555; font-weight: bold; } /* Alert */
+    code span.an { color: #6a737d; } /* Annotation */
+    code span.at { color: #d73a49; } /* Attribute */
+    code span.bn { color: #005cc5; } /* BaseN */
+    code span.bu { color: #d73a49; } /* BuiltIn */
+    code span.cf { color: #d73a49; } /* ControlFlow */
+    code span.ch { color: #032f62; } /* Char */
+    code span.cn { color: #005cc5; } /* Constant */
+    code span.co { color: #6a737d; } /* Comment */
+    code span.cv { color: #6a737d; } /* CommentVar */
+    code span.do { color: #6a737d; } /* Documentation */
+    code span.dt { color: #d73a49; } /* DataType */
+    code span.dv { color: #005cc5; } /* DecVal */
+    code span.er { color: #ff5555; text-decoration: underline; } /* Error */
+    code span.ex { color: #d73a49; font-weight: bold; } /* Extension */
+    code span.fl { color: #005cc5; } /* Float */
+    code span.fu { color: #6f42c1; } /* Function */
+    code span.im { color: #032f62; } /* Import */
+    code span.in { color: #6a737d; } /* Information */
+    code span.kw { color: #d73a49; } /* Keyword */
+    code span.op { color: #24292e; } /* Operator */
+    code span.ot { color: #6f42c1; } /* Other */
+    code span.pp { color: #d73a49; } /* Preprocessor */
+    code span.re { color: #6a737d; } /* RegionMarker */
+    code span.sc { color: #005cc5; } /* SpecialChar */
+    code span.ss { color: #032f62; } /* SpecialString */
+    code span.st { color: #032f62; } /* String */
+    code span.va { color: #e36209; } /* Variable */
+    code span.vs { color: #032f62; } /* VerbatimString */
+    code span.wa { color: #ff5555; } /* Warning */
   </style>
   <link rel="stylesheet" href="class_16_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
   <link rel="stylesheet" href="../_shared/course.css">
@@ -201,7 +267,7 @@ Mauricio Bucca · Sociología UC
 <h2>Nuestro caso: clima despejado y demanda</h2>
 <p>Vamos a estudiar una hipótesis concreta:</p>
 <blockquote>
-<p>Un cielo despejado aumenta la cantidad de ciclistas por hora.</p>
+<p>Un cielo despejado aumenta la probabilidad de demanda alta.</p>
 </blockquote>
 <p>Definimos un predictor binario:</p>
 <p><span class="math display">
@@ -211,28 +277,69 @@ D_i =
 0 &amp; \text{si hay nubes, lluvia o nieve}
 \end{cases}
 </span></p>
-<p>El resultado es continuo: <span class="math inline">Y_i=</span> número de <code>bikers</code> en esa hora.</p>
+<p>El resultado también es binario:</p>
+<p><span class="math display">
+Y_i =
+\begin{cases}
+1 &amp; \text{si la hora tiene demanda alta}\\
+0 &amp; \text{si la hora no tiene demanda alta}
+\end{cases}
+</span></p>
+<p><code>high_demand = 1</code> identifica las horas sobre el percentil 75 de <code>bikers</code>.</p>
 </section>
 <section id="primero-vemos-una-asociación" class="slide level2">
 <h2>Primero vemos una asociación</h2>
 
-<img data-src="class_16_files/figure-revealjs/observed-association-1.png" width="960" class="r-stretch"><p>Las horas despejadas registran más ciclistas en promedio. Eso es un hecho descriptivo; todavía no es una conclusión causal.</p>
+<img data-src="class_16_files/figure-revealjs/observed-association-1.png" width="960" class="r-stretch"><p>Las horas despejadas tienen mayor probabilidad de demanda alta. Eso es un hecho descriptivo; todavía no es una conclusión causal.</p>
 </section>
 <section id="la-diferencia-observada" class="slide level2">
 <h2>La diferencia observada</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 2 × 3
-  weather_label horas media_bikers
-  &lt;fct&gt;         &lt;int&gt;        &lt;dbl&gt;
-1 Otro clima     3000         123.
-2 Despejado      5645         155.</code></pre>
+  weather_label horas prob_demanda_alta
+  &lt;fct&gt;         &lt;int&gt;             &lt;dbl&gt;
+1 Otro clima     3000             0.189
+2 Despejado      5645             0.282</code></pre>
 </div>
 </div>
-<p>La diferencia es de 32.300 ciclistas por hora.</p>
+<p>La diferencia observada es de 9,3 puntos porcentuales.</p>
 <div class="fragment">
 <p><strong>Pregunta:</strong> ¿cuánto de esa diferencia se debe al clima y cuánto a que las horas despejadas son distintas en otros aspectos?</p>
 </div>
+</section>
+<section id="el-coeficiente-del-logit-resume-la-asociación" class="slide level2">
+<h2>El coeficiente del logit resume la asociación</h2>
+<p>Ajustamos:</p>
+<p><span class="math display">
+\operatorname{logit}\{\Pr(Y_i=1\mid D_i)\}
+=\beta_0+\beta_1D_i.
+</span></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href=""></a>logit_crudo <span class="ot">&lt;-</span> <span class="fu">glm</span>(</span>
+<span id="cb2-2"><a href=""></a>  high_demand <span class="sc">~</span> clear_weather,</span>
+<span id="cb2-3"><a href=""></a>  <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>),</span>
+<span id="cb2-4"><a href=""></a>  <span class="at">data =</span> bikedata</span>
+<span id="cb2-5"><a href=""></a>)</span>
+<span id="cb2-6"><a href=""></a></span>
+<span id="cb2-7"><a href=""></a><span class="fu">coef</span>(logit_crudo)[[<span class="st">"clear_weather"</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.522</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a><span class="fu">exp</span>(<span class="fu">coef</span>(logit_crudo)[[<span class="st">"clear_weather"</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1.686</code></pre>
+</div>
+</div>
+<p>En estos datos, <span class="math inline">\hat\beta_1=0,522</span> y <span class="math inline">e^{\hat\beta_1}=1,69</span>.</p>
+<div class="fragment">
+<p>Las <em>odds</em> de demanda alta son aproximadamente 69% mayores bajo clima despejado. Por ahora, esta es una <strong>asociación</strong>.</p>
+</div>
+</section>
+<section id="predicciones-del-logit" class="slide level2">
+<h2>Predicciones del logit</h2>
+
+<img data-src="class_16_files/figure-revealjs/logit-predictions-1.png" width="960" class="r-stretch"><p>Con un único predictor binario, el logit produce dos probabilidades predichas: una para <span class="math inline">D=0</span> y otra para <span class="math inline">D=1</span>.</p>
 </section></section>
 <section>
 <section id="mundos-paralelos" class="title-slide slide level1 inverse center middle" data-background-color="#F0B323">
@@ -243,13 +350,13 @@ D_i =
 <h2>Dos resultados potenciales para cada hora</h2>
 <p>Para cada hora <span class="math inline">i</span> imaginamos dos resultados:</p>
 <p><span class="math display">
-Y_i(1): \text{bikers si esa hora estuviera despejada}
+Y_i(1): \text{demanda alta o no si esa hora estuviera despejada}
 </span></p>
 <p><span class="math display">
-Y_i(0): \text{bikers si esa misma hora tuviera otro clima}
+Y_i(0): \text{demanda alta o no si esa misma hora tuviera otro clima}
 </span></p>
 <p>El efecto causal individual es:</p>
-<p><span class="math display">\tau_i = Y_i(1)-Y_i(0).</span></p>
+<p><span class="math display">\tau_i = Y_i(1)-Y_i(0)\in\{-1,0,1\}.</span></p>
 <p>Esta comparación mantiene fija la unidad y cambia solo el tratamiento.</p>
 </section>
 <section id="en-el-multiverso-veríamos-ambas-columnas" class="slide level2">
@@ -266,27 +373,27 @@ Y_i(0): \text{bikers si esa misma hora tuviera otro clima}
 <tbody>
 <tr class="odd">
 <td>Lunes, 08:00</td>
-<td style="text-align: right;">180</td>
-<td style="text-align: right;">130</td>
-<td style="text-align: right;">+50</td>
+<td style="text-align: right;">Alta (1)</td>
+<td style="text-align: right;">No alta (0)</td>
+<td style="text-align: right;">+1</td>
 </tr>
 <tr class="even">
 <td>Martes, 14:00</td>
-<td style="text-align: right;">95</td>
-<td style="text-align: right;">80</td>
-<td style="text-align: right;">+15</td>
+<td style="text-align: right;">No alta (0)</td>
+<td style="text-align: right;">No alta (0)</td>
+<td style="text-align: right;">0</td>
 </tr>
 <tr class="odd">
 <td>Viernes, 18:00</td>
-<td style="text-align: right;">310</td>
-<td style="text-align: right;">230</td>
-<td style="text-align: right;">+80</td>
+<td style="text-align: right;">Alta (1)</td>
+<td style="text-align: right;">Alta (1)</td>
+<td style="text-align: right;">0</td>
 </tr>
 <tr class="even">
 <td>Domingo, 11:00</td>
-<td style="text-align: right;">220</td>
-<td style="text-align: right;">205</td>
-<td style="text-align: right;">+15</td>
+<td style="text-align: right;">No alta (0)</td>
+<td style="text-align: right;">Alta (1)</td>
+<td style="text-align: right;">−1</td>
 </tr>
 </tbody>
 </table>
@@ -310,26 +417,26 @@ Y_i(0): \text{bikers si esa misma hora tuviera otro clima}
 <tr class="odd">
 <td>Lunes, 08:00</td>
 <td>despejado</td>
-<td style="text-align: right;">180</td>
+<td style="text-align: right;">Alta (1)</td>
 <td style="text-align: right;"><strong>?</strong></td>
 </tr>
 <tr class="even">
 <td>Martes, 14:00</td>
 <td>otro clima</td>
 <td style="text-align: right;"><strong>?</strong></td>
-<td style="text-align: right;">80</td>
+<td style="text-align: right;">No alta (0)</td>
 </tr>
 <tr class="odd">
 <td>Viernes, 18:00</td>
 <td>despejado</td>
-<td style="text-align: right;">310</td>
+<td style="text-align: right;">Alta (1)</td>
 <td style="text-align: right;"><strong>?</strong></td>
 </tr>
 <tr class="even">
 <td>Domingo, 11:00</td>
 <td>otro clima</td>
 <td style="text-align: right;"><strong>?</strong></td>
-<td style="text-align: right;">205</td>
+<td style="text-align: right;">Alta (1)</td>
 </tr>
 </tbody>
 </table>
@@ -350,6 +457,7 @@ Y_i(0): \text{bikers si esa misma hora tuviera otro clima}
 \mathbb{E}[Y_i\mid D_i=1]-\mathbb{E}[Y_i\mid D_i=0].
 </span></p>
 <p>Una comparación es entre <strong>mundos posibles para las mismas unidades</strong>; la otra es entre <strong>unidades diferentes en el mundo observado</strong>.</p>
+<p>Como <span class="math inline">Y</span> es binario, ambas expresiones son diferencias de probabilidades. El ATE es un efecto causal promedio medido en puntos porcentuales.</p>
 </div>
 </section>
 <section id="asociación-no-es-causalidad" class="slide level2">
@@ -381,27 +489,69 @@ Y_i(0): \text{bikers si esa misma hora tuviera otro clima}
 <section id="el-mes-cambia-el-clima-y-también-la-demanda" class="slide level2">
 <h2>El mes cambia el clima y también la demanda</h2>
 
-<img data-src="class_16_files/figure-revealjs/clear-by-month-1.png" width="960" class="r-stretch"><p>Los meses no tienen la misma probabilidad de estar despejados. Además, estación, vacaciones y horas de luz afectan la demanda por bicicletas.</p>
+<img data-src="class_16_files/figure-revealjs/clear-by-month-1.png" width="960" class="r-stretch"><p>Los meses no tienen la misma probabilidad de estar despejados. Además, estación, vacaciones y horas de luz afectan la probabilidad de demanda alta.</p>
 </section>
 <section id="confusión-una-causa-común-abre-un-camino-alternativo" class="slide level2">
 <h2>Confusión: una causa común abre un camino alternativo</h2>
 
 <img data-src="class_16_files/figure-revealjs/dag-confound-1.png" width="960" class="r-stretch"><p>El camino <span class="math inline">D \leftarrow X \rightarrow Y</span> mezcla el efecto del clima con diferencias estacionales.</p>
 </section>
-<section id="ajustar-por-el-confusor-cambia-la-comparación" class="slide level2">
-<h2>Ajustar por el confusor cambia la comparación</h2>
+<section id="ajustar-por-el-confusor-cambia-el-coeficiente" class="slide level2">
+<h2>Ajustar por el confusor cambia el coeficiente</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2 × 2
-  comparación          diferencia_estimada
-  &lt;chr&gt;                              &lt;dbl&gt;
-1 Cruda                               32.300
-2 Dentro del mismo mes                24.400</code></pre>
+<pre><code># A tibble: 2 × 3
+  modelo                 beta_clima odds_ratio
+  &lt;chr&gt;                       &lt;dbl&gt;      &lt;dbl&gt;
+1 Logit crudo                 0.522       1.690
+2 Logit ajustado por mes      0.443       1.560</code></pre>
 </div>
 </div>
-<p>La diferencia estimada cae al comparar horas dentro del mismo mes: parte de la asociación cruda reflejaba composición estacional.</p>
+<p>El coeficiente cambia al comparar horas dentro del mismo mes: parte de la asociación cruda reflejaba composición estacional.</p>
 <div class="fragment">
-<p>Esto <strong>no prueba</strong> que el valor ajustado sea causal. Solo elimina la confusión explicada por <code>month</code> bajo la forma funcional elegida.</p>
+<p>Esto <strong>no prueba</strong> que el coeficiente ajustado sea causal. Solo elimina la confusión explicada por <code>month</code> bajo la forma funcional elegida.</p>
+</div>
+</section>
+<section id="el-mismo-coeficiente-admite-dos-lecturas" class="slide level2">
+<h2>El mismo coeficiente admite dos lecturas</h2>
+<div class="pull-left">
+<p><strong>Lectura asociacional</strong></p>
+<p><span class="math display">
+\beta_1=
+\log\frac{\operatorname{odds}(Y=1\mid D=1,X)}
+{\operatorname{odds}(Y=1\mid D=0,X)}
+</span></p>
+<p>Describe una comparación condicional en los datos observados.</p>
+</div>
+<div class="pull-right">
+<p><strong>Lectura causal</strong></p>
+<p><span class="math display">
+\beta_1=
+\log\frac{\operatorname{odds}\{Y(1)=1\mid X\}}
+{\operatorname{odds}\{Y(0)=1\mid X\}}
+</span></p>
+<p>Compara resultados potenciales bajo dos intervenciones.</p>
+</div>
+<div class="fragment">
+<p>La segunda lectura necesita diseño y supuestos causales. La ecuación logística, por sí sola, solo garantiza la primera.</p>
+</div>
+</section>
+<section id="la-causalidad-no-está-en-la-complejidad" class="slide level2">
+<h2>La causalidad no está en la complejidad</h2>
+<p>El mismo logit puede ser:</p>
+<ul>
+<li><strong>asociacional</strong>, si el tratamiento está confundido;</li>
+<li><strong>causal</strong>, si el diseño hace creíble la comparación contrafactual.</li>
+</ul>
+<div class="fragment">
+<p>Un modelo más complejo puede ajustar mejor la asociación, pero no fabrica el contrafactual faltante.</p>
+</div>
+<div class="fragment">
+<p>Una muestra más grande reduce el error estándar:</p>
+<p><span class="math display">
+n\uparrow \quad\Longrightarrow\quad SE(\hat\beta_1)\downarrow
+</span></p>
+<p>pero no elimina el sesgo por confusión. Podemos estimar una asociación no causal con enorme precisión.</p>
 </div>
 </section>
 <section id="el-supuesto-decisivo-no-viene-de-la-regresión" class="slide level2">
@@ -487,23 +637,23 @@ D_i=d \quad\Longrightarrow\quad Y_i=Y_i(d).
 </section>
 <section id="cómo-leer-los-coeficientes-desde-ahora" class="slide level2">
 <h2>Cómo leer los coeficientes desde ahora</h2>
-<p>Los modelos del curso describen asociaciones condicionales:</p>
+<p>Sin supuestos causales, el coeficiente de un logit describe una asociación condicional:</p>
 <blockquote>
-<p>Entre observaciones con iguales covariables, ¿cómo cambia en promedio <span class="math inline">Y</span> cuando cambia <span class="math inline">X</span>?</p>
+<p>Entre observaciones con iguales covariables, ¿cómo cambian las log-odds de <span class="math inline">Y=1</span> cuando cambia <span class="math inline">D</span>?</p>
 </blockquote>
 <div class="fragment">
-<p>Para hablar de un efecto causal necesitamos además:</p>
+<p>Ese mismo coeficiente <strong>puede</strong> interpretarse como un efecto causal condicional si además:</p>
 <ol type="1">
-<li>definir tratamiento, outcome, población y estimando;</li>
-<li>explicitar un DAG;</li>
-<li>justificar no-confusión, positividad y consistencia;</li>
-<li>evitar controles que abran sesgos nuevos.</li>
+<li>definimos tratamiento, outcome, población y estimando;</li>
+<li>explicitamos un DAG;</li>
+<li>justificamos no-confusión, positividad y consistencia;</li>
+<li>evitamos controles que abran sesgos nuevos.</li>
 </ol>
 </div>
 </section>
 <section id="ejercicio-construya-el-argumento-causal" class="slide level2">
 <h2>Ejercicio: construya el argumento causal</h2>
-<p>Suponga que queremos estimar el efecto de <code>workingday</code> sobre <code>bikers</code>.</p>
+<p>Suponga que queremos estimar el efecto de <code>workingday</code> sobre la probabilidad de <code>high_demand</code>.</p>
 <ol type="1">
 <li>Defina <span class="math inline">Y_i(1)</span> y <span class="math inline">Y_i(0)</span> y precise cuál es la unidad <span class="math inline">i</span>.</li>
 <li>Dibuje un DAG con al menos un confusor plausible.</li>
@@ -517,9 +667,10 @@ D_i=d \quad\Longrightarrow\quad Y_i=Y_i(d).
 <ul>
 <li>Causalidad compara resultados potenciales de la misma unidad.</li>
 <li>Solo observamos uno: el otro es contrafactual.</li>
-<li>Una diferencia entre grupos es asociación; no es automáticamente un efecto.</li>
+<li>Un coeficiente logístico es asociacional por defecto; puede ser causal bajo un diseño y supuestos adecuados.</li>
 <li>Los confusores crean caminos alternativos entre tratamiento y resultado.</li>
-<li>La identificación causal requiere diseño y supuestos, no solo una regresión.</li>
+<li>Más datos reducen incertidumbre, pero no eliminan confusión.</li>
+<li>La causalidad depende del diseño, no de la complejidad del modelo.</li>
 </ul>
 </section>
 <section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#8E1B3D">
