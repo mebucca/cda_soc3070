@@ -730,12 +730,12 @@ reg_grid %>% select(size, decay, validation_RMSE) %>% arrange(validation_RMSE)
 ```{r nn-reg-final, cache=TRUE}
 best_reg <- reg_grid %>% slice_min(validation_RMSE, n = 1, with_ties = FALSE)
 nn_reg_final <- nnet(
-  x = x_dev, y = log1p(bikedata$bikers[c(id_train, id_valid)]),
+  x = x_dev, y = log1p(bikedata$bikers[id_dev]),
   size = best_reg$size, decay = best_reg$decay,
   linout = TRUE, maxit = 260, MaxNWts = 7000, trace = FALSE
 )
 nn_count <- pmax(0, expm1(as.numeric(predict(nn_reg_final, x_test))))
-linear_final <- update(linear, data = bikedata[c(id_train, id_valid), ])
+linear_final <- update(linear, data = bikedata[id_dev, ])
 linear_test <- pmax(0, expm1(predict(linear_final, bikedata[id_test, ])))
 
 tibble(

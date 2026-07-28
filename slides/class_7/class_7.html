@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-23">
+  <meta name="dcterms.date" content="2026-07-28">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -159,7 +159,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-23</p>
+  <p class="date">2026-07-28</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -309,9 +309,9 @@ Mauricio Bucca · Sociología UC
 </div>
 <div class="fragment">
 <p>visualmente: <span class="math display">\begin{bmatrix}
-y_{i} \\  \vdots \\ y_{n}
+y_{1} \\  \vdots \\ y_{n}
 \end{bmatrix}_{(n,1)} \sim \text{Normal}_{n}\Bigg(  \boldsymbol{\mu} = \begin{bmatrix}
-\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki} \\
+\beta_{0} + \beta_{1}x_{11} + \dots \beta_{k}x_{k1} \\
 \vdots \\ \beta_{0} + \beta_{1}x_{1n} + \dots \beta_{k}x_{kn}
 \end{bmatrix}_{(n,1)} , \boldsymbol{\Sigma} = \begin{bmatrix}
     \sigma^{2}    &amp; 0      &amp; \ldots         &amp; 0      \\
@@ -486,7 +486,7 @@ Number of Fisher Scoring iterations: 2</code></pre>
 </section>
 <section id="interpretación-coeficientes-en-lm-1" class="slide level2">
 <h2>Interpretación coeficientes en LM</h2>
-<p><span class="math display">\text{Si } \quad \quad y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}}^{\mathbb{E}(y_{i} \mid x_{1}, \dots, x_{k})} + \underbrace{e_{i}}_{\text{Normal}}(0,\sigma)</span></p>
+<p><span class="math display">\text{Si } \quad \quad y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}}^{\mathbb{E}(y_{i} \mid x_{1}, \dots, x_{k})} + \underbrace{e_{i}}_{\sim \text{Normal}(0,\sigma)}</span></p>
 <p>Entonces decimos que el efecto de <span class="math inline">x_{k}</span> sobre <span class="math inline">y</span> es <span class="math inline">\beta_{k}</span>. ¿Qué significa?</p>
 <div class="pull-left">
 <p><span class="math display">\frac{\partial \mathbb{E}(y_{i} \mid x_{1}, \dots, x_{k})}{\partial x_{k}} = \beta_{k}</span></p>
@@ -819,7 +819,7 @@ F-statistic: 1290.000 on 1 and 8643 DF,  p-value: &lt;0.000</code></pre>
 <p><span class="bold">2) Observaciones con varianza heterogénea (o, errores heterocedásticos)</span></p>
 <p><span class="math display">\begin{align}
   \operatorname{Var}(y_{i}) &amp;=  p_{i}(1-p_{i}) \\
-                      &amp;= (\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})(1 - \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})
+                      &amp;= (\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})\Big(1 - (\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})\Big)
 \end{align}</span></p>
 <div class="fragment">
 <p>Por tanto,</p>

@@ -270,7 +270,7 @@ $$\beta_{2} \mid H_{0} \sim \text{Normal}\Big(\mu_{\beta_{2}} = 0, \sigma_{\beta
 
 ::: {.content-box-blue}
 
-$$\mathbb{P}( \beta_{2} > | \hat{\beta}_{2} |  \mid H_{0}) :=   \mathbb{P}\big(\text{Normal}(\mu_{\beta_{2}} = 0, \sigma_{\beta_{2}} = \text{SE}_{\beta_{2}})  > |\hat{\beta}_{2}| \big)$$
+$$\mathbb{P}( |\beta_{2}| > | \hat{\beta}_{2} |  \mid H_{0}) :=   \mathbb{P}\big(|\text{Normal}(\mu_{\beta_{2}} = 0, \sigma_{\beta_{2}} = \text{SE}_{\beta_{2}})|  > |\hat{\beta}_{2}| \big)$$
 
 :::
 
@@ -314,7 +314,7 @@ tibble(x = x_vals, y = dens_vals) %>%
 
 ::: {.content-box-blue}
 
-[Calculemos ahora un IC al 95% para el efecto multiplicativo de la "temperatura" sobre las odds de alta demanda:]{.bold} $e^{\beta_{2}}$= `r expbeta2=exp(logit_demand_wday_temp$coefficients[3]); expbeta2`
+[Calculemos ahora un IC al 95% para el efecto multiplicativo de la "temperatura" sobre las odds de alta demanda:]{.bold} $e^{\beta_{2}}$= `r expbeta2=exp(beta2); expbeta2`
 
 :::
 
@@ -771,6 +771,14 @@ boots %>%
 ```
 
 :::
+
+## En resumen
+
+- Los estimadores MLE de un GLM (como la regresión logística) son consistentes, insesgados y asintóticamente normales — de ahí que $\hat\theta \pm z \cdot SE_{\hat\theta}$ sea un intervalo de confianza válido en muestras grandes.
+- Test de Wald: divide el coeficiente por su error estándar y lo compara con una Normal; usa la estimación de **un solo** modelo.
+- Test de razón de verosimilitudes (LR): compara la log-verosimilitud de dos modelos anidados; suele ser más confiable que Wald con muestras chicas o coeficientes grandes.
+- Bootstrap: remuestrea los datos con reemplazo para aproximar la distribución muestral de cualquier estimate (SE, CI) sin depender de fórmulas asintóticas.
+- La próxima clase extiende el modelo logístico a variables dependientes con más de dos categorías no ordenadas: regresión logística multinomial.
 
 ## Gracias {.inverse .center .middle .closing}
 

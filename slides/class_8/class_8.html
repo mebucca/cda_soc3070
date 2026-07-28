@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-23">
+  <meta name="dcterms.date" content="2026-07-28">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -159,7 +159,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-23</p>
+  <p class="date">2026-07-28</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -508,7 +508,7 @@ Mauricio Bucca · Sociología UC
 <div class="fragment">
 <p>Por tanto, <span class="math display">y_{i} \sim \text{Normal}(\mu_{i} = \eta_{i}, \sigma_{i} = \sqrt{\phi})</span></p>
 <ul>
-<li>En nomenclatura GLM <span class="math inline">\phi</span> (parámetro de dispersión) es un modo más general de expesar el componente constante de la varianza ( <span class="math inline">\sigma^2</span> en LM)</li>
+<li>En nomenclatura GLM <span class="math inline">\phi</span> (parámetro de dispersión) es un modo más general de expresar el componente constante de la varianza ( <span class="math inline">\sigma^2</span> en LM)</li>
 </ul>
 </div>
 </section></section>
@@ -560,7 +560,7 @@ Mauricio Bucca · Sociología UC
 <p><span class="bold">Ejemplo:</span> es un práctica común trabajar con la variable dependiente transforma a logs (ej. ingresos).</p>
 <ul>
 <li><span class="math inline">y_{1}, \dots y_{n}</span> son <span class="math inline">n</span> variables que no distribuyen normal pero <span class="math inline">\ln(y_{1}), \dots \ln(y_{n})</span> si.</li>
-<li>Estimar LM con variable dependendiente transformada:</li>
+<li>Estimar LM con variable dependiente transformada:</li>
 </ul>
 <p><span class="math display">\ln y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}}^{\mathbb{E}(\ln y_{i} \mid x_{1}, \dots, x_{k} )  } + \underbrace{e_{i}}_{\text{Normal}(0,\sigma)}</span></p>
 </div>
@@ -683,6 +683,16 @@ Number of Fisher Scoring iterations: 6</code></pre>
 </div>
 </div>
 </div>
+</section>
+<section id="en-resumen" class="slide level2">
+<h2>En resumen</h2>
+<ul>
+<li>Un GLM se define por cuatro piezas: componente aleatorio (familia exponencial), componente sistemático <span class="math inline">\eta_{i}</span>, función de enlace <span class="math inline">g(\mu_{i})=\eta_{i}</span> y función de varianza <span class="math inline">\operatorname{Var}(y_{i})=\phi V(\mu_{i})</span>.</li>
+<li>La función de enlace mantiene <span class="math inline">\mu_{i}</span> dentro de su rango natural; cada distribución tiene un enlace “canónico” (Normal: identidad, Poisson: log, Binomial: logit).</li>
+<li>LM es el caso particular de GLM con componente Normal y enlace identidad.</li>
+<li>Usar una función de enlace (ej. log) no es lo mismo que transformar la variable dependiente: cambian tanto la interpretación de los coeficientes como los supuestos sobre la varianza.</li>
+<li>La próxima clase: regresión logística — estructura teórica y estimación.</li>
+</ul>
 </section>
 <section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#C4162A">
 <h2>Gracias</h2>

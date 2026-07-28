@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-23">
+  <meta name="dcterms.date" content="2026-07-28">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -159,7 +159,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-23</p>
+  <p class="date">2026-07-28</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -414,7 +414,7 @@ temp                0.000</code></pre>
 <li>Calcular <span class="bold">p-value</span> (2 colas)</li>
 </ol>
 <div class="content-box-blue">
-<p><span class="math display">\mathbb{P}( \beta_{2} &gt; | \hat{\beta}_{2} |  \mid H_{0}) :=   \mathbb{P}\big(\text{Normal}(\mu_{\beta_{2}} = 0, \sigma_{\beta_{2}} = \text{SE}_{\beta_{2}})  &gt; |\hat{\beta}_{2}| \big)</span></p>
+<p><span class="math display">\mathbb{P}( |\beta_{2}| &gt; | \hat{\beta}_{2} |  \mid H_{0}) :=   \mathbb{P}\big(|\text{Normal}(\mu_{\beta_{2}} = 0, \sigma_{\beta_{2}} = \text{SE}_{\beta_{2}})|  &gt; |\hat{\beta}_{2}| \big)</span></p>
 </div>
 <div class="cell">
 <style type="text/css">
@@ -625,7 +625,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1</code></pre>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code> temp  temp  temp  temp  temp  temp 
-4.565 4.850 4.909 4.736 4.790 4.920 </code></pre>
+4.938 4.535 5.144 4.743 5.077 5.054 </code></pre>
 </div>
 </div>
 </div>
@@ -635,11 +635,11 @@ Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1</code></pre>
 <div class="pull-left">
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.155</code></pre>
+<pre><code>[1] 0.153</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code> 2.500% 97.500% 
-4.594 5.202 </code></pre>
+4.599 5.192 </code></pre>
 </div>
 </div>
 </div>
@@ -683,7 +683,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1</code></pre>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code> temp  temp  temp  temp  temp  temp 
-112.200 128.800 115.600 139.100 121.000 122.700 </code></pre>
+132.400 170.800 140.400 140.800 144.600 101.800 </code></pre>
 </div>
 </div>
 </section>
@@ -692,11 +692,11 @@ Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1</code></pre>
 <div class="pull-left">
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 20.480</code></pre>
+<pre><code>[1] 20.660</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code> 2.500% 97.500% 
-100.500 180.500 </code></pre>
+<pre><code>  2.500%  97.500% 
+ 99.970 179.210 </code></pre>
 </div>
 </div>
 </div>
@@ -739,7 +739,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1</code></pre>
 <p>Bootstrapeando …</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.785 0.792 0.768 0.797 0.800 0.805</code></pre>
+<pre><code>[1] 0.791 0.790 0.783 0.840 0.795 0.809</code></pre>
 </div>
 </div>
 </section>
@@ -755,7 +755,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  2.500%  97.500% 
-0.749 0.826 </code></pre>
+0.750 0.827 </code></pre>
 </div>
 </div>
 </div>
@@ -799,6 +799,16 @@ Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1</code></pre>
 </div>
 </div>
 </div>
+</section>
+<section id="en-resumen" class="slide level2">
+<h2>En resumen</h2>
+<ul>
+<li>Los estimadores MLE de un GLM (como la regresión logística) son consistentes, insesgados y asintóticamente normales — de ahí que <span class="math inline">\hat\theta \pm z \cdot SE_{\hat\theta}</span> sea un intervalo de confianza válido en muestras grandes.</li>
+<li>Test de Wald: divide el coeficiente por su error estándar y lo compara con una Normal; usa la estimación de <strong>un solo</strong> modelo.</li>
+<li>Test de razón de verosimilitudes (LR): compara la log-verosimilitud de dos modelos anidados; suele ser más confiable que Wald con muestras chicas o coeficientes grandes.</li>
+<li>Bootstrap: remuestrea los datos con reemplazo para aproximar la distribución muestral de cualquier estimate (SE, CI) sin depender de fórmulas asintóticas.</li>
+<li>La próxima clase extiende el modelo logístico a variables dependientes con más de dos categorías no ordenadas: regresión logística multinomial.</li>
+</ul>
 </section>
 <section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#0050B5">
 <h2>Gracias</h2>

@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-23">
+  <meta name="dcterms.date" content="2026-07-28">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -159,7 +159,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-23</p>
+  <p class="date">2026-07-28</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -323,7 +323,7 @@ Mauricio Bucca · Sociología UC
 </div>
 <div class="fragment">
 <ul>
-<li>Para cada observación observamos datos <span class="math inline">y_{i}, \dots , y_{n}</span> que actúan como variable dependiente.</li>
+<li>Para cada observación observamos datos <span class="math inline">y_{1}, \dots , y_{n}</span> que actúan como variable dependiente.</li>
 </ul>
 </div>
 <div class="fragment">
@@ -392,7 +392,7 @@ Mauricio Bucca · Sociología UC
 <div class="fragment">
 <div class="pull-right">
 <ul>
-<li>En resumen, un modelo de regressión Poisson describe <span class="math inline">\ln \mathbb{E}(y_{i} \mid x_{1i}, \dots, x_{ki}) = \ln \mu_{i}</span>.</li>
+<li>En resumen, un modelo de regresión Poisson describe <span class="math inline">\ln \mathbb{E}(y_{i} \mid x_{1i}, \dots, x_{ki}) = \ln \mu_{i}</span>.</li>
 <li>Recordar que esto es distinto de modelar el logaritmo de la variable dependiente: <span class="math inline">\mathbb{E}(\ln y_{i} \mid x_{1i}, \dots, x_{ki})</span></li>
 </ul>
 </div>
@@ -424,7 +424,7 @@ Mauricio Bucca · Sociología UC
 <h2>Regresión Poisson para modelar “tasas”</h2>
 <p>Usando la definición de tasa: <span class="math inline">\theta_{i} = \frac{\mu_{i}}{n_{i}}</span></p>
 <div class="fragment">
-<p>Podemos modelar la tasa de occurrencia de un evento de la siguiente manera:</p>
+<p>Podemos modelar la tasa de ocurrencia de un evento de la siguiente manera:</p>
 </div>
 <div class="fragment">
 <p><span class="math display">\ln(\theta_{i}) = \ln \bigg(\frac{\mu_{i}}{n_{i}}\bigg) = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}</span></p>
@@ -670,7 +670,7 @@ median_age    0.050  0.000</code></pre>
 <ul>
 <li>Coeficientes del modelo de regresión Poisson son estimados via MLE
 <ul>
-<li>maximización via algoritmo Newton-Rapson</li>
+<li>maximización via algoritmo Newton-Raphson</li>
 </ul></li>
 </ul>
 </div>
@@ -1153,7 +1153,7 @@ factor(continent)South America  3.162  0.005</code></pre>
 <p><span class="math display">\mu_{i}= n_{i} \cdot e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}</span></p>
 </div>
 <div class="pull-right">
-<p><span class="math display">\frac{\partial \mu_{i}}{\partial x_{k}} =  n_{i} \cdot \theta_{k} \cdot  \mu_{i}</span></p>
+<p><span class="math display">\frac{\partial \mu_{i}}{\partial x_{k}} =  \beta_{k} \cdot  \mu_{i}</span></p>
 </div>
 <div class="pull-left">
 <div class="cell">
@@ -1190,7 +1190,7 @@ factor(continent)South America  3.162  0.005</code></pre>
 <p><span class="math display">\mu_{i}= n_{i} \cdot e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}</span></p>
 </div>
 <div class="pull-right">
-<p><span class="math display">\frac{\partial \mu_{i}}{\partial x_{k}} =  n_{i} \cdot \theta_{k} \cdot  \mu_{i}</span></p>
+<p><span class="math display">\frac{\partial \mu_{i}}{\partial x_{k}} =  \beta_{k} \cdot  \mu_{i}</span></p>
 </div>
 <div class="pull-left">
 <div class="cell">
@@ -1325,9 +1325,9 @@ Note:                    *p&lt;0.100; **p&lt;0.050; ***p&lt;0.010</code></pre>
 </div>
 <div class="fragment">
 <ul>
-<li>Este caso se conocer como “over-dispersion”. Los datos son más dispersos de lo esperando de acuerdo al modelo.
+<li>Este caso se conoce como “over-dispersion”. Los datos son más dispersos de lo esperado de acuerdo al modelo.
 <ul>
-<li>Over-dispersion no afecta la estimación de los coeficientes pero la inferencia demasiado “liberal”: errores estándar</li>
+<li>Over-dispersion no afecta la estimación de los coeficientes pero vuelve la inferencia demasiado “liberal”: errores estándar subestimados</li>
 </ul></li>
 </ul>
 </div>
@@ -1379,16 +1379,16 @@ Note:                    *p&lt;0.100; **p&lt;0.050; ***p&lt;0.010</code></pre>
 </div>
 </div>
 </section>
-<section id="regressión-quasi-poisson" class="slide level2">
-<h2>Regressión Quasi-Poisson</h2>
-<p>La regressión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferenciadel modelo.</p>
+<section id="regresión-quasi-poisson" class="slide level2">
+<h2>Regresión Quasi-Poisson</h2>
+<p>La regresión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferencia del modelo.</p>
 <div class="fragment">
 <p><span class="math display">y_{i} \sim \text{quasi-Poisson}(\mu_{i} = e^{X_{i}\beta}, \sigma= \sqrt{\omega \cdot  e^{X_{i}\beta}})</span></p>
 <p>donde <span class="math inline">\omega</span> es el factor de dispersion.</p>
 </div>
 <div class="fragment">
 <ul>
-<li>Regressión Poisson es un caso especial de quasi-Poisson ( <span class="math inline">\omega=1</span> ).</li>
+<li>Regresión Poisson es un caso especial de quasi-Poisson ( <span class="math inline">\omega=1</span> ).</li>
 </ul>
 </div>
 <div class="fragment">
@@ -1412,6 +1412,7 @@ hum         0.000</code></pre>
 </section>
 <section id="quasi-poisson" class="slide level2">
 <h2>Quasi-Poisson</h2>
+<p>Comparando ambos modelos (mismos coeficientes, errores estándar corregidos por sobre-dispersión):</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>
@@ -1434,6 +1435,17 @@ Akaike Inf. Crit.    819,440.000
 Note:                     *p&lt;0.100; **p&lt;0.050; ***p&lt;0.010</code></pre>
 </div>
 </div>
+</section>
+<section id="en-resumen" class="slide level2">
+<h2>En resumen</h2>
+<ul>
+<li>Regresión Poisson modela conteos: <span class="math inline">\mathbb{E}(y_{i}\mid x_{i}) = \mu_{i} = e^{\eta_{i}}</span>, con <span class="math inline">\ln(\mu_{i})=\eta_{i}</span> como componente sistemático (función de enlace log).</li>
+<li>Para modelar tasas se agrega un “offset” <span class="math inline">\ln(n_{i})</span>, con <span class="math inline">n_{i}</span> la exposición.</li>
+<li><span class="math inline">\beta_{k}</span> es el efecto marginal de <span class="math inline">x_{k}</span> sobre <span class="math inline">\ln(\mu)</span>; <span class="math inline">e^{\beta_{k}}</span> es la razón de tasas de incidencia (IRR), el efecto multiplicativo sobre <span class="math inline">\mu</span>.</li>
+<li>El modelo Poisson impone <span class="math inline">\operatorname{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}</span>; cuando esto no se cumple hay over-dispersion.</li>
+<li>Quasi-Poisson corrige los errores estándar con un factor de dispersión <span class="math inline">\omega</span>, sin cambiar los coeficientes estimados.</li>
+<li>La próxima clase pasa de la asociación a la causalidad: qué supuestos adicionales se necesitan para interpretar un coeficiente como un efecto causal.</li>
+</ul>
 </section>
 <section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#007CC3">
 <h2>Gracias</h2>

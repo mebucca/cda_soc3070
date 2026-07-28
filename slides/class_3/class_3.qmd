@@ -48,9 +48,6 @@ variables aleatorias y distribuciones discretas.
 :::
 
 
-
-
-
 # Presentación del curso {.inverse .center .middle}
 
 ## Sobre mi
@@ -92,6 +89,52 @@ variables aleatorias y distribuciones discretas.
 ![ayudante](roberto.jpeg)
 
 :::
+
+# Logística del curso {.inverse .center .middle}
+
+## Contenidos
+
+::: {.pull-left}
+
+1. Fundamentos de teoría de la probabilidad
+2. Variables aleatorias y distribuciones discretas
+3. Estimación via Maximum Likelihood (MLE)
+4. Tablas de contingencia
+5. Modelo Lineal de Probabilidad (LPM)
+
+:::
+
+::: {.pull-right}
+
+6. Modelos Lineales Generalizados (GLM)
+7. Modelos de Regresión Logística
+8. Modelos de Regresión Logística Multinomial
+9. Modelos de Regresión Poisson y Quasi-Poisson
+10. Modelos Log-Lineales para tablas de contingencia
+
+:::
+
+## Evaluación
+
+::: {.content-box-primary}
+
+Tareas cortas (24%) · Trabajos (40%) · Trabajo Final (30%) · Participación (6%)
+
+:::
+
+. . .
+
+- [Tareas cortas:]{.bold} 4 tareas cortas, 6% cada una
+- [Trabajos:]{.bold} 2 trabajos de mediana extensión, 20% cada uno
+- [Trabajo final:]{.bold} 1 trabajo final (30%), aplicando contenidos del curso a un problema sustantivo
+- [Participación]{.bold} activa en clases y ayudantías
+
+## Políticas
+
+- [Asistencia:]{.bold} regular a clases es importante, esperada, pero no obligatoria
+- [Entregas:]{.bold} tareas y trabajos se entregan a más tardar el día indicado en el calendario del curso, a la hora señalada
+- [Uso de IA:]{.bold} permitido de forma ética y transparente, únicamente como herramienta de estudio o apoyo en la escritura de código. Debe declararse explícitamente qué herramientas fueron usadas y con qué propósito
+- [Honestidad académica:]{.bold} el desconocimiento de la política de honestidad académica de la universidad — incluyendo el uso de IA — no es una explicación razonable para su incumplimiento
 
 # Filosofía de enseñanza {.inverse .center .middle}
 
@@ -164,7 +207,7 @@ Todo el material del curso será almacenado y actualizado regularmente en reposi
 ::: {.center}
 
 ![github](github.png)
-[https://github.com/mebucca/ad2-sol114]{.bold}
+[https://github.com/mebucca/cda_soc3070]{.bold}
 
 :::
 
@@ -173,6 +216,9 @@ Todo el material del curso será almacenado y actualizado regularmente en reposi
 ::: {.center}
 
 ![officehours](officehours.jpg)
+
+[Consulta:]{.bold} Lunes 14:30–15:30 (Mauricio Bucca, mebucca@uc.cl)
+[Ayudantía:]{.bold} Martes 12:20–13:30 (Roberto Cantillan, ricantillan@uc.cl)
 
 :::
 

@@ -208,9 +208,9 @@ $$\boldsymbol{y} \sim \text{Normal}_{n}(\boldsymbol{X}\boldsymbol{\beta},\boldsy
 
 visualmente:
 $$\begin{bmatrix}
-y_{i} \\  \vdots \\ y_{n}
+y_{1} \\  \vdots \\ y_{n}
 \end{bmatrix}_{(n,1)} \sim \text{Normal}_{n}\Bigg(  \boldsymbol{\mu} = \begin{bmatrix}
-\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki} \\ 
+\beta_{0} + \beta_{1}x_{11} + \dots \beta_{k}x_{k1} \\
  \vdots \\ \beta_{0} + \beta_{1}x_{1n} + \dots \beta_{k}x_{kn}
 \end{bmatrix}_{(n,1)} , \boldsymbol{\Sigma} = \begin{bmatrix}
     \sigma^{2}    & 0      & \ldots         & 0      \\
@@ -235,6 +235,7 @@ p_load("modelr")
 # La tipografía la provee el theme compartido de Quarto del curso.
 primary_color <- course_palette[["primary"]]
 secondary_color <- course_palette[["secondary"]]
+paris_colors <- course_colors(course_palette, 6)
 
 ```
 ```{r}
@@ -469,7 +470,7 @@ $$\text{Si } \quad \quad y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots 
 
 ## Interpretación coeficientes en LM
 
-$$\text{Si } \quad \quad y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}}^{\mathbb{E}(y_{i} \mid x_{1}, \dots, x_{k})} + \underbrace{e_{i}}_{\text{Normal}}(0,\sigma)$$
+$$\text{Si } \quad \quad y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}}^{\mathbb{E}(y_{i} \mid x_{1}, \dots, x_{k})} + \underbrace{e_{i}}_{\sim \text{Normal}(0,\sigma)}$$
 
 Entonces decimos que el efecto de $x_{k}$ sobre $y$ es $\beta_{k}$. ¿Qué significa?
 
@@ -903,7 +904,7 @@ $$\text{LPM asume que: } \quad  y_{i} \sim \text{Normal}(p_{i}, \sigma) \quad  \
 
 \begin{align}
   \operatorname{Var}(y_{i}) &=  p_{i}(1-p_{i}) \\
-                      &= (\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})(1 - \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})
+                      &= (\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})\Big(1 - (\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})\Big)
 \end{align}
 
 . . .
@@ -988,7 +989,7 @@ print(p_histogram)
 
 ```{r, echo=FALSE, fig.height=6, fig.width=7, warning=FALSE}
 
-paris_colors <- course_colors(course_palette, 6)
+# Reutiliza paris_colors (paleta del curso) calculado en el chunk inicial del DGP
 
 grid <- bikedata  %>% data_grid(temp=seq_range(c(0,1), by=0.02), weathersit, .model=lpm_demand_tempweather)
 predictions <- cbind(grid, p_hat = predict(lpm_demand_tempweather, newdata = grid))
@@ -1217,8 +1218,7 @@ $\quad \quad \Box$ [Paleativo: "trimming"]{.bold}
 
 ```{r, echo=FALSE, fig.height=6, fig.width=7, warning=FALSE, message=FALSE}
 
-# Definir la paleta de colores del curso
-paris_colors <- course_colors(course_palette, 6)
+# Reutiliza paris_colors (paleta del curso) calculado en el chunk inicial del DGP
 
 # Gráfico
 p_fitted_histogram <- bikedata %>% ggplot(aes(x=fitted)) +
@@ -1250,13 +1250,19 @@ print(p_fitted_histogram)
 
 ```{r, echo=FALSE, fig.height=6, fig.width=7, warning=FALSE}
 
-# Definir la paleta de colores del curso
-paris_colors <- course_colors(course_palette, 6)
+# Reutiliza paris_colors (paleta del curso) calculado en el chunk inicial del DGP
+
+# Predicciones del modelo re-estimado en la muestra "trimmed" (no las del modelo original).
+# Se usan los valores ajustados directamente sobre trimmed_sample, ya que "heavy rain/snow"
+# no tiene observaciones tras el trimming (data_grid generaría un nivel inexistente en el modelo).
+predictions_trimmed <- trimmed_sample %>%
+  mutate(p_hat = lpm_demand_tempweather_trimmed$fitted.values) %>%
+  arrange(weathersit, temp)
 
 # Gráfico
 p_temp_demand <- trimmed_sample %>% ggplot(aes(x=temp, y=high_demand, group=factor(weathersit), colour=factor(weathersit))) +
   geom_jitter(alpha=0.2, width = 0.02, height = 0.05, size=2.5) +
-  geom_line(data=predictions, aes(x=temp, y=p_hat, group=factor(weathersit), colour=factor(weathersit)), size=2, alpha = 1) +
+  geom_line(data=predictions_trimmed, aes(x=temp, y=p_hat, group=factor(weathersit), colour=factor(weathersit)), size=2, alpha = 1) +
   geom_hline(yintercept = 0, linetype="dotted", color = course_palette[["primary"]], alpha=0.5, size=1.5) +
   geom_hline(yintercept = 1, linetype="dotted", color = course_palette[["primary"]], alpha=0.5, size=1.5) +
   xlim(0,1) +

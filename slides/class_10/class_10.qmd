@@ -93,11 +93,8 @@ $$\ln \frac{p_{i}}{1 - p_{i}} = \underbrace{\beta_{0} + \beta_{1} x_{i1} + \dots
 # datos de Capital Bikeshare del paquete "ISLR2"
 library(pacman)
 p_load("ISLR2")
-p_load("viridis")
 p_load("tidyverse")
 p_load("modelr")
-p_load("cowplot")
-p_load("margins")
 p_load("marginaleffects")
 
 theme_set(theme_julia())
@@ -441,7 +438,7 @@ $$\frac{\partial p_{i} }{\partial x_{k}} \frac{1}{p_{i}(1 - p_{i})}= \beta_{k}$$
 
 . . .
 
-- [Paso 4]{.bold}: re-ordebando los términos obtenemos el efecto marginal que buscamos:
+- [Paso 4]{.bold}: re-ordenando los términos obtenemos el efecto marginal que buscamos:
 
 ::: {.content-box-blue}
 
@@ -707,7 +704,7 @@ round(mean(me_temp_approx), 3)
 Depende de que lo que queremos ...
 
 ## Efectos marginales sobre la probabilidad de éxito: MEM
-Implentamos la tercera opción usando `marginaleffects` en `R`: efecto marginal para temperatura y tipo de día fijos a su promedio global.
+Implementamos la tercera opción usando `marginaleffects` en `R`: efecto marginal para temperatura y tipo de día fijos a su promedio global.
 
 . . .
 
@@ -745,6 +742,13 @@ slopes(logit_demand_wday_temp,
 | **AME** | Promedio del efecto marginal sobre todos los casos | Resume heterogeneidad en 1 número | Puede ocultar variación |
 | **MEM** | Efecto en covariables fijadas en su promedio | Fácil de interpretar | “Promedio” puede no ser realista |
 | **MER** | Efectos en valores representativos | Ilustra heterogeneidad | Depende de la elección de escenarios |
+
+## En resumen
+
+- Un mismo coeficiente $\beta_{k}$ admite tres lecturas: efecto aditivo sobre el logit ($\beta_{k}$), efecto multiplicativo sobre las odds ($e^{\beta_{k}}$ = odds ratio), y efecto marginal (no lineal) sobre la probabilidad ($\beta_{k} \cdot p_{i}(1-p_{i})$).
+- El efecto marginal sobre la probabilidad no es constante: depende de $p_{i}$, y por tanto de los valores de todas las covariables — es máximo cuando $p_{i} \approx 0.5$ y se aproxima a 0 en los extremos.
+- Para resumir esta heterogeneidad en un solo número usamos AME, MEM o MER, según la pregunta sustantiva.
+- La próxima clase: inferencia y bootstrap.
 
 ## Gracias {.inverse .center .middle .closing}
 
