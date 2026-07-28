@@ -32,6 +32,72 @@
       margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
       vertical-align: middle;
     }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      { color: #24292e;  }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #24292e; } /* Normal */
+    code span.al { color: #ff5555; font-weight: bold; } /* Alert */
+    code span.an { color: #6a737d; } /* Annotation */
+    code span.at { color: #d73a49; } /* Attribute */
+    code span.bn { color: #005cc5; } /* BaseN */
+    code span.bu { color: #d73a49; } /* BuiltIn */
+    code span.cf { color: #d73a49; } /* ControlFlow */
+    code span.ch { color: #032f62; } /* Char */
+    code span.cn { color: #005cc5; } /* Constant */
+    code span.co { color: #6a737d; } /* Comment */
+    code span.cv { color: #6a737d; } /* CommentVar */
+    code span.do { color: #6a737d; } /* Documentation */
+    code span.dt { color: #d73a49; } /* DataType */
+    code span.dv { color: #005cc5; } /* DecVal */
+    code span.er { color: #ff5555; text-decoration: underline; } /* Error */
+    code span.ex { color: #d73a49; font-weight: bold; } /* Extension */
+    code span.fl { color: #005cc5; } /* Float */
+    code span.fu { color: #6f42c1; } /* Function */
+    code span.im { color: #032f62; } /* Import */
+    code span.in { color: #6a737d; } /* Information */
+    code span.kw { color: #d73a49; } /* Keyword */
+    code span.op { color: #24292e; } /* Operator */
+    code span.ot { color: #6f42c1; } /* Other */
+    code span.pp { color: #d73a49; } /* Preprocessor */
+    code span.re { color: #6a737d; } /* RegionMarker */
+    code span.sc { color: #005cc5; } /* SpecialChar */
+    code span.ss { color: #032f62; } /* SpecialString */
+    code span.st { color: #032f62; } /* String */
+    code span.va { color: #e36209; } /* Variable */
+    code span.vs { color: #032f62; } /* VerbatimString */
+    code span.wa { color: #ff5555; } /* Warning */
   </style>
   <link rel="stylesheet" href="class_14_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
   <link rel="stylesheet" href="../_shared/course.css">
@@ -143,13 +209,13 @@
     }
   </style>
 </head>
-<body class="theme-napoli quarto-light">
+<body class="theme-celtic quarto-light">
   <div class="reveal">
     <div class="slides">
 
-<section id="title-slide" data-background-color="#007CC3" class="quarto-title-block center">
+<section id="title-slide" data-background-color="#087E4B" class="quarto-title-block center">
   <h1 class="title">Análisis de Datos Categóricos (SOC3070)</h1>
-  <p class="subtitle">Regresión Poisson</p>
+  <p class="subtitle">Predicción, overfitting y validación cruzada</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -166,1288 +232,522 @@ Mauricio Bucca · Sociología UC
 <div class="full-width">
 <div class="content-box">
 <p><strong>Antes</strong></p>
-<p>regresión logística multinomial: interpretación de efectos.</p>
+<p>asociación y causalidad.</p>
 </div>
 <div class="content-box-primary">
 <p><strong>Hoy</strong></p>
-<p>regresión Poisson y modelos de conteo.</p>
+<p>generalización, overfitting y validación cruzada.</p>
 </div>
 <div class="content-box-secondary">
 <p><strong>Después</strong></p>
-<p>sobre-dispersión y quasi-Poisson.</p>
+<p>clasificador logístico: métricas y umbrales.</p>
 </div>
 </div>
 </section>
 <section>
-<section id="regresión-poisson" class="title-slide slide level1 inverse center middle" data-background-color="#003C82">
-<h1>Regresión Poisson</h1>
+<section id="predecir-es-generalizar" class="title-slide slide level1 inverse center middle" data-background-color="#D19F00">
+<h1>Predecir es generalizar</h1>
 
 </section>
-<section id="distribución-poisson" class="slide level2 inverse center middle" data-background-color="#003C82">
-<h2>Distribución Poisson</h2>
-</section>
-<section id="distribución-poisson-1" class="slide level2">
-<h2>Distribución Poisson</h2>
-<div class="fragment">
-<p>En Capital Bikeshare se observan, en promedio, cerca de 144 arriendos por hora.</p>
-</div>
-<div class="fragment">
-<ul>
-<li>Pensemos este recuento como una manifestación de una variable aleatoria: bajo condiciones similares, la demanda de otra hora no sería exactamente igual.</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Llamemos <span class="math inline">Y</span> a la cantidad de bicicletas arrendadas durante una hora.</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="math inline">Y</span> puede ser descrita con una distribución Poisson: <span class="math inline">Y \sim \text{Poisson}(\mu)</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>donde <span class="math inline">\mu</span> corresponde al número esperado de arriendos por hora.
-<ul>
-<li>Para ilustrar, supongamos que <span class="math inline">\mu=144</span>.</li>
-</ul></li>
-</ul>
-</div>
-<div class="fragment">
-<p><span class="bold">Pregunta</span>: ¿Cuál es la probabilidad de observar exactamente <span class="math inline">y</span> arriendos en una hora?</p>
-</div>
-<div class="fragment">
-<div class="content-box-yellow">
-<p><span class="math display">\quad  \quad \mathbb{P}(Y=y) = \frac{\mu^{y}}{y!}  e^{-\mu}, \quad \text{donde } \quad y \in \{0,1, 2, 3, \dots \} \quad \text{y } \mu&gt;0</span></p>
-</div>
-</div>
-</section>
-<section id="distribución-poisson-2" class="slide level2">
-<h2>Distribución Poisson</h2>
-<p><span class="math display"> \text{En nuestro caso: } \quad \mathbb{P}(Y=y) = \frac{144^{y}}{y!}e^{-144} </span></p>
-<div class="center">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_14_files/figure-revealjs/unnamed-chunk-1-1.png" width="864"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="fragment">
-<p>Por ejemplo: <span class="math inline">P(Y=144)=</span> 0.033.</p>
-</div>
-</section>
-<section id="distribución-poisson-3" class="slide level2">
-<h2>Distribución Poisson</h2>
-<ul>
-<li>Una hora con 300 arriendos representa una demanda muy superior al promedio ilustrativo.</li>
-</ul>
-<div class="fragment">
-<ul>
-<li>¿Cuál es la probabilidad de observar 300 arriendos si <span class="math inline">Y \sim \text{Poisson}(\mu=144)</span>?</li>
-</ul>
-</div>
-<div class="fragment">
-<p><span class="math inline">P(Y=300)=</span> 0.000.</p>
-<div class="center">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_14_files/figure-revealjs/unnamed-chunk-2-1.png" width="864"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="distribución-poisson-4" class="slide level2">
-<h2>Distribución Poisson</h2>
-<div class="img-left">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_14_files/figure-revealjs/unnamed-chunk-3-1.png" width="960"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="fragment">
-<div class="pull-right">
-<p>Algunas características:</p>
-<ul>
-<li>Sesgado hacia la derecha, pero sesgo decrece cuando aumenta <span class="math inline">\mu</span></li>
-<li>Centrado en torno a <span class="math inline">\mu</span>.</li>
-<li>Dispersión aumenta cuando aumenta <span class="math inline">\mu</span>.</li>
-</ul>
-</div>
-</div>
-<div class="fragment">
-<div class="pull-right">
-<p>Específicamente,</p>
-<ul>
-<li>Si <span class="math inline">Y_{i} \sim \text{Poisson}(\mu)</span>, entonces:</li>
-<li><span class="math inline">\mathbb{E}(Y) =  \mu</span></li>
-<li><span class="math inline">\operatorname{Var}(Y) =  \mu</span> y, por tanto, <span class="math inline">\sigma= \sqrt{\mu}</span>.</li>
-</ul>
-</div>
-<div class="cell">
-<style type="text/css">
-.pull-right ~ * { clear: unset; }
-.pull-right + * { clear: both; }
-</style>
-</div>
-</div>
-</section>
-<section id="fundamentos-teóricos-de-regresión-poisson" class="slide level2 inverse center middle" data-background-color="#003C82">
-<h2>Fundamentos teóricos de regresión Poisson</h2>
-</section>
-<section id="estructura-de-un-modelo-de-regresión-poisson" class="slide level2">
-<h2>Estructura de un modelo de regresión Poisson</h2>
-<p>Regresión Poisson es la herramienta estándar para modelar variables de conteo (e.j. cantidad de accidentes, tiempos de espera en línea, etc.).</p>
-<div class="fragment">
-<p>Podemos pensar en un modelo de regresión Poisson de la siguiente forma:</p>
-</div>
-<div class="fragment">
-<p><span class="bold">Configuración</span></p>
-<ul>
-<li>Tenemos <span class="math inline">n</span> observaciones independientes: <span class="math inline">i = 1, \dots, n</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Para cada observación observamos datos <span class="math inline">y_{1}, \dots , y_{n}</span> que actúan como variable dependiente.</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="math inline">y_{i} \in \mathbb{Z}^{*}</span>, es decir, es un entero no-negativo, tal que: <span class="math inline">y_{i} \in \{0,1, 2, 3, \dots \}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Asumimos que estos datos son realizaciones de <span class="math inline">n</span> variables aleatorias Poisson con parámetros desconocidos: <span class="math inline">Y_{i} \sim \text{Poisson}(\mu_{i})</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Asumimos que dichos parámetros (media) pueden variar de observación en observación.
-<ul>
-<li>Podemos describir estos parámetros en función de covariables.</li>
-</ul></li>
-</ul>
-</div>
-</section>
-<section id="estructura-de-un-modelo-de-regresión-poisson-1" class="slide level2">
-<h2>Estructura de un modelo de regresión Poisson</h2>
-<p>Específicamente, una regresión Poisson modela la media condicional de una variable de recuento de la siguiente manera:</p>
-<div class="content-box-yellow">
-<p><span class="math display">\mathbb{E}(y_{i} \mid x_{1i}, \dots, x_{ki}) = \mu_{i} = e^{\eta_{i}} \quad \quad  \text{donde} \quad \quad \eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}</span></p>
-</div>
-<div class="fragment">
-<p><span class="bold">Importante</span> notar que:</p>
-</div>
-<div class="fragment">
-<ul>
-<li>El rango de la función exponencial, <span class="math inline">e^x \in (0, \infty+)</span>, asegura que la media condicional predicha por un modelo de regresión Poisson siempre sea <span class="bold">estrictamente positiva</span>.</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="math inline">x_{1} \dots x_{k}</span> son predictores o variables independientes</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="math inline">\beta_{1} \dots \beta_{k}</span> son los respectivos “efectos” de los predictores sobre <span class="math inline">\eta_{i}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="math inline">\mu_{i}</span> <span class="bold">no está relacionado linealmente</span> con sus predictores.</li>
-</ul>
-</div>
-</section>
-<section id="estructura-de-un-modelo-de-regresión-poisson-2" class="slide level2">
-<h2>Estructura de un modelo de regresión Poisson</h2>
-<p>Sin embargo, <span class="math inline">\eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}</span> si es una función lineal de los predictores.</p>
-<div class="fragment">
-<p>Por tanto, es conveniente expresar <span class="math inline">\eta_{i}</span> en función de <span class="math inline">\mu_{i}</span>. Si <span class="math inline">\mu_{i} = e^{\eta_{i}}</span>, entonces …</p>
-</div>
-<div class="fragment">
+<section id="dos-preguntas-dos-criterios-de-éxito" class="slide level2">
+<h2>Dos preguntas, dos criterios de éxito</h2>
 <div class="pull-left">
-<p><strong>Transformación clave:</strong> modelamos el logaritmo de la media para mantener <span class="math inline">\mu_i&gt;0</span>.</p>
-<div class="content-box-yellow">
-<p><span class="math display">\quad \quad  \ln \mu_{i} = \eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}</span></p>
-</div>
-</div>
-</div>
-<div class="fragment">
-<div class="pull-right">
+<p><strong>Problemas de <span class="math inline">\hat{\beta}</span></strong></p>
 <ul>
-<li>En resumen, un modelo de regresión Poisson describe <span class="math inline">\ln \mathbb{E}(y_{i} \mid x_{1i}, \dots, x_{ki}) = \ln \mu_{i}</span>.</li>
-<li>Recordar que esto es distinto de modelar el logaritmo de la variable dependiente: <span class="math inline">\mathbb{E}(\ln y_{i} \mid x_{1i}, \dots, x_{ki})</span></li>
+<li>¿Cómo se relaciona <span class="math inline">X</span> con <span class="math inline">Y</span>?</li>
+<li>¿Qué parámetro resume esa relación?</li>
+<li>¿Qué incertidumbre tiene la estimación?</li>
+<li>¿Es defendible una interpretación causal?</li>
 </ul>
+<p>El foco está en <strong>explicación e inferencia</strong>.</p>
 </div>
+<div class="pull-right">
+<p><strong>Problemas de <span class="math inline">\hat{y}</span></strong></p>
+<ul>
+<li>¿Qué valor tendrá <span class="math inline">Y</span> para un caso nuevo?</li>
+<li>¿Cuánto nos equivocaremos?</li>
+<li>¿Qué especificación predice mejor?</li>
+<li>¿El desempeño se mantiene en otros datos?</li>
+</ul>
+<p>El foco está en <strong>generalización</strong>.</p>
+</div>
+<div class="footnote">
+<p>Distinción inspirada en Mullainathan y Spiess (2017).</p>
 </div>
 </section>
-<section id="regresión-poisson-para-modelar-tasas" class="slide level2">
-<h2>Regresión Poisson para modelar “tasas”</h2>
-<p>Si bien la regresión Poisson es una herramienta para modelar conteos, muchas veces el verdadero fenómeno de interés es una “tasa”.</p>
+<section id="el-examen-ocurre-en-datos-nuevos" class="slide level2">
+<h2>El examen ocurre en datos nuevos</h2>
+<p>Un modelo recibe predictores <span class="math inline">X</span> y construye una regla:</p>
+<p><span class="math display">
+\widehat{f}:X\longrightarrow \widehat{Y}.
+</span></p>
+<p>El objetivo predictivo no es reproducir los datos que ya vimos, sino minimizar el error esperado en una nueva observación:</p>
+<p><span class="math display">
+\mathbb{E}\left[L\{Y_{\text{nuevo}},\widehat f(X_{\text{nuevo}})\}\right].
+</span></p>
+<div class="fragment">
+<p>La función de pérdida <span class="math inline">L</span> depende de la tarea: error cuadrático, error absoluto, log-loss, error de clasificación, etc.</p>
+</div>
+</section>
+<section id="nuestro-problema-de-hoy" class="slide level2">
+<h2>Nuestro problema de hoy</h2>
+<p>Usaremos <code>bikers</code> como outcome:</p>
+<blockquote>
+<p>¿Cuántos arriendos habrá en una hora que el modelo no usó para aprender?</p>
+</blockquote>
+<p>Los predictores disponibles describen clima, calendario y hora del día.</p>
+<div class="fragment">
+<p>No necesitamos comprometernos con una familia de modelos: la lógica de evaluación es la misma para una regresión, un árbol, una red neuronal o cualquier otra regla de predicción.</p>
+</div>
+</section>
+<section id="ajustar-y-evaluar-son-operaciones-distintas" class="slide level2">
+<h2>Ajustar y evaluar son operaciones distintas</h2>
 <div class="pull-left">
+<p><strong>Ajustar</strong></p>
+<p>Usar datos para aprender:</p>
+<p><span class="math display">
+\text{datos de entrenamiento}
+\longrightarrow \widehat f
+</span></p>
+</div>
+<div class="pull-right">
+<p><strong>Evaluar</strong></p>
+<p>Aplicar la regla sin reestimarla:</p>
+<p><span class="math display">
+\widehat f(X_{\text{nuevo}})
+\longrightarrow \text{pérdida}
+</span></p>
+</div>
+<div class="fragment">
+<p>Si ajustamos y evaluamos con los mismos casos, el modelo ya conoce las respuestas del examen.</p>
+</div>
+</section></section>
+<section>
+<section id="overfitting" class="title-slide slide level1 inverse center middle" data-background-color="#D19F00">
+<h1>Overfitting</h1>
+
+</section>
+<section id="buen-ajuste-no-implica-buena-predicción" class="slide level2">
+<h2>Buen ajuste no implica buena predicción</h2>
+<p>Un modelo flexible puede capturar:</p>
+<ul>
+<li>patrones estables que volverán a aparecer;</li>
+<li>ruido idiosincrático de la muestra de entrenamiento.</li>
+</ul>
+<div class="fragment">
+<p>El segundo componente reduce el error de entrenamiento, pero deteriora la predicción en casos nuevos. Eso es <strong>overfitting</strong> o sobreajuste.</p>
+</div>
+</section>
+<section id="tres-regímenes-de-complejidad" class="slide level2">
+<h2>Tres regímenes de complejidad</h2>
+<div class="center">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="bici.png"></p>
-<figcaption>bici</figcaption>
+<p><img data-src="underfit_right_overfit.png" style="width:78.0%"></p>
+<figcaption>Subajuste, ajuste adecuado y sobreajuste</figcaption>
 </figure>
 </div>
 </div>
-<div class="fragment">
-<div class="pull-right">
-<p>Aumento en número de accidentes en bicicleta puede reflejar dos cosas (no excluyentes):</p>
 <ul>
-<li>Aumento de la propensión a sufrir un accidente (“tasa”)</li>
-<li>Aumento de la cantidad de ciclistas (“exposure”)</li>
+<li><strong>Subajuste:</strong> la regla es demasiado rígida y omite señal.</li>
+<li><strong>Buen balance:</strong> captura patrones reproducibles.</li>
+<li><strong>Sobreajuste:</strong> persigue fluctuaciones que no se repiten.</li>
 </ul>
-<p>Formalmente: <span class="math display">\mu_{i} = \underbrace{n_{i}}_{\text{exposición}} \cdot \underbrace{\theta_{i}}_{\text{tasa}}</span></p>
-</div>
-</div>
 </section>
-<section id="regresión-poisson-para-modelar-tasas-1" class="slide level2">
-<h2>Regresión Poisson para modelar “tasas”</h2>
-<p>Usando la definición de tasa: <span class="math inline">\theta_{i} = \frac{\mu_{i}}{n_{i}}</span></p>
-<div class="fragment">
-<p>Podemos modelar la tasa de ocurrencia de un evento de la siguiente manera:</p>
-</div>
-<div class="fragment">
-<p><span class="math display">\ln(\theta_{i}) = \ln \bigg(\frac{\mu_{i}}{n_{i}}\bigg) = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}</span></p>
-</div>
-<div class="fragment">
-<p><span class="math display">\ln(\theta_{i})  = \ln(\mu_{i}) - \ln(n_{i}) = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}</span></p>
-</div>
-<div class="fragment">
-<p>El modelo para la “tasa” puede ser re-expresado como un modelo de conteo:</p>
-</div>
-<div class="fragment">
-<div class="content-box-yellow">
-<p><span class="math display">\ln(\mu_{i}) = \ln(\theta_{i}) + \ln(n_{i}) = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki} + \ln(n_{i})</span></p>
-</div>
-</div>
-<div class="fragment">
-<p>En jerga GLM <span class="math inline">n_{i}</span> es comúnmente referido como <span class="bold">“exposure”</span> y <span class="math inline">\ln(n_{i})</span> como <span class="bold">“offset”</span>.</p>
-</div>
-</section>
-<section id="regresión-poisson-para-modelar-tasas-2" class="slide level2">
-<h2>Regresión Poisson para modelar “tasas”</h2>
-<p>Dado <span class="math display">\ln(\mu_{i})  = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki} + \ln(n_{i})</span></p>
-<div class="fragment">
-<p>exponenciando en ambos lados de la ecuación obtenemos:</p>
-</div>
-<div class="fragment">
-<p><span class="math display">\mu_{i}  = n_{i} \cdot \underbrace{e^{\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}}}_{\theta_{i}}</span></p>
-</div>
-<div class="fragment">
-<p>En resumen:</p>
-</div>
-<div class="fragment">
-<ul>
-<li>En un modelo de regresión Poisson para <span class="bold">conteos</span>: <span class="math display">\mathbb{E}(y_{i} \mid x_{1i}, \dots, x_{ki}) = \mu_{i} = e^{\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}} \quad \quad  \text{donde} \quad y_{i} \sim \text{Poisson}(\mu_{i})</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>En un modelo de regresión Poisson para <span class="bold">tasas</span>: <span class="math display">\mathbb{E}(y_{i} \mid x_{1i}, \dots, x_{ki}) = \mu_{i} = n_{i} \cdot  e^{\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}} \quad \quad  \text{donde} \quad y_{i} \sim \text{Poisson}(\mu_{i})</span></li>
-</ul>
-</div>
-</section>
-<section id="regresión-poisson-es-un-tipo-de-glm" class="slide level2">
-<h2>Regresión Poisson es un tipo de GLM</h2>
-<p>Regresión Poisson es un GLM con componente aleatorio <span class="bold">Poisson</span> y función de enlace <span class="bold">log</span>.</p>
-<div class="fragment">
-<ul>
-<li>Componente aleatorio: <span class="math inline">y_{1}, \dots y_{n}</span> son <span class="math inline">n</span> variables independientes con distribución <span class="math inline">\text{Poisson}(\mu_{i})</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Función de enlace: <span class="math inline">\ln( x )</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Componente sistemático: <span class="math inline">\ln(\mu_{i}) = \eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Función media: <span class="math inline">\mu_{i} = {e^{\eta_{i}}}</span> (para conteos), o <span class="math inline">\mu_{i} = n_{i} \cdot {e^{\eta_{i}}}</span> (para tasas)</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Varianza: <span class="math inline">\operatorname{Var}(y_{i}) = \overbrace{\phi}^{\text{dispersion = 1 }} \overbrace{V(\mu)}^{\text{ función varianza}} = \phi \frac{d\mu_{i}}{d\eta_{i}} = \phi e^{\eta_{i}} = \mu_{i}</span></li>
-</ul>
-</div>
-</section>
-<section id="regresión-poisson-en-la-práctica" class="slide level2">
-<h2>Regresión Poisson en la práctica</h2>
-<p>Para ejemplificar el uso de regresión Poisson trabajaremos con <a href="https://github.com/owid/covid-19-data/tree/master/public/data">datos mundiales de Covid-19</a> disponibles al día 17 de Noviembre 2020.</p>
-<p>Hasell, J., Mathieu, E., Beltekian, D. et al.&nbsp;A cross-country database of COVID-19 testing. Sci Data 7, 345 (2020). https://doi.org/10.1038/s41597-020-00688-8</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>Rows: 210
-Columns: 12
-$ continent                  &lt;chr&gt; "Asia", "Europe", "Africa", "Europe", "Africa", "North America", "North America", "…
-$ location                   &lt;chr&gt; "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Anguilla", "Antigua and …
-$ total_cases                &lt;dbl&gt; 43468, 28432, 68589, 5914, 13451, 3, 134, 1318371, 118870, 4668, 27750, 207798, 770…
-$ total_deaths               &lt;dbl&gt; 1632, 631, 2168, 76, 322, NA, 4, 35727, 1811, 44, 907, 1741, 985, 163, 337, 6215, 7…
-$ total_tests                &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…
-$ population                 &lt;dbl&gt; 38928341, 2877800, 43851043, 77265, 32866268, 15002, 97928, 45195777, 2963234, 1067…
-$ population_density         &lt;dbl&gt; 54.422, 104.871, 17.348, 163.755, 23.890, NA, 231.845, 16.177, 102.931, 584.800, 3.…
-$ median_age                 &lt;dbl&gt; 18.600, 38.000, 29.100, NA, 16.800, NA, 32.100, 31.900, 35.700, 41.200, 37.900, 44.400, 32.400, 34.300, 32.…
-$ gdp_per_capita             &lt;dbl&gt; 1804.000, 11803.400, 13913.800, NA, 5819.500, NA, 21490.900, 18933.900, 8787.600, 35973.800, 44648.…
-$ human_development_index    &lt;dbl&gt; 498.000, 785.000, 754.000, 858.000, 581.000, NA, 0.780, 825.000, 755.000, NA, 939.000, 908.000…
-$ diabetes_prevalence        &lt;dbl&gt; 9.590, 10.080, 6.730, 7.970, 3.940, NA, 13.170, 5.500, 7.110, 11.620, 5.070, 6.350, 7.110, 13.100…
-$ hospital_beds_per_thousand &lt;dbl&gt; 0.500, 2.890, 1.900, NA, NA, NA, 3.800, 5.000, 4.200, NA, 3.840, 7.370, 4.700, 2.900…</code></pre>
-</div>
-</div>
-</section>
-<section id="regresión-poisson-para-conteos-sin-offset" class="slide level2">
-<h2>Regresión Poisson para conteos (sin offset)</h2>
-<p>Ajustaremos el siguiente modelo: <span class="math inline">\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i}</span>.</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-glm(formula = total_deaths ~ median_age, family = poisson(link = "log"), 
-    data = covid_subdata)
-
-Coefficients:
-            Estimate Std. Error z value            Pr(&gt;|z|)    
-(Intercept) 7.314   0.004    2020 &lt;0.000 ***
-median_age  0.049   0.000     480 &lt;0.000 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
-
-(Dispersion parameter for poisson family taken to be 1)
-
-    Null deviance: 4990626  on 171  degrees of freedom
-Residual deviance: 4747916  on 170  degrees of freedom
-  (38 observations deleted due to missingness)
-AIC: 4749300
-
-Number of Fisher Scoring iterations: 7</code></pre>
-</div>
-</div>
-</section>
-<section id="regresión-poisson-para-conteos-sin-offset-en-la-práctica" class="slide level2">
-<h2>Regresión Poisson para conteos (sin offset) en la práctica</h2>
+<section id="sesgo-y-varianza-describen-errores-distintos" class="slide level2">
+<h2>Sesgo y varianza describen errores distintos</h2>
 <div class="pull-left">
-<p>Nuestro modelo: <span class="math inline">\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i}</span></p>
-</div>
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>            Estimate Std. Error
-(Intercept)  7.314  0.004
-median_age   0.049  0.000</code></pre>
-</div>
-</div>
-</div>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_14_files/figure-revealjs/unnamed-chunk-8-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_14_files/figure-revealjs/unnamed-chunk-9-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="cell">
-<style type="text/css">
-.pull-right ~ * { clear: unset; }
-.pull-right + * { clear: both; }
-</style>
-</div>
-</section>
-<section id="regresión-poisson-para-tasas-con-offset" class="slide level2">
-<h2>Regresión Poisson para tasas (con offset)</h2>
-<p>Ajustaremos el siguiente modelo: <span class="math inline">\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \ln(\text{population}_{i})</span>.</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-glm(formula = total_deaths ~ median_age, family = poisson(link = "log"), 
-    data = covid_subdata, offset = log(population))
-
-Coefficients:
-              Estimate Std. Error z value            Pr(&gt;|z|)    
-(Intercept) -10.369   0.004   -2549 &lt;0.000 ***
-median_age    0.050   0.000     439 &lt;0.000 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
-
-(Dispersion parameter for poisson family taken to be 1)
-
-    Null deviance: 2348786  on 171  degrees of freedom
-Residual deviance: 2149159  on 170  degrees of freedom
-  (38 observations deleted due to missingness)
-AIC: 2150543
-
-Number of Fisher Scoring iterations: 6</code></pre>
-</div>
-</div>
-</section>
-<section id="regresión-poisson-para-tasas-con-offset-en-la-práctica" class="slide level2">
-<h2>Regresión Poisson para tasas (con offset) en la práctica</h2>
-<div class="pull-left">
-<p>Nuestro modelo: <span class="math inline">\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \ln(\text{population}_{i})</span></p>
-</div>
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>             Estimate Std. Error
-(Intercept) -10.369  0.004
-median_age    0.050  0.000</code></pre>
-</div>
-</div>
-</div>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_14_files/figure-revealjs/unnamed-chunk-13-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_14_files/figure-revealjs/unnamed-chunk-14-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="cell">
-<style type="text/css">
-.pull-right ~ * { clear: unset; }
-.pull-right + * { clear: both; }
-</style>
-</div>
-</section>
-<section id="estimación" class="slide level2 inverse center middle" data-background-color="#003C82">
-<h2>Estimación</h2>
-</section>
-<section id="estimación-1" class="slide level2">
-<h2>Estimación</h2>
-<div class="fragment">
+<p><strong>Sesgo alto</strong></p>
+<p>El modelo aprende una regla sistemáticamente equivocada.</p>
 <ul>
-<li>Coeficientes del modelo de regresión Poisson son estimados via MLE
+<li>poca flexibilidad;</li>
+<li>errores parecidos en distintas muestras;</li>
+<li>riesgo de subajuste.</li>
+</ul>
+</div>
+<div class="pull-right">
+<p><strong>Varianza alta</strong></p>
+<p>Pequeños cambios en la muestra producen reglas muy diferentes.</p>
 <ul>
-<li>maximización via algoritmo Newton-Raphson</li>
-</ul></li>
+<li>mucha flexibilidad;</li>
+<li>predicciones inestables;</li>
+<li>riesgo de sobreajuste.</li>
 </ul>
 </div>
 <div class="fragment">
+<p>Reducir uno suele aumentar el otro: ese es el <strong>trade-off sesgo–varianza</strong>.</p>
+</div>
+</section>
+<section id="la-descomposición-del-error" class="slide level2">
+<h2>La descomposición del error</h2>
+<p>En predicción con pérdida cuadrática:</p>
+<p><span class="math display">
+\underbrace{\mathbb{E}\left[(Y-\widehat f(X))^2\right]}_{\text{error esperado}}
+=
+\underbrace{\text{Sesgo}^2}_{\text{rigidez}}
++
+\underbrace{\text{Varianza}}_{\text{inestabilidad}}
++
+\underbrace{\sigma^2}_{\text{ruido irreducible}}.
+</span></p>
+<div class="fragment">
+<p>La complejidad óptima no elimina todo error. Busca el punto donde agregar flexibilidad deja de recuperar señal y empieza a perseguir ruido.</p>
+</div>
+</section>
+<section id="el-error-de-entrenamiento-siempre-sonríe" class="slide level2">
+<h2>El error de entrenamiento siempre sonríe</h2>
+
+<img data-src="class_14_files/figure-revealjs/complexity-demo-1.png" width="960" class="r-stretch"><p>En esta demostración con <code>bikers</code>, el error de entrenamiento cae al aumentar flexibilidad; el error en datos separados puede subir.</p>
+</section>
+<section id="el-error-relevante-es-fuera-de-muestra" class="slide level2">
+<h2>El error relevante es fuera de muestra</h2>
 <ul>
-<li>(si han estudiado) ustedes pueden derivar la log-likelihood function a maximizar …</li>
+<li><strong>Error de entrenamiento:</strong> mide qué tan bien la regla reproduce los casos usados para ajustarla.</li>
+<li><strong>Error de generalización:</strong> mide qué tan bien predice casos generados por el mismo proceso, pero no usados para aprender.</li>
 </ul>
+<div class="fragment">
+<p>El overfitting es la brecha:</p>
+<p><span class="math display">
+\text{error fuera de muestra}
+-
+\text{error de entrenamiento}.
+</span></p>
+<p>No podemos diagnosticarla mirando solo el ajuste in-sample.</p>
+</div>
+</section></section>
+<section>
+<section id="separar-para-aprender" class="title-slide slide level1 inverse center middle" data-background-color="#D19F00">
+<h1>Separar para aprender</h1>
+
+</section>
+<section id="la-regla-básica-no-usar-dos-veces-la-respuesta" class="slide level2">
+<h2>La regla básica: no usar dos veces la respuesta</h2>
 <div class="center">
-<p><strong>La optimización es numérica:</strong> el algoritmo itera hasta que la log-verosimilitud deja de mejorar de forma relevante.</p>
-</div>
-</div>
-</section>
-<section id="interpretación" class="slide level2 inverse center middle" data-background-color="#003C82">
-<h2>Interpretación</h2>
-</section>
-<section id="un-ejemplo-empírico-media-de-muertes-covid-19-por-país" class="slide level2">
-<h2>Un ejemplo empírico: media de muertes Covid-19 por país</h2>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output-display">
-<div>
+<div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="class_14_files/figure-revealjs/unnamed-chunk-16-1.png" width="576"></p>
+<p><img data-src="train_test.png" style="width:72.0%"></p>
+<figcaption>Separación entre entrenamiento y evaluación</figcaption>
 </figure>
 </div>
 </div>
-</div>
-</div>
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_14_files/figure-revealjs/unnamed-chunk-17-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
+<ol type="1">
+<li>Ajustamos el modelo en el <strong>training set</strong>.</li>
+<li>Congelamos la regla aprendida.</li>
+<li>Predecimos el <strong>test set</strong>.</li>
+<li>Comparamos predicción y resultado con una pérdida.</li>
+</ol>
 </section>
-<section id="un-ejemplo-empírico-cantidad-esperada-de-muertes-covid-19-por-país-conteo" class="slide level2">
-<h2>Un ejemplo empírico: cantidad esperada de muertes Covid-19 por país (conteo)</h2>
-<p><span class="math display">\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \sum_{j} \mathbb{1}\{\text{continent}=j\}\beta_{j}</span> donde: cantidad esperada de muertes por Covid-19 es función de edad mediana del país (median age) y continente (continent)</p>
-<div class="fragment">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>                               Estimate Std. Error z value Pr(&gt;|z|)
-(Intercept)                     5.910  0.006  999.530        0
-median_age                      0.042  0.000  244.080        0
-factor(continent)Asia           1.557  0.005  293.660        0
-factor(continent)Europe         1.211  0.006  199.680        0
-factor(continent)North America  2.365  0.005  442.210        0
-factor(continent)Oceania       -2.053  0.031  -66.950        0
-factor(continent)South America  2.987  0.005  581.040        0</code></pre>
-</div>
-</div>
-</div>
-</section>
-<section id="un-ejemplo-empírico-tasa-de-muertes-covid-19-por-país-tasa" class="slide level2">
-<h2>Un ejemplo empírico: tasa de muertes Covid-19 por país (tasa)</h2>
-<p><span class="math display">\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \sum_{j} \mathbb{1}\{\text{continent}=j\}\beta_{j} + \ln \text{(population}_{i})</span> donde: tasa esperada de muertes por Covid-19 es función de edad mediana del país (median age) y continente (continent)</p>
-<div class="fragment">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>                               Estimate Std. Error   z value  Pr(&gt;|z|)
-(Intercept)                    -9.982  0.006 -1654.543 0.000
-median_age                     -0.013  0.000   -65.729 0.000
-factor(continent)Asia           0.653  0.005   119.030 0.000
-factor(continent)Europe         2.681  0.007   402.678 0.000
-factor(continent)North America  3.068  0.006   542.135 0.000
-factor(continent)Oceania       -0.103  0.031    -3.344 0.001
-factor(continent)South America  3.162  0.005   579.477 0.000</code></pre>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-lnmu" class="slide level2 center middle">
-<h2>Efectos marginales sobre <span class="math inline">\ln(\mu)</span></h2>
-</section>
-<section id="efectos-marginales-sobre-lnmu-recuentos" class="slide level2">
-<h2>Efectos marginales sobre <span class="math inline">\ln(\mu)</span>, recuentos</h2>
-<div class="fragment">
-<p>Dado el siguiente modelo de regresión Poisson para recuentos:</p>
-<p><span class="math display">\ln(\mu_{i})= \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></p>
-</div>
-<div class="fragment">
+<section id="un-único-split-es-frágil" class="slide level2">
+<h2>Un único split es frágil</h2>
+<p>Separar una vez training y test evita el doble uso, pero:</p>
 <ul>
-<li>El intercepto <span class="math inline">\beta_{0}</span> corresponde al logaritmo natural del recuento esperado cuando <span class="math inline">x_{1} = \dots = x_{k} = 0</span></li>
+<li>el resultado depende de qué casos quedaron en cada lado;</li>
+<li>una partición difícil puede hacer parecer malo a un buen modelo;</li>
+<li>una partición fácil puede producir optimismo;</li>
+<li>en muestras pequeñas reservamos demasiada información solo para evaluar.</li>
 </ul>
-</div>
 <div class="fragment">
-<ul>
-<li>El efecto marginal de <span class="math inline">x_{k}</span> sobre el logaritmo natural del recuento esperado, <span class="math inline">\ln(\mu)</span>, está dado por:</li>
-</ul>
-<div class="pull-left">
-<div class="content-box-yellow">
-<p><span class="math display">\frac{\partial \ln(\mu)}{\partial x_{k}} = \beta_{k}</span></p>
-</div>
-</div>
-<div class="pull-right">
-<div class="content-box-yellow">
-<p>“Un cambio (infinitesimal) en <span class="math inline">\Delta</span> unidades de <span class="math inline">x_{k}</span> se traduce en un cambio en <span class="math inline">\Delta \beta_{k}</span> unidades en <span class="math inline">\ln(\mu)</span>”</p>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-lnmu-recuentos-1" class="slide level2">
-<h2>Efectos marginales sobre <span class="math inline">\ln(\mu)</span>, recuentos</h2>
-<p>Nuestro modelo: <span class="math inline">\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \sum_{j} \mathbb{1}\{\text{continent}=j\}\beta_{j}</span></p>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>                               Estimate Std. Error
-(Intercept)                     5.910  0.006
-median_age                      0.042  0.000
-factor(continent)Asia           1.557  0.005
-factor(continent)Europe         1.211  0.006
-factor(continent)North America  2.365  0.005
-factor(continent)Oceania       -2.053  0.031
-factor(continent)South America  2.987  0.005</code></pre>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_14_files/figure-revealjs/unnamed-chunk-23-1.png" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-lnmu-tasas" class="slide level2">
-<h2>Efectos marginales sobre <span class="math inline">\ln(\mu)</span>, tasas</h2>
-<div class="fragment">
-<p>Dado el siguiente modelo de regresión Poisson para tasas:</p>
-<p><span class="math display">\ln(\mu_{i})= \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik} + \ln(n_{i})</span></p>
-</div>
-<div class="fragment">
-<ul>
-<li>El intercepto <span class="math inline">\beta_{0}</span> corresponde al logaritmo natural de la tasa esperada cuando <span class="math inline">x_{1} = \dots = x_{k} = 0</span> y <span class="math inline">n_{i}=1</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>El efecto marginal de <span class="math inline">x_{k}</span> sobre el logaritmo natural de la tasa esperada, <span class="math inline">\ln(\mu)</span>, está dado por:</li>
-</ul>
-<div class="pull-left">
-<div class="content-box-yellow">
-<p><span class="math display">\frac{\partial \ln(\mu)}{\partial x_{k}} = \beta_{k}</span></p>
-</div>
-</div>
-<div class="pull-right">
-<div class="content-box-yellow">
-<p>“Un cambio (infinitesimal) en <span class="math inline">\Delta</span> unidades de <span class="math inline">x_{k}</span> se traduce en un cambio en <span class="math inline">\Delta \beta_{k}</span> unidades en <span class="math inline">\ln(\mu)</span>”</p>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-lnmu-tasas-1" class="slide level2">
-<h2>Efectos marginales sobre <span class="math inline">\ln(\mu)</span>, tasas</h2>
-<p>Nuestro modelo: <span class="math inline">\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \sum_{j} \mathbb{1}\{\text{continent}=j\}\beta_{j} + \ln(n_{i})</span></p>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>                               Estimate Std. Error
-(Intercept)                    -9.982  0.006
-median_age                     -0.013  0.000
-factor(continent)Asia           0.653  0.005
-factor(continent)Europe         2.681  0.007
-factor(continent)North America  3.068  0.006
-factor(continent)Oceania       -0.103  0.031
-factor(continent)South America  3.162  0.005</code></pre>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_14_files/figure-revealjs/unnamed-chunk-25-1.png" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-lnmu-ilustración" class="slide level2">
-<h2>Efectos marginales sobre <span class="math inline">\ln(\mu)</span>: ilustración</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>                               Estimate Std. Error
-(Intercept)                    -9.982  0.006
-median_age                     -0.013  0.000
-factor(continent)Asia           0.653  0.005
-factor(continent)Europe         2.681  0.007
-factor(continent)North America  3.068  0.006
-factor(continent)Oceania       -0.103  0.031
-factor(continent)South America  3.162  0.005</code></pre>
-</div>
-</div>
-<div class="pull-left">
-<p>Si <code>continent="South America"</code> y <code>median_age=20</code>, entonces <code>ln(mu)</code> es:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] -7.078</code></pre>
-</div>
-</div>
-<p>Si <code>continent="South America"</code> y <code>median_age=21</code>, entonces <code>ln(mu)</code> es:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] -7.091</code></pre>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<p>Por tanto, el efecto de <code>median_age</code> es:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] -0.013</code></pre>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-multiplicativos-sobre-mu" class="slide level2 center middle">
-<h2>Efectos multiplicativos sobre <span class="math inline">\mu</span></h2>
-</section>
-<section id="efectos-multiplicativos-sobre-mu-recuentos" class="slide level2">
-<h2>Efectos multiplicativos sobre <span class="math inline">\mu</span>, recuentos</h2>
-<div class="fragment">
-<p>Dado el siguiente modelo de regresión Poisson para recuentos:</p>
-<p><span class="math display">\ln(\mu_{i})= \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></p>
-</div>
-<div class="fragment">
-<p>exponenciando a ambos lados obtenemos <span class="math display">\mu_{i} = e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \cdots e^{\beta_{k} x_{ik}}</span></p>
-</div>
-<div class="fragment">
-<p>Examinando esta ecuación observamos que cuando <span class="math inline">x_1 = \dots = x_k = 0</span>, <span class="math display">\mu_{i} = e^{\beta_{0}}</span> Es decir, <span class="math inline">e^{\beta_{0}}</span> es el recuento esperado cuando <span class="math inline">x_1 = \dots = x_k = 0</span>.</p>
-</div>
-</section>
-<section id="efectos-multiplicativos-sobre-mu-recuentos-1" class="slide level2">
-<h2>Efectos multiplicativos sobre <span class="math inline">\mu</span>, recuentos</h2>
-<div class="fragment">
-<p>Considera la situación en que <span class="math inline">i</span> y <span class="math inline">i'</span> son dos observaciones con <span class="math inline">x_{k}=c</span> y <span class="math inline">x_{k}=c+1</span>, respectivamente. El resto de las covariables toman valores idénticos.</p>
-</div>
-<div class="fragment">
-<p>El ratio entre el recuento esperado de <span class="math inline">i'</span> e <span class="math inline">i</span> está dado por:</p>
-<p><span class="math display">\begin{align}
-\mu_{i'}/\mu_{i} &amp;= \frac{e^{\beta_{0}} \cdot e^{\beta_{1} x_{i'1}}  \dots (e^{\beta_{k}})^{c+1}}{e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c}} \\ \\
-&amp;= e^{\beta_{k}}
-\end{align}</span></p>
-</div>
-<div class="fragment">
-<p>En otras palabras,</p>
-<div class="content-box-yellow">
-<p>“Un cambio en <span class="math inline">\Delta</span> unidades de <span class="math inline">x_{k}</span> multiplica el recuento esperado por <span class="math inline">e^{\Delta \beta_{k}}</span>”</p>
-</div>
-</div>
-<div class="fragment">
-<p>A <span class="math inline">e^{\beta_{k}}</span> se le llama <strong>razón de tasas de incidencia</strong> (<em>Incidence Rate Ratio</em>, IRR): el análogo, en regresión Poisson, de la odds ratio en regresión logística. Un <span class="math inline">\text{IRR}=1.65</span> se lee “65% más recuento esperado por unidad adicional de <span class="math inline">x_k</span>”.</p>
-</div>
-</section>
-<section id="efectos-multiplicativos-sobre-mu-tasas" class="slide level2">
-<h2>Efectos multiplicativos sobre <span class="math inline">\mu</span>, tasas</h2>
-<div class="fragment">
-<p>Dado el siguiente modelo de regresión Poisson para tasas: <span class="math display">\ln(\mu_{i})= \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik} + \ln(n_{i})</span></p>
-</div>
-<div class="fragment">
-<p>exponenciando a ambos lados obtenemos <span class="math display">\mu_{i} = e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \cdots e^{\beta_{k} x_{ik}} \cdot n_{i}</span></p>
-</div>
-<div class="fragment">
-<p>Examinando esta ecuación observamos que cuando <span class="math inline">x_1 = \dots = x_k = 0</span>, <span class="math display">\mu_{i} = e^{\beta_{0}} \cdot n_{i}</span></p>
-</div>
-<div class="fragment">
-<p>Es decir:</p>
-<ul>
-<li><span class="math inline">e^{\beta_{0}}</span> corresponde a la “tasa” de ocurrencia del evento cuando <span class="math inline">x_1 = \dots = x_k = 0</span></li>
-<li><span class="math inline">e^{\beta_{0}} \cdot n_{i}</span> es el recuento esperado cuando <span class="math inline">x_1 = \dots = x_k = 0</span>.</li>
-</ul>
-</div>
-</section>
-<section id="efectos-multiplicativos-sobre-mu-tasas-1" class="slide level2">
-<h2>Efectos multiplicativos sobre <span class="math inline">\mu</span>, tasas</h2>
-<p>Asimismo, si <span class="math inline">i</span> y <span class="math inline">j</span> son dos observaciones con <span class="math inline">x_{k}=c</span> y <span class="math inline">x_{k}=c+1</span> respectivamente, el ratio entre el recuento esperado de <span class="math inline">i'</span> e <span class="math inline">i</span> (otros factores constantes) está dado por:</p>
-<p><span class="math display">\begin{align}
-\mu_{i'}/\mu_{i} &amp;= \frac{ n_{i'} \cdot e^{\beta_{0}} \cdot e^{\beta_{1} x_{i'1}}  \dots (e^{\beta_{k}})^{c+1}}{n_{i} \cdot e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c}} \\ \\
-&amp;= e^{\beta_{k}}
-\end{align}</span></p>
-<div class="fragment">
-<p>En otras palabras,</p>
-<div class="content-box-yellow">
-<p>“Un cambio en <span class="math inline">\Delta</span> unidades de <span class="math inline">x_{k}</span> multiplica la tasa de ocurrencia por <span class="math inline">e^{\Delta \beta_{k}}</span>”</p>
-</div>
-</div>
-</section>
-<section id="efectos-multiplicativos-sobre-mu-ilustración" class="slide level2">
-<h2>Efectos multiplicativos sobre <span class="math inline">\mu</span>: ilustración</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>                                  betas    expbetas
-(Intercept)                    -9.982  0.000
-median_age                     -0.013  0.987
-factor(continent)Asia           0.653  1.922
-factor(continent)Europe         2.681 14.595
-factor(continent)North America  3.068 21.491
-factor(continent)Oceania       -0.103  0.902
-factor(continent)South America  3.162 23.624</code></pre>
-</div>
-</div>
-<div class="pull-left">
-<p>Si <code>continent="South America"</code> y <code>median_age=20</code>, entonces <code>ln(mu)</code> es:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.001</code></pre>
-</div>
-</div>
-<p>Si <code>continent="South America"</code> y <code>median_age=21</code>, entonces <code>ln(mu)</code> es:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.001</code></pre>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<p>Por tanto, el efecto multiplicativo de <code>median_age</code> es:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.987</code></pre>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-mu" class="slide level2 center middle">
-<h2>Efectos marginales sobre <span class="math inline">\mu</span></h2>
-</section>
-<section id="efectos-marginales-sobre-mu-recuentos" class="slide level2">
-<h2>Efectos marginales sobre <span class="math inline">\mu</span>, recuentos</h2>
-<div class="fragment">
-<p>Dado el siguiente modelo de regresión Poisson para recuentos:</p>
-<p><span class="math display">\mu_{i}= e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}</span></p>
-</div>
-<div class="fragment">
-<p>Queremos saber el <span class="bold">efecto marginal</span> de los predictores sobre el recuento esperado. Formalmente:</p>
-</div>
-<div class="fragment">
-<p><span class="math display">\begin{align}
-\frac{\partial \mu_{i}}{\partial x_{k}} &amp;=  \beta_{k} \cdot  e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}} \\ \\
-\frac{\partial \mu_{i}}{\partial x_{k}} &amp;=  \beta_{k} \cdot  \mu_{i}
-\end{align}</span></p>
-</div>
-<div class="fragment">
-<ul>
-<li>Dado que <span class="math inline">\mu_{i}</span> es estrictamente positivo, el efecto marginal y el coeficiente <span class="math inline">\beta_{k}</span> tienen el mismo signo.</li>
-</ul>
-</div>
-</section>
-<section id="efectos-marginales-sobre-mu-recuentos-1" class="slide level2">
-<h2>Efectos marginales sobre <span class="math inline">\mu</span>, recuentos</h2>
-<p>Nuestro modelo: <span class="math inline">\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \sum_{j} \mathbb{1}\{\text{continent}=j\}\beta_{j}</span></p>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>                               Estimate Std. Error
-(Intercept)                     5.910  0.006
-median_age                      0.042  0.000
-factor(continent)Asia           1.557  0.005
-factor(continent)Europe         1.211  0.006
-factor(continent)North America  2.365  0.005
-factor(continent)Oceania       -2.053  0.031
-factor(continent)South America  2.987  0.005</code></pre>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_14_files/figure-revealjs/unnamed-chunk-35-1.png" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-mu-recuentos-2" class="slide level2">
-<h2>Efectos marginales sobre <span class="math inline">\mu</span>, recuentos</h2>
-<div class="pull-left">
-<p><span class="math display">\mu_{i}= e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}</span></p>
-</div>
-<div class="pull-right">
-<p><span class="math display">\frac{\partial \mu_{i}}{\partial x_{k}} =  \beta_{k} \cdot  \mu_{i}</span></p>
-</div>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_14_files/figure-revealjs/unnamed-chunk-36-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_14_files/figure-revealjs/unnamed-chunk-37-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="cell">
-<style type="text/css">
-.pull-right ~ * { clear: unset; }
-.pull-right + * { clear: both; }
-</style>
-</div>
-</section>
-<section id="efectos-marginales-sobre-mu-tasas" class="slide level2">
-<h2>Efectos marginales sobre <span class="math inline">\mu</span>, tasas</h2>
-<div class="fragment">
-<p>Dado el siguiente modelo de regresión Poisson para tasas:</p>
-<p><span class="math display">\mu_{i}= n_{i} \cdot  \underbrace{e^{\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}}}_{\theta_{i}}</span></p>
-</div>
-<div class="fragment">
-<p>Queremos saber el <span class="bold">efecto marginal</span> de los predictores sobre el recuento esperado. Formalmente:</p>
-</div>
-<div class="fragment">
-<p><span class="math display">\begin{align}
-\frac{\partial \mu_{i}}{\partial x_{k}} &amp;=  \beta_{k} \cdot  n_{i} \cdot  e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}} \\ \\
-\frac{\partial \mu_{i}}{\partial x_{k}} &amp;=  \beta_{k} \cdot  n_{i} \cdot  \theta_{i}
-\end{align}</span></p>
-</div>
-<div class="fragment">
-<ul>
-<li>Dado que <span class="math inline">\theta_{i}</span> y <span class="math inline">n_{i}</span> son estrictamente positivos, el efecto marginal y el coeficiente <span class="math inline">\beta_{k}</span> tienen el mismo signo.</li>
-</ul>
-</div>
-</section>
-<section id="efectos-marginales-sobre-mu-tasas-1" class="slide level2">
-<h2>Efectos marginales sobre <span class="math inline">\mu</span>, tasas</h2>
-<p>Nuestro modelo: <span class="math inline">\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \sum_{j} \mathbb{1}\{\text{continent}=j\}\beta_{j} + \ln(\text{population}_{i})</span></p>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>                               Estimate Std. Error
-(Intercept)                    -9.982  0.006
-median_age                     -0.013  0.000
-factor(continent)Asia           0.653  0.005
-factor(continent)Europe         2.681  0.007
-factor(continent)North America  3.068  0.006
-factor(continent)Oceania       -0.103  0.031
-factor(continent)South America  3.162  0.005</code></pre>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_14_files/figure-revealjs/unnamed-chunk-40-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="efectos-marginales-sobre-mu-tasas-2" class="slide level2">
-<h2>Efectos marginales sobre <span class="math inline">\mu</span>, tasas</h2>
-<div class="pull-left">
-<p><span class="math display">\mu_{i}= n_{i} \cdot e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}</span></p>
-</div>
-<div class="pull-right">
-<p><span class="math display">\frac{\partial \mu_{i}}{\partial x_{k}} =  \beta_{k} \cdot  \mu_{i}</span></p>
-</div>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_14_files/figure-revealjs/unnamed-chunk-41-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_14_files/figure-revealjs/unnamed-chunk-42-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="cell">
-<style type="text/css">
-.pull-right ~ * { clear: unset; }
-.pull-right + * { clear: both; }
-</style>
-</div>
-</section>
-<section id="efectos-marginales-sobre-mu-tasas-3" class="slide level2">
-<h2>Efectos marginales sobre <span class="math inline">\mu</span>, tasas</h2>
-<div class="pull-left">
-<p><span class="math display">\mu_{i}= n_{i} \cdot e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}</span></p>
-</div>
-<div class="pull-right">
-<p><span class="math display">\frac{\partial \mu_{i}}{\partial x_{k}} =  \beta_{k} \cdot  \mu_{i}</span></p>
-</div>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_14_files/figure-revealjs/unnamed-chunk-44-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_14_files/figure-revealjs/unnamed-chunk-45-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="cell">
-<style type="text/css">
-.pull-right ~ * { clear: unset; }
-.pull-right + * { clear: both; }
-</style>
-</div>
-</section>
-<section id="efectos-marginales-sobre-mu-recuentostasas" class="slide level2">
-<h2>Efectos marginales sobre <span class="math inline">\mu</span>, recuentos/tasas</h2>
-<div class="fragment">
-<ul>
-<li>Efectos marginales son <em>esencialmente</em> heterogéneos. No hay un efecto sino muchos.</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Heterogeneidad crece con la complejidad del modelo: número de predictores, interacciones, etc.</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>En la práctica, muchas veces queremos UN número que resuma el efecto marginal.</li>
-</ul>
-</div>
-<div class="fragment">
-<div class="pull-left">
-<p><strong>Objetivo:</strong> obtener un resumen único sin ocultar que el efecto varía entre observaciones.</p>
-</div>
-</div>
-<div class="fragment">
-<p>Cantidades de interés:</p>
-<div class="pull-right">
-<ul>
-<li>Average Marginal Effects (AME)</li>
-<li>Marginal Effects at the Mean (MEM)</li>
-<li>Marginal Effects at Representative Values (MER)</li>
-</ul>
-</div>
-</div>
-</section>
-<section id="ejemplo-mer-para-tasa" class="slide level2">
-<h2>Ejemplo: MER para tasa</h2>
-<p>Ejemplo MER de “median age” (fijo al promedio global) sobre “tasa de muertes por millón de habitantes” por continente:</p>
-<div class="fragment">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
- Estimate Std. Error     z Pr(&gt;|z|)     S  2.500 % 97.500 %
-   -0.404    0.006 -71.500   &lt;0.001   Inf -0.415 -0.393
-   -0.776    0.012 -63.800   &lt;0.001   Inf -0.800 -0.752
-   -5.890    0.105 -56.300   &lt;0.001   Inf -6.095 -5.685
-   -8.673    0.140 -61.700   &lt;0.001   Inf -8.949 -8.398
-   -0.364    0.012 -29.300   &lt;0.001 623.100 -0.389 -0.340
-   -9.534    0.150 -63.800   &lt;0.001   Inf -9.827 -9.241
+<p>Queremos repetir el examen con distintas particiones sin evaluar sobre casos usados para entrenar.</p>
+</div>
+</section></section>
+<section>
+<section id="validación-cruzada" class="title-slide slide level1 inverse center middle" data-background-color="#D19F00">
+<h1>Validación cruzada</h1>
 
-Term: median_age
-Type: response
-Comparison: dY/dX</code></pre>
+</section>
+<section id="cada-observación-rinde-examen-una-vez" class="slide level2">
+<h2>Cada observación rinde examen una vez</h2>
+<div class="center">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="kfold_cv.gif" style="width:70.0%"></p>
+<figcaption>Esquema de validación cruzada</figcaption>
+</figure>
 </div>
 </div>
+<p>En <span class="math inline">k</span>-fold cross-validation, dividimos los datos en <span class="math inline">k</span> grupos. Cada fold actúa una vez como evaluación y <span class="math inline">k-1</span> veces como parte del entrenamiento.</p>
+</section>
+<section id="el-algoritmo-es-una-envoltura-genérica" class="slide level2">
+<h2>El algoritmo es una envoltura genérica</h2>
+<p>Para <span class="math inline">j=1,\ldots,k</span>:</p>
+<ol type="1">
+<li>reserve el fold <span class="math inline">j</span>;</li>
+<li>ajuste la regla con los otros <span class="math inline">k-1</span> folds;</li>
+<li>prediga los casos del fold reservado;</li>
+<li>calcule la pérdida <span class="math inline">E_j</span>.</li>
+</ol>
+<div class="fragment">
+<p>Luego promediamos:</p>
+<p><span class="math display">
+\widehat E_{\text{CV}}=\frac{1}{k}\sum_{j=1}^{k}E_j.
+</span></p>
+<p>El interior de “ajuste la regla” puede ser cualquier algoritmo predictivo.</p>
 </div>
 </section>
-<section id="datos-de-recuento" class="slide level2 inverse center middle" data-background-color="#003C82">
-<h2>Datos de recuento</h2>
-<h3 id="regresión-poisson-y-quasi-poisson">Regresión Poisson y Quasi-Poisson</h3>
+<section id="el-resultado-es-una-distribución-no-solo-un-promedio" class="slide level2">
+<h2>El resultado es una distribución, no solo un promedio</h2>
+<p>Los <span class="math inline">k</span> errores <span class="math inline">\{E_1,\ldots,E_k\}</span> permiten estudiar:</p>
+<ul>
+<li>desempeño promedio;</li>
+<li>dispersión entre folds;</li>
+<li>folds especialmente difíciles;</li>
+<li>sensibilidad de la conclusión a la partición.</li>
+</ul>
+<div class="fragment">
+<p>Dos modelos con el mismo error promedio pueden diferir mucho en estabilidad.</p>
+</div>
 </section>
-<section id="regresión-poisson-1" class="slide level2">
-<h2>Regresión Poisson</h2>
+<section id="cuántos-folds" class="slide level2">
+<h2>¿Cuántos folds?</h2>
+<div class="pull-left">
+<p><strong><span class="math inline">k</span> pequeño</strong></p>
+<ul>
+<li>entrenamientos más pequeños;</li>
+<li>menor costo computacional;</li>
+<li>estimación más sesgada del desempeño final.</li>
+</ul>
+</div>
+<div class="pull-right">
+<p><strong><span class="math inline">k</span> grande</strong></p>
+<ul>
+<li>entrenamientos parecidos al dataset completo;</li>
+<li>mayor costo;</li>
+<li>errores entre folds más correlacionados.</li>
+</ul>
+</div>
+<div class="fragment">
+<p><span class="math inline">k=5</span> o <span class="math inline">k=10</span> suele ofrecer un balance razonable.</p>
+</div>
+</section>
+<section id="loocv-es-el-caso-extremo" class="slide level2">
+<h2>LOOCV es el caso extremo</h2>
+<p>Si <span class="math inline">k=n</span>, cada fold contiene una sola observación:</p>
+<p><span class="math display">
+\text{LOOCV}=\text{Leave-One-Out Cross-Validation}.
+</span></p>
+<ul>
+<li>Entrena <span class="math inline">n</span> veces con <span class="math inline">n-1</span> casos.</li>
+<li>Usa casi todos los datos en cada ajuste.</li>
+<li>Puede ser costoso y producir una estimación de error con alta varianza.</li>
+</ul>
+<div class="fragment">
+<p>Usar más folds no garantiza una mejor decisión.</p>
+</div>
+</section></section>
+<section>
+<section id="cross-validation-con-bikers" class="title-slide slide level1 inverse center middle" data-background-color="#D19F00">
+<h1>Cross-validation con <code>bikers</code></h1>
+
+</section>
+<section id="la-partición-debe-parecerse-al-uso-futuro" class="slide level2">
+<h2>La partición debe parecerse al uso futuro</h2>
+<p>Los datos contienen 24 horas dentro de cada día. Si repartimos horas al azar, el training set puede contener otras horas del mismo día que estamos evaluando.</p>
+<div class="fragment">
+<p>Para predecir demanda en <strong>días nuevos</strong>, dejamos días completos fuera:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href=""></a><span class="fu">set.seed</span>(<span class="dv">3070</span>)</span>
+<span id="cb1-2"><a href=""></a>folds <span class="ot">&lt;-</span> <span class="fu">group_vfold_cv</span>(</span>
+<span id="cb1-3"><a href=""></a>  bikedata,</span>
+<span id="cb1-4"><a href=""></a>  <span class="at">group =</span> day,</span>
+<span id="cb1-5"><a href=""></a>  <span class="at">v =</span> <span class="dv">10</span></span>
+<span id="cb1-6"><a href=""></a>)</span>
+<span id="cb1-7"><a href=""></a></span>
+<span id="cb1-8"><a href=""></a>folds <span class="sc">%&gt;%</span></span>
+<span id="cb1-9"><a href=""></a>  <span class="fu">select</span>(id) <span class="sc">%&gt;%</span></span>
+<span id="cb1-10"><a href=""></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 1
+  id        
+  &lt;chr&gt;     
+1 Resample01
+2 Resample02
+3 Resample03</code></pre>
+</div>
+</div>
+<p>Mostramos tres de los diez folds. La unidad de partición es parte del estimando predictivo.</p>
+</div>
+</section>
+<section id="dos-reglas-candidatas" class="slide level2">
+<h2>Dos reglas candidatas</h2>
+<p>Para hacer visible el procedimiento, usamos dos reglas reproducibles:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href=""></a>simple_formula <span class="ot">&lt;-</span> bikers <span class="sc">~</span></span>
+<span id="cb3-2"><a href=""></a>  temp <span class="sc">+</span> hum <span class="sc">+</span> workingday <span class="sc">+</span> <span class="fu">factor</span>(hr)</span>
+<span id="cb3-3"><a href=""></a></span>
+<span id="cb3-4"><a href=""></a>flexible_formula <span class="ot">&lt;-</span> bikers <span class="sc">~</span></span>
+<span id="cb3-5"><a href=""></a>  <span class="fu">poly</span>(temp, <span class="dv">5</span>, <span class="at">raw =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb3-6"><a href=""></a>  <span class="fu">poly</span>(hum, <span class="dv">5</span>, <span class="at">raw =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb3-7"><a href=""></a>  <span class="fu">factor</span>(mnth) <span class="sc">+</span></span>
+<span id="cb3-8"><a href=""></a>  <span class="fu">factor</span>(hr) <span class="sc">*</span> workingday <span class="sc">+</span></span>
+<span id="cb3-9"><a href=""></a>  <span class="fu">factor</span>(weekday) <span class="sc">+</span></span>
+<span id="cb3-10"><a href=""></a>  windspeed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>El objetivo no es enseñar estas especificaciones. Son dos objetos <code>fit/predict</code> que la misma validación cruzada puede comparar.</p>
+</section>
+<section id="una-función-evalúa-cualquier-fórmula" class="slide level2">
+<h2>Una función evalúa cualquier fórmula</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a>evaluate_fold <span class="ot">&lt;-</span> <span class="cf">function</span>(split, formula) {</span>
+<span id="cb4-2"><a href=""></a>  train_data <span class="ot">&lt;-</span> <span class="fu">analysis</span>(split)</span>
+<span id="cb4-3"><a href=""></a>  test_data <span class="ot">&lt;-</span> <span class="fu">assessment</span>(split)</span>
+<span id="cb4-4"><a href=""></a>  fit <span class="ot">&lt;-</span> <span class="fu">lm</span>(formula, <span class="at">data =</span> train_data)</span>
+<span id="cb4-5"><a href=""></a></span>
+<span id="cb4-6"><a href=""></a>  <span class="fu">tibble</span>(</span>
+<span id="cb4-7"><a href=""></a>    <span class="at">RMSE_train =</span> <span class="fu">rmse</span>(</span>
+<span id="cb4-8"><a href=""></a>      train_data<span class="sc">$</span>bikers, <span class="fu">predict</span>(fit, train_data)</span>
+<span id="cb4-9"><a href=""></a>    ),</span>
+<span id="cb4-10"><a href=""></a>    <span class="at">RMSE_test =</span> <span class="fu">rmse</span>(</span>
+<span id="cb4-11"><a href=""></a>      test_data<span class="sc">$</span>bikers, <span class="fu">predict</span>(fit, test_data)</span>
+<span id="cb4-12"><a href=""></a>    )</span>
+<span id="cb4-13"><a href=""></a>  )</span>
+<span id="cb4-14"><a href=""></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Cada ajuste conoce solo el training set de su fold.</p>
+</section>
+<section id="repetimos-el-examen-diez-veces" class="slide level2">
+<h2>Repetimos el examen diez veces</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href=""></a>candidate_models <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb5-2"><a href=""></a>  <span class="at">Simple =</span> simple_formula,</span>
+<span id="cb5-3"><a href=""></a>  <span class="at">Flexible =</span> flexible_formula</span>
+<span id="cb5-4"><a href=""></a>)</span>
+<span id="cb5-5"><a href=""></a></span>
+<span id="cb5-6"><a href=""></a>cv_results <span class="ot">&lt;-</span> <span class="fu">imap_dfr</span>(</span>
+<span id="cb5-7"><a href=""></a>  candidate_models,</span>
+<span id="cb5-8"><a href=""></a>  <span class="cf">function</span>(formula, model_name) {</span>
+<span id="cb5-9"><a href=""></a>    <span class="fu">map_dfr</span>(folds<span class="sc">$</span>splits, evaluate_fold, formula) <span class="sc">%&gt;%</span></span>
+<span id="cb5-10"><a href=""></a>      <span class="fu">mutate</span>(<span class="at">modelo =</span> model_name, <span class="at">.before =</span> <span class="dv">1</span>)</span>
+<span id="cb5-11"><a href=""></a>  }</span>
+<span id="cb5-12"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>El resultado contiene veinte evaluaciones: diez por regla. <code>RMSE_test</code> se calcula siempre fuera de muestra.</p>
+</section>
+<section id="el-promedio-importa-la-variación-también" class="slide level2">
+<h2>El promedio importa; la variación también</h2>
+
+<img data-src="class_14_files/figure-revealjs/cv-plot-1.png" width="960" class="r-stretch"><p>Cada punto es un fold; el punto blanco es el promedio.</p>
+</section>
+<section id="resumimos-desempeño-y-estabilidad" class="slide level2">
+<h2>Resumimos desempeño y estabilidad</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>
-====================================================
-                         Dependent variable:        
-                  ----------------------------------
-                                bikers              
-                        (1)               (2)       
-----------------------------------------------------
-temp              2.194*** (0.005) 1.995*** (0.005) 
-hum                                -1.169*** (0.005)
-Constant          3.803*** (0.003) 4.633*** (0.004) 
-----------------------------------------------------
-Observations           8,645             8,645      
-Log Likelihood      -441,483.000     -409,717.000   
-Akaike Inf. Crit.   882,969.000       819,440.000   
-====================================================
-Note:                    *p&lt;0.100; **p&lt;0.050; ***p&lt;0.010</code></pre>
+<pre><code># A tibble: 2 × 4
+  modelo   RMSE_promedio SD_entre_folds brecha_generalización
+  &lt;chr&gt;            &lt;dbl&gt;          &lt;dbl&gt;                 &lt;dbl&gt;
+1 Flexible          57.000           4.990                 1.580 
+2 Simple            80.500           3.090                 0.559</code></pre>
 </div>
+</div>
+<p>En este ejercicio, la regla flexible predice mejor días nuevos. La brecha y la dispersión recuerdan que un único número no resume toda la incertidumbre predictiva.</p>
+</section>
+<section id="cross-validation-no-está-casada-con-rmse" class="slide level2">
+<h2>Cross-validation no está casada con RMSE</h2>
+<p>Podemos conservar los mismos folds y cambiar la pérdida:</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Tipo de outcome</th>
+<th>Pérdidas posibles</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>continuo (<code>bikers</code>)</td>
+<td>RMSE, MAE</td>
+</tr>
+<tr class="even">
+<td>binario (<code>high_demand</code>)</td>
+<td>log-loss, error de clasificación</td>
+</tr>
+<tr class="odd">
+<td>multinomial (<code>demand_level</code>)</td>
+<td>cross-entropy, accuracy</td>
+</tr>
+<tr class="even">
+<td>conteo</td>
+<td>deviance, MAE, RMSE</td>
+</tr>
+</tbody>
+</table>
+<div class="fragment">
+<p>La métrica debe reflejar el uso sustantivo de la predicción y el costo de equivocarse.</p>
 </div>
 </section>
-<section id="over-dispersion-en-regresión-poisson" class="slide level2">
-<h2>Over-dispersion en regresión Poisson</h2>
-<div class="fragment">
+<section id="cross-validation-también-sirve-para-elegir" class="slide level2">
+<h2>Cross-validation también sirve para elegir</h2>
+<p>La usamos para comparar:</p>
 <ul>
-<li>En un modelo de regresión Poisson cada <span class="math inline">i</span> sigue una distribución <span class="math inline">y_{i} \sim \text{Poisson}(\mu_{i} = e^{X_{i}\beta})</span></li>
+<li>algoritmos;</li>
+<li>predictores;</li>
+<li>transformaciones;</li>
+<li>niveles de regularización;</li>
+<li>hiperparámetros;</li>
+<li>reglas de decisión.</li>
 </ul>
-</div>
 <div class="fragment">
-<ul>
-<li>No hay un parámetro adicional para la varianza. Por definición: <span class="math inline">\operatorname{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}=e^{X_{i}\beta}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Esto puede resultar en una sub-estimación o sobre-estimación de la varianza de los datos.
-<ul>
-<li>Por lo general resulta en una subestimación de la varianza de los datos.</li>
-</ul></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Este caso se conoce como “over-dispersion”. Los datos son más dispersos de lo esperado de acuerdo al modelo.
-<ul>
-<li>Over-dispersion no afecta la estimación de los coeficientes pero vuelve la inferencia demasiado “liberal”: errores estándar subestimados</li>
-</ul></li>
-</ul>
+<p>Pero toda elección guiada por CV convierte esos folds en parte del entrenamiento del procedimiento completo.</p>
 </div>
 </section>
-<section id="over-dispersion-en-regresión-poisson-1" class="slide level2">
-<h2>Over-dispersion en regresión Poisson</h2>
+<section id="el-test-final-se-toca-una-sola-vez" class="slide level2">
+<h2>El test final se toca una sola vez</h2>
+<p>Un flujo limpio separa tres funciones:</p>
+<ol type="1">
+<li><strong>Training folds:</strong> ajustar parámetros.</li>
+<li><strong>Validation folds:</strong> comparar alternativas y elegir.</li>
+<li><strong>Test final:</strong> estimar desempeño del procedimiento elegido.</li>
+</ol>
 <div class="fragment">
-<ul>
-<li>Es posible detectar over-dispersion inspeccionando los residuos “estandarizados” de un modelo Poisson. Formalmente: <span class="math display">z_{i} = \frac{y_{i} - \mu_{i}}{\sigma_{i}} = \frac{y_{i} - \mu_{i}}{\sqrt{\mu_{i}}} = \frac{y_{i} - e^{X_{i}\beta}}{\sqrt{e^{X_{i}\beta}}}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Si los <span class="math inline">y_{i}</span>’s distribuyen Poisson entonces <span class="math inline">z_{i} \sim \mathcal{N}(0,1)</span>. Luego, la presencia de residuos grandes indican over-dispersion. La “suma de residuos al cuadrado” resume esta información: <span class="math display">\text{ssr} = \sum^{n}_{i=1} z^{2}_{i}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Si el modelo Poisson es correcto <span class="math inline">\text{ssr} \sim \chi^2_{\text{df}=n-k}</span>, con valor esperado <span class="math inline">\mathbb{E}(\text{ssr})=n-k</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>El ratio entre ambos, <span class="math inline">\frac{\text{ssr}}{n-k}</span>, es un estimado del “factor de dispersión”.</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Obtenemos la inferencia correcta multiplicando los SE’s por <span class="math inline">\sqrt{\frac{\text{ssr}}{n-k}}</span>.</li>
-</ul>
+<p>Si miramos repetidamente el test para modificar el modelo, terminamos sobreajustando el test.</p>
 </div>
 </section>
-<section id="over-dispersion-en-regresión-poisson-2" class="slide level2">
-<h2>Over-dispersion en regresión Poisson</h2>
-<div class="fragment">
-<p>En nuestro modelo Poisson más complejo:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>rss =  794674  , rss esperado =  8642</code></pre>
-</div>
-</div>
-</div>
-<div class="fragment">
-<p>En este caso el factor de over-dispersion es:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>factor de dispersión =  91.950</code></pre>
-</div>
-</div>
-</div>
-</section>
-<section id="regresión-quasi-poisson" class="slide level2">
-<h2>Regresión Quasi-Poisson</h2>
-<p>La regresión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferencia del modelo.</p>
-<div class="fragment">
-<p><span class="math display">y_{i} \sim \text{quasi-Poisson}(\mu_{i} = e^{X_{i}\beta}, \sigma= \sqrt{\omega \cdot  e^{X_{i}\beta}})</span></p>
-<p>donde <span class="math inline">\omega</span> es el factor de dispersion.</p>
-</div>
-<div class="fragment">
+<section id="fugas-de-información" class="slide level2">
+<h2>Fugas de información</h2>
+<p>Hay <em>data leakage</em> cuando información del fold reservado influye en el ajuste:</p>
 <ul>
-<li>Regresión Poisson es un caso especial de quasi-Poisson ( <span class="math inline">\omega=1</span> ).</li>
+<li>estandarizar con media y desviación de todo el dataset;</li>
+<li>imputar usando también los casos de evaluación;</li>
+<li>seleccionar predictores antes de crear folds;</li>
+<li>ajustar umbrales con las respuestas del test;</li>
+<li>repartir observaciones relacionadas entre training y test.</li>
 </ul>
-</div>
 <div class="fragment">
-<p>Implementación en <code>R</code>:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>            Estimate Std. Error t value
-(Intercept)    4.633    0.040  115.840
-temp           1.995    0.044   45.140
-hum           -1.169    0.044  -26.360
-                                                                                                                                                            Pr(&gt;|t|)
-(Intercept) 0.000
-temp        0.000
-hum         0.000</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>dispersion =  91.960</code></pre>
-</div>
-</div>
+<p>Toda operación que “aprende” de los datos debe ocurrir dentro de cada fold.</p>
 </div>
 </section>
-<section id="quasi-poisson" class="slide level2">
-<h2>Quasi-Poisson</h2>
-<p>Comparando ambos modelos (mismos coeficientes, errores estándar corregidos por sobre-dispersión):</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
-=====================================================
-                          Dependent variable:        
-                  -----------------------------------
-                                bikers               
-                       Poisson      glm: quasipoisson
-                                       link = log    
-                         (1)               (2)       
------------------------------------------------------
-temp              1.995*** (0.005)  1.995*** (0.044) 
-hum               -1.169*** (0.005) -1.169*** (0.044)
-Constant          4.633*** (0.004)  4.633*** (0.040) 
------------------------------------------------------
-Observations            8,645             8,645      
-Log Likelihood      -409,717.000                     
-Akaike Inf. Crit.    819,440.000                     
-=====================================================
-Note:                     *p&lt;0.100; **p&lt;0.050; ***p&lt;0.010</code></pre>
+<section id="series-de-tiempo-requieren-otra-partición" class="slide level2">
+<h2>Series de tiempo requieren otra partición</h2>
+<p>Si el objetivo fuera predecir el futuro, folds aleatorios podrían dejar observaciones futuras en training y pasadas en evaluación.</p>
+<div class="fragment">
+<p>En ese caso usaríamos validación temporal:</p>
+<p><span class="math display">
+\text{pasado}\longrightarrow\text{futuro},
+</span></p>
+<p>con ventanas móviles o acumulativas. La validación debe imitar las restricciones reales de despliegue.</p>
 </div>
-</div>
+</section>
+<section id="ejercicio" class="slide level2">
+<h2>Ejercicio</h2>
+<p>Con los mismos folds por <code>day</code>:</p>
+<ol type="1">
+<li>proponga una tercera regla de predicción;</li>
+<li>evalúela con MAE y RMSE;</li>
+<li>compare promedio y dispersión entre folds;</li>
+<li>identifique una posible fuga de información;</li>
+<li>explique cómo cambiaría los folds si el objetivo fuera predecir el mes siguiente.</li>
+</ol>
 </section>
 <section id="en-resumen" class="slide level2">
 <h2>En resumen</h2>
 <ul>
-<li>Regresión Poisson modela conteos: <span class="math inline">\mathbb{E}(y_{i}\mid x_{i}) = \mu_{i} = e^{\eta_{i}}</span>, con <span class="math inline">\ln(\mu_{i})=\eta_{i}</span> como componente sistemático (función de enlace log).</li>
-<li>Para modelar tasas se agrega un “offset” <span class="math inline">\ln(n_{i})</span>, con <span class="math inline">n_{i}</span> la exposición.</li>
-<li><span class="math inline">\beta_{k}</span> es el efecto marginal de <span class="math inline">x_{k}</span> sobre <span class="math inline">\ln(\mu)</span>; <span class="math inline">e^{\beta_{k}}</span> es la razón de tasas de incidencia (IRR), el efecto multiplicativo sobre <span class="math inline">\mu</span>.</li>
-<li>El modelo Poisson impone <span class="math inline">\operatorname{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}</span>; cuando esto no se cumple hay over-dispersion.</li>
-<li>Quasi-Poisson corrige los errores estándar con un factor de dispersión <span class="math inline">\omega</span>, sin cambiar los coeficientes estimados.</li>
-<li>La próxima clase pasa de la asociación a la causalidad: qué supuestos adicionales se necesitan para interpretar un coeficiente como un efecto causal.</li>
+<li>Predecir significa generalizar a casos nuevos.</li>
+<li>El error de entrenamiento es optimista por construcción.</li>
+<li>El overfitting surge cuando la flexibilidad captura ruido.</li>
+<li>Validación cruzada repite evaluaciones fuera de muestra.</li>
+<li>Folds y pérdidas deben imitar la tarea predictiva real.</li>
+<li>El test final se reserva para una sola evaluación.</li>
 </ul>
 </section>
-<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#007CC3">
+<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#087E4B">
 <h2>Gracias</h2>
 <p><strong>Hasta la próxima clase</strong></p>
 <p>Mauricio Bucca</p>

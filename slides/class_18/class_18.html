@@ -32,72 +32,6 @@
       margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
       vertical-align: middle;
     }
-    /* CSS for syntax highlighting */
-    html { -webkit-text-size-adjust: 100%; }
-    pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-    pre > code.sourceCode > span:empty { height: 1.2em; }
-    .sourceCode { overflow: visible; }
-    code.sourceCode > span { color: inherit; text-decoration: inherit; }
-    div.sourceCode { margin: 1em 0; }
-    pre.sourceCode { margin: 0; }
-    @media screen {
-    div.sourceCode { overflow: auto; }
-    }
-    @media print {
-    pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-    }
-    pre.numberSource code
-      { counter-reset: source-line 0; }
-    pre.numberSource code > span
-      { position: relative; left: -4em; counter-increment: source-line; }
-    pre.numberSource code > span > a:first-child::before
-      { content: counter(source-line);
-        position: relative; left: -1em; text-align: right; vertical-align: baseline;
-        border: none; display: inline-block;
-        -webkit-touch-callout: none; -webkit-user-select: none;
-        -khtml-user-select: none; -moz-user-select: none;
-        -ms-user-select: none; user-select: none;
-        padding: 0 4px; width: 4em;
-      }
-    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-    div.sourceCode
-      { color: #24292e;  }
-    @media screen {
-    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-    }
-    code span { color: #24292e; } /* Normal */
-    code span.al { color: #ff5555; font-weight: bold; } /* Alert */
-    code span.an { color: #6a737d; } /* Annotation */
-    code span.at { color: #d73a49; } /* Attribute */
-    code span.bn { color: #005cc5; } /* BaseN */
-    code span.bu { color: #d73a49; } /* BuiltIn */
-    code span.cf { color: #d73a49; } /* ControlFlow */
-    code span.ch { color: #032f62; } /* Char */
-    code span.cn { color: #005cc5; } /* Constant */
-    code span.co { color: #6a737d; } /* Comment */
-    code span.cv { color: #6a737d; } /* CommentVar */
-    code span.do { color: #6a737d; } /* Documentation */
-    code span.dt { color: #d73a49; } /* DataType */
-    code span.dv { color: #005cc5; } /* DecVal */
-    code span.er { color: #ff5555; text-decoration: underline; } /* Error */
-    code span.ex { color: #d73a49; font-weight: bold; } /* Extension */
-    code span.fl { color: #005cc5; } /* Float */
-    code span.fu { color: #6f42c1; } /* Function */
-    code span.im { color: #032f62; } /* Import */
-    code span.in { color: #6a737d; } /* Information */
-    code span.kw { color: #d73a49; } /* Keyword */
-    code span.op { color: #24292e; } /* Operator */
-    code span.ot { color: #6f42c1; } /* Other */
-    code span.pp { color: #d73a49; } /* Preprocessor */
-    code span.re { color: #6a737d; } /* RegionMarker */
-    code span.sc { color: #005cc5; } /* SpecialChar */
-    code span.ss { color: #032f62; } /* SpecialString */
-    code span.st { color: #032f62; } /* String */
-    code span.va { color: #e36209; } /* Variable */
-    code span.vs { color: #032f62; } /* VerbatimString */
-    code span.wa { color: #ff5555; } /* Warning */
   </style>
   <link rel="stylesheet" href="class_18_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
   <link rel="stylesheet" href="../_shared/course.css">
@@ -209,13 +143,13 @@
     }
   </style>
 </head>
-<body class="theme-milan quarto-light">
+<body class="theme-flamengo quarto-light">
   <div class="reveal">
     <div class="slides">
 
-<section id="title-slide" data-background-color="#8B1E2D" class="quarto-title-block center">
+<section id="title-slide" data-background-color="#1B5E3F" class="quarto-title-block center">
   <h1 class="title">Análisis de Datos Categóricos (SOC3070)</h1>
-  <p class="subtitle">Clasificador Logístico (Binomial y Multinomial)</p>
+  <p class="subtitle">Introducción a Redes Neuronales</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -232,686 +166,871 @@ Mauricio Bucca · Sociología UC
 <div class="full-width">
 <div class="content-box">
 <p><strong>Antes</strong></p>
-<p>predicción, overfitting y validación cruzada.</p>
+<p>árboles, Random Forest y Gradient Boosting.</p>
 </div>
 <div class="content-box-primary">
 <p><strong>Hoy</strong></p>
-<p>clasificador logístico: métricas, umbrales y el caso multinomial.</p>
+<p>redes neuronales para clasificación y regresión.</p>
 </div>
 <div class="content-box-secondary">
 <p><strong>Después</strong></p>
-<p>regularización: Ridge y LASSO.</p>
+<p>un “flavor” de LLMs, usando regresión logística.</p>
 </div>
 </div>
 </section>
 <section>
-<section id="regresión-logística-como-machine-learning" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
-<h1>Regresión Logística como Machine Learning</h1>
+<section id="redes-neuronales" class="title-slide slide level1 inverse center middle" data-background-color="#C3281E">
+<h1>Redes neuronales</h1>
 
 </section>
-<section id="regresión-logística-como-machine-learning-1" class="slide level2">
-<h2>Regresión Logística como Machine Learning</h2>
-<p><br><br></p>
-<div class="middle">
-<div class="center">
+<section id="ruta-de-la-clase" class="slide level2">
+<h2>Ruta de la clase</h2>
+<ol type="1">
+<li>Reconocer una neurona como extensión de un GLM.</li>
+<li>Construir un perceptrón multicapa pequeño.</li>
+<li>Entrenar para clasificación y regresión.</li>
+<li>Regularizar y elegir arquitectura.</li>
+<li>Comparar con baselines simples.</li>
+</ol>
+<p>Referencia principal: James et al.&nbsp;(2021), <em>An Introduction to Statistical Learning</em>, 2ª ed., capítulo 10 (<a href="https://www.statlearning.com/">sitio oficial</a>).</p>
+</section>
+<section id="el-problema-no-es-un-juguete" class="slide level2">
+<h2>El problema no es un juguete</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 4
+  conjunto       días horas columnas_de_entrada
+  &lt;chr&gt;         &lt;int&gt; &lt;int&gt;               &lt;int&gt;
+1 Entrenamiento   219  5162                  60
+2 Validación       73  1735                  60
+3 Test             73  1748                  60</code></pre>
+</div>
+</div>
+<p>La red recibe clima, calendario, no linealidades e interacción hora × día hábil. La partición temporal y el umbral aprendido en entrenamiento reproducen una decisión de pronóstico, no una clasificación artificialmente fácil.</p>
+</section>
+<section id="qué-no-haremos" class="slide level2">
+<h2>Qué no haremos</h2>
+<ul>
+<li>No construiremos una red profunda.</li>
+<li>No trabajaremos con imágenes ni lenguaje.</li>
+<li>No interpretaremos pesos como efectos causales.</li>
+<li>No asumiremos que “más complejo” significa “mejor”.</li>
+</ul>
+<p>El objetivo es conectar herramientas conocidas con una arquitectura flexible.</p>
+</section>
+<section id="retomando-la-pregunta-de-la-clase-pasada" class="slide level2">
+<h2>Retomando la pregunta de la clase pasada</h2>
+<p>Los árboles y ensambles de la clase 17 resolvieron el problema de la clase 16 —ya no elegimos interacciones a mano—, pero heredaron una limitación: predicciones <strong>escalonadas</strong>, constantes dentro de cada región, sin poder aproximar una relación suave ni extrapolar.</p>
+<div class="fragment">
+<p>La pregunta que quedó abierta: <strong>¿se puede aprender una función no lineal —interacciones incluidas— que sea suave en vez de escalonada?</strong></p>
+</div>
+<div class="fragment">
+<p>Cada modelo del curso, hasta ahora, exigió que <strong>nosotros</strong> especificáramos la forma funcional: qué interacciones incluir en el logit, qué penalización usar, qué preguntas de sí/no hacer en un árbol. Una red neuronal invierte el orden: le damos entradas y salida, y el modelo <strong>aprende directamente de los datos</strong> qué transformaciones intermedias son útiles — de forma continua, no en escalones.</p>
+</div>
+<div class="fragment">
+<p>No es una idea nueva: McCulloch y Pitts propusieron en 1943 la primera neurona artificial (una unidad de umbral); Rosenblatt construyó en 1957 el primer <em>perceptrón</em> entrenable. Lo que cambió desde entonces es la escala, no la idea básica.</p>
+</div>
+</section>
+<section id="configuración-los-mismos-datos-de-la-clase-16" class="slide level2">
+<h2>Configuración: los mismos datos de la clase 16</h2>
+<p>La red reutiliza exactamente el outcome, la partición cronológica y la matriz de diseño de la clase 16:</p>
+</section>
+<section id="configuración-escalar-las-entradas" class="slide level2">
+<h2>Configuración: escalar las entradas</h2>
+<p>A diferencia de Ridge/LASSO, las redes son sensibles a la <strong>escala</strong> de las entradas, así que las estandarizamos. La media y la desviación se aprenden <strong>solo en entrenamiento</strong> (volveremos sobre por qué):</p>
+</section>
+<section id="de-la-neurona-biológica-a-la-artificial" class="slide level2">
+<h2>De la neurona biológica a la artificial</h2>
+
+<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20260414151507594095/420047197.webp" style="width:70.0%" class="r-stretch quarto-figure-center"><p class="caption">Una neurona biológica (dendritas → cuerpo celular → axón) inspira la unidad artificial (entradas → combinación → salida).</p><div class="footnote">
+<p>Fuente: <a href="https://www.geeksforgeeks.org/machine-learning/neural-networks-a-beginners-guide/">GeeksforGeeks — Neural Networks: A Beginner’s Guide</a></p>
+</div>
 <table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
 <thead>
 <tr class="header">
-<th>Énfasis inferencial</th>
-<th>Énfasis predictivo</th>
+<th></th>
+<th>Red biológica</th>
+<th>Red artificial</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>parámetros e incertidumbre</td>
-<td>desempeño fuera de muestra</td>
+<td>Unidad</td>
+<td>neurona (dendritas, axón)</td>
+<td>nodo/unidad</td>
 </tr>
 <tr class="even">
-<td>interpretación del mecanismo</td>
-<td>generalización a casos nuevos</td>
+<td>Conexión</td>
+<td>sinapsis</td>
+<td>peso numérico</td>
 </tr>
 <tr class="odd">
-<td>supuestos explícitos</td>
-<td>validación y calibración</td>
+<td>Aprendizaje</td>
+<td>cambios en la fuerza sináptica</td>
+<td>ajuste de pesos vía optimización</td>
+</tr>
+<tr class="even">
+<td>Procesamiento</td>
+<td>electroquímico, masivamente paralelo</td>
+<td>numérico, secuencial por capas</td>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
-</section></section>
-<section>
-<section id="regresión-logística-el-hello-world-de-ml" class="title-slide slide level1 center">
-<h1>Regresión Logística: el <strong>“hello world”</strong> de ML</h1>
-<ul>
-<li><strong>Qué resuelve:</strong>
-<ul>
-<li>Estima la probabilidad de un evento binario (<span class="math inline">Y=0/1</span>).<br>
-</li>
-<li>Ejemplos: ¿un mail es spam? ¿una hora tendrá alta demanda de bicicletas?</li>
-</ul></li>
-<li><strong>Cómo funciona:</strong>
-<ul>
-<li>Ajusta una combinación lineal de predictores <span class="math inline">X\beta</span>.<br>
-</li>
-<li>Pasa ese valor por la <strong>curva sigmoide</strong> → convierte log-odds en probabilidades (0–1).<br>
-</li>
-<li>Aprende de los datos para <strong>generalizar</strong> a casos no observados (nuevos datos, futuro, etc.).</li>
-</ul></li>
-<li><strong>Por qué es importante:</strong>
-<ul>
-<li>Interpretable: cada predictor tiene un rol claro en la probabilidad.<br>
-</li>
-<li>Eficiente: funciona bien incluso con muestras pequeñas.<br>
-</li>
-<li>Fundacional: es la base sobre la cual se construyen modelos más complejos en ML.</li>
-</ul></li>
-</ul>
+<p>La analogía es útil para la intuición inicial; de aquí en adelante trabajamos solo con la versión matemática.</p>
 </section>
-<section id="ejemplo-empírico" class="slide level2">
-<h2>Ejemplo empírico</h2>
-<p>Continuando con el ejemplo de clases anteriores, ajustamos el siguiente modelo: <span class="math display">\ln \frac{p_{i}}{1-p_{i}} = \beta_{0} + \beta_{1}\text{temp}_{i} + \beta_{2}\text{workingday}_{i} + \beta_{3}\text{hum}_{i} + \beta_{4}\text{hum}^{2}_{i}</span> Llamemos a este modelo, modelo <span class="math inline">M</span>:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href=""></a>logit_demand <span class="ot">&lt;-</span>  <span class="fu">glm</span>(high_demand <span class="sc">~</span> temp <span class="sc">+</span> <span class="fu">factor</span>(workingday) <span class="sc">+</span> hum <span class="sc">+</span> <span class="fu">I</span>(hum<span class="sc">^</span><span class="dv">2</span>) ,<span class="at">family=</span><span class="fu">binomial</span>(<span class="at">link=</span><span class="st">"logit"</span>), <span class="at">data=</span>bikedata)</span>
-<span id="cb1-2"><a href=""></a><span class="fu">summary</span>(logit_demand)<span class="sc">$</span>coefficients</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>                    Estimate Std. Error z value
-(Intercept)          -3.303    0.259 -12.736
-temp                  4.612    0.153  30.211
-factor(workingday)1  -0.344    0.058  -5.882
-hum                   3.107    0.850   3.655
-I(hum^2)             -4.607    0.700  -6.584
-                                                                                                                                                                                                                         Pr(&gt;|z|)
-(Intercept)         0.000
-temp                0.000
-factor(workingday)1 0.000
-hum                 0.000
-I(hum^2)            0.000</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href=""></a><span class="fu">print</span>(<span class="fu">paste0</span>(<span class="st">"log-likelihood: "</span>,<span class="fu">round</span>(<span class="fu">logLik</span>(logit_demand),<span class="dv">3</span>),</span>
-<span id="cb3-2"><a href=""></a>             <span class="st">" Deviance: "</span>, <span class="fu">round</span>(<span class="fu">summary</span>(logit_demand)<span class="sc">$</span>deviance,<span class="dv">3</span>) ))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] "log-likelihood: -4068.340 Deviance: 8136.679"</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href=""></a><span class="fu">print</span>(<span class="fu">paste0</span>(<span class="st">"AIC: "</span>, <span class="fu">round</span>(<span class="fu">summary</span>(logit_demand)<span class="sc">$</span>aic,<span class="dv">3</span>),</span>
-<span id="cb5-2"><a href=""></a>             <span class="st">" BIC: "</span>, <span class="fu">round</span>(<span class="fu">BIC</span>(logit_demand),<span class="dv">3</span>) ))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] "AIC: 8146.679 BIC: 8182.003"</code></pre>
-</div>
-</div>
-</section>
-<section id="likelihood-como-función-de-pérdida" class="slide level2">
-<h2>Likelihood como función de pérdida</h2>
-<ul>
-<li>En ML, entrenar un modelo = encontrar parámetros que <strong>maximicen la verosimilitud</strong><br>
-(o equivalentemente <strong>minimicen la pérdida</strong>).</li>
-</ul>
-<div class="fragment">
-<ul>
-<li>En regresión logística, cada <span class="math inline">y_i</span> es Bernoulli con probabilidad <span class="math inline">p_i</span>:</li>
-</ul>
+<section id="de-la-regresión-logística-a-una-neurona" class="slide level2">
+<h2>De la regresión logística a una neurona</h2>
+<p>La regresión logística ya tiene la estructura de una neurona:</p>
 <p><span class="math display">
-P(y_i \mid p_i) = p_i^{y_i}(1-p_i)^{1-y_i}
+\widehat p=\sigma\left(\beta_0+\sum_jx_j\beta_j\right),
+\qquad
+\sigma(z)=\frac{1}{1+e^{-z}}.
 </span></p>
-</div>
-<div class="fragment">
-<ul>
-<li>La probabilidad conjunta de todos los datos:</li>
-</ul>
-<p><span class="math display">
-\mathcal{L}(\beta) = \prod_{i=1}^{n} p_i^{y_i}(1-p_i)^{1-y_i}
-</span></p>
-</div>
-<div class="fragment">
-<ul>
-<li>Tomando logaritmos:</li>
-</ul>
-<p><span class="math display">
-\ell(\beta) = \sum_{i=1}^{n} \big[ y_i \ln p_i + (1-y_i) \ln(1-p_i) \big]
-</span></p>
-</div>
-<div class="fragment">
-<ul>
-<li>En ML a esto le llamamos <strong>log-loss</strong> o <strong>cross-entropy loss</strong>:</li>
-</ul>
-<p><span class="math display">
-\text{LogLoss} = -\ell(\beta)
-</span></p>
-</div>
+<p>Entradas → combinación lineal → activación → predicción.</p>
 </section>
-<section id="likelihood-como-función-de-pérdida-1" class="slide level2">
-<h2>Likelihood como función de pérdida</h2>
+<section id="anatomía-de-una-neurona" class="slide level2">
+<h2>Anatomía de una neurona</h2>
+<p>Para entradas <span class="math inline">x_1,\ldots,x_p</span>:</p>
+<p><span class="math display">z=b+\sum_{j=1}^{p}w_jx_j, \qquad h=g(z).</span></p>
 <ul>
-<li>Si las predicciones del modelo son correctas (<span class="math inline">y=1</span> y <span class="math inline">p</span> cercano a 1) → log-loss bajo.</li>
-<li>Si se equivocan (<span class="math inline">y=1</span> pero <span class="math inline">p</span> cercano a 0) → log-loss alto.</li>
-<li>Entrenar = <strong>ajustar <span class="math inline">\beta</span> para minimizar log-loss</strong> (= maximizar likelihood). Likelihood maximizada en nuestro ejemplo:</li>
+<li><span class="math inline">w_j</span>: pesos aprendidos.</li>
+<li><span class="math inline">b</span>: sesgo o intercepto.</li>
+<li><span class="math inline">g(\cdot)</span>: activación no lineal.</li>
+<li><span class="math inline">h</span>: representación producida por la unidad.</li>
 </ul>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>    Likelihood log_likelihood 
-             0          -4068 </code></pre>
-</div>
-</div>
-<div class="fragment">
-<p><span class="bold">Versión ML: Log-loss promedio</span> En machine learning se suele trabajar con la <strong>log-loss promedio</strong> para obtener una pérdida por observación (comparable entre datasets de distinto tamaño).</p>
-<p><span class="math display">
-\text{LogLoss} = -\frac{1}{n}\,\ell(\beta)
-</span></p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.471</code></pre>
-</div>
-</div>
-</div>
+<p>Sin activación no lineal, apilar capas seguiría produciendo una función lineal.</p>
 </section>
-<section id="modelos-de-referencia-baselines" class="slide level2">
-<h2>Modelos de referencia (baselines)</h2>
-<p>En ML y estadística es común usar <strong>modelos de referencia</strong> para poner en contexto el desempeño de un modelo más complejo. Dos extremos:</p>
-<div class="fragment">
-<p><br><br></p>
-<ul>
-<li><strong>Modelo nulo (<span class="math inline">M_N</span>)</strong>
-<ul>
-<li>El más simple posible: siempre predice la probabilidad promedio global.<br>
-</li>
-<li>Ventaja: parsimonioso y fácil de interpretar.<br>
-</li>
-<li>Desventaja: genera las peores predicciones posibleså, ignora covariables.</li>
-</ul></li>
-</ul>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href=""></a><span class="co"># modelo nulo</span></span>
-<span id="cb9-2"><a href=""></a>logit_demand_null <span class="ot">&lt;-</span> <span class="fu">glm</span>(high_demand <span class="sc">~</span> <span class="dv">1</span>,<span class="at">family=</span><span class="fu">binomial</span>(<span class="at">link=</span><span class="st">"logit"</span>), <span class="at">data=</span>bikedata)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</div>
-<div class="fragment">
-<ul>
-<li><strong>Modelo saturado (<span class="math inline">M_S</span>)</strong>
-<ul>
-<li>El más complejo posible: ajusta un parámetro distinto para cada observación.<br>
-</li>
-<li>Ventaja: fit perfecto (cero perdida).<br>
-</li>
-<li>Desventaja: no generaliza → memoriza los datos.</li>
-</ul></li>
-</ul>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href=""></a><span class="co"># En Bernoulli, el modelo saturado reproduce cada observación y su log-likelihood es 0.</span></span>
-<span id="cb10-2"><a href=""></a><span class="co"># Evitamos ajustar miles de indicadores, que sería computacionalmente innecesario.</span></span>
-<span id="cb10-3"><a href=""></a>ll_saturated <span class="ot">&lt;-</span> <span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</div>
-</section>
-<section id="baselines-vs-modelo-de-interés" class="slide level2">
-<h2>Baselines vs Modelo de Interés</h2>
-<div class="center">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="models.png"></p>
-<figcaption>dev</figcaption>
-</figure>
-</div>
-</div>
-</section>
-<section id="residual-deviance-y-null-deviance" class="slide level2">
-<h2>Residual Deviance y Null Deviance</h2>
-<p>En modelos logísticos, el <strong>log-likelihood ratio</strong> puede re-expresarse como <strong>Deviance</strong>, que es esencialmente una medida de <strong>pérdida (loss)</strong>. Dos tipos de deviance:</p>
-<ul>
-<li><strong>Residual Deviance:</strong> <span class="math inline">D = -2 \cdot (\log\mathcal{L}_{M} - \log \mathcal{L}_{S})</span>
-<ul>
-<li>Evalúa el ajuste de <span class="math inline">M</span> respecto al modelo saturado (fit perfecto).</li>
-</ul></li>
-<li><strong>Null Deviance:</strong> <span class="math inline">D_N = -2 \cdot (\log\mathcal{L}_{0} - \log \mathcal{L}_{S})</span>
-<ul>
-<li>Equivale al “total explicable”, similar a la varianza total en OLS.</li>
-</ul></li>
-</ul>
-<div class="fragment">
-<ul>
-<li><strong>Distribución muestral:</strong> <span class="math inline">D \sim \chi^{2}(df = n-k), \quad  \text{donde k es el número de parámetros en M}</span></li>
-</ul>
-<p>Interpretación:</p>
-<ul>
-<li><span class="math inline">D</span> alto (p-value bajo) → “mal ajuste” (alto error, modelo se queda corto).<br>
-</li>
-<li><span class="math inline">D</span> bajo (p-value alto) → “buen ajuste” (más parámetros no agregan valor.</li>
-</ul>
-</div>
-</section>
-<section id="residual-deviance-y-null-deviance-1" class="slide level2">
-<h2>Residual Deviance y Null Deviance</h2>
-<div class="center">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="deviances.png"></p>
-<figcaption>dev</figcaption>
-</figure>
-</div>
-</div>
-</section>
-<section id="residual-deviance-y-log-loss-promedio" class="slide level2">
-<h2>Residual Deviance y Log-loss promedio</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>                    Estimate Std. Error z value
-(Intercept)          -3.303    0.259 -12.736
-temp                  4.612    0.153  30.211
-factor(workingday)1  -0.344    0.058  -5.882
-hum                   3.107    0.850   3.655
-I(hum^2)             -4.607    0.700  -6.584
-                                                                                                                                                                                                                         Pr(&gt;|z|)
-(Intercept)         0.000
-temp                0.000
-factor(workingday)1 0.000
-hum                 0.000
-I(hum^2)            0.000</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] "Null Deviance: 9711.222 | Residual Deviance: 8136.679"</code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href=""></a><span class="co"># Cálculo manual de la Residual Deviance</span></span>
-<span id="cb13-2"><a href=""></a>D <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">2</span> <span class="sc">*</span> (<span class="fu">logLik</span>(logit_demand)[<span class="dv">1</span>] <span class="sc">-</span> ll_saturated)</span>
-<span id="cb13-3"><a href=""></a></span>
-<span id="cb13-4"><a href=""></a><span class="co"># Relación con log-loss promedio</span></span>
-<span id="cb13-5"><a href=""></a>log_likelihood <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(<span class="fu">logLik</span>(logit_demand))</span>
-<span id="cb13-6"><a href=""></a>log_loss <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">1</span><span class="sc">/</span><span class="fu">length</span>(bikedata<span class="sc">$</span>high_demand) <span class="sc">*</span> log_likelihood</span>
-<span id="cb13-7"><a href=""></a><span class="fu">print</span>(<span class="fu">paste0</span>(<span class="st">"Log-loss promedio: "</span>, <span class="fu">round</span>(log_loss, <span class="dv">3</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] "Log-loss promedio: 0.471"</code></pre>
-</div>
-</div>
-</section>
-<section id="pseudo---r2" class="slide level2">
-<h2>Pseudo - <span class="math inline">R^2</span></h2>
-<div class="fragment">
-<ul>
-<li>En modelos OLS es común medir ajuste usando el coeficiente <span class="math inline">R^2</span>, es decir, % de varianza explicada por el modelo.</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>En GLM’s la varianza no es separable de la media, por tanto no se puede descomponer.</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Existe una variedad de alternativas al <span class="math inline">R^2</span>, llamadas genéricamente pseudo - <span class="math inline">R^2</span>. Uno de los más comunes es:</li>
-</ul>
-</div>
-<div class="fragment">
-<p><span class="math display">\text{McFadden’s } R^{2} = 1 - \frac{D}{D_{0}} = 1 - \frac{(\log\mathcal{L}_{S} - \log \mathcal{L}_{M})}{ (\log\mathcal{L}_{S} - \log \mathcal{L}_{N})}</span></p>
-</div>
-<div class="fragment">
-<p><span class="bold">Intuición:</span> fracción del total del “explicable” del likelihood que es explicado por el modelo <span class="math inline">M</span>. - <span class="math inline">R^{2} \in [0,1]</span>, donde 0 indica el peor fit posible y 1 indica el mejor fit posible.</p>
-</div>
-</section>
-<section id="pseudo---r2-1" class="slide level2">
-<h2>Pseudo - <span class="math inline">R^2</span></h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>                    Estimate Std. Error z value
-(Intercept)          -3.303    0.259 -12.736
-temp                  4.612    0.153  30.211
-factor(workingday)1  -0.344    0.058  -5.882
-hum                   3.107    0.850   3.655
-I(hum^2)             -4.607    0.700  -6.584
-                                                                                                                                                                                                                         Pr(&gt;|z|)
-(Intercept)         0.000
-temp                0.000
-factor(workingday)1 0.000
-hum                 0.000
-I(hum^2)            0.000</code></pre>
-</div>
-</div>
-<div class="fragment">
-<p><span class="bold">Residual deviance</span>:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.162</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>McFadden 
-  0.162 </code></pre>
-</div>
-</div>
-</div>
-</section></section>
-<section>
-<section id="regresión-logística-como-clasificador" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
-<h1>Regresión Logística como clasificador</h1>
+<section id="una-neurona-geométricamente" class="slide level2">
+<h2>Una neurona, geométricamente</h2>
 
-</section>
-<section id="de-probabilidades-a-clases" class="slide level2">
-<h2>De Probabilidades a clases</h2>
-<ul>
-<li>La regresión logística entrega <strong>scores probabilísticos</strong>: <span class="math inline">\hat{p}_i = \Pr(Y_i=1\mid X_i,\hat\beta)</span></li>
-</ul>
-<div class="fragment">
-<ul>
-<li>Para convertir un score en decisión usamos un <strong>umbral de corte</strong> <span class="math inline">\tau</span>:</li>
-</ul>
-<p><span class="math display">
-\hat{y}_i =
-\begin{cases}
-1 &amp; \text{si } \hat{p}_i &gt; \tau \\
-0 &amp; \text{si } \hat{p}_i \leq \tau
-\end{cases}
-</span></p>
+<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20251209120638608023/bhu.webp" style="width:60.0%" class="r-stretch quarto-figure-center"><p class="caption">Estructura de una neurona: entradas, pesos, sesgo y activación.</p><div class="footnote">
+<p>Fuente: <a href="https://www.geeksforgeeks.org/deep-learning/what-is-perceptron-the-simplest-artificial-neural-network/">GeeksforGeeks — What is Perceptron</a></p>
 </div>
-<div class="fragment">
-<ul>
-<li>Por defecto: <span class="math inline">\tau=0.5</span><br>
-</li>
-<li>En ML, el umbral se ajusta al problema:
-<ul>
-<li>Spam: es peor que se cuele spam → corte bajo.<br>
-</li>
-<li>Subsidio: es peor dejar fuera a quien lo necesita → corte bajo.<br>
-</li>
-<li>Examen de enfermedad peligrosa:
-<ul>
-<li>Detección temprana: es peor no encontrar la enfermedad → corte bajo.<br>
-</li>
-<li>Confirmación: es peor asustar a alguien sano → corte alto. <span class="bold">👉 Un clasificador es un modelo + una regla de decisión.</span></li>
-</ul></li>
-</ul></li>
-</ul>
-</div>
+<p>Antes de la fórmula: <strong>los pesos inclinan la frontera de decisión; el sesgo la desplaza</strong>. Antes de aprender nada, una neurona sin activación no lineal es exactamente una línea (o un plano) que separa el espacio de entradas en dos.</p>
 </section>
-<section id="matriz-de-confusión" class="slide level2">
-<h2>Matriz de Confusión</h2>
-<div class="center">
+<section id="un-ejemplo-de-juguete-aprender-la-función-or" class="slide level2">
+<h2>Un ejemplo de juguete: aprender la función OR</h2>
+<p>Antes de la demanda de bicicletas, veamos una neurona aprendiendo el problema más simple posible: la función lógica OR.</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">x_1</span></th>
+<th style="text-align: right;"><span class="math inline">x_2</span></th>
+<th style="text-align: right;">OR</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+<p>Es un problema <strong>linealmente separable</strong>: una sola recta separa el punto <span class="math inline">(0,0)</span> del resto.</p>
+</section>
+<section id="or-la-neurona-aprende-una-recta" class="slide level2">
+<h2>OR: la neurona aprende una recta</h2>
+<div class="pull-left">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="https://miro.medium.com/v2/resize:fit:4800/format:webp/1*mL-nYY6MFhiG0uoR5kJaCA.jpeg" class="quarto-figure quarto-figure-center" style="width:55.0%"></p>
+<p><img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20251209120947314615/a.webp" style="width:95.0%"></p>
+<figcaption>Frontera de decisión aprendida (los cuatro puntos de la tabla OR, separados por una recta).</figcaption>
+</figure>
+</div>
+</div>
+<div class="pull-right">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20251209121005579885/b.webp" style="width:95.0%"></p>
+<figcaption>Errores de clasificación por época de entrenamiento: bajan a cero cuando la recta separa bien los datos.</figcaption>
 </figure>
 </div>
 </div>
 <div class="footnote">
-<p>Fuente: <a href="https://towardsdatascience.com/understanding-confusion-matrix-a9ad42dcfd62">Understanding Confusion Matrix — Towards Data Science</a></p>
+<p>Fuente: <a href="https://www.geeksforgeeks.org/deep-learning/what-is-perceptron-the-simplest-artificial-neural-network/">GeeksforGeeks — What is Perceptron</a></p>
 </div>
+<p>Con solo 2 entradas y 4 observaciones, ya vemos el ciclo completo: predicción → error → ajuste de pesos → repetir. La demanda de bicicletas es el mismo ciclo, con más entradas y una frontera bastante más compleja que una recta.</p>
 </section>
-<section id="matriz-de-confusión-1" class="slide level2">
-<h2>Matriz de Confusión</h2>
-<div class="pull-left">
-<p><img data-src="conf_mat.png"></p>
-</div>
-<div class="pull-right">
-<ul>
-<li><p><strong>Accuracy</strong>: <span class="math inline">(TP+TN)/N</span><br>
-% de clasificaciones correctas</p></li>
-<li><p><strong>Misclassification Rate</strong>: <span class="math inline">(FP+FN)/N</span><br>
-% de clasificaciones incorrectas</p></li>
-<li><p><strong>True Positive Rate (Recall / Sensitivity)</strong>:<br>
-<span class="math inline">TP/(TP+FN)</span></p></li>
-<li><p><strong>True Negative Rate (Specificity)</strong>:<br>
-<span class="math inline">TN/(TN+FP)</span></p></li>
-<li><p><strong>Precision (PPV)</strong>:<br>
-<span class="math inline">TP/(TP+FP)</span></p></li>
-<li><p><strong>Prevalence</strong>:<br>
-<span class="math inline">(TP+FN)/N</span></p></li>
-</ul>
-</div>
-<div class="fragment">
-<p>📌 Estas métricas capturan distintos aspectos del desempeño de un clasificador.<br>
-En ML es clave elegir métricas alineadas con el problema (ej: medicina ≠ marketing).</p>
-</div>
-</section>
-<section id="ejemplo-empírico-demanda-de-bicicletas" class="slide level2">
-<h2>Ejemplo empírico: demanda de bicicletas</h2>
-<p>Clasificamos como “baja demanda” a todas las horas cuya probabilidad predicha sea menor o igual a 0.5, y como “alta demanda” a aquellas cuya probabilidad predicha supere dicho umbral.</p>
+<section id="una-capa-oculta" class="slide level2">
+<h2>Una capa oculta</h2>
+<p>Con <span class="math inline">H</span> unidades ocultas:</p>
 <p><span class="math display">
-\hat{y}_i =
-\begin{cases}
-1 &amp; \text{si } \hat{p}_i &gt; 0.5 \quad (\text{Alta demanda}) \\
-0 &amp; \text{si } \hat{p}_i \leq 0.5 \quad (\text{Baja demanda})
-\end{cases}
+h_k=g\left(a_{k0}+\sum_ja_{kj}x_j\right),
+\qquad
+\widehat y=f\left(b_0+\sum_{k=1}^{H}b_kh_k\right).
 </span></p>
+<p>La red combina varias transformaciones aprendidas de temperatura, humedad, calendario y hora.</p>
+</section>
+<section id="forma-vectorial" class="slide level2">
+<h2>Forma vectorial</h2>
+<p>Con una capa oculta de <span class="math inline">H</span> unidades, todo se escribe con matrices:</p>
+<p><span class="math display">
+h=g\big(W^{(1)}x+b^{(1)}\big),\qquad
+\widehat y=f\big(W^{(2)}h+b^{(2)}\big).
+</span></p>
+<ul>
+<li><span class="math inline">W^{(1)}</span> es <span class="math inline">H\times p</span>; <span class="math inline">W^{(2)}</span> es <span class="math inline">K\times H</span>.</li>
+<li><span class="math inline">g</span> se aplica <strong>elemento a elemento</strong>; <span class="math inline">f</span> es la salida (softmax o lineal).</li>
+<li>Apilar capas = componer estas transformaciones. Sin <span class="math inline">g</span> no lineal, la composición colapsa a <strong>una</strong> transformación lineal.</li>
+</ul>
+</section>
+<section id="arquitectura-mínima" class="slide level2">
+<h2>Arquitectura mínima</h2>
+
+<img data-src="class_18_files/figure-revealjs/network-diagram-1.png" width="960" class="r-stretch"></section>
+<section id="funciones-de-activación" class="slide level2">
+<h2>Funciones de activación</h2>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Activación</th>
+<th style="text-align: right;">Rango</th>
+<th>Uso típico</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>logística</td>
+<td style="text-align: right;"><span class="math inline">(0,1)</span></td>
+<td>probabilidad binaria</td>
+</tr>
+<tr class="even">
+<td><code>tanh</code></td>
+<td style="text-align: right;"><span class="math inline">(-1,1)</span></td>
+<td>capa oculta clásica</td>
+</tr>
+<tr class="odd">
+<td>ReLU</td>
+<td style="text-align: right;"><span class="math inline">[0,\infty)</span></td>
+<td>redes modernas</td>
+</tr>
+<tr class="even">
+<td>lineal</td>
+<td style="text-align: right;"><span class="math inline">(-\infty,\infty)</span></td>
+<td>salida de regresión</td>
+</tr>
+</tbody>
+</table>
+<p><code>nnet</code> utiliza una activación logística en la capa oculta.</p>
+<p>Regla práctica habitual (fuera de <code>nnet</code>, que fija la logística): partir con ReLU en capas ocultas; usar logística/softmax en la salida para clasificación; lineal en la salida para regresión.</p>
+</section>
+<section id="activaciones-comparadas" class="slide level2">
+<h2>Activaciones comparadas</h2>
+
+<img data-src="class_18_files/figure-revealjs/activations-1.png" width="960" class="r-stretch"><p>Sin no linealidad, la red sería lineal. La forma de <span class="math inline">g</span> decide qué tan fácil fluye el gradiente.</p>
+<div class="footnote">
+<p>Recordatorio: el gradiente es la derivada de <span class="math inline">g</span> — indica cuánto cambia la salida de la unidad ante un cambio pequeño en <span class="math inline">z</span>; es lo que backpropagation propaga hacia atrás.</p>
+</div>
+</section>
+<section id="la-sigmoide-se-satura" class="slide level2">
+<h2>La sigmoide se satura</h2>
+
+<img data-src="class_18_files/figure-revealjs/sigmoid-derivative-1.png" width="960" class="r-stretch"><p>La derivada <span class="math inline">g'(z)=g(z)\,[1-g(z)]</span> es casi cero cuando <span class="math inline">|z|</span> es grande: gradientes que se <strong>desvanecen</strong>. Escalar las entradas mantiene <span class="math inline">z</span> cerca de 0 y facilita el aprendizaje.</p>
+<div class="footnote">
+<p>Recordatorio: el gradiente indica cuánto y hacia dónde ajustar un peso para reducir la pérdida; si es casi cero, ese ajuste casi no ocurre — de ahí “gradiente que se desvanece”.</p>
+</div>
+</section>
+<section id="propagación-hacia-adelante" class="slide level2">
+<h2>Propagación hacia adelante</h2>
+<p>Para una observación:</p>
+<ol type="1">
+<li>calcular combinaciones lineales ocultas;</li>
+<li>aplicar la activación;</li>
+<li>combinar unidades ocultas;</li>
+<li>transformar la salida;</li>
+<li>obtener una probabilidad o valor predicho.</li>
+</ol>
+<p>Esto produce la predicción antes de actualizar cualquier peso.</p>
+</section>
+<section id="función-de-pérdida" class="slide level2">
+<h2>Función de pérdida</h2>
+<p>Para clasificación binaria usamos entropía cruzada:</p>
+<p><span class="math display">
+L=-\frac{1}{n}\sum_{i=1}^{n}
+\left[y_i\log(\widehat p_i)+(1-y_i)\log(1-\widehat p_i)\right].
+</span></p>
+<p>Para regresión podemos usar error cuadrático. Entrenar significa buscar pesos que reduzcan la pérdida.</p>
+</section>
+<section id="softmax-y-su-vínculo-con-la-logística" class="slide level2">
+<h2>Softmax y su vínculo con la logística</h2>
+<p>Para <span class="math inline">K</span> clases, la salida softmax convierte puntajes <span class="math inline">z_k</span> en probabilidades:</p>
+<p><span class="math display">
+\widehat p_k=\frac{e^{z_k}}{\sum_{l=1}^{K}e^{z_l}}.
+</span></p>
+<ul>
+<li>Suma 1 y es positiva: una distribución sobre clases.</li>
+<li>Con <span class="math inline">K=2</span> se reduce a la <strong>logística</strong>: <span class="math inline">\widehat p_1=\sigma(z_1-z_2)</span>.</li>
+<li>Por eso <code>softmax = TRUE</code> con dos clases es, en esencia, una regresión logística con una capa oculta añadida.</li>
+</ul>
+</section>
+<section id="el-gradiente-en-la-salida-widehat-p-y" class="slide level2">
+<h2>El gradiente en la salida: <span class="math inline">\widehat p-y</span></h2>
+<div class="footnote">
+<p>Recordatorio: el gradiente de la pérdida respecto a <span class="math inline">z</span> dice cuánto y en qué dirección mover esa pre-activación para reducir el error; aquí toma una forma particularmente simple.</p>
+</div>
+<p>Con entropía cruzada y softmax (o sigmoide), el gradiente respecto a la pre-activación de salida se simplifica:</p>
+<p><span class="math display">
+\frac{\partial L}{\partial z}=\widehat p-y.
+</span></p>
+<ul>
+<li>Es literalmente el <strong>error de predicción</strong>: probabilidad menos etiqueta.</li>
+<li>Esta cancelación es la que vuelve estable el entrenamiento de clasificadores.</li>
+<li>Es el punto de partida de la retropropagación.</li>
+</ul>
+</section>
+<section id="backpropagation-intuición" class="slide level2">
+<h2>Backpropagation: intuición</h2>
+<p>Backpropagation aplica la regla de la cadena en dos pasadas:</p>
+<ol type="1">
+<li><strong>hacia adelante</strong>: calcular la predicción actual de la red;</li>
+<li><strong>hacia atrás</strong>: medir el error en la salida y repartir “la culpa” entre los pesos que contribuyeron a él, capa por capa.</li>
+</ol>
+
+<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20250701163824448467/Backpropagation-in-Neural-Network-1.webp" style="width:55.0%" class="r-stretch quarto-figure-center"><p class="caption">Backpropagation reparte el error de salida hacia atrás, capa por capa, para actualizar cada peso.</p><div class="footnote">
+<p>Fuente: <a href="https://www.geeksforgeeks.org/machine-learning/backpropagation-in-neural-network/">GeeksforGeeks — Backpropagation in Neural Network</a></p>
+</div>
+<p>No es una teoría nueva: es una forma eficiente de derivar una función compuesta.</p>
+</section>
+<section id="backpropagation-las-ecuaciones" class="slide level2">
+<h2>Backpropagation: las ecuaciones</h2>
+<div class="footnote">
+<p>Recordatorio: cada <span class="math inline">\delta</span> de abajo es un gradiente — cuánto y hacia dónde ajustar esa capa para reducir la pérdida; la regla de la cadena los encadena capa por capa.</p>
+</div>
+<p>Para una red de una capa oculta, la regla de la cadena da:</p>
+<p><span class="math display">
+\delta^{(2)}=\widehat p-y,\qquad
+\frac{\partial L}{\partial W^{(2)}}=\delta^{(2)}h^\top,
+</span></p>
+<p><span class="math display">
+\delta^{(1)}=\big(W^{(2)\top}\delta^{(2)}\big)\odot g'(z^{(1)}),\qquad
+\frac{\partial L}{\partial W^{(1)}}=\delta^{(1)}x^\top.
+</span></p>
+<ul>
+<li><span class="math inline">\delta</span> = “cuánta culpa” tiene cada unidad del error total.</li>
+<li><span class="math inline">\odot</span> = producto elemento a elemento; <span class="math inline">g'(z^{(1)})</span> es la derivada de la activación oculta.</li>
+<li>El error se <strong>propaga hacia atrás</strong> multiplicando por los pesos y por <span class="math inline">g'</span>.</li>
+</ul>
+</section>
+<section id="cómo-se-entrena" class="slide level2">
+<h2>Cómo se entrena</h2>
+<div class="footnote">
+<p>Recordatorio: el gradiente apunta hacia donde la pérdida crece más rápido; por eso los pesos se mueven en la dirección <strong>contraria</strong> (<span class="math inline">-\eta \, \partial L/\partial w</span>).</p>
+</div>
+<p>Con los gradientes, se actualizan los pesos para bajar la pérdida:</p>
+<p><span class="math display">w\leftarrow w-\eta\,\frac{\partial L}{\partial w}.</span></p>
+<ul>
+<li><span class="math inline">\eta</span> = tasa de aprendizaje (tamaño del paso).</li>
+<li>Las redes grandes usan <strong>descenso de gradiente estocástico</strong> por <em>mini-lotes</em> y muchas <em>épocas</em>.</li>
+<li><code>nnet</code> es pequeña: optimiza con <strong>BFGS</strong> (cuasi-Newton) hasta <code>maxit</code> iteraciones, no con SGD. La idea de “bajar por el gradiente” es la misma.</li>
+</ul>
+</section>
+<section id="por-qué-escalar" class="slide level2">
+<h2>Por qué escalar</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>        Real
-Predicho    0    1
-       0 5984 1463
-       1  505  693</code></pre>
+<pre><code># A tibble: 3 × 5
+  variable  media_original sd_original media_escalada_train sd_escalada_train
+  &lt;chr&gt;              &lt;dbl&gt;       &lt;dbl&gt;                &lt;dbl&gt;             &lt;dbl&gt;
+1 temp               0.489       0.198             0.000             1    
+2 hum                0.643       0.196             0.000             1.000 
+3 windspeed          0.191       0.123             0.000             1.000</code></pre>
 </div>
 </div>
+<p>Escalar facilita la optimización y evita que una variable domine solo por sus unidades.</p>
 </section>
-<section id="ejemplo-empírico-demanda-de-bicicletas-1" class="slide level2">
-<h2>Ejemplo empírico: demanda de bicicletas</h2>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_18_files/figure-revealjs/unnamed-chunk-12-1.png" width="960"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<p><strong>Métricas principales del clasificador logístico</strong></p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>            Métrica  Valor
-1       Sensitivity 0.321
-2       Specificity 0.922
-3         Precision 0.579
-4                F1 0.413
-5 Balanced Accuracy 0.622</code></pre>
-</div>
-</div>
-</div>
-</section>
-<section id="umbral-y-predicción" class="slide level2">
-<h2>Umbral y predicción</h2>
-<ul>
-<li>Cada umbral <span class="math inline">\tau</span> genera un nivel de Especificidad y Sensibilidad: <span class="math inline">\{\text{Specificity}(\tau), \text{Sensitivity}(\tau)\}</span> para <span class="math inline">\tau \in [0,1]</span>.</li>
-</ul>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_18_files/figure-revealjs/plot_scores-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<ul>
-<li>Umbrales bajos → más predicciones positivas</li>
-<li>Umbrales altos → más predicciones negativas</li>
-</ul>
-</div>
-</section>
-<section id="curva-roc" class="slide level2">
-<h2>Curva ROC</h2>
-<ul>
-<li>La <strong>curva ROC</strong> conecta todos los puntos <span class="math inline">\{1 - \text{Specificity}(\tau), \quad \text{Sensitivity}(\tau)\}</span> para <span class="math inline">\tau \in [0,1]</span>.</li>
-<li>La diagonal corresponde a un clasificador aleatorio.</li>
-<li>Mejor desempeño = curva más arriba a la izquierda.</li>
-</ul>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_18_files/figure-revealjs/plot_scores2-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_18_files/figure-revealjs/plot_roc-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="auc-área-bajo-la-curva" class="slide level2">
-<h2>AUC: Área bajo la curva</h2>
-<ul>
-<li>El <strong>AUC</strong> resume el desempeño en un solo número: <span class="math inline">AUC = \int_{0}^{1}\text{Sensibilidad}(\tau)\, d(1-\text{Especificidad}(\tau))</span></li>
-<li><strong>Interpretación</strong>: probabilidad de que el modelo asigne mayor score a un positivo que a un negativo (elegidos al azar).</li>
-</ul>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_18_files/figure-revealjs/plot_auc-1.png" width="576"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<p><strong>Interpretación del AUC:</strong></p>
-<ul>
-<li><strong>AUC ≈ 0.5</strong>: Sin poder discriminatorio (como azar)</li>
-<li><strong>AUC ≈ 0.7-0.8</strong>: Discriminación aceptable</li>
-<li><strong>AUC &gt; 0.9</strong>: Discriminación excelente</li>
-<li><strong>AUC = 1</strong>: Clasificador perfecto 👉 Nuestro modelo tiene AUC = 0.776; ubíquelo en la escala anterior para juzgar su poder discriminatorio.</li>
-</ul>
-</div>
-</section>
-<section id="selección-del-umbral-óptimo" class="slide level2">
-<h2>Selección del umbral óptimo</h2>
-<ul>
-<li>No existe un único “mejor” umbral: depende del contexto y los costos de errar.</li>
-<li>Criterios comunes: <strong>Youden</strong>, <strong>punto más cercano a (0,1)</strong>, etc. Cómo extraer umbrales en R:</li>
-</ul>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>  threshold specificity sensitivity
-1    0.230      0.683      0.747</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  threshold specificity sensitivity
-1    0.230      0.683      0.747</code></pre>
-</div>
-</div>
-</section>
-<section id="selección-del-umbral-óptimo-1" class="slide level2">
-<h2>Selección del umbral óptimo</h2>
-<ul>
-<li>No existe un único “mejor” umbral: depende del contexto y los costos de errar.</li>
-<li>Criterios comunes: <strong>Youden</strong>, <strong>punto más cercano a (0,1)</strong>, etc. Cómo extraer umbrales en R:</li>
-</ul>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>   threshold specificity sensitivity
-1       -Inf   0.000      1.000
-2    0.013   0.000      1.000
-3    0.015   0.000      1.000
-4    0.015   0.000      1.000
-5    0.016   0.001      1.000
-6    0.017   0.001      1.000
-7    0.018   0.001      1.000
-8    0.018   0.003      1.000
-9    0.019   0.003      1.000
-10   0.020   0.004      1.000
-11   0.020   0.005      1.000
-12   0.021   0.005      1.000
-13   0.021   0.005      1.000</code></pre>
-</div>
-</div>
+<section id="evitar-filtración" class="slide level2">
+<h2>Evitar filtración</h2>
+<p>La media y desviación usadas para escalar se estiman únicamente en entrenamiento:</p>
+<p><span class="math display">z_{ij}=\frac{x_{ij}-\bar{x}_{j,\text{train}}}{s_{j,\text{train}}}.</span></p>
+<p>Las mismas constantes se aplican a validación y test. Recalcularlas en test revelaría información que el modelo no tendría al desplegarse.</p>
 </section></section>
 <section>
-<section id="clasificador-multinomial" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
-<h1>Clasificador multinomial</h1>
+<section id="clasificación" class="title-slide slide level1 inverse center middle" data-background-color="#C3281E">
+<h1>Clasificación</h1>
 
 </section>
-<section id="más-de-dos-clases" class="slide level2">
-<h2>Más de dos clases</h2>
-<p>Todo lo anterior asumió un outcome binario. Muchas veces el clasificador debe elegir entre <strong>más de dos categorías</strong> — por ejemplo, demanda “baja”, “media” o “alta”, en vez de solo “alta/baja”.</p>
+<section id="baseline-logístico" class="slide level2">
+<h2>Baseline logístico</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 1
+  validation_log_loss
+                &lt;dbl&gt;
+1               0.353</code></pre>
+</div>
+</div>
+<p>Una red debe superar un baseline útil, no solo el azar.</p>
+</section>
+<section id="primer-perceptrón-multicapa-ejemplo-empírico" class="slide level2">
+<h2>Primer perceptrón multicapa: ejemplo empírico</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 2
+  modelo          validation_log_loss
+  &lt;chr&gt;                         &lt;dbl&gt;
+1 Logit                         0.353
+2 Red: 6 unidades               0.423</code></pre>
+</div>
+</div>
+<p><code>size = 6</code> indica seis unidades ocultas; <code>decay</code> penaliza pesos grandes.</p>
+</section>
+<section id="capacidad-del-modelo" class="slide level2">
+<h2>Capacidad del modelo</h2>
+<p>Con <span class="math inline">p</span> entradas, <span class="math inline">H</span> unidades ocultas y <span class="math inline">K</span> salidas, el número de pesos es:</p>
+<p><span class="math display">H(p+1)+K(H+1).</span></p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  entradas unidades_ocultas pesos
+     &lt;int&gt;            &lt;dbl&gt; &lt;dbl&gt;
+1       60                3   191
+2       60                6   380
+3       60               10   632</code></pre>
+</div>
+</div>
+<p>Más unidades aumentan capacidad y costo computacional. También aumentan el riesgo de aprender patrones específicos del entrenamiento.</p>
+</section>
+<section id="aproximación-universal" class="slide level2">
+<h2>Aproximación universal</h2>
+<p>Una red con <strong>una sola capa oculta</strong> y suficientes unidades puede aproximar cualquier función continua en un dominio acotado (teorema de aproximación universal).</p>
+<ul>
+<li>Es un resultado de <strong>existencia</strong>: dice que la capacidad está; no que la vayamos a <em>encontrar</em> ni que <em>generalice</em>.</li>
+<li>“Puede ajustar cualquier cosa” incluye el ruido: de ahí la necesidad de regularización y validación.</li>
+<li>Más unidades ≠ mejor: preferimos la arquitectura que <strong>generaliza</strong>, no la que memoriza.</li>
+</ul>
+</section>
+<section id="regularización-de-pesos-decay-es-ridge-otra-vez" class="slide level2">
+<h2>Regularización de pesos: <code>decay</code> es Ridge, otra vez</h2>
+<p><span class="math display">L_{\text{penalizada}}=L+\lambda\sum_w w^2.</span></p>
+<ul>
+<li>Es exactamente la penalización <strong>Ridge</strong> de la clase 16, ahora aplicada sobre los pesos de la red en vez de sobre coeficientes de un GLM.</li>
+<li><code>decay</code> pequeño: red más flexible; <code>decay</code> grande: pesos más contraídos, funciones más suaves.</li>
+<li>Equivale a un <strong>prior gaussiano</strong> <span class="math inline">w\sim\mathcal N(0,\tau^2)</span> con estimación MAP, tomando <span class="math inline">\lambda=1/(2\tau^2)</span>.</li>
+<li>Junto con <code>maxit</code> (una forma de parada temprana), controla la capacidad efectiva de la red — el mismo compromiso sesgo-varianza de siempre, con otro nombre.</li>
+</ul>
+</section>
+<section id="tuning-conjunto" class="slide level2">
+<h2>Tuning conjunto</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 3
+   size decay validation_loss
+  &lt;dbl&gt; &lt;dbl&gt;           &lt;dbl&gt;
+1     3  0.010           0.301
+2    10  0.080           0.450
+3     3  0.080           0.676
+4     6  0.010           0.696
+5     6  0.080           0.751
+6    10  0.010           0.949</code></pre>
+</div>
+</div>
+<p>Arquitectura y regularización deben elegirse juntas.</p>
+</section>
+<section id="superficie-de-validación" class="slide level2">
+<h2>Superficie de validación</h2>
+
+<img data-src="class_18_files/figure-revealjs/nn-tuning-plot-1.png" width="960" class="r-stretch"></section>
+<section id="la-inicialización-también-importa" class="slide level2">
+<h2>La inicialización también importa</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  mínimo promedio máximo
+   &lt;dbl&gt;    &lt;dbl&gt;  &lt;dbl&gt;
+1  0.238    0.378  0.544</code></pre>
+</div>
+</div>
+<p>La misma arquitectura puede converger a soluciones distintas. Una única corrida no permite separar calidad del modelo de una inicialización afortunada.</p>
+</section>
+<section id="el-paisaje-de-optimización" class="slide level2">
+<h2>El paisaje de optimización</h2>
+<p>La pérdida de una red <strong>no es convexa</strong>: tiene muchos mínimos locales, mesetas y simetrías entre unidades.</p>
+<ul>
+<li>Distintas inicializaciones → distintas soluciones, todas “válidas”.</li>
+<li>No hay garantía de óptimo global; buscamos soluciones <em>suficientemente buenas</em>.</li>
+<li>Por eso fijamos semillas, comparamos varias corridas y no leemos los pesos como parámetros únicos e identificables.</li>
+</ul>
+</section>
+<section id="reajuste-final" class="slide level2">
+<h2>Reajuste final</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+   size decay validation_log_loss
+  &lt;dbl&gt; &lt;dbl&gt;               &lt;dbl&gt;
+1     3  0.010               0.301</code></pre>
+</div>
+</div>
+</section>
+<section id="comparación-fuera-de-muestra" class="slide level2">
+<h2>Comparación fuera de muestra</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 4
+  modelo       log_loss accuracy sensitivity
+  &lt;chr&gt;           &lt;dbl&gt;    &lt;dbl&gt;       &lt;dbl&gt;
+1 Logit           0.323    0.878       0.803
+2 Red neuronal    0.423    0.864       0.846</code></pre>
+</div>
+</div>
+</section>
+<section id="distribución-de-probabilidades" class="slide level2">
+<h2>Distribución de probabilidades</h2>
+
+<img data-src="class_18_files/figure-revealjs/class-density-1.png" width="960" class="r-stretch"><p>Mayor separación facilita clasificar, pero no garantiza calibración.</p>
+</section>
+<section id="calibración-de-la-red" class="slide level2">
+<h2>Calibración de la red</h2>
+
+<img data-src="class_18_files/figure-revealjs/nn-calibration-1.png" width="960" class="r-stretch"></section></section>
+<section>
+<section id="predicción-del-conteo" class="title-slide slide level1 inverse center middle" data-background-color="#C3281E">
+<h1>Predicción del conteo</h1>
+
+</section>
+<section id="cambiar-la-salida" class="slide level2">
+<h2>Cambiar la salida</h2>
+<p>Para predecir <code>bikers</code> usamos salida lineal y modelamos <code>log1p(bikers)</code>:</p>
+<p><span class="math display">\widehat z=b_0+\sum_kb_kh_k,
+\qquad
+\widehat{\text{bikers}}=\exp(\widehat z)-1.</span></p>
+<p>La transformación estabiliza la escala y evita que las horas extremas dominen completamente la pérdida.</p>
+</section>
+<section id="baseline-lineal" class="slide level2">
+<h2>Baseline lineal</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 2
+  validation_RMSE validation_MAE
+            &lt;dbl&gt;          &lt;dbl&gt;
+1            85.300           58.200</code></pre>
+</div>
+</div>
+</section>
+<section id="tuning-de-la-red-de-regresión" class="slide level2">
+<h2>Tuning de la red de regresión</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 3
+   size decay validation_RMSE
+  &lt;dbl&gt; &lt;dbl&gt;           &lt;dbl&gt;
+1     8  0.010            60.100
+2     8  0.080            65.700
+3     4  0.010            81.400
+4     4  0.080            88.600</code></pre>
+</div>
+</div>
+</section>
+<section id="red-de-regresión-ejemplo-empírico" class="slide level2">
+<h2>Red de regresión: ejemplo empírico</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  modelo            RMSE   MAE
+  &lt;chr&gt;            &lt;dbl&gt; &lt;dbl&gt;
+1 Regresión lineal  61.000  37.100
+2 Red neuronal      87.500  50.800</code></pre>
+</div>
+</div>
+</section>
+<section id="observado-versus-predicho" class="slide level2">
+<h2>Observado versus predicho</h2>
+
+<img data-src="class_18_files/figure-revealjs/nn-reg-plot-1.png" width="960" class="r-stretch"></section>
+<section id="residuos-por-hora" class="slide level2">
+<h2>Residuos por hora</h2>
+
+<img data-src="class_18_files/figure-revealjs/nn-hour-errors-1.png" width="960" class="r-stretch"><p>Una métrica global puede ocultar franjas horarias con errores sistemáticamente mayores.</p>
+</section></section>
+<section>
+<section id="evaluación-responsable" class="title-slide slide level1 inverse center middle" data-background-color="#C3281E">
+<h1>Evaluación responsable</h1>
+
+</section>
+<section id="las-mismas-herramientas-apuestas-distintas" class="slide level2">
+<h2>Las mismas herramientas, apuestas distintas</h2>
+<p>Durante tres clases usamos un solo caso —demanda de bicicletas— a propósito: para dominar bien un problema en vez de recorrer superficialmente muchos.</p>
 <div class="fragment">
-<p>El modelo detrás ya lo conocemos: la regresión logística <strong>multinomial</strong> de la clase 12, ahora evaluada como clasificador en vez de interpretada como modelo explicativo.</p>
+<p>Pero Ridge/LASSO, Random Forest, Gradient Boosting y esta misma red neuronal son, matemáticamente, <strong>las mismas herramientas</strong> que hoy deciden aprobación de crédito, riesgo de reincidencia o preselección de currículums. Cambia el dato de entrada; no cambia el algoritmo.</p>
+</div>
+<div class="fragment">
+<p>Lo que sí debe cambiar con las apuestas es el <strong>estándar de evaluación</strong>: la disciplina de validación, calibración, error por subgrupo y honestidad sobre qué es y qué no es causal —que practicamos aquí con un outcome inofensivo— es exactamente la que hay que exigir cuando el error recae sobre una persona, no sobre una bicicleta.</p>
 </div>
 </section>
-<section id="un-outcome-de-tres-categorías" class="slide level2">
-<h2>Un outcome de tres categorías</h2>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href=""></a><span class="fu">p_load</span>(nnet)</span>
-<span id="cb23-2"><a href=""></a></span>
-<span id="cb23-3"><a href=""></a>terciles <span class="ot">&lt;-</span> <span class="fu">quantile</span>(bikedata<span class="sc">$</span>bikers, <span class="at">probs =</span> <span class="fu">c</span>(<span class="dv">1</span><span class="sc">/</span><span class="dv">3</span>, <span class="dv">2</span><span class="sc">/</span><span class="dv">3</span>))</span>
-<span id="cb23-4"><a href=""></a>bikedata <span class="ot">&lt;-</span> bikedata <span class="sc">%&gt;%</span></span>
-<span id="cb23-5"><a href=""></a>  <span class="fu">mutate</span>(<span class="at">demand_level =</span> <span class="fu">cut</span>(</span>
-<span id="cb23-6"><a href=""></a>    bikers, <span class="at">breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, terciles, <span class="cn">Inf</span>),</span>
-<span id="cb23-7"><a href=""></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"baja"</span>, <span class="st">"media"</span>, <span class="st">"alta"</span>)</span>
-<span id="cb23-8"><a href=""></a>  ))</span>
-<span id="cb23-9"><a href=""></a></span>
-<span id="cb23-10"><a href=""></a>logit_multi <span class="ot">&lt;-</span> <span class="fu">multinom</span>(demand_level <span class="sc">~</span> temp <span class="sc">+</span> <span class="fu">factor</span>(workingday) <span class="sc">+</span> hum <span class="sc">+</span> <span class="fu">I</span>(hum<span class="sc">^</span><span class="dv">2</span>),</span>
-<span id="cb23-11"><a href=""></a>                        <span class="at">data =</span> bikedata, <span class="at">trace =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</section>
-<section id="la-matriz-de-confusión-se-generaliza" class="slide level2">
-<h2>La matriz de confusión se generaliza</h2>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href=""></a>pred_clase <span class="ot">&lt;-</span> <span class="fu">predict</span>(logit_multi, <span class="at">type =</span> <span class="st">"class"</span>)</span>
-<span id="cb24-2"><a href=""></a></span>
-<span id="cb24-3"><a href=""></a>conf_mat_multi <span class="ot">&lt;-</span> <span class="fu">confusionMatrix</span>(pred_clase, bikedata<span class="sc">$</span>demand_level)</span>
-<span id="cb24-4"><a href=""></a>conf_mat_multi<span class="sc">$</span>table</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>          Reference
-Prediction baja media alta
-     baja  1907  1071  422
-     media  529   927  552
-     alta   453   898 1886</code></pre>
-</div>
-</div>
-<p>La matriz sigue siendo “predicho × real”, pero ahora es <span class="math inline">3\times 3</span> (en general, <span class="math inline">J\times J</span>): la diagonal son aciertos, todo lo demás son errores de clasificación entre pares de categorías.</p>
-</section>
-<section id="métricas-promediar-sobre-las-clases" class="slide level2">
-<h2>Métricas: promediar sobre las clases</h2>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href=""></a>conf_mat_multi<span class="sc">$</span>overall[<span class="st">"Accuracy"</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Accuracy 
-   0.546 </code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href=""></a>conf_mat_multi<span class="sc">$</span>byClass[, <span class="fu">c</span>(<span class="st">"Sensitivity"</span>, <span class="st">"Specificity"</span>, <span class="st">"Precision"</span>)]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>             Sensitivity Specificity Precision
-Class: baja       0.660      0.741    0.561
-Class: media      0.320      0.812    0.462
-Class: alta       0.659      0.766    0.583</code></pre>
-</div>
-</div>
+<section id="qué-aprende-una-red" class="slide level2">
+<h2>Qué aprende una red</h2>
+<p>Una red puede capturar:</p>
 <ul>
-<li><strong>Accuracy</strong> sigue siendo “% de aciertos totales” — una sola cifra, igual que en el caso binario.</li>
-<li>Sensibilidad, especificidad y precisión ahora se calculan <strong>una vez por clase</strong> (cada clase “vs.&nbsp;el resto”) y típicamente se resumen promediándolas — el enfoque <strong>one-vs-rest</strong>.</li>
+<li>peaks no lineales por hora;</li>
+<li>interacción entre hora y día hábil;</li>
+<li>efectos conjuntos de temperatura y humedad;</li>
+<li>estacionalidad distribuida entre varias unidades.</li>
+</ul>
+<p>La representación es útil para predecir, pero sus pesos no tienen la interpretación directa de un coeficiente GLM.</p>
+</section>
+<section id="fuentes-de-inestabilidad" class="slide level2">
+<h2>Fuentes de inestabilidad</h2>
+<ul>
+<li>inicialización aleatoria de pesos;</li>
+<li>mínimos locales y mesetas;</li>
+<li>arquitectura elegida;</li>
+<li>escala y codificación de entradas;</li>
+<li>tamaño de la muestra;</li>
+<li>regularización insuficiente.</li>
+</ul>
+<p>Por eso fijamos semillas, validamos y comparamos varias ejecuciones cuando el riesgo lo justifica.</p>
+</section>
+<section id="otros-casos-de-uso" class="slide level2">
+<h2>Otros casos de uso</h2>
+<p>La misma arquitectura —capas de transformaciones aprendidas, entrenadas por descenso de gradiente— es la base de aplicaciones muy distintas entre sí:</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Dominio</th>
+<th>Uso típico</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Salud</td>
+<td>diagnóstico por imágenes médicas (radiografías, resonancias)</td>
+</tr>
+<tr class="even">
+<td>Lenguaje</td>
+<td>traducción automática, chatbots, resúmenes de texto</td>
+</tr>
+<tr class="odd">
+<td>Finanzas</td>
+<td>detección de fraude en tiempo real sobre transacciones</td>
+</tr>
+<tr class="even">
+<td>Marketing</td>
+<td>sistemas de recomendación (qué producto o contenido mostrar)</td>
+</tr>
+<tr class="odd">
+<td>Ciencias</td>
+<td>predicción de estructura de proteínas (AlphaFold), modelos climáticos</td>
+</tr>
+<tr class="even">
+<td>Transporte</td>
+<td>percepción visual en vehículos autónomos</td>
+</tr>
+</tbody>
+</table>
+<p>Lo que vimos hoy —un perceptrón multicapa pequeño— es la unidad conceptual detrás de todos estos casos; lo que cambia es la arquitectura (capas convolucionales para imágenes, atención para lenguaje) y la escala.</p>
+</section>
+<section id="dónde-queda-esto-en-el-mapa-más-amplio" class="slide level2">
+<h2>Dónde queda esto en el mapa más amplio</h2>
+<p>Lo que vimos hoy —un perceptrón multicapa (<em>MLP</em>) con una capa oculta— es una familia entre varias:</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Arquitectura</th>
+<th>Para qué se usa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>MLP</strong> (hoy)</td>
+<td>datos tabulares, entradas de tamaño fijo</td>
+</tr>
+<tr class="even">
+<td>CNN (convolucional)</td>
+<td>imágenes</td>
+</tr>
+<tr class="odd">
+<td>RNN / LSTM</td>
+<td>secuencias, series de tiempo largas</td>
+</tr>
+<tr class="even">
+<td>Transformer</td>
+<td>lenguaje y secuencias largas con atención</td>
+</tr>
+</tbody>
+</table>
+<p>No cubrimos estas arquitecturas porque nuestro problema —predecir con datos tabulares de bicicletas— es exactamente el caso de uso del MLP. La lógica de fondo (capas, pesos, backpropagation) es la misma en todas.</p>
+</section>
+<section id="cuándo-una-red-no-es-la-mejor-opción" class="slide level2">
+<h2>Cuándo una red no es la mejor opción</h2>
+<ul>
+<li><strong>Datos tabulares y medianos</strong>: boosting suele igualar o superar a la red, con menos ajuste.</li>
+<li><strong>Pocos datos</strong>: la red sobreajusta y su varianza domina.</li>
+<li><strong>Se necesita interpretación</strong>: un GLM da odds ratios; la red, no.</li>
+<li><strong>Sensibilidad a escala y semilla</strong>: exige más cuidado de preprocesamiento y reproducibilidad.</li>
+</ul>
+<p>Una red se justifica cuando la estructura no lineal es fuerte y hay datos suficientes para estimarla.</p>
+</section>
+<section id="frente-a-glm-y-ensambles" class="slide level2">
+<h2>Frente a GLM y ensambles</h2>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th></th>
+<th>GLM (+ regularización)</th>
+<th>Ensambles de árboles</th>
+<th>Red neuronal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>No linealidad</td>
+<td>manual</td>
+<td>automática (cortes)</td>
+<td>automática (suave)</td>
+</tr>
+<tr class="even">
+<td>Interpretación</td>
+<td>alta</td>
+<td>media</td>
+<td>baja</td>
+</tr>
+<tr class="odd">
+<td>Datos pequeños</td>
+<td>robusto</td>
+<td>medio</td>
+<td>frágil</td>
+</tr>
+<tr class="even">
+<td>Ajuste requerido</td>
+<td>poco</td>
+<td>medio</td>
+<td>alto</td>
+</tr>
+</tbody>
+</table>
+<p>La red extiende la lógica del GLM con transformaciones aprendidas; el costo es interpretabilidad y estabilidad.</p>
+</section>
+<section id="comparar-justamente" class="slide level2">
+<h2>Comparar justamente</h2>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Elemento</th>
+<th>Debe ser igual entre modelos</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Outcome</td>
+<td>definición de demanda alta o <code>bikers</code></td>
+</tr>
+<tr class="even">
+<td>Partición</td>
+<td>mismas filas en train/valid/test</td>
+</tr>
+<tr class="odd">
+<td>Métrica</td>
+<td>misma fórmula y escala</td>
+</tr>
+<tr class="even">
+<td>Información</td>
+<td>ningún acceso anticipado al test</td>
+</tr>
+</tbody>
+</table>
+<p>Cambiar estas condiciones confunde diferencias metodológicas con diferencias de evaluación.</p>
+</section>
+<section id="interpretación-y-uso" class="slide level2">
+<h2>Interpretación y uso</h2>
+<ul>
+<li>Use curvas de calibración y errores por subgrupo.</li>
+<li>Compare con GLM, regularización y ensembles.</li>
+<li>Documente transformaciones y semillas.</li>
+<li>No convierta importancia predictiva en argumento causal.</li>
+<li>Prefiera el modelo más simple cuando el desempeño sea equivalente.</li>
 </ul>
 </section>
-<section id="y-la-curva-roc" class="slide level2">
-<h2>¿Y la curva ROC?</h2>
-<p>La curva ROC y el AUC, tal como los definimos, son conceptos binarios. La generalización estándar es <strong>one-vs-rest</strong>: tratar cada clase, por turno, como “positivo” contra las demás como “negativo”, y calcular una curva ROC por clase.</p>
-<ul>
-<li>Ninguna curva única resume el desempeño multinomial completo — se reportan <span class="math inline">J</span> curvas, o un promedio (macro-AUC).</li>
-<li>Log-loss (clase 6), en cambio, se generaliza de forma inmediata al caso multinomial — es la misma cross-entropy que usamos para ajustar <code>logit_multi</code>, y sigue siendo una sola cifra comparable entre modelos.</li>
-</ul>
+<section id="ejercicio" class="slide level2">
+<h2>Ejercicio</h2>
+<ol type="1">
+<li>Agregue una interacción explícita al baseline logístico.</li>
+<li>Pruebe <code>size = 12</code> sin cambiar el test.</li>
+<li>Compare <code>decay = 0</code> y <code>decay = 0.1</code>.</li>
+<li>Grafique calibración por tipo de día.</li>
+<li>Decida si la ganancia justifica la menor interpretabilidad.</li>
+</ol>
 </section>
 <section id="en-resumen" class="slide level2">
 <h2>En resumen</h2>
 <ul>
-<li>La regresión logística es también un clasificador de ML: ajusta <span class="math inline">X\beta</span> maximizando la verosimilitud, equivalente a minimizar el log-loss.</li>
-<li>Un umbral <span class="math inline">\tau</span> convierte probabilidades en clases; su elección depende del costo relativo de cada tipo de error, no de una convención fija.</li>
-<li>La matriz de confusión resume aciertos y errores; sensibilidad, especificidad, precisión y AUC capturan aspectos distintos del desempeño.</li>
-<li>La curva ROC recorre todos los umbrales posibles; el AUC resume ese trade-off en un solo número.</li>
-<li>El caso multinomial generaliza estas ideas: matriz <span class="math inline">J\times J</span>, métricas one-vs-rest, y un log-loss que se extiende sin cambios.</li>
-<li>La próxima clase pregunta qué hacer cuando ya no confiamos en la forma funcional elegida a mano: regularización con Ridge y LASSO.</li>
+<li>Una red neuronal extiende la lógica de la regresión logística.</li>
+<li>La capa oculta aprende transformaciones no lineales.</li>
+<li>Escalamiento, regularización y validación son parte del modelo.</li>
+<li>Clasificación y regresión requieren salidas y pérdidas distintas.</li>
+<li>Una red debe superar baselines simples bajo una comparación justa.</li>
 </ul>
 </section>
-<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#8B1E2D">
+<section id="mapa-conceptual-del-módulo-clases-1922" class="slide level2">
+<h2>Mapa conceptual del módulo (clases 19–22)</h2>
+<p>Tres clases, una sola pregunta de fondo —¿cómo controlar la complejidad de un modelo sin decidirla arbitrariamente?— respondida cada vez de forma distinta:</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Clase</th>
+<th>Pregunta que resuelve</th>
+<th>Pregunta que deja abierta</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>19. Regularización</strong></td>
+<td>¿cuánta complejidad usar, dado un conjunto de predictores fijado por nosotros?</td>
+<td>¿y si no sabemos qué interacciones importan?</td>
+</tr>
+<tr class="even">
+<td><strong>20. Árboles y ensambles</strong></td>
+<td>¿puede el modelo descubrir interacciones y no linealidades por sí solo?</td>
+<td>¿puede esa función ser suave, no escalonada?</td>
+</tr>
+<tr class="odd">
+<td><strong>21. Redes neuronales</strong></td>
+<td>¿puede aprender transformaciones suaves y no lineales, capa por capa?</td>
+<td>(ver evaluación responsable: el costo es interpretabilidad y estabilidad)</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math display">
+\text{logit lineal}
+\;\longrightarrow\;
+\text{coeficientes penalizados}
+\;\longrightarrow\;
+\text{reglas y ensambles}
+\;\longrightarrow\;
+\text{transformaciones neuronales}.
+</span></p>
+<p>En cada etapa, la <em>forma</em> del modelo se vuelve más flexible — pero la disciplina no cambió ni una vez: mismo outcome, misma partición train/valid/test, misma métrica, mismo test intocado hasta el final. Esa disciplina, no la técnica de moda, es lo que distingue una predicción confiable de una casualidad de la muestra.</p>
+</section>
+<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#1B5E3F">
 <h2>Gracias</h2>
 <p><strong>Hasta la próxima clase</strong></p>
 <p>Mauricio Bucca</p>

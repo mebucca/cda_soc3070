@@ -1,10 +1,10 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Regresión Logística Multinomial"
+subtitle: "Causalidad y asociación"
 author: "Mauricio Bucca · Sociología UC"
 date: today
-body-classes: theme-ajax
-course-team: ajax
+body-classes: theme-roma
+course-team: roma
 filters: ["../_shared/course.lua"]
 format:
   revealjs:
@@ -16,11 +16,46 @@ format:
     width: 1600
     height: 900
     html-math-method: katex
+execute:
+  warning: false
+  message: false
 ---
 
 ```{r course-style, include=FALSE}
+library(pacman)
+p_load(tidyverse)
+
 source("../_shared/bikeshare.R")
-course_palette <- use_course_style("ajax")
+course <- use_course_data("roma")
+course_palette <- course$palette
+
+bikedata <- course$data %>%
+  mutate(
+    month = as.integer(mnth),
+    clear_weather = as.integer(weathersit == "clear"),
+    weather_label = factor(
+      clear_weather,
+      levels = c(0, 1),
+      labels = c("Otro clima", "Despejado")
+    ),
+    demand_label = factor(
+      high_demand,
+      levels = c(0, 1),
+      labels = c("Demanda no alta", "Demanda alta")
+    )
+  )
+
+logit_crudo <- glm(
+  high_demand ~ clear_weather,
+  family = binomial(link = "logit"),
+  data = bikedata
+)
+
+logit_mes <- glm(
+  high_demand ~ clear_weather + factor(month),
+  family = binomial(link = "logit"),
+  data = bikedata
+)
 ```
 
 ## Antes · Hoy · Después {.class-rhythm}
@@ -30,621 +65,538 @@ course_palette <- use_course_style("ajax")
 ::: {.content-box}
 **Antes**
 
-estructura teórica de la regresión multinomial.
+sobre-dispersión y quasi-Poisson.
 :::
 
 ::: {.content-box-primary}
 **Hoy**
 
-interpretación de efectos multinomiales.
+asociación, contrafactuales y causalidad.
 :::
 
 ::: {.content-box-secondary}
 **Después**
 
-regresión de Poisson para recuentos.
+predicción, overfitting y validación cruzada.
 :::
 
 :::
 
+# Causalidad {.inverse .center .middle}
 
+## Las preguntas causales comparan mundos
 
-## Regresión Logística Multinomial: interpretación de efectos {.inverse .center .middle}
-
-## Efectos marginales sobre el logit {.center .middle}
-
-## Un ejemplo empírico
-```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
-# datos del plebiscito chileno de 1988, del paquete "carData"
-library(pacman)
-p_load("carData")
-p_load("viridis")
-p_load("tidyverse")
-p_load("modelr")
-p_load("cowplot")
-p_load("rsample")
-p_load("arm")
-p_load("DescTools")
-p_load("caret")
-p_load("nnet")
-p_load("marginaleffects")
-
-theme_set(theme_julia())
-
-data(Chile)
-plebs_1988 <- Chile %>% as_tibble()
-
-# display the data as a tibble
-plebs_1988 %>% arrange(statusquo)
-```
-
-::: {.pull-left}
-
-Continuando con los datos del plebiscito de 1988, ajustaremos el siguiente modelo:
-$$\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}$$
-donde:
-
-- $p_{iJ} =\mathbb{P}(\text{vote}_{i}=\text{A})$
-- $p_{ij} =\mathbb{P}(\text{vote}_{i}=j), \quad j \in \{\text{N},\text{U},\text{Y}\}$
-- $\text{logit}(p_{ij})$ es el [log odds]{.bold} de votar N/U/Y vs A.
-- $p_{ij}$'s son una función de apoyo al status-quo (`statusquo`) y género (`sex`)
-
-:::
+Las ciencias sociales están llenas de preguntas aparentemente sencillas:
 
 . . .
 
-::: {.pull-right}
-
-```{r}
-mlogit_vote_sq_sex <- multinom(vote ~ statusquo + sex, trace=F, data=plebs_1988);
-summary(mlogit_vote_sq_sex)
-```
-
-:::
-
-## Efectos marginales sobre el logit
-Un modelo de regresión logística multinomial consiste de $J-1$ ecuaciones:
-$$\text{logit}(p_{ij}) = \ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}$$
+- ¿Una política de transporte cambia el uso de bicicletas?
+- ¿Un día despejado hace que más personas arrienden una bicicleta?
+- ¿Trabajar desde casa reduce los viajes en hora punta?
 
 . . .
 
-- El intercepto $\beta_{j0}$ corresponde al log del ratio entre la probabilidad de obtener $j$ en vez de $J$ -- $\text{logit}(p_{j})$ --, cuando $x_{1} = \dots = x_{k} = 0$
+Todas preguntan qué **cambiaría** en un resultado si interviniéramos sobre una causa.
 
-. . .
+## Nuestro caso: clima despejado y demanda
 
-- El efecto marginal de $x_{k}$ sobre el $\text{logit}(p_{j})$ por:
+Vamos a estudiar una hipótesis concreta:
 
-::: {.pull-left}
+> Un cielo despejado aumenta la probabilidad de demanda alta.
 
-::: {.content-box-blue}
+Definimos un predictor binario:
 
-$$\frac{\partial\text{logit}(p_{ij})}{\partial x_{k}} = \beta_{jk}$$
+$$
+D_i =
+\begin{cases}
+1 & \text{si el clima de la hora } i \text{ está despejado}\\
+0 & \text{si hay nubes, lluvia o nieve}
+\end{cases}
+$$
 
-:::
+El resultado también es binario:
 
-:::
+$$
+Y_i =
+\begin{cases}
+1 & \text{si la hora tiene demanda alta}\\
+0 & \text{si la hora no tiene demanda alta}
+\end{cases}
+$$
 
-::: {.pull-right}
+`high_demand = 1` identifica las horas sobre el percentil 75 de `bikers`.
 
-::: {.content-box-yellow}
+## Primero vemos una asociación
 
-"Un cambio infinitesimal en $x_{k}$  ( $\partial x_{k}$ ) se traduce en un cambio en $\partial x_{k} \beta_{jk}$ unidades en el $\text{logit}(p_{j})$"
-
-:::
-
-:::
-
-. . .
-
-[Importante:]{.bold} los coeficientes y sus transformaciones entregan información sobre las probabilidades [relativas]{.bold} de los diferentes $j$'s (con respecto a categoría de referencia).
-
-## Efectos marginales sobre el logit
-En nuestro ejemplo: $\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}$
-
-::: {.pull-left}
-
-```{r, echo=FALSE}
-summary(mlogit_vote_sq_sex)$coefficients
+```{r observed-association, echo=FALSE, fig.height=4.5}
+bikedata %>%
+  group_by(weather_label) %>%
+  summarise(prop_high = mean(high_demand), .groups = "drop") %>%
+  ggplot(aes(weather_label, prop_high, fill = weather_label)) +
+  geom_col(width = 0.58) +
+  geom_text(
+    aes(label = scales::percent(prop_high, accuracy = 0.1)),
+    vjust = -0.45, size = 5
+  ) +
+  scale_fill_course(guide = "none") +
+  scale_y_continuous(
+    labels = scales::percent_format(accuracy = 1),
+    limits = c(0, 0.34)
+  ) +
+  labs(x = NULL, y = "Probabilidad observada de demanda alta")
 ```
 
-:::
+Las horas despejadas tienen mayor probabilidad de demanda alta. Eso es un hecho descriptivo; todavía no es una conclusión causal.
 
-::: {.pull-right}
+## La diferencia observada
 
-```{r, echo=FALSE, fig.width=6, fig.height=5, warning=FALSE, message=FALSE}
+```{r observed-means, echo=FALSE}
+observed_means <- bikedata %>%
+  group_by(weather_label) %>%
+  summarise(
+    horas = n(),
+    prob_demanda_alta = mean(high_demand),
+    .groups = "drop"
+  )
 
-# plot the result
-grid <- plebs_1988  %>% data_grid(statusquo=seq_range(statusquo,30),sex,.model=mlogit_vote_sq_sex)
-
-predictions <- cbind(grid,predict(mlogit_vote_sq_sex, newdata=grid, type="prob")) %>%
-              pivot_longer(-c(statusquo,sex), names_to="outcome",values_to="p" ) %>%
-              mutate(p_outcome = paste0("p_",outcome)) %>% dplyr::select(-outcome) %>%
-              pivot_wider(names_from = p_outcome, values_from=p) %>%
-              mutate(across(p_N:p_Y, ~  log(.x/p_A), .names = "logit_{.col}" )) %>%
-              pivot_longer(-c(statusquo,sex), names_to="quant", values_to="est")
-
-predictions %>% filter(str_detect(quant, "^l")) %>% separate(quant,sep=8, into=c("quant","vote")) %>%
-  ggplot(aes(x=statusquo, y=est, colour=vote, group=interaction(vote,sex))) +
-  geom_path(aes(linetype=sex), alpha=0.5, size=1.5) +
-  scale_color_course() +  scale_fill_course() +
-  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-  legend.text = element_text(size = 18), legend.position="top") +
-  labs(x="Support status-quo", y="Logit(Vote=j)")
-
+observed_means
 ```
 
-:::
-
-## Efectos marginales sobre el logit
-
-::: {.pull-left}
-
-```{r, echo=FALSE}
-summary(mlogit_vote_sq_sex)$coefficients
-```
-
-Por tanto, $\beta_{N1}$ y $\beta_{Y1}$ son=
-```{r}
-c(
-betaN1 = (0.11 -1.76*1 + 0.7*1)-(0.11 -1.76*0 + 0.7*1),
-betaY1 = (0.78 + 1.9*1 -0.11*1)-(0.78 + 1.9*0 -0.11*1)
+```{r observed-difference, echo=FALSE}
+raw_difference <- with(
+  bikedata,
+  mean(high_demand[clear_weather == 1]) -
+    mean(high_demand[clear_weather == 0])
 )
 ```
 
+La diferencia observada es de `r sub("\\.", ",", formatC(100 * raw_difference, format = "f", digits = 1))` puntos porcentuales.
+
+. . .
+
+**Pregunta:** ¿cuánto de esa diferencia se debe al clima y cuánto a que las horas despejadas son distintas en otros aspectos?
+
+## El coeficiente del logit resume la asociación
+
+Ajustamos:
+
+$$
+\operatorname{logit}\{\Pr(Y_i=1\mid D_i)\}
+=\beta_0+\beta_1D_i.
+$$
+
+```{r crude-logit, echo=TRUE}
+logit_crudo <- glm(
+  high_demand ~ clear_weather,
+  family = binomial(link = "logit"),
+  data = bikedata
+)
+
+coef(logit_crudo)[["clear_weather"]]
+exp(coef(logit_crudo)[["clear_weather"]])
+```
+
+En estos datos, $\hat\beta_1=`r sub("\\.", ",", formatC(coef(logit_crudo)[["clear_weather"]], format = "f", digits = 3))`$ y $e^{\hat\beta_1}=`r sub("\\.", ",", formatC(exp(coef(logit_crudo)[["clear_weather"]]), format = "f", digits = 2))`$.
+
+. . .
+
+Las *odds* de demanda alta son aproximadamente `r formatC(100 * (exp(coef(logit_crudo)[["clear_weather"]]) - 1), format = "f", digits = 0)`% mayores bajo clima despejado. Por ahora, esta es una **asociación**.
+
+## Predicciones del logit
+
+```{r logit-predictions, echo=FALSE, fig.height=4.6}
+prediction_data <- tibble(
+  clear_weather = c(0, 1),
+  weather_label = factor(
+    c(0, 1),
+    levels = c(0, 1),
+    labels = c("Otro clima", "Despejado")
+  )
+)
+
+pred_link <- predict(
+  logit_crudo,
+  newdata = prediction_data,
+  type = "link",
+  se.fit = TRUE
+)
+
+prediction_data <- prediction_data %>%
+  mutate(
+    probability = plogis(pred_link$fit),
+    lower = plogis(pred_link$fit - 1.96 * pred_link$se.fit),
+    upper = plogis(pred_link$fit + 1.96 * pred_link$se.fit)
+  )
+
+ggplot(
+  prediction_data,
+  aes(weather_label, probability, group = 1, color = weather_label)
+) +
+  geom_line(linewidth = 1, color = course_palette[["secondary"]]) +
+  geom_pointrange(
+    aes(ymin = lower, ymax = upper),
+    linewidth = 1, size = 1.2
+  ) +
+  scale_color_course(guide = "none") +
+  scale_y_continuous(
+    labels = scales::percent_format(accuracy = 1),
+    limits = c(0.15, 0.31)
+  ) +
+  labs(x = NULL, y = "Probabilidad predicha de demanda alta")
+```
+
+Con un único predictor binario, el logit produce dos probabilidades predichas: una para $D=0$ y otra para $D=1$.
+
+# Mundos paralelos {.inverse .center .middle}
+
+## Dos resultados potenciales para cada hora
+
+Para cada hora $i$ imaginamos dos resultados:
+
+$$
+Y_i(1): \text{demanda alta o no si esa hora estuviera despejada}
+$$
+
+$$
+Y_i(0): \text{demanda alta o no si esa misma hora tuviera otro clima}
+$$
+
+El efecto causal individual es:
+
+$$\tau_i = Y_i(1)-Y_i(0)\in\{-1,0,1\}.$$
+
+Esta comparación mantiene fija la unidad y cambia solo el tratamiento.
+
+## En el multiverso veríamos ambas columnas
+
+| Hora | $Y_i(1)$: despejado | $Y_i(0)$: otro clima | Efecto |
+|---|---:|---:|---:|
+| Lunes, 08:00 | Alta (1) | No alta (0) | +1 |
+| Martes, 14:00 | No alta (0) | No alta (0) | 0 |
+| Viernes, 18:00 | Alta (1) | Alta (1) | 0 |
+| Domingo, 11:00 | No alta (0) | Alta (1) | −1 |
+
+Si pudiéramos observar ambas columnas, calcular el efecto causal sería trivial.
+
+. . .
+
+Pero estos valores son una **ilustración**: en los datos reales nunca vemos las dos columnas para la misma hora.
+
+## En el mundo observado falta un contrafactual
+
+| Hora | Clima observado | $Y_i(1)$ | $Y_i(0)$ |
+|---|---|---:|---:|
+| Lunes, 08:00 | despejado | Alta (1) | **?** |
+| Martes, 14:00 | otro clima | **?** | No alta (0) |
+| Viernes, 18:00 | despejado | Alta (1) | **?** |
+| Domingo, 11:00 | otro clima | **?** | Alta (1) |
+
+Para cada unidad observamos:
+
+$$Y_i = D_iY_i(1)+(1-D_i)Y_i(0).$$
+
+El otro resultado potencial es contrafactual. Este es el **problema fundamental de la inferencia causal**.
+
+## Del efecto individual al efecto promedio
+
+Como no observamos $\tau_i$ para ninguna hora, apuntamos al **efecto promedio del tratamiento**:
+
+$$
+\text{ATE}=\mathbb{E}[Y_i(1)-Y_i(0)]
+=\mathbb{E}[Y_i(1)]-\mathbb{E}[Y_i(0)].
+$$
+
+. . .
+
+En cambio, los datos entregan la diferencia entre dos grupos de horas:
+
+$$
+\mathbb{E}[Y_i\mid D_i=1]-\mathbb{E}[Y_i\mid D_i=0].
+$$
+
+Una comparación es entre **mundos posibles para las mismas unidades**; la otra es entre **unidades diferentes en el mundo observado**.
+
+Como $Y$ es binario, ambas expresiones son diferencias de probabilidades. El ATE es un efecto causal promedio medido en puntos porcentuales.
+
+## Asociación no es causalidad
+
+::: {.pull-left}
+
+**Asociación observada**
+
+$$
+\mathbb{E}[Y\mid D=1]-
+\mathbb{E}[Y\mid D=0]
+$$
+
+Compara horas despejadas con horas no despejadas.
+
 :::
 
 ::: {.pull-right}
 
-Si `male=1` y `statusquo=0`, entonces `logit(p_N)` y `logit(p_Y)` son=
-```{r}
-c(N=0.11 -1.76*0 + 0.7*1,
-  Y=0.78  + 1.9*0 + -0.11*1)
-```
-Si `male=1` y `statusquo=1`, entonces `logit(p_N)` y `logit(p_Y)` son=
-```{r}
-c(N=0.11 -1.76*1 + 0.7*1,
-  Y=0.78  + 1.9*1 + -0.11*1)
-```
+**Efecto causal**
 
-:::
+$$
+\mathbb{E}[Y(1)-Y(0)]
+$$
 
-## Efectos multiplicativos sobre las odds {.center .middle}
-
-## Efectos multiplicativos sobre las odds
-Dado el siguiente modelo de regresión logística multinomial:
-$$\text{logit}(p_{ij}) = \ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}$$
-
-. . .
-
-exponenciando a ambos lados obtenemos
-$$\frac{p_{ij}}{p_{iJ}} = e^{\beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}}$$
-
-. . .
-
-equivalentemente
-
-::: {.content-box-blue}
-
-$$\frac{p_{ij}}{p_{iJ}} =  e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i1}}  \dots e^{\beta_{jk} x_{ik}}$$
-
-:::
-
-## Efectos multiplicativos sobre las odds: odds ratios
-Considera la situación en que $i$ y $i^{´}$ son dos observaciones con $x_{k}=c$ y $x_{k}=c+1$, respectivamente. El resto de las covariables toman valores idénticos.
-
-. . .
-
- Las odds de observar $j$ en vez de $J$ son:
-
-- $p_{ij}/(p_{iJ}) = e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i1}}  \dots (e^{\beta_{jk}})^{c}$
-- $p_{i^{´}j}/(p_{i^{´}J}) = e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i^{´}1}}  \dots (e^{\beta_{jk}})^{c+1}$
-
-. . .
-
-El ratio de las odd de éxito entre $i^{´}$ e $i$ está dado por:
-
-\begin{align}
-\frac{p_{i^{´}j}/p_{i^{´}J}}{p_{ij}/p_{iJ}} &= \frac{e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i^{´}1}}  \dots (e^{\beta_{jk}})^{c+1}}{e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i1}}  \dots (e^{\beta_{jk}})^{c}} = e^{\beta_{jk}}
-\end{align}
-
-En otras palabras, manteniendo otros factores constantes, $e^{\beta_{jk}}$ representa la odds ratio de $j$ vs $J$ entre el caso con $x_{k}$ aumentado en una unidad, y el caso con $x_{k}$ en un nivel basal dado.
-
-## Efectos multiplicativos sobre las odds
-
-::: {.content-box-yellow}
-
-"Un cambio en $\Delta$ unidades de $x_{k}$ multiplica el ratio entre las probabilidad de obtener $j$ vs $J$ por $e^{\Delta \beta_{jk}}$"
-
-:::
-
-[Propiedades]{.bold}:
-
-. . .
-
-- $e^{\beta_{jk}}$ está restringido al rango $[0,\infty+)$. Es una constante que "comprime" o amplifica el ratio entre las probabilidades de $j$ vs $J$
-
-. . .
-
-- Si $\beta_{jk} < 0  \to  (0 < e^{\beta_{jk}} < 1)$. Es decir, un aumento en $x_{k}$ está asociado con una reducción (multiplicativa) del ratio entre las probabilidades de  $j$ vs $J$
-
-. . .
-
-- Si $\beta_{jk} = 0  \to  (e^{\beta_{jk}} =1)$. Es decir, un cambio en $x_{k}$ está asociado a un cambio nulo en el ratio entre las probabilidades de  $j$ vs $J$
-
-. . .
-
-- Si $\beta_{jk} > 0  \to  (e^{\beta_{jk}} > 1)$. Es decir, un aumento en $x_{k}$ está asociado a aumento (multiplicativo) en el ratio entre las probabilidades de  $j$ vs $J$
-
-## Efectos multiplicativos sobre las odds
-En nuestro ejemplo: $\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}$, por tanto:
-
-::: {.pull-left}
-
-  $\frac{p_{ij}}{p_{iJ}} = e^{\beta_{j0}} \cdot  e^{\beta_{j1}\text{statusquo}_{i}} \cdot e^{ \beta_{j2}\text{male}_{i} }$
-```{r}
-
-# coeffs
-summary(mlogit_vote_sq_sex)$coefficients
-
-
-# exp(coeffs)
-exp(summary(mlogit_vote_sq_sex)$coefficients)
-```
+Compara cada hora consigo misma bajo dos climas posibles.
 
 :::
 
 . . .
 
-::: {.pull-right}
+La asociación identifica el efecto causal solo bajo supuestos adicionales.
 
-```{r, echo=FALSE, fig.height=6}
+# ¿Por qué pueden diferir? {.inverse .center .middle}
 
-grid <- plebs_1988  %>% data_grid(statusquo=seq_range(statusquo,30),sex,.model=mlogit_vote_sq_sex)
+## El mes cambia el clima y también la demanda
 
-predictions <- cbind(grid,predict(mlogit_vote_sq_sex, newdata=grid, type="prob")) %>%
-            pivot_longer(-c(statusquo,sex), names_to="outcome",values_to="p" ) %>%
-            mutate(p_outcome = paste0("p_",outcome)) %>% dplyr::select(-outcome) %>%
-            pivot_wider(names_from = p_outcome, values_from=p) %>%
-            mutate(across(p_N:p_Y, ~  log(.x/p_A), .names = "logit_{.col}" )) %>%
-            mutate(across(logit_p_N:logit_p_Y, ~  exp(.x), .names = "or_{.col}" )) %>%
-            pivot_longer(-c(statusquo,sex), names_to="quant", values_to="est")
-
-predictions %>% filter(str_detect(quant, "^or")) %>% separate(quant,sep=11, into=c("quant","vote")) %>%
-ggplot(aes(x=statusquo, y=est, colour=vote, group=interaction(vote,sex))) +
-geom_path(aes(linetype=sex), alpha=0.5, size=1.5) +
-scale_color_course() +  scale_fill_course() +
-theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-legend.text = element_text(size = 18), legend.position="top") +
-labs(x="Support status-quo", y="Odds vote=j vs vote=A")
-
+```{r clear-by-month, echo=FALSE, fig.height=4.2}
+bikedata %>%
+  group_by(mnth) %>%
+  summarise(
+    prop_clear = mean(clear_weather),
+    prop_high = mean(high_demand),
+    .groups = "drop"
+  ) %>%
+  ggplot(aes(mnth, prop_clear, group = 1)) +
+  geom_line(linewidth = 1.2, color = course_palette[["primary"]]) +
+  geom_point(size = 3, color = course_palette[["secondary"]]) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(x = "Mes", y = "Proporción de horas despejadas")
 ```
 
-:::
+Los meses no tienen la misma probabilidad de estar despejados. Además, estación, vacaciones y horas de luz afectan la probabilidad de demanda alta.
 
-## Efectos multiplicativos sobre las odds
+## Confusión: una causa común abre un camino alternativo
 
-::: {.pull-left}
+```{r dag-confound, echo=FALSE, fig.height=4.2}
+nodes <- tibble(
+  x = c(1, 3, 2), y = c(1, 1, 2.45),
+  label = c("D\nClima despejado", "Y\nDemanda alta", "X\nMes")
+)
+edges <- tibble(
+  x = c(2, 2, 1), y = c(2.28, 2.28, 1),
+  xend = c(1.12, 2.88, 2.82), yend = c(1.18, 1.18, 1)
+)
 
-```{r, echo=FALSE}
-cbind(beta1=summary(mlogit_vote_sq_sex)$coefficients[,"statusquo"],exp.beta1=exp(summary(mlogit_vote_sq_sex)$coefficients[,"statusquo"]))
+ggplot() +
+  geom_segment(
+    data = edges, aes(x, y, xend = xend, yend = yend),
+    arrow = arrow(length = unit(0.22, "cm"), type = "closed"),
+    color = course_palette[["secondary"]], linewidth = 1.1
+  ) +
+  geom_point(
+    data = nodes, aes(x, y), size = 25, shape = 21,
+    fill = course_palette[["primary"]], color = "white"
+  ) +
+  geom_text(
+    data = nodes, aes(x, y, label = label),
+    color = "white", size = 4, lineheight = 0.9
+  ) +
+  coord_cartesian(xlim = c(0.45, 3.55), ylim = c(0.55, 2.9)) +
+  theme_void()
 ```
 
-:::
+El camino $D \leftarrow X \rightarrow Y$ mezcla el efecto del clima con diferencias estacionales.
 
-::: {.pull-right}
+## Ajustar por el confusor cambia el coeficiente
 
-Si `male=1` y `statusquo=0`, entonces las odds de N e Y son=
-```{r}
-c(N=exp(0.11 -1.76*0 + 0.7*1),
-  Y=exp(0.78  + 1.9*0 + -0.11*1) )
-```
-Si `male=1` y `statusquo=1`,  entonces las odds de N e Y son=
-```{r}
-c(N=exp(0.11 -1.76*1 + 0.7*1),
-  Y=exp(0.78  + 1.9*1 + -0.11*1))
-```
-
-:::
-
-## Efectos multiplicativos sobre las odds
-
-::: {.pull-left}
-
-```{r, echo=FALSE}
-cbind(beta1=summary(mlogit_vote_sq_sex)$coefficients[,"statusquo"],exp.beta1=exp(summary(mlogit_vote_sq_sex)$coefficients[,"statusquo"]))
-```
-
-Por tanto, $e^{\beta_{N1}}$ y $e^{\beta_{Y1}}$ son=
-```{r}
-c(
-betaN1 = exp(0.11 -1.76*1 + 0.7*1)/exp(0.11 -1.76*0 + 0.7*1),
-betaY1 = exp(0.78 + 1.9*1 -0.11*1)/exp(0.78 + 1.9*0 -0.11*1)
+```{r control-demo, echo=FALSE}
+tibble(
+  modelo = c("Logit crudo", "Logit ajustado por mes"),
+  beta_clima = c(
+    coef(logit_crudo)[["clear_weather"]],
+    coef(logit_mes)[["clear_weather"]]
+  ),
+  odds_ratio = exp(c(
+    coef(logit_crudo)[["clear_weather"]],
+    coef(logit_mes)[["clear_weather"]]
+  ))
 )
 ```
 
-:::
-
-::: {.pull-right}
-
-Si `male=1` y `statusquo=0`, entonces las odds de N e Y son=
-```{r}
-c(N=exp(0.11 -1.76*0 + 0.7*1),
-  Y=exp(0.78  + 1.9*0 + -0.11*1) )
-```
-Si `male=1` y `statusquo=1`,  entonces las odds de N e Y son=
-```{r}
-c(N=exp(0.11 -1.76*1 + 0.7*1),
-  Y=exp(0.78  + 1.9*1 + -0.11*1))
-```
-
-:::
-
-## Efectos marginales sobre la probabilidad de la categoría $j$ {.center .middle}
-
-## Efectos marginales sobre la probabilidad de la categoría $j$
+El coeficiente cambia al comparar horas dentro del mismo mes: parte de la asociación cruda reflejaba composición estacional.
 
 . . .
 
-Dado el siguiente modelo de regresión logística multinomial:
-$$\text{logit}(p_{ij}) = \ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}$$
+Esto **no prueba** que el coeficiente ajustado sea causal. Solo elimina la confusión explicada por `month` bajo la forma funcional elegida.
 
-. . .
-
-Queremos saber el [efecto marginal]{.bold} de los predictores sobre la [probabilidad]{.bold} de observar cada categoría $j: \{1, \dots, J\}$. Formalmente
-
-. . .
-
-$$\frac{\partial p_{ij}}{\partial x_{k}}$$
-
-. . .
-
-$$\vdots$$
-
-## Efectos marginales sobre la probabilidad de la categoría $j$
-Después de varios pasos, obtenemos:
-
-::: {.content-box-yellow}
-
-$$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)$$
-
-:::
-
-donde
-$$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1}  e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}$$
-
-## Efectos marginales sobre la probabilidad de la categoría $j$
+## El mismo coeficiente admite dos lecturas
 
 ::: {.pull-left}
 
-Analizando $$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)$$
+**Lectura asociacional**
 
-:::
+$$
+\beta_1=
+\log\frac{\operatorname{odds}(Y=1\mid D=1,X)}
+{\operatorname{odds}(Y=1\mid D=0,X)}
+$$
 
-. . .
-
-::: {.pull-right}
-
-podemos notar que  $\sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk} \equiv \overline{\beta_{k}}, \quad$ el "efecto promedio de" $x_k$ (no depende de $j$). Se desprende que:
-
-:::
-
-. . .
-
-- El signo del efecto marginal de los predictores [no necesariamente]{.bold} corresponde al signo del parámetro estimado en la regresión.
-
-. . .
-
-  - $\frac{\partial p_{ij}}{\partial x_{k}} > 0 \quad$  si  $\quad \beta_{jk} > \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}$
-  - $\frac{\partial p_{ij}}{\partial x_{k}} = 0 \quad$  si  $\quad \beta_{jk} = \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}$
-  - $\frac{\partial p_{ij}}{\partial x_{k}} < 0 \quad$  si  $\quad \beta_{jk} < \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}$
-
-. . .
-
-[Nota]{.bold}: No tiene mucho sentido testear si efectos marginales son distintos de cero.
-
-## Efectos marginales sobre la probabilidad de la categoría $j$
-
-::: {.pull-left}
-
-si $$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)$$
-
-:::
-
-. . .
-
-::: {.pull-right}
-
-y $$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1}  e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}$$
-
-:::
-
-. . .
-
-- Es claro que el efecto marginal de $x_{k}$ varía dependiendo del valor de $x_{k}$, de su coeficiente $\beta_{jk}$, y de todas las otras covariables con sus respectivos coeficientes.
-
-## Efectos marginales sobre la probabilidad de la categoría $j$
-En nuestro ejemplo: $\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}$, por tanto:
-
-::: {.pull-left}
-
-  $$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{l=1} e^{\beta_{l0} + \beta_{l1}\text{statusquo}_{i} + \beta_{l2}\text{male}_{i}}}$$
-
-```{r}
-summary(mlogit_vote_sq_sex)$coefficients
-```
-
-:::
-
-. . .
-
-::: {.pull-right}
-
-```{r, echo=FALSE, fig.height=6}
-grid <- plebs_1988  %>% data_grid(statusquo=seq_range(statusquo,30),sex,.model=mlogit_vote_sq_sex)
-
-predictions <- cbind(grid,predict(mlogit_vote_sq_sex, newdata=grid, type="prob")) %>%
-              pivot_longer(-c(statusquo,sex), names_to="outcome",values_to="p" ) %>%
-              mutate(p_outcome = paste0("p_",outcome)) %>% dplyr::select(-outcome) %>%
-              pivot_wider(names_from = p_outcome, values_from=p) %>%
-              mutate(across(p_N:p_Y, ~  log(.x/p_A), .names = "logit_{.col}" )) %>%
-              mutate(across(logit_p_N:logit_p_Y, ~  exp(.x), .names = "or_{.col}" )) %>%
-              pivot_longer(-c(statusquo,sex), names_to="quant", values_to="est")
-
-predictions %>% filter(str_detect(quant, "^p")) %>% separate(quant,sep="_", into=c("quant","vote")) %>%
-  ggplot(aes(x=statusquo, y=est, colour=vote, group=interaction(vote,sex))) +
-  geom_path(aes(linetype=sex), alpha=0.5, size=1.5) +
-  scale_color_course() +  scale_fill_course() +
-  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-  legend.text = element_text(size = 18), legend.position="top") +
-  labs(x="Support status-quo", y="P(vote=j)")
-```
-
-:::
-
-## Efectos marginales sobre la probabilidad de la categoría $j$
-
-::: {.pull-left}
-
-$$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{l=1} e^{\beta_{l0} + \beta_{l1}\text{statusquo}_{i} + \beta_{l2}\text{male}_{i}}}$$
-```{r, echo=FALSE, fig.width=6, fig.height=5}
-predictions %>% filter(str_detect(quant, "^p")) %>% separate(quant,sep="_", into=c("quant","vote")) %>%
-  ggplot(aes(x=statusquo, y=est, colour=vote, group=interaction(vote,sex))) +
-  geom_path(aes(linetype=sex), alpha=0.5, size=1.5) +
-  scale_color_course() +  scale_fill_course() +
-  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-  legend.text = element_text(size = 18), legend.position="top") +
-  labs(x="Support status-quo", y="P(vote=j)")
-```
+Describe una comparación condicional en los datos observados.
 
 :::
 
 ::: {.pull-right}
 
-$$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)$$
-```{r, echo=FALSE, fig.width=6, fig.height=5, warning=F}
+**Lectura causal**
 
-predictions <- predictions %>% filter(str_detect(quant, "^p")) %>% separate(quant,sep="_", into=c("quant","vote"))
+$$
+\beta_1=
+\log\frac{\operatorname{odds}\{Y(1)=1\mid X\}}
+{\operatorname{odds}\{Y(0)=1\mid X\}}
+$$
 
-coefs <- summary(mlogit_vote_sq_sex)$coefficients %>% as_tibble() %>% mutate(vote = c("N","U","Y")) %>%
-  rename(beta_0 = `(Intercept)`, beta_sq = statusquo, beta_sex = sexM)
-
- predictions %>% left_join(coefs, by="vote") %>%
-  replace_na(list(beta_0 = 0, beta_sq = 0, beta_sex = 0)) %>%
-  mutate(beta_sq_prob = beta_sq*est) %>% group_by(statusquo,sex) %>%
-  mutate(average_beta_sq = sum(beta_sq_prob, na.rm = T)) %>%
-  ungroup() %>% mutate(me_sq = est*(beta_sq -average_beta_sq)) %>%
-  ggplot(aes(x=statusquo, y=me_sq, colour=vote, group=interaction(vote,sex))) +
-  geom_path(aes(linetype=sex), alpha=0.5, size=1.5) +
-  scale_color_course() +  scale_fill_course() +
-  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-  legend.text = element_text(size = 18), legend.position="top") +
-  labs(x="Support status-quo", y="Efecto marginal de status quo") +
-  geom_hline(yintercept = 0, size=1.5)
-```
-
-:::
-
-## Efectos marginales sobre la probabilidad de la categoría $j$
-
-- Efectos marginales son _esencialmente_ heterogéneos. No hay un efecto sino muchos.
-
-. . .
-
-- Heterogeneidad crece con la complejidad del modelo: número de predictores, interacciones, etc.
-
-. . .
-
-- Más aún, en el caso de modelos de regresión logística multinomial, los efectos marginales no son necesariamente monotónicos (pueden cambiar de signo).
-
-. . .
-
-- En la práctica, muchas veces queremos UN número que resuma el efecto marginal.
-
-. . .
-
-::: {.pull-left}
-
-**Objetivo:** resumir la heterogeneidad sin confundir un promedio con un efecto universal.
+Compara resultados potenciales bajo dos intervenciones.
 
 :::
 
 . . .
 
-Cantidades de interes:
+La segunda lectura necesita diseño y supuestos causales. La ecuación logística, por sí sola, solo garantiza la primera.
 
-::: {.pull-right}
+## La causalidad no está en la complejidad
 
-* Average Marginal Effects (AME)
-* Marginal Effects at the Mean (MEM)
-* Marginal Effects at Representative Values (MER)
+El mismo logit puede ser:
 
-:::
-
-## Efectos marginales sobre la probabilidad de la categoría $j$: MEM
+- **asociacional**, si el tratamiento está confundido;
+- **causal**, si el diseño hace creíble la comparación contrafactual.
 
 . . .
 
-Usando el paquete `marginaleffects`:
-```{r}
-grid <- plebs_1988 %>% data_grid(sex, .model=mlogit_vote_sq_sex)
-avg_slopes(mlogit_vote_sq_sex, variables="statusquo", newdata=grid)
-
-```
-
-## Independence of Irrelevant Alternatives (IIA) {.inverse .center .middle}
-
-## Independence of Irrelevant Alternatives (IIA)
+Un modelo más complejo puede ajustar mejor la asociación, pero no fabrica el contrafactual faltante.
 
 . . .
 
-- Cuando regresión logística Multinomial es utilizada para modelar decisiones (choice), el modelo descansa en el supuesto implícito de IIA
+Una muestra más grande reduce el error estándar:
+
+$$
+n\uparrow \quad\Longrightarrow\quad SE(\hat\beta_1)\downarrow
+$$
+
+pero no elimina el sesgo por confusión. Podemos estimar una asociación no causal con enorme precisión.
+
+## El supuesto decisivo no viene de la regresión
+
+La **intercambiabilidad condicional** o no-confusión exige:
+
+$$
+\{Y_i(1),Y_i(0)\}\perp D_i\mid X_i.
+$$
+
+En palabras: dentro de grupos con igual $X$, recibir $D=1$ o $D=0$ es “como si” fuera aleatorio respecto de los resultados potenciales.
 
 . . .
 
-- IIA: las odds (probabilidades relativas) de seleccionar cualquiera de las $J$ alternativas no son afectadas por la existencia de alternativas irrelavantes.
+Este supuesto:
+
+- no se demuestra con un $p$-value;
+- no aparece automáticamente al aumentar $n$;
+- requiere teoría, conocimiento del proceso y un buen diseño.
+
+## También necesitamos comparaciones posibles
+
+Para cada combinación de confusores debe existir alguna posibilidad de observar ambos tratamientos:
+
+$$
+0<\Pr(D_i=1\mid X_i=x)<1.
+$$
+
+Este supuesto se llama **positividad** u **overlap**.
 
 . . .
 
-[Ejemplo]{.bold} (McFadden's 1974):
+Si en cierto mes nunca hubiera horas despejadas, los datos no permitirían estimar qué ocurriría bajo clima despejado para ese mes: el contrafactual requeriría extrapolación.
 
--  Una persona puede viajar al trabajo en: $\{\text{auto}, \text{ bus rojo}\}$
--  $\mathbb{P}(\text{auto}) =  \mathbb{P}(\text{ bus rojo}) = 1/2$. Odds=1.
+## Consistencia: el tratamiento debe estar bien definido
 
-. . .
+La **consistencia** conecta el resultado observado con el potencial:
 
-- Supongamos se amplía el conjunto de alternativas: $\{\text{auto}, \text{ bus rojo},  \text{ bus azul}\}$
+$$
+D_i=d \quad\Longrightarrow\quad Y_i=Y_i(d).
+$$
 
-. . .
-
-- Dado que los buses sólo difieren en color, esperaríamos que $\mathbb{P}(\text{ bus rojo}) = \mathbb{P}(\text{bus azul})$
-- Único modo de retener Odds entre auto y bus rojo es si: $\mathbb{P}(\text{auto}) =  \mathbb{P}(\text{ bus rojo}) = \mathbb{P}(\text{bus azul}) = 1/3$
+Pero “otro clima” mezcla nubes, lluvia y nieve. ¿Son realmente la misma intervención?
 
 . . .
 
-- Sería más realista esperar que $\mathbb{P}(\text{auto}) = 1/2)$ y $\quad \mathbb{P}(\text{ bus rojo}) = \mathbb{P}(\text{bus azul}) = 1/4$
- - Sin embargo, violaría IIA porque las odds entre auto y bus rojo serían (1/2)/(1/4)=2.
+Cuanto más heterogénea sea la definición de $D=0$, más difícil es interpretar un único efecto. Definir con precisión el tratamiento es parte del análisis causal.
 
-## Independence of Irrelevant Alternatives (IIA)
-Existe una variedad de tests para el supuesto de IIA, pero ninguno ha mostrado ser concluyente:
+# El DAG guía los controles {.inverse .center .middle}
 
-::: {.center}
+## No todas las covariables son confusores
 
-![iia](iia.png)
+- **Confusor:** causa tanto $D$ como $Y$. Controlarlo puede bloquear una asociación espuria.
+- **Mediador:** está en el camino $D\rightarrow M\rightarrow Y$. Controlarlo elimina parte del efecto total.
+- **Colisionador:** recibe flechas $D\rightarrow C\leftarrow Y$. Controlarlo puede crear una asociación espuria.
 
-:::
+. . .
+
+El DAG representa supuestos sustantivos; no se “descubre” mirando significancia estadística.
+
+## Más controles no garantizan causalidad
+
+Agregar variables a una regresión ayuda solo si esas variables cumplen el rol causal correcto.
+
+. . .
+
+- Omitir un confusor deja abierto un camino no causal.
+- Incluir un mediador cambia el estimando: pasamos del efecto total a un efecto directo.
+- Incluir un colisionador puede introducir sesgo.
+- Ajustar por una variable medida después del tratamiento suele ser especialmente riesgoso.
+
+. . .
+
+La lista de controles se decide con un argumento causal **antes** de mirar qué especificación entrega el coeficiente preferido.
+
+## Diseño antes que sofisticación
+
+La diferencia entre asociación y causalidad:
+
+- **no** es principalmente un problema de estimación;
+- **no** desaparece con una muestra más grande;
+- **sí** depende de cómo se asigna el tratamiento y cómo se construye la comparación.
+
+. . .
+
+Experimentos aleatorizados, experimentos naturales y diseños cuasi-experimentales buscan hacer creíble la comparación contrafactual.
+
+## Cómo leer los coeficientes desde ahora
+
+Sin supuestos causales, el coeficiente de un logit describe una asociación condicional:
+
+> Entre observaciones con iguales covariables, ¿cómo cambian las log-odds de $Y=1$ cuando cambia $D$?
+
+. . .
+
+Ese mismo coeficiente **puede** interpretarse como un efecto causal condicional si además:
+
+1. definimos tratamiento, outcome, población y estimando;
+2. explicitamos un DAG;
+3. justificamos no-confusión, positividad y consistencia;
+4. evitamos controles que abran sesgos nuevos.
+
+## Ejercicio: construya el argumento causal
+
+Suponga que queremos estimar el efecto de `workingday` sobre la probabilidad de `high_demand`.
+
+1. Defina $Y_i(1)$ y $Y_i(0)$ y precise cuál es la unidad $i$.
+2. Dibuje un DAG con al menos un confusor plausible.
+3. Identifique una variable que **no** debería controlarse y explique su rol.
+4. Proponga un diseño que haga más creíble la comparación causal.
+5. Evalúe dónde podría fallar la positividad.
 
 ## En resumen
 
-- El efecto marginal de $x_{k}$ sobre $\text{logit}(p_{ij})$ es constante e igual a $\beta_{jk}$; exponenciando, $e^{\beta_{jk}}$ es la odds ratio de $j$ vs $J$ asociada a un aumento de una unidad en $x_{k}$.
-- El efecto marginal sobre la **probabilidad** $p_{ij}$ no es $\beta_{jk}$: $\partial p_{ij}/\partial x_{k} = p_{ij}(\beta_{jk} - \overline{\beta_{k}})$, por lo que su signo y magnitud dependen de $p_{ij}$ y pueden variar entre observaciones (e incluso cambiar de signo).
-- En la práctica se resume esta heterogeneidad con AME, MEM o MER (ej., `avg_slopes()` del paquete `marginaleffects`).
-- El modelo logit multinomial supone Independencia de Alternativas Irrelevantes (IIA); no existe un test concluyente para verificarlo.
-- La próxima clase aborda la regresión de Poisson, usada para modelar variables de conteo.
+- Causalidad compara resultados potenciales de la misma unidad.
+- Solo observamos uno: el otro es contrafactual.
+- Un coeficiente logístico es asociacional por defecto; puede ser causal bajo un diseño y supuestos adecuados.
+- Los confusores crean caminos alternativos entre tratamiento y resultado.
+- Más datos reducen incertidumbre, pero no eliminan confusión.
+- La causalidad depende del diseño, no de la complejidad del modelo.
 
 ## Gracias {.inverse .center .middle .closing}
 

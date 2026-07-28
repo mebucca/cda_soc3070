@@ -1,10 +1,10 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Efectos en Regresión Logística"
+subtitle: "Regresión Logística Multinomial"
 author: "Mauricio Bucca · Sociología UC"
 date: today
-body-classes: theme-juventus
-course-team: juventus
+body-classes: theme-ajax
+course-team: ajax
 filters: ["../_shared/course.lua"]
 format:
   revealjs:
@@ -20,7 +20,7 @@ format:
 
 ```{r course-style, include=FALSE}
 source("../_shared/bikeshare.R")
-course_palette <- use_course_style("juventus")
+course_palette <- use_course_style("ajax")
 ```
 
 ## Antes · Hoy · Después {.class-rhythm}
@@ -30,96 +30,64 @@ course_palette <- use_course_style("juventus")
 ::: {.content-box}
 **Antes**
 
-regresión logística y máxima verosimilitud.
+estructura teórica de la regresión multinomial.
 :::
 
 ::: {.content-box-primary}
 **Hoy**
 
-interpretación de efectos y efectos marginales.
+interpretación de efectos multinomiales.
 :::
 
 ::: {.content-box-secondary}
 **Después**
 
-inferencia y bootstrap.
+regresión de Poisson para recuentos.
 :::
 
 :::
 
 
 
-# Regresión Logística {.inverse .center .middle}
-## Interpretación de efectos
+## Regresión Logística Multinomial: interpretación de efectos {.inverse .center .middle}
 
-## Configuración
-
-. . .
-
-- Tenemos $y_{1}, \dots y_{n}$ son $n$ variables independientes con distribución $\text{Bernoulli}(p_{i})$
-
-. . .
-
-- $\mathbb{E}(y_{i} \mid x_{i1}, \dots,x_{ik}) = \mathbb{P}(y_{i}=1 \mid x_{i1}, \dots,x_{ik}) = p_{i}$ 
-
-. . .
-
-donde, 
-$$\ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$$
-
-## Configuración
-
-- Tenemos $y_{1}, \dots y_{n}$ son $n$ variables independientes con distribución $\text{Bernoulli}(p_{i})$
-- $\mathbb{E}(y_{i} \mid x_{i1}, \dots,x_{ik}) = \mathbb{P}(y_{i}=1 \mid x_{i1}, \dots,x_{ik}) = p_{i}$ 
-
-donde, 
-$$\underbrace{\ln \frac{p_{i}}{1 - p_{i}}}_{\text{Link logit}(p_{i})} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$$
-
-## Configuración
-
-- Tenemos $y_{1}, \dots y_{n}$ son $n$ variables independientes con distribución $\text{Bernoulli}(p_{i})$
-- $\mathbb{E}(y_{i} \mid x_{i1}, \dots,x_{ik}) = \mathbb{P}(y_{i}=1 \mid x_{i1}, \dots,x_{ik}) = p_{i}$ 
-
-donde, 
-$$\ln \frac{p_{i}}{1 - p_{i}} = \underbrace{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}_{\text{Predictor lineal  } \eta_{i}}$$
-
-. . .
-
-- Interpretación: ¿cuál es el significado de $\beta_{0},\beta_{1}, \dots, \beta_{k}$?
+## Efectos marginales sobre el logit {.center .middle}
 
 ## Un ejemplo empírico
 ```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
-
-# datos de Capital Bikeshare del paquete "ISLR2"
+# datos del plebiscito chileno de 1988, del paquete "carData"
 library(pacman)
-p_load("ISLR2")
+p_load("carData")
+p_load("viridis")
 p_load("tidyverse")
 p_load("modelr")
+p_load("cowplot")
+p_load("rsample")
+p_load("arm")
+p_load("DescTools")
+p_load("caret")
+p_load("nnet")
 p_load("marginaleffects")
 
 theme_set(theme_julia())
 
-bikedata <- Bikeshare %>% as_tibble()
+data(Chile)
+plebs_1988 <- Chile %>% as_tibble()
 
-# variable binaria: alta demanda = top 25% de las horas (umbral P75 de bikers)
-p75 <- quantile(bikedata$bikers, 0.75)
-bikedata <- bikedata %>%
-  mutate(demand = if_else(bikers > p75, "alta", "baja")) %>%
-  # codificación 0/1
-  mutate(high_demand = if_else(bikers > p75, 1, 0))
+# display the data as a tibble
+plebs_1988 %>% arrange(statusquo)
 ```
 
 ::: {.pull-left}
 
-Continuando con los datos de demanda de bicicletas, ajustaremos el siguiente modelo:
-
-$$\underbrace{\ln \frac{p_{i}}{ 1 - p_{i}}}_{\text{logit}(p_{i})}    = \beta_{0} + \beta_{1}\text{hábil}_{i} + \beta_{2}\text{temp}_{i}$$
-
+Continuando con los datos del plebiscito de 1988, ajustaremos el siguiente modelo:
+$$\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}$$
 donde:
 
-- $p_{i} =\mathbb{P}(\text{alta demanda}_{i}=1)$
-- $\text{logit}(p_{i})$ es el [log odds]{.bold} de que una hora sea de alta demanda
-- $p_{i}$ y $\text{logit}(p_{i})$ son una función del tipo de día (hábil) y la temperatura (temp).
+- $p_{iJ} =\mathbb{P}(\text{vote}_{i}=\text{A})$
+- $p_{ij} =\mathbb{P}(\text{vote}_{i}=j), \quad j \in \{\text{N},\text{U},\text{Y}\}$
+- $\text{logit}(p_{ij})$ es el [log odds]{.bold} de votar N/U/Y vs A.
+- $p_{ij}$'s son una función de apoyo al status-quo (`statusquo`) y género (`sex`)
 
 :::
 
@@ -128,53 +96,29 @@ donde:
 ::: {.pull-right}
 
 ```{r}
-logit_demand_wday_temp <-
-  glm(high_demand ~ factor(workingday) + temp,
-      family=binomial(link="logit"),
-      data=bikedata)
-summary(logit_demand_wday_temp)
-```
-
-:::
-
-## Efectos marginales sobre el logit {.inverse .center .middle}
-
-## Efectos marginales sobre el logit
-
-::: {.center}
-
-```{r, echo=FALSE, fig.width=6, fig.height=5, warning=FALSE, message=FALSE}
-fakedata <- tibble(x=seq(-6,6,by=0.01), logit=1 + 0.7*x, odds=exp(logit), probabilities=1/(1+exp(-logit)))
-
-fakedata %>%  ggplot(aes(x=x, y=logit)) +  
-  geom_line(size=2, alpha = 1) +
-  scale_color_course() +  scale_fill_course() +
-  guides(fill="none", color="none") +
-  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
-  legend.text = element_text(size = 18), legend.position="bottom") +
-  labs(x="x", y="logit(x)") 
+mlogit_vote_sq_sex <- multinom(vote ~ statusquo + sex, trace=F, data=plebs_1988);
+summary(mlogit_vote_sq_sex)
 ```
 
 :::
 
 ## Efectos marginales sobre el logit
-Dado el siguiente modelo de regresión logística: 
-$$\text{logit}(p_{i}) = \ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$$
+Un modelo de regresión logística multinomial consiste de $J-1$ ecuaciones:
+$$\text{logit}(p_{ij}) = \ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}$$
 
 . . .
 
-- El intercepto $\beta_{0}$ corresponde al logit de la probabilidad de éxito cuando $x_{1} = \dots = x_{k} = 0$
+- El intercepto $\beta_{j0}$ corresponde al log del ratio entre la probabilidad de obtener $j$ en vez de $J$ -- $\text{logit}(p_{j})$ --, cuando $x_{1} = \dots = x_{k} = 0$
 
 . . .
 
-- El efecto marginal de $x_{k}$ sobre el logit de la probabilidad de éxito está dado por:
+- El efecto marginal de $x_{k}$ sobre el $\text{logit}(p_{j})$ por:
 
 ::: {.pull-left}
 
 ::: {.content-box-blue}
 
-$$\frac{\partial\text{logit}(p_{i})}{\partial x_{k}} = \beta_{k}$$
+$$\frac{\partial\text{logit}(p_{ij})}{\partial x_{k}} = \beta_{jk}$$
 
 :::
 
@@ -184,7 +128,7 @@ $$\frac{\partial\text{logit}(p_{i})}{\partial x_{k}} = \beta_{k}$$
 
 ::: {.content-box-yellow}
 
-"Un cambio infinitesimal en $x_{k}$ $\big(\partial x_{k}\big)$ se traduce en un cambio en $\partial x_{k} \beta_{k}$ unidades en el logit de p"
+"Un cambio infinitesimal en $x_{k}$  ( $\partial x_{k}$ ) se traduce en un cambio en $\partial x_{k} \beta_{jk}$ unidades en el $\text{logit}(p_{j})$"
 
 :::
 
@@ -192,26 +136,15 @@ $$\frac{\partial\text{logit}(p_{i})}{\partial x_{k}} = \beta_{k}$$
 
 . . .
 
-¿Por qué?
-
-. . .
-
- Asumamos que sólo la variable $x_{k}$ cambia en una unidad, de $x_{k}=c$ a $x_{k}=c+1$. Entonces:
-
-. . .
-
-\begin{align}
-  \frac{\Delta\text{logit}(p_{i}) }{\Delta x_{k}} &= (\beta_{0} + \beta_{1}x_{1} +  \dots + \beta_{k}(c+1)) - (\beta_{0} + \beta_{1}x_{1} + \dots + \beta_{k}c)  \\
-  &=  \beta_{k}(c+1) - \beta_{k}c = \beta_{k}
-\end{align}
+[Importante:]{.bold} los coeficientes y sus transformaciones entregan información sobre las probabilidades [relativas]{.bold} de los diferentes $j$'s (con respecto a categoría de referencia).
 
 ## Efectos marginales sobre el logit
-En nuestro ejemplo: $\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i}$
+En nuestro ejemplo: $\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}$
 
 ::: {.pull-left}
 
 ```{r, echo=FALSE}
-summary(logit_demand_wday_temp)$coefficients[,c(1,2)]
+summary(mlogit_vote_sq_sex)$coefficients
 ```
 
 :::
@@ -221,34 +154,71 @@ summary(logit_demand_wday_temp)$coefficients[,c(1,2)]
 ```{r, echo=FALSE, fig.width=6, fig.height=5, warning=FALSE, message=FALSE}
 
 # plot the result
+grid <- plebs_1988  %>% data_grid(statusquo=seq_range(statusquo,30),sex,.model=mlogit_vote_sq_sex)
 
-grid <- bikedata  %>% data_grid(workingday, temp=seq_range(temp,100), .model=logit_demand_wday_temp)
-predictions <- cbind(grid,logit_hat = predict(logit_demand_wday_temp, newdata = grid))
+predictions <- cbind(grid,predict(mlogit_vote_sq_sex, newdata=grid, type="prob")) %>%
+              pivot_longer(-c(statusquo,sex), names_to="outcome",values_to="p" ) %>%
+              mutate(p_outcome = paste0("p_",outcome)) %>% dplyr::select(-outcome) %>%
+              pivot_wider(names_from = p_outcome, values_from=p) %>%
+              mutate(across(p_N:p_Y, ~  log(.x/p_A), .names = "logit_{.col}" )) %>%
+              pivot_longer(-c(statusquo,sex), names_to="quant", values_to="est")
 
-beta_temp <- logit_demand_wday_temp$coefficients[3]
-
-predictions %>% ggplot(aes(x=temp, y=logit_hat, group=factor(workingday), colour=factor(workingday))) +
-  geom_line(size=2, alpha = 1) +
+predictions %>% filter(str_detect(quant, "^l")) %>% separate(quant,sep=8, into=c("quant","vote")) %>%
+  ggplot(aes(x=statusquo, y=est, colour=vote, group=interaction(vote,sex))) +
+  geom_path(aes(linetype=sex), alpha=0.5, size=1.5) +
   scale_color_course() +  scale_fill_course() +
   theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
   axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-  legend.text = element_text(size = 18), legend.position="bottom") +
-  labs(x="temperatura", y="logit(p)", color="Día hábil") +
-  annotate('text', x = 0.5, y = min(predictions$logit_hat) + 0.3*diff(range(predictions$logit_hat)), label = paste0("beta[temp]==", course_number(beta_temp)), parse = TRUE, size=8)
+  legend.text = element_text(size = 18), legend.position="top") +
+  labs(x="Support status-quo", y="Logit(Vote=j)")
+
 ```
 
 :::
 
-## Efectos multiplicativos sobre las odds de éxito {.inverse .center .middle}
+## Efectos marginales sobre el logit
+
+::: {.pull-left}
+
+```{r, echo=FALSE}
+summary(mlogit_vote_sq_sex)$coefficients
+```
+
+Por tanto, $\beta_{N1}$ y $\beta_{Y1}$ son=
+```{r}
+c(
+betaN1 = (0.11 -1.76*1 + 0.7*1)-(0.11 -1.76*0 + 0.7*1),
+betaY1 = (0.78 + 1.9*1 -0.11*1)-(0.78 + 1.9*0 -0.11*1)
+)
+```
+
+:::
+
+::: {.pull-right}
+
+Si `male=1` y `statusquo=0`, entonces `logit(p_N)` y `logit(p_Y)` son=
+```{r}
+c(N=0.11 -1.76*0 + 0.7*1,
+  Y=0.78  + 1.9*0 + -0.11*1)
+```
+Si `male=1` y `statusquo=1`, entonces `logit(p_N)` y `logit(p_Y)` son=
+```{r}
+c(N=0.11 -1.76*1 + 0.7*1,
+  Y=0.78  + 1.9*1 + -0.11*1)
+```
+
+:::
+
+## Efectos multiplicativos sobre las odds {.center .middle}
 
 ## Efectos multiplicativos sobre las odds
-Dado el siguiente modelo de regresión logística: 
-$$\text{logit}(p_{i}) = \ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$$
+Dado el siguiente modelo de regresión logística multinomial:
+$$\text{logit}(p_{ij}) = \ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}$$
 
 . . .
 
-exponenciando a ambos lados obtenemos las [odds de éxito]{.bold}:
-$$\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}$$
+exponenciando a ambos lados obtenemos
+$$\frac{p_{ij}}{p_{iJ}} = e^{\beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}}$$
 
 . . .
 
@@ -256,51 +226,35 @@ equivalentemente
 
 ::: {.content-box-blue}
 
-$$\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots e^{\beta_{k} x_{ik}}$$
+$$\frac{p_{ij}}{p_{iJ}} =  e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i1}}  \dots e^{\beta_{jk} x_{ik}}$$
 
 :::
 
-## Efectos multiplicativos sobre las odds
-$$\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots e^{\beta_{k} x_{ik}}$$
-
-. . .
-
-Examinando esta ecuación observamos que cuando $x_1 = \dots = x_k = 0$, 
-
-$$\frac{p_{i}}{1 - p_{i}}=  e^{\beta_{0}}$$
-Es decir, cuando $x_1 = \dots = x_k = 0$ las odds de éxito están dadas por $e^{\beta_{0}}$.
-
-. . .
-
-Generalizando,  observamos que cuando $x_1 = c_1  \dots = x_k = c_k$,  las odds de éxito están dadas por
-
-$$\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0}} \cdot e^{\beta_{1} c_{1}}  \dots e^{\beta_{k} c_{k}}$$
-
 ## Efectos multiplicativos sobre las odds: odds ratios
-Considera la situación en que $i$ y $j$ son dos observaciones con $x_{k}=c$ y $x_{k}=c+1$, respectivamente. El resto de las covariables toman valores idénticos.
+Considera la situación en que $i$ y $i^{´}$ son dos observaciones con $x_{k}=c$ y $x_{k}=c+1$, respectivamente. El resto de las covariables toman valores idénticos.
 
 . . .
 
- Las odds de éxito para cada caso son:
+ Las odds de observar $j$ en vez de $J$ son:
 
-- $p_{i}/(1 - p_{i}) = e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c}$
-- $p_{j}/(1 - p_{j}) = e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c+1}$
+- $p_{ij}/(p_{iJ}) = e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i1}}  \dots (e^{\beta_{jk}})^{c}$
+- $p_{i^{´}j}/(p_{i^{´}J}) = e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i^{´}1}}  \dots (e^{\beta_{jk}})^{c+1}$
 
 . . .
 
-El ratio de las odd de éxito entre $j$ e $i$ está dado por:
+El ratio de las odd de éxito entre $i^{´}$ e $i$ está dado por:
 
 \begin{align}
-\frac{p_{j}/(1 - p_{j})}{p_{i}/(1 - p_{i})} &= \frac{e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c+1}}{e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c}} \\ \\
-&= e^{\beta_{k}}
+\frac{p_{i^{´}j}/p_{i^{´}J}}{p_{ij}/p_{iJ}} &= \frac{e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i^{´}1}}  \dots (e^{\beta_{jk}})^{c+1}}{e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i1}}  \dots (e^{\beta_{jk}})^{c}} = e^{\beta_{jk}}
 \end{align}
-En otras palabras, manteniendo otros factores constantes, $e^{\beta_{k}}$ representa la odds ratio entre el caso con $x_{k}$ aumentado en una unidad, y el caso con $x_{k}$ en un nivel basal dado. 
+
+En otras palabras, manteniendo otros factores constantes, $e^{\beta_{jk}}$ representa la odds ratio de $j$ vs $J$ entre el caso con $x_{k}$ aumentado en una unidad, y el caso con $x_{k}$ en un nivel basal dado.
 
 ## Efectos multiplicativos sobre las odds
 
 ::: {.content-box-yellow}
 
-"Un cambio en $\Delta$ unidades de $x_{k}$ multiplica las las odds de éxito por $e^{\Delta \beta_{k}}$"
+"Un cambio en $\Delta$ unidades de $x_{k}$ multiplica el ratio entre las probabilidad de obtener $j$ vs $J$ por $e^{\Delta \beta_{jk}}$"
 
 :::
 
@@ -308,33 +262,34 @@ En otras palabras, manteniendo otros factores constantes, $e^{\beta_{k}}$ repres
 
 . . .
 
-- $e^{\beta_{k}}$ está restringido al rango $[0,\infty+)$. Es una constante que "comprime" o amplifica las odds de éxito.
+- $e^{\beta_{jk}}$ está restringido al rango $[0,\infty+)$. Es una constante que "comprime" o amplifica el ratio entre las probabilidades de $j$ vs $J$
 
 . . .
 
-- Si $\beta_{k} < 0  \to  (0 < e^{\beta_{k}} < 1)$. Es decir, un aumento en $x_{k}$ está asociado con una reducción (multiplicativa) de las odds de éxito.
+- Si $\beta_{jk} < 0  \to  (0 < e^{\beta_{jk}} < 1)$. Es decir, un aumento en $x_{k}$ está asociado con una reducción (multiplicativa) del ratio entre las probabilidades de  $j$ vs $J$
 
 . . .
 
-- Si $\beta_{k} = 0  \to  (e^{\beta_{k}} =1)$. Es decir, un cambio en $x_{k}$ está asociado a un cambio nulo en las odds de éxito.
+- Si $\beta_{jk} = 0  \to  (e^{\beta_{jk}} =1)$. Es decir, un cambio en $x_{k}$ está asociado a un cambio nulo en el ratio entre las probabilidades de  $j$ vs $J$
 
 . . .
 
-- Si $\beta_{k} > 0  \to  (e^{\beta_{k}} > 1)$. Es decir, un aumento en $x_{k}$ está asociado a aumento (multiplicativo) en de las odds de éxito.
+- Si $\beta_{jk} > 0  \to  (e^{\beta_{jk}} > 1)$. Es decir, un aumento en $x_{k}$ está asociado a aumento (multiplicativo) en el ratio entre las probabilidades de  $j$ vs $J$
 
 ## Efectos multiplicativos sobre las odds
-En nuestro ejemplo: $\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i}$, por tanto:
+En nuestro ejemplo: $\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}$, por tanto:
 
 ::: {.pull-left}
 
-  $\frac{p_{i}}{1 -p_{i}} = e^{\beta_{0}} \cdot  e^{\beta_{1}*\text{hábil}_{i}} \cdot e^{\beta_{2}\text{temp}_{i}}$
+  $\frac{p_{ij}}{p_{iJ}} = e^{\beta_{j0}} \cdot  e^{\beta_{j1}\text{statusquo}_{i}} \cdot e^{ \beta_{j2}\text{male}_{i} }$
 ```{r}
 
 # coeffs
-summary(logit_demand_wday_temp)$coefficients[,c(1,2)]
+summary(mlogit_vote_sq_sex)$coefficients
+
 
 # exp(coeffs)
-exp(summary(logit_demand_wday_temp)$coefficients[,c(1)])
+exp(summary(mlogit_vote_sq_sex)$coefficients)
 ```
 
 :::
@@ -343,202 +298,181 @@ exp(summary(logit_demand_wday_temp)$coefficients[,c(1)])
 
 ::: {.pull-right}
 
-```{r, echo=FALSE, fig.height=6, warnings=FALSE}
+```{r, echo=FALSE, fig.height=6}
 
-# plot the result
+grid <- plebs_1988  %>% data_grid(statusquo=seq_range(statusquo,30),sex,.model=mlogit_vote_sq_sex)
 
-grid <- bikedata  %>% data_grid(workingday, temp=seq_range(temp,100), .model=logit_demand_wday_temp)
-predictions <- cbind(grid,logit_hat = predict(logit_demand_wday_temp, newdata = grid)) %>%
-  mutate(odds = exp(logit_hat))
+predictions <- cbind(grid,predict(mlogit_vote_sq_sex, newdata=grid, type="prob")) %>%
+            pivot_longer(-c(statusquo,sex), names_to="outcome",values_to="p" ) %>%
+            mutate(p_outcome = paste0("p_",outcome)) %>% dplyr::select(-outcome) %>%
+            pivot_wider(names_from = p_outcome, values_from=p) %>%
+            mutate(across(p_N:p_Y, ~  log(.x/p_A), .names = "logit_{.col}" )) %>%
+            mutate(across(logit_p_N:logit_p_Y, ~  exp(.x), .names = "or_{.col}" )) %>%
+            pivot_longer(-c(statusquo,sex), names_to="quant", values_to="est")
 
-beta_temp <- logit_demand_wday_temp$coefficients[3]
-beta_wday <- logit_demand_wday_temp$coefficients[2]
+predictions %>% filter(str_detect(quant, "^or")) %>% separate(quant,sep=11, into=c("quant","vote")) %>%
+ggplot(aes(x=statusquo, y=est, colour=vote, group=interaction(vote,sex))) +
+geom_path(aes(linetype=sex), alpha=0.5, size=1.5) +
+scale_color_course() +  scale_fill_course() +
+theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
+legend.text = element_text(size = 18), legend.position="top") +
+labs(x="Support status-quo", y="Odds vote=j vs vote=A")
 
-predictions %>% ggplot(aes(x=temp, y=odds, group=factor(workingday), colour=factor(workingday))) +
-  geom_line(size=2, alpha = 1) +
-  scale_color_course() +  scale_fill_course() +
-  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-        axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-        legend.text = element_text(size = 18), legend.position="bottom") +
-  labs(x="temperatura", y="Odds de alta demanda", color="Día hábil") +
-  annotate('text', x = 0.5, y = 0.5*max(predictions$odds), label = paste0("e^beta[temp]==", course_number(exp(beta_temp))), parse = TRUE, size=8) +
-  annotate('text', x = 0.5, y = 0.85*max(predictions$odds), label = paste0("e^beta[wday]==", course_number(exp(beta_wday))), parse = TRUE, size=8)
 ```
 
 :::
 
-## Efectos marginales sobre la probabilidad de éxito {.inverse .center .middle}
-
-## Efectos marginales sobre la probabilidad de éxito
-
-::: {.center}
-
-```{r, echo=FALSE, fig.width=6, fig.height=5, warning=FALSE, message=FALSE}
-fakedata <- tibble(x=seq(-6,6,by=0.01), logit=1 + 0.7*x, odds=exp(logit), probabilities=1/(1+exp(-logit)))
-
-fakedata %>%  ggplot(aes(x=x, y=probabilities)) +  
-  geom_line(size=2, alpha = 1) +
-  scale_color_course() +  scale_fill_course() +
-  guides(fill="none", color="none") +
-  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
-  legend.text = element_text(size = 18), legend.position="bottom") +
-  labs(x="x", y="p(x)") 
-```
-
-:::
-
-## Efectos marginales sobre la probabilidad de éxito
-Dado el siguiente modelo de regresión logística: 
-$$\ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$$
-
-. . .
-
-Queremos saber el [efecto marginal]{.bold} de los predictores sobre la [probabilidad]{.bold} de éxito. Formalmente
-
-. . .
-
-$$\frac{\partial p_{i}}{\partial x_{k}}$$
-
-. . .
-
-[Paso a paso...]{.bold}
-
-::: {.img-right}
-
-![mostaza](mostaza-merlo.jpg)
-
-:::
-
-. . .
-
-- [Paso 1]{.bold}: reexpresar la ecuación de regresión como
-
-$$\ln(p_{i}) - \ln(1-p_{i}) = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$$
-
-## Efectos marginales sobre la probabilidad de éxito
-
-- [Paso 1]{.bold}: reexpresar la ecuación de regresión como
-$$\ln(p_{i}) - \ln(1-p_{i}) = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$$
-
-. . .
-
-- [Paso 2]{.bold}: usando diferenciación implícita y tomando derivada con respecto a $x_{k}$ en ambos lados, obtenemos:
-$$\frac{\partial p_{i} }{\partial x_{k}} \frac{1}{p_{i}} + \frac{\partial p_{i} }{\partial x_{k}} \frac{1}{(1 - p_{i})} = \beta_{k}$$
-
-. . .
-
-- [Paso 3]{.bold}: re-agrupando:
-$$\frac{\partial p_{i} }{\partial x_{k}} \frac{1}{p_{i}(1 - p_{i})}= \beta_{k}$$
-
-## Efectos marginales sobre la probabilidad de éxito
-
-- [Paso 3]{.bold}: re-agrupando:
-$$\frac{\partial p_{i} }{\partial x_{k}} \frac{1}{p_{i}(1 - p_{i})}= \beta_{k}$$
-
-. . .
-
-- [Paso 4]{.bold}: re-ordenando los términos obtenemos el efecto marginal que buscamos:
-
-::: {.content-box-blue}
-
-$$\frac{\partial p_{i}}{\partial x_{k}}= \beta_{k} \cdot p_{i}(1 - p_{i})$$
-
-:::
-
-. . .
-
-recordar que ...
-  $$p_{i} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik})}}$$
-
-## Efectos marginales sobre la probabilidad de éxito
-
-- [Paso 5]{.bold}: reemplazando,
-$$\frac{\partial p_{i}}{\partial x_{k}}= \beta_{k} \cdot \Bigg(\frac{1}{1 + e^{-(\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}})}\Bigg) \Bigg(1 - \frac{1}{1 + e^{-(\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik})}}\Bigg)$$
-
-. . .
-
-Corolario:
-
-. . .
-
-- Dado que $p_{i}(1-p_{i})$ es estrictamente positivo,
- - $\beta_{k}>0$ indica que variable $x_{k}$ tienen un efecto positivo sobre la probabilidad de éxito
- - $\beta_{k}<0$ indica que $x_{k}$ tiene un efecto negativo.
-
-. . .
-
-- El [efecto marginal]{.bold} de $x_{k}$ no depende sólo de $\beta_{k}$ sino varía dependiendo del valor de $x_{k}$ y del valor de todas las otras covariables.
-
-## Efectos marginales sobre la probabilidad de éxito
-$$\frac{\partial p_{i}}{\partial x_{k}}= \beta_{k} \cdot \Bigg(\frac{1}{1 + e^{-(\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}})}\Bigg) \Bigg(1 - \frac{1}{1 + e^{-(\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik})}}\Bigg)$$
-
-. . .
-
-Corolario,
-
-. . .
-
-- A medida que la $p_{i}$ se aproxima a 0, $\frac{\partial p_{i}}{\partial x_{k}}$ tiende a 0.
-- A medida que la $p_{i}$ se aproxima a 1, $\frac{\partial p_{i}}{\partial x_{k}}$ tiende a 0.
-- A medida que la $p_{i}$ se acerca a 0.5, $\frac{\partial p_{i}}{\partial x_{k}}$ tiende a $\beta_{k}/4$.
-
-## Efectos marginales sobre la probabilidad de éxito
-En nuestro ejemplo: $\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i}$, por tanto:
-$$p_{i} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i})} }$$
+## Efectos multiplicativos sobre las odds
 
 ::: {.pull-left}
 
 ```{r, echo=FALSE}
-summary(logit_demand_wday_temp)$coefficients[,c(1,2)]
+cbind(beta1=summary(mlogit_vote_sq_sex)$coefficients[,"statusquo"],exp.beta1=exp(summary(mlogit_vote_sq_sex)$coefficients[,"statusquo"]))
 ```
 
 :::
 
 ::: {.pull-right}
 
-```{r, echo=FALSE, fig.width=6, fig.height=5}
-
-# plot the result
-
-grid <- bikedata  %>% data_grid(workingday, temp=seq_range(temp,100), .model=logit_demand_wday_temp)
-predictions <- cbind(grid,logit_hat = predict(logit_demand_wday_temp, newdata = grid)) %>%
-                mutate(p_hat = 1/(1 + exp(-logit_hat)))
-
-beta_temp <- logit_demand_wday_temp$coefficients[3]
-
-predictions %>% ggplot(aes(x=temp, y=p_hat, group=factor(workingday), colour=factor(workingday))) +
-  geom_line(size=2, alpha = 1) +
-  scale_color_course() +  scale_fill_course() +
-  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-  legend.text = element_text(size = 18), legend.position="bottom") +
-  labs(x="temperatura", y="p", color="Día hábil") +
-  annotate('text', x = 0.5, y = 0.3, label = paste0("slope==", course_number(beta_temp), "*p*(1-p)"), parse = TRUE, size=8)
+Si `male=1` y `statusquo=0`, entonces las odds de N e Y son=
+```{r}
+c(N=exp(0.11 -1.76*0 + 0.7*1),
+  Y=exp(0.78  + 1.9*0 + -0.11*1) )
+```
+Si `male=1` y `statusquo=1`,  entonces las odds de N e Y son=
+```{r}
+c(N=exp(0.11 -1.76*1 + 0.7*1),
+  Y=exp(0.78  + 1.9*1 + -0.11*1))
 ```
 
 :::
 
-## Efectos marginales sobre la probabilidad de éxito
+## Efectos multiplicativos sobre las odds
 
 ::: {.pull-left}
 
-$$p_{i} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i})}}$$
-```{r, echo=FALSE, fig.width=6, fig.height=5}
+```{r, echo=FALSE}
+cbind(beta1=summary(mlogit_vote_sq_sex)$coefficients[,"statusquo"],exp.beta1=exp(summary(mlogit_vote_sq_sex)$coefficients[,"statusquo"]))
+```
 
-# plot the result
+Por tanto, $e^{\beta_{N1}}$ y $e^{\beta_{Y1}}$ son=
+```{r}
+c(
+betaN1 = exp(0.11 -1.76*1 + 0.7*1)/exp(0.11 -1.76*0 + 0.7*1),
+betaY1 = exp(0.78 + 1.9*1 -0.11*1)/exp(0.78 + 1.9*0 -0.11*1)
+)
+```
 
-grid <- bikedata  %>% data_grid(workingday, temp=seq_range(temp,100), .model=logit_demand_wday_temp)
-predictions <- cbind(grid,logit_hat = predict(logit_demand_wday_temp, newdata = grid)) %>%
-                mutate(p_hat = 1/(1 + exp(-logit_hat)))
+:::
 
-predictions %>% ggplot(aes(x=temp, y=p_hat, group=factor(workingday), colour=factor(workingday))) +
-  geom_line(size=2, alpha = 1) +
-  scale_color_course() +  scale_fill_course() +
-  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-  legend.text = element_text(size = 18), legend.position="bottom") +
-  labs(x="temperatura", y="p", color="Día hábil")
+::: {.pull-right}
+
+Si `male=1` y `statusquo=0`, entonces las odds de N e Y son=
+```{r}
+c(N=exp(0.11 -1.76*0 + 0.7*1),
+  Y=exp(0.78  + 1.9*0 + -0.11*1) )
+```
+Si `male=1` y `statusquo=1`,  entonces las odds de N e Y son=
+```{r}
+c(N=exp(0.11 -1.76*1 + 0.7*1),
+  Y=exp(0.78  + 1.9*1 + -0.11*1))
+```
+
+:::
+
+## Efectos marginales sobre la probabilidad de la categoría $j$ {.center .middle}
+
+## Efectos marginales sobre la probabilidad de la categoría $j$
+
+. . .
+
+Dado el siguiente modelo de regresión logística multinomial:
+$$\text{logit}(p_{ij}) = \ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}$$
+
+. . .
+
+Queremos saber el [efecto marginal]{.bold} de los predictores sobre la [probabilidad]{.bold} de observar cada categoría $j: \{1, \dots, J\}$. Formalmente
+
+. . .
+
+$$\frac{\partial p_{ij}}{\partial x_{k}}$$
+
+. . .
+
+$$\vdots$$
+
+## Efectos marginales sobre la probabilidad de la categoría $j$
+Después de varios pasos, obtenemos:
+
+::: {.content-box-yellow}
+
+$$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)$$
+
+:::
+
+donde
+$$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1}  e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}$$
+
+## Efectos marginales sobre la probabilidad de la categoría $j$
+
+::: {.pull-left}
+
+Analizando $$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)$$
+
+:::
+
+. . .
+
+::: {.pull-right}
+
+podemos notar que  $\sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk} \equiv \overline{\beta_{k}}, \quad$ el "efecto promedio de" $x_k$ (no depende de $j$). Se desprende que:
+
+:::
+
+. . .
+
+- El signo del efecto marginal de los predictores [no necesariamente]{.bold} corresponde al signo del parámetro estimado en la regresión.
+
+. . .
+
+  - $\frac{\partial p_{ij}}{\partial x_{k}} > 0 \quad$  si  $\quad \beta_{jk} > \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}$
+  - $\frac{\partial p_{ij}}{\partial x_{k}} = 0 \quad$  si  $\quad \beta_{jk} = \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}$
+  - $\frac{\partial p_{ij}}{\partial x_{k}} < 0 \quad$  si  $\quad \beta_{jk} < \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}$
+
+. . .
+
+[Nota]{.bold}: No tiene mucho sentido testear si efectos marginales son distintos de cero.
+
+## Efectos marginales sobre la probabilidad de la categoría $j$
+
+::: {.pull-left}
+
+si $$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)$$
+
+:::
+
+. . .
+
+::: {.pull-right}
+
+y $$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1}  e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}$$
+
+:::
+
+. . .
+
+- Es claro que el efecto marginal de $x_{k}$ varía dependiendo del valor de $x_{k}$, de su coeficiente $\beta_{jk}$, y de todas las otras covariables con sus respectivos coeficientes.
+
+## Efectos marginales sobre la probabilidad de la categoría $j$
+En nuestro ejemplo: $\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}$, por tanto:
+
+::: {.pull-left}
+
+  $$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{l=1} e^{\beta_{l0} + \beta_{l1}\text{statusquo}_{i} + \beta_{l2}\text{male}_{i}}}$$
+
+```{r}
+summary(mlogit_vote_sq_sex)$coefficients
 ```
 
 :::
@@ -547,30 +481,77 @@ predictions %>% ggplot(aes(x=temp, y=p_hat, group=factor(workingday), colour=fac
 
 ::: {.pull-right}
 
-$$\frac{\partial p_{i}}{\partial \text{temp} }= \beta_{\text{temp}} \cdot p_{i}(1 - p_{i})$$
-```{r, echo=FALSE, fig.width=6, fig.height=5}
+```{r, echo=FALSE, fig.height=6}
+grid <- plebs_1988  %>% data_grid(statusquo=seq_range(statusquo,30),sex,.model=mlogit_vote_sq_sex)
 
-beta_temp = logit_demand_wday_temp$coefficients[3]
+predictions <- cbind(grid,predict(mlogit_vote_sq_sex, newdata=grid, type="prob")) %>%
+              pivot_longer(-c(statusquo,sex), names_to="outcome",values_to="p" ) %>%
+              mutate(p_outcome = paste0("p_",outcome)) %>% dplyr::select(-outcome) %>%
+              pivot_wider(names_from = p_outcome, values_from=p) %>%
+              mutate(across(p_N:p_Y, ~  log(.x/p_A), .names = "logit_{.col}" )) %>%
+              mutate(across(logit_p_N:logit_p_Y, ~  exp(.x), .names = "or_{.col}" )) %>%
+              pivot_longer(-c(statusquo,sex), names_to="quant", values_to="est")
 
-grid <- bikedata  %>% data_grid(workingday, temp=seq_range(temp,100), .model=logit_demand_wday_temp)
-predictions <- cbind(grid,logit_hat = predict(logit_demand_wday_temp, newdata = grid)) %>%
-                mutate(p_hat = 1/(1 + exp(-logit_hat))) %>%
-                mutate(me = beta_temp*(p_hat)*(1-p_hat))
-
-predictions %>% ggplot(aes(x=temp, y=me, group=factor(workingday), colour=factor(workingday))) +
-  geom_line(size=2, alpha = 1) +
+predictions %>% filter(str_detect(quant, "^p")) %>% separate(quant,sep="_", into=c("quant","vote")) %>%
+  ggplot(aes(x=statusquo, y=est, colour=vote, group=interaction(vote,sex))) +
+  geom_path(aes(linetype=sex), alpha=0.5, size=1.5) +
   scale_color_course() +  scale_fill_course() +
   theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
   axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-  legend.text = element_text(size = 18), legend.position="bottom") +
-  labs(x="temperatura", y="efecto 'marginal' temperatura", color="Día hábil")
+  legend.text = element_text(size = 18), legend.position="top") +
+  labs(x="Support status-quo", y="P(vote=j)")
 ```
 
 :::
 
-## Efectos marginales sobre la probabilidad de éxito
+## Efectos marginales sobre la probabilidad de la categoría $j$
 
-- Efectos marginales son _esencialmente_ heterogeneos. No hay un efecto sino muchos.
+::: {.pull-left}
+
+$$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{l=1} e^{\beta_{l0} + \beta_{l1}\text{statusquo}_{i} + \beta_{l2}\text{male}_{i}}}$$
+```{r, echo=FALSE, fig.width=6, fig.height=5}
+predictions %>% filter(str_detect(quant, "^p")) %>% separate(quant,sep="_", into=c("quant","vote")) %>%
+  ggplot(aes(x=statusquo, y=est, colour=vote, group=interaction(vote,sex))) +
+  geom_path(aes(linetype=sex), alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
+  legend.text = element_text(size = 18), legend.position="top") +
+  labs(x="Support status-quo", y="P(vote=j)")
+```
+
+:::
+
+::: {.pull-right}
+
+$$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)$$
+```{r, echo=FALSE, fig.width=6, fig.height=5, warning=F}
+
+predictions <- predictions %>% filter(str_detect(quant, "^p")) %>% separate(quant,sep="_", into=c("quant","vote"))
+
+coefs <- summary(mlogit_vote_sq_sex)$coefficients %>% as_tibble() %>% mutate(vote = c("N","U","Y")) %>%
+  rename(beta_0 = `(Intercept)`, beta_sq = statusquo, beta_sex = sexM)
+
+ predictions %>% left_join(coefs, by="vote") %>%
+  replace_na(list(beta_0 = 0, beta_sq = 0, beta_sex = 0)) %>%
+  mutate(beta_sq_prob = beta_sq*est) %>% group_by(statusquo,sex) %>%
+  mutate(average_beta_sq = sum(beta_sq_prob, na.rm = T)) %>%
+  ungroup() %>% mutate(me_sq = est*(beta_sq -average_beta_sq)) %>%
+  ggplot(aes(x=statusquo, y=me_sq, colour=vote, group=interaction(vote,sex))) +
+  geom_path(aes(linetype=sex), alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
+  legend.text = element_text(size = 18), legend.position="top") +
+  labs(x="Support status-quo", y="Efecto marginal de status quo") +
+  geom_hline(yintercept = 0, size=1.5)
+```
+
+:::
+
+## Efectos marginales sobre la probabilidad de la categoría $j$
+
+- Efectos marginales son _esencialmente_ heterogéneos. No hay un efecto sino muchos.
 
 . . .
 
@@ -578,13 +559,17 @@ predictions %>% ggplot(aes(x=temp, y=me, group=factor(workingday), colour=factor
 
 . . .
 
-- En la práctica, muchas veces queremos UN número que resuma el efecto marginal. 
+- Más aún, en el caso de modelos de regresión logística multinomial, los efectos marginales no son necesariamente monotónicos (pueden cambiar de signo).
+
+. . .
+
+- En la práctica, muchas veces queremos UN número que resuma el efecto marginal.
 
 . . .
 
 ::: {.pull-left}
 
-**Objetivo:** obtener un resumen único sin ocultar que el efecto varía entre observaciones.
+**Objetivo:** resumir la heterogeneidad sin confundir un promedio con un efecto universal.
 
 :::
 
@@ -600,155 +585,66 @@ Cantidades de interes:
 
 :::
 
-## Efectos marginales sobre la probabilidad de éxito: AME
-[AME]{.bold}: Efecto marginal promedio (en muestra)
+## Efectos marginales sobre la probabilidad de la categoría $j$: MEM
 
 . . .
 
-En `R` pueden usar el nuevo paquete `marginaleffects` (o comando `margins` en `Stata` )
+Usando el paquete `marginaleffects`:
 ```{r}
-avg_slopes(logit_demand_wday_temp)
+grid <- plebs_1988 %>% data_grid(sex, .model=mlogit_vote_sq_sex)
+avg_slopes(mlogit_vote_sq_sex, variables="statusquo", newdata=grid)
+
 ```
+
+## Independence of Irrelevant Alternatives (IIA) {.inverse .center .middle}
+
+## Independence of Irrelevant Alternatives (IIA)
 
 . . .
 
-::: {.pull-left}
+- Cuando regresión logística Multinomial es utilizada para modelar decisiones (choice), el modelo descansa en el supuesto implícito de IIA
 
-[¿De donde vienen estos números?]{.bold}
+. . .
+
+- IIA: las odds (probabilidades relativas) de seleccionar cualquiera de las $J$ alternativas no son afectadas por la existencia de alternativas irrelavantes.
+
+. . .
+
+[Ejemplo]{.bold} (McFadden's 1974):
+
+-  Una persona puede viajar al trabajo en: $\{\text{auto}, \text{ bus rojo}\}$
+-  $\mathbb{P}(\text{auto}) =  \mathbb{P}(\text{ bus rojo}) = 1/2$. Odds=1.
+
+. . .
+
+- Supongamos se amplía el conjunto de alternativas: $\{\text{auto}, \text{ bus rojo},  \text{ bus azul}\}$
+
+. . .
+
+- Dado que los buses sólo difieren en color, esperaríamos que $\mathbb{P}(\text{ bus rojo}) = \mathbb{P}(\text{bus azul})$
+- Único modo de retener Odds entre auto y bus rojo es si: $\mathbb{P}(\text{auto}) =  \mathbb{P}(\text{ bus rojo}) = \mathbb{P}(\text{bus azul}) = 1/3$
+
+. . .
+
+- Sería más realista esperar que $\mathbb{P}(\text{auto}) = 1/2)$ y $\quad \mathbb{P}(\text{ bus rojo}) = \mathbb{P}(\text{bus azul}) = 1/4$
+ - Sin embargo, violaría IIA porque las odds entre auto y bus rojo serían (1/2)/(1/4)=2.
+
+## Independence of Irrelevant Alternatives (IIA)
+Existe una variedad de tests para el supuesto de IIA, pero ninguno ha mostrado ser concluyente:
+
+::: {.center}
+
+![iia](iia.png)
 
 :::
-
-## Efectos marginales sobre la probabilidad de éxito: AME
- [(a) Solución análítica]{.bold}, usando
-$$\frac{\partial p_{i}}{\partial \text{temp} }= \beta_{\text{temp}} \cdot p_{i}(1 - p_{i})$$
-
-. . .
-
-En `R`:
-```{r}
-beta_temp <- logit_demand_wday_temp$coefficients[3] # coeficiente temp
-p_hat   <- predict(logit_demand_wday_temp, type = "response") # probabilidades predichas
-
-me_temp <- tibble(p  = p_hat, beta_temp = beta_temp, me = beta_temp * p_hat * (1 - p_hat)
-)
-
-```
-
-. . .
-
-::: {.pull-left}
-
-```{r, echo=FALSE, fig.width=4.5, fig.height=3.7, message=FALSE}
-me_temp
-```
-
-:::
-
-::: {.pull-right}
-
-```{r, message=FALSE, warning=FALSE}
-ame = round(mean(me_temp$me), 3)
-print(paste0("AME Temperatura: ", ame))
-```
-
-:::
-
-## Efectos marginales sobre la probabilidad de éxito: AME
- [(b) Aproximación numérica]{.bold}, usando la definición la derivada:
-
-. . .
-
-$$\frac{\partial p_{i}}{\partial \text{temp}} \approx  \frac{p_{i}(x_{1}, \dots ,\text{temp} = c + \delta) - p_{i}(x_{1}, \dots ,\text{temp} = c )}{\delta}$$
-
-. . .
-
-```{r}
-p_hat <- predict(logit_demand_wday_temp, type="response") # prob predichas cada obs.
-
-delta = 0.01 # cantidad cambio
-bikedata_delta <- bikedata %>% mutate(temp = temp + delta) # cambio marginal en temp
-
-# probabilidad predicha con temp aumentada marginalmente
-p_hat_delta <- predict(logit_demand_wday_temp, newdata=bikedata_delta ,type="response")
-
-me_temp_approx <- (p_hat_delta - p_hat)/delta # approx. numerica marginal effect.
-
-# average marginal effect
-round(mean(me_temp_approx), 3)
-```
-
-## Efectos marginales sobre la probabilidad de éxito: MEM
-[MEM]{.bold}: Efecto marginal al valor promedio (en muestra)
-
-. . .
-
-::: {.pull-left}
-
-- ¿Qué promedio?
-  - ¿Promedio de "temperatura" para cada tipo de día por separado?
-  - ¿Promedio global de "temperatura" por cada tipo de día por separado?
-  - ¿Promedio global de "temperatura" y la media del tipo de día (como var. continua)?
-
-:::
-
-. . .
-
-::: {.pull-right}
-
-**La elección depende de la pregunta sustantiva y de qué población queremos resumir.**
-
-:::
-
-. . .
-
-Depende de que lo que queremos ...
-
-## Efectos marginales sobre la probabilidad de éxito: MEM
-Implementamos la tercera opción usando `marginaleffects` en `R`: efecto marginal para temperatura y tipo de día fijos a su promedio global.
-
-. . .
-
-```{r, warning=FALSE, message=FALSE}
-logit_demand_wday_temp2 <- glm(high_demand ~ workingday + temp, family=binomial(link="logit"),
-                             data=bikedata)
-
-mean_wday = mean(bikedata$workingday);  mean_temp = mean(bikedata$temp)
-c("Promedio temp"=mean_temp, "Promedio workingday"=mean_wday)
-```
-
-. . .
-
-```{r, warning=FALSE, message=FALSE}
-slopes(logit_demand_wday_temp2, newdata =   expand.grid(workingday=mean_wday, temp=mean_temp))
-```
-
-## Efectos marginales sobre la probabilidad de éxito: MER
-Una versión más general de MEM es calcular los efectos marginales para "valores representativos".
-
-. . .
-
-En `R`
-```{r, warning=FALSE, message=FALSE}
-slopes(logit_demand_wday_temp,
-                        newdata =  expand.grid(workingday = c(0, 1),
-                                  temp=c(0.2,0.5,0.8)
-                                  )) %>% filter(term=="temp")
-```
-
-## Efectos marginales sobre la probabilidad de éxito: MER
-
-| Método | Definición | Ventaja | Limitación |
-|--------|------------|---------|------------|
-| **AME** | Promedio del efecto marginal sobre todos los casos | Resume heterogeneidad en 1 número | Puede ocultar variación |
-| **MEM** | Efecto en covariables fijadas en su promedio | Fácil de interpretar | “Promedio” puede no ser realista |
-| **MER** | Efectos en valores representativos | Ilustra heterogeneidad | Depende de la elección de escenarios |
 
 ## En resumen
 
-- Un mismo coeficiente $\beta_{k}$ admite tres lecturas: efecto aditivo sobre el logit ($\beta_{k}$), efecto multiplicativo sobre las odds ($e^{\beta_{k}}$ = odds ratio), y efecto marginal (no lineal) sobre la probabilidad ($\beta_{k} \cdot p_{i}(1-p_{i})$).
-- El efecto marginal sobre la probabilidad no es constante: depende de $p_{i}$, y por tanto de los valores de todas las covariables — es máximo cuando $p_{i} \approx 0.5$ y se aproxima a 0 en los extremos.
-- Para resumir esta heterogeneidad en un solo número usamos AME, MEM o MER, según la pregunta sustantiva.
-- La próxima clase: inferencia y bootstrap.
+- El efecto marginal de $x_{k}$ sobre $\text{logit}(p_{ij})$ es constante e igual a $\beta_{jk}$; exponenciando, $e^{\beta_{jk}}$ es la odds ratio de $j$ vs $J$ asociada a un aumento de una unidad en $x_{k}$.
+- El efecto marginal sobre la **probabilidad** $p_{ij}$ no es $\beta_{jk}$: $\partial p_{ij}/\partial x_{k} = p_{ij}(\beta_{jk} - \overline{\beta_{k}})$, por lo que su signo y magnitud dependen de $p_{ij}$ y pueden variar entre observaciones (e incluso cambiar de signo).
+- En la práctica se resume esta heterogeneidad con AME, MEM o MER (ej., `avg_slopes()` del paquete `marginaleffects`).
+- El modelo logit multinomial supone Independencia de Alternativas Irrelevantes (IIA); no existe un test concluyente para verificarlo.
+- La próxima clase aborda la regresión de Poisson, usada para modelar variables de conteo.
 
 ## Gracias {.inverse .center .middle .closing}
 

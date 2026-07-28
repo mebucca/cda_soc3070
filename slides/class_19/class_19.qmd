@@ -1,17 +1,18 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Regularización: Ridge, LASSO y Elastic Net"
+subtitle: "Un \"Flavor\" de LLMs (usando Regresión Logística)"
 author: "Mauricio Bucca · Sociología UC"
 date: today
-body-classes: theme-valencia
-course-team: valencia
+body-classes: theme-chelsea
+course-team: chelsea
 filters: ["../_shared/course.lua"]
 format:
   revealjs:
     css: "../_shared/course.css"
+    slide-number: false
     theme: default
     highlight-style: github
-    slide-number: false
+    code-block-font-size: 0.9em
     width: 1600
     height: 900
     html-math-method: katex
@@ -20,14 +21,12 @@ execute:
   message: false
 ---
 
-```{r setup, include=FALSE}
+```{r course-style, include=FALSE}
 library(pacman)
 p_load(tidyverse)
-p_load(glmnet)
+p_load(nnet)
 source("../_shared/bikeshare.R")
-course <- use_course_data("valencia")
-bikedata <- course$data %>% mutate(month = as.integer(mnth))
-course_palette <- course$palette
+course_palette <- use_course_style("chelsea")
 ```
 
 ## Antes · Hoy · Después {.class-rhythm}
@@ -37,799 +36,332 @@ course_palette <- course$palette
 ::: {.content-box}
 **Antes**
 
-GLM, logit, inferencia, bootstrap: modelos donde *nosotros* elegimos la forma.
+redes neuronales para clasificación y regresión.
 :::
 
 ::: {.content-box-primary}
 **Hoy**
 
-qué hacer cuando ya no confiamos en que esa forma sea la correcta.
+un "flavor" de LLMs, usando regresión logística.
 :::
 
 ::: {.content-box-secondary}
 **Después**
 
-dejar que el propio algoritmo aprenda la forma: árboles y ensambles.
+cierre del curso.
 :::
 
 :::
 
-```{r setup-continued, include=FALSE}
+# Un "flavor" de LLMs {.inverse .center .middle}
 
-# Diseño y partición compartidos (ver _shared/bikeshare.R).
-setup <- bikeshare_learning_setup(bikedata)
-bikedata <- setup$data
-days <- setup$days
-train_days <- setup$train_days
-valid_days <- setup$valid_days
-test_days <- setup$test_days
-id_train <- setup$id_train
-id_valid <- setup$id_valid
-id_test <- setup$id_test
-demand_cutoff <- setup$demand_cutoff
-high_demand <- setup$high_demand
+## Una advertencia antes de empezar
 
-x_all <- setup$x_all
-x_train <- x_all[id_train, , drop = FALSE]
-x_valid <- x_all[id_valid, , drop = FALSE]
-x_test <- x_all[id_test, , drop = FALSE]
-y_train <- high_demand[id_train]
-y_valid <- high_demand[id_valid]
-y_test <- high_demand[id_test]
-
-log_loss <- function(y, p) {
-  p <- pmin(pmax(p, 1e-8), 1 - 1e-8)
-  -mean(y * log(p) + (1 - y) * log(1 - p))
-}
-
-class_metrics <- function(y, p, threshold = 0.5) {
-  predicted <- as.integer(p >= threshold)
-  tibble(
-    log_loss = log_loss(y, p),
-    accuracy = mean(predicted == y),
-    sensitivity = mean(predicted[y == 1] == 1),
-    specificity = mean(predicted[y == 0] == 0)
-  )
-}
-```
-
-# Regularización {.inverse .center .middle}
-
-## Un nuevo módulo, una nueva pregunta
-
-Durante todo el curso, cada modelo (LPM, logit, Poisson) compartió un mismo supuesto: **nosotros** elegimos qué variables entran, qué interacciones importan, qué transformaciones usar. El modelo solo estima los coeficientes.
+Lo que vamos a construir hoy **no es un LLM pequeño**. Es un modelo estadístico bien conocido —regresión logística multinomial, de la clase 9— aplicado a texto.
 
 . . .
 
-Las próximas tres clases (19, 20 y 21) exploran una pregunta distinta: **¿qué pasa cuando dejamos de confiar en que esa forma elegida a mano sea la correcta?** ¿Puede el propio procedimiento de ajuste decidir cuánta complejidad usar — o incluso qué forma tomar?
+Lo que sí es cierto, y es la razón de esta clase: **un LLM moderno resuelve, en su capa final, exactamente el mismo problema de clasificación multinomial que ya sabemos resolver.** La diferencia es la escala y cómo se construyen los predictores — no la formulación estadística del problema.
+
+## Ruta de la clase
+
+1. El lenguaje como variable categórica.
+2. Un caso simple: predicción binaria.
+3. El caso general: predicción multinomial.
+4. Cómo representar el contexto.
+5. Ajustar el modelo e interpretar sus probabilidades.
+6. Generación secuencial de texto.
+7. Qué le falta a esto para ser un LLM de verdad.
+
+# El lenguaje como variable categórica {.inverse .center .middle}
+
+## Qué hace, en el fondo, un LLM
+
+Cuando un modelo de lenguaje "escribe", en cada paso hace exactamente una cosa: dado el texto visto hasta ahora, **predice cuál es la siguiente palabra**, entre todas las palabras posibles de su vocabulario.
 
 . . .
 
-Referencia principal para las tres clases: James et al. (2021), *An Introduction to Statistical Learning*, 2ª ed., capítulos 5–6, 8 y 10 ([sitio oficial](https://www.statlearning.com/)).
+Eso es, formalmente, un problema que ya conocemos:
 
-## El problema, en carne propia
+$$
+\mathbb{P}(Y = j \mid X) = \text{softmax}(X\beta)_j, \qquad j = 1, \dots, J
+$$
 
-Sigamos usando la misma pregunta sustantiva del curso — ¿cuándo hay demanda alta de bicicletas? — pero démosle al logit una interacción **completa** entre hora (24 categorías) y mes (12 categorías): mucho más flexible que la interacción hora × día hábil que usamos hasta ahora. Agreguemos esas variables de a poco y observemos qué pasa.
+donde $Y$ es la próxima palabra (una categoría entre $J$ posibles) y $X$ es alguna representación de las palabras anteriores. **Esta es exactamente la regresión logística multinomial de la clase 9.**
 
-```{r overfit-demo, echo=FALSE, fig.height=5}
-features_flex <- ~ temp + atemp + I(temp^2) + hum + I(hum^2) + windspeed +
-  holiday + factor(weathersit) + factor(hr) * factor(month)
-x_flex <- model.matrix(features_flex, bikedata)[, -1]
-x_flex_train <- x_flex[id_train, , drop = FALSE]
-x_flex_valid <- x_flex[id_valid, , drop = FALSE]
+## Nuestro corpus de juguete
 
-k_grid <- c(1, 5, 10, 15, 20, 25, 30, 35, 40)
+Vamos a trabajar con oraciones de la forma "el SUJETO VERBO los OBJETO", generadas a partir de un vocabulario pequeño:
 
-complejidad <- map_dfr(k_grid, function(k) {
-  Xk_train <- cbind(`(Intercept)` = 1, x_flex_train[, seq_len(k), drop = FALSE])
-  Xk_valid <- cbind(`(Intercept)` = 1, x_flex_valid[, seq_len(k), drop = FALSE])
-  ajuste <- suppressWarnings(glm.fit(x = Xk_train, y = y_train, family = binomial()))
-  p_train <- plogis(as.numeric(Xk_train %*% coef(ajuste)))
-  p_valid <- plogis(as.numeric(Xk_valid %*% coef(ajuste)))
-  tibble(
-    parametros = k + 1,
-    entrenamiento = log_loss(y_train, p_train),
-    validación = log_loss(y_valid, p_valid)
-  )
-})
+```{r corpus, echo=TRUE}
+set.seed(3070)
 
-complejidad %>%
-  pivot_longer(-parametros, names_to = "conjunto", values_to = "log_loss") %>%
-  ggplot(aes(parametros, log_loss, color = conjunto)) +
-  geom_line(linewidth = 1.2) +
-  geom_point(size = 2.6) +
-  scale_color_course() +
-  labs(x = "Número de parámetros en el modelo", y = "Log-loss", color = NULL)
+sujetos <- c("estudiante", "investigador", "modelo", "algoritmo")
+verbos  <- c("analiza", "estima", "predice", "explica")
+objetos <- c("datos", "resultados", "modelos", "problemas")
 ```
 
-## Leer la curva
+- Vocabulario total: $4+4+4=12$ palabras de contenido (más "el"/"los").
+- No es un corpus real: lo construimos con una estructura conocida, para poder verificar que el modelo efectivamente la aprende.
 
-- Con pocos parámetros, **ambos** errores bajan juntos: el modelo aprende señal real (temperatura, hora, clima).
-- Pasado cierto punto, el error de **entrenamiento** sigue bajando —más parámetros siempre ajustan mejor *esos* datos— pero el de **validación** empieza a **subir**: el modelo empieza a ajustar celdas hora×mes con pocas observaciones, memorizando ruido específico de esa combinación particular.
-- Este divorcio entre "ajusta mejor" y "predice mejor" es el problema que motiva toda la clase de hoy.
+## Construyendo el corpus
 
-. . .
+Para que el ejercicio tenga sentido, el sujeto influye en qué verbo es más probable, y el verbo influye en qué objeto es más probable — igual que en el lenguaje real, donde el contexto restringe (sin determinar) la palabra que sigue.
 
-Nótese algo importante: **no sabíamos de antemano** cuál de estas variables hora×mes era señal y cuál era ruido — todas entraron con la misma justificación teórica ("la demanda varía por hora y por estación"). Hasta ahora controlábamos la complejidad **a mano**, decidiendo qué interacciones incluir. La pregunta de hoy es si el propio procedimiento de ajuste puede controlar esa complejidad automáticamente, de forma validada.
+```{r corpus-probs, echo=TRUE}
+p_verbo_dado_sujeto <- matrix(c(
+  .50, .20, .20, .10,   # estudiante
+  .20, .50, .10, .20,   # investigador
+  .10, .10, .60, .20,   # modelo
+  .10, .10, .20, .60    # algoritmo
+), nrow = 4, byrow = TRUE, dimnames = list(sujetos, verbos))
 
-## Intuición: sesgo y varianza
-
-Antes de la solución, pongamos nombre al fenómeno que acabamos de ver, con una analogía simple.
-
-![Sesgo = qué tan lejos del centro caen los tiros en promedio. Varianza = qué tan dispersos están entre sí.](https://media.geeksforgeeks.org/wp-content/uploads/20251212100155382352/frame_3244.webp){fig-align="center" width="55%"}
-
-::: {.footnote}
-Fuente: [GeeksforGeeks — Bias vs Variance in Machine Learning](https://www.geeksforgeeks.org/machine-learning/bias-vs-variance-in-machine-learning/)
-:::
-
-- **Pocos parámetros** (modelo rígido): los tiros caen agrupados, pero lejos del centro — **sesgo alto**.
-- **Muchos parámetros** (modelo flexible): los tiros rodean el centro en promedio, pero dispersos — **varianza alta**.
-- Nuestra curva de arriba es exactamente esto: pocos parámetros = sesgo (mal ajuste, en train y en validación); muchos parámetros = varianza (ajusta train, falla en validación).
-
-## La intuición, formalizada
-
-Para un punto $x_0$, el error cuadrático esperado de un estimador $\hat f$ se descompone en tres piezas:
-
-$$
-\mathbb{E}\big[(y_0-\hat f(x_0))^2\big]
-= \underbrace{\big(\mathbb{E}[\hat f(x_0)]-f(x_0)\big)^2}_{\text{sesgo}^2}
-+ \underbrace{\mathrm{Var}(\hat f(x_0))}_{\text{varianza}}
-+ \underbrace{\sigma^2}_{\text{irreducible}}.
-$$
-
-| Símbolo | Significado |
-|---|---|
-| $f(x_0)$ | la relación verdadera (desconocida) entre predictores y outcome |
-| $\hat f(x_0)$ | nuestra estimación, que cambiaría si cambiara la muestra |
-| $\mathbb{E}[\hat f(x_0)]-f(x_0)$ | **sesgo**: error sistemático por usar un modelo demasiado rígido |
-| $\mathrm{Var}(\hat f(x_0))$ | **varianza**: cuánto cambia el ajuste de muestra a muestra |
-| $\sigma^2$ | ruido irreducible; ninguna técnica lo elimina |
-
-Regularizar *aumenta* el sesgo a propósito para *reducir* la varianza — conviene exactamente cuando la caída de varianza supera el aumento de sesgo, que es lo que vimos en la curva de validación.
-
-## El compromiso, en una imagen
-
-![Sesgo, varianza y error total en función de la complejidad del modelo.](https://media.geeksforgeeks.org/wp-content/uploads/20251209150317698595/model_complexity.webp){fig-align="center" width="60%"}
-
-::: {.footnote}
-Fuente: [GeeksforGeeks — What is Ridge Regression](https://www.geeksforgeeks.org/machine-learning/what-is-ridge-regression/)
-:::
-
-- $\lambda=0$ (sin penalizar): sesgo bajo, varianza alta → la mitad derecha de nuestra curva de validación.
-- $\lambda\to\infty$: sesgo alto, varianza baja → subajuste.
-- Existe un $\lambda^{*}$ intermedio que minimiza el error fuera de muestra — no lo conocemos, lo **estimamos con validación**.
-
-## Tres formas de penalizar, en una frase
-
-Antes de cualquier fórmula, la idea completa en tres oraciones:
-
-- **Ridge**: encoge **todos** los coeficientes hacia cero, sin eliminar ninguno.
-- **LASSO**: encoge y además puede llevar algunos coeficientes **exactamente a cero** — selecciona variables.
-- **Elastic Net**: un punto intermedio entre ambos.
-
-Todo lo que sigue en esta clase es la formalización — y luego la implementación — de estas tres frases.
-
-## Configuración: outcome y partición
-
-El módulo completo (clases 19–22) comparte la misma preparación de datos. Primero definimos el outcome y partimos los datos:
-
-```{r config-split, eval=FALSE}
-# Preparación compartida por las clases 19-22 (ver _shared/bikeshare.R)
-setup <- bikeshare_learning_setup(bikedata)
-
-# Outcome binario: "alta demanda" = top 25% de las horas.
-# El umbral (cuantil 0.75) se aprende SOLO en entrenamiento.
-demand_cutoff <- setup$demand_cutoff
-high_demand   <- setup$high_demand
-
-# Partición CRONOLÓGICA 60/20/20 por día (no aleatoria):
-# entrenar con el pasado, validar después, reservar los últimos días para test.
-id_train <- setup$id_train
-id_valid <- setup$id_valid
-id_test  <- setup$id_test
+p_objeto_dado_verbo <- matrix(c(
+  .60, .20, .10, .10,   # analiza
+  .20, .20, .50, .10,   # estima
+  .10, .60, .10, .20,   # predice
+  .10, .10, .20, .60    # explica
+), nrow = 4, byrow = TRUE, dimnames = list(verbos, objetos))
 ```
 
-## Configuración: la matriz de diseño
-
-Sobre esos datos construimos la matriz de predictores $X$ que usarán Ridge, LASSO y Elastic Net:
-
-```{r config-design, eval=FALSE}
-# Expansión de predictores: no linealidad en clima, calendario e
-# interacción hora × día hábil. temp y atemp son casi colineales a propósito.
-features <- ~ temp + atemp + I(temp^2) + hum + I(hum^2) + windspeed +
-  holiday + month + sin(2 * pi * month / 12) + cos(2 * pi * month / 12) +
-  factor(weathersit) + factor(hr) * workingday
-
-x_all   <- model.matrix(features, bikedata)[, -1]
-x_train <- x_all[id_train, ]; y_train <- high_demand[id_train]
-x_valid <- x_all[id_valid, ]; y_valid <- high_demand[id_valid]
-x_test  <- x_all[id_test, ];  y_test  <- high_demand[id_test]
-```
-
-## El diseño de datos de hoy
-
-```{r}
-tibble(
-  observaciones_train = nrow(x_train),
-  variables_base = 9,
-  columnas_modelo = ncol(x_train)
-)
-```
-
-La expansión incluye no linealidad en clima, indicadores de calendario e interacción hora × día hábil — exactamente el tipo de términos que, en la curva de arriba, empujaba el modelo hacia el sobreajuste. `temp` y `atemp` son además deliberadamente casi idénticas: veremos que ese tipo de colinealidad es precisamente donde Ridge resulta más útil.
-
-## Tres conjuntos, tres funciones
-
-Antes de penalizar nada, fijemos la disciplina de evaluación — ya la usamos antes (bootstrap, validación) pero aquí es central, no un anexo:
-
-| Conjunto | Proporción | Función |
-|---|---:|---|
-| Entrenamiento | 60% | estimar coeficientes |
-| Validación | 20% | elegir $\alpha$ y $\lambda$ |
-| Test | 20% | estimar desempeño final, **una sola vez** |
-
-Mirar el test durante el tuning produce **filtración de información**: el desempeño deja de ser genuinamente fuera de muestra — el mismo problema, en miniatura, que acabamos de ver en la curva de sobreajuste.
-
-```{r}
-tibble(
-  conjunto = c("Entrenamiento", "Validación", "Test"),
-  primer_día = c(min(train_days), min(valid_days), min(test_days)),
-  último_día = c(max(train_days), max(valid_days), max(test_days)),
-  horas = c(length(id_train), length(id_valid), length(id_test))
-)
-```
-
-Entrenamos con el pasado, elegimos hiperparámetros en un período posterior y reservamos los últimos días para test: una partición aleatoria sería optimista si horas vecinas comparten patrones no observados.
-
-# Ridge {.inverse .center .middle}
-
-## Motivación: cuando los predictores se parecen entre sí
-
-`temp` y `atemp` están altamente correlacionadas. En un GLM sin penalizar, esto genera un problema específico: $X^\top X$ se vuelve casi no invertible, y pequeños cambios en la muestra producen coeficientes muy distintos — alta varianza, tal como vimos arriba.
-
-. . .
-
-**Ridge** ataca exactamente ese síntoma: en vez de dejar que los coeficientes crezcan sin control para "explicar" la colinealidad, los penaliza por tamaño.
-
-## Intuición: el estimador como compromiso
-
-En la geometría familiar de mínimos cuadrados, agregar una penalización por el tamaño de $\boldsymbol\beta$ es "tirar" al estimador hacia el origen, un poco menos lejos de donde los datos solos lo llevarían.
-
-![El estimador Ridge (verde) es el punto donde las curvas de nivel de la pérdida (elipses) tocan primero la región de restricción circular.](https://media.geeksforgeeks.org/wp-content/uploads/20251209150233295936/ridge_estimate.webp){fig-align="center" width="50%"}
-
-::: {.footnote}
-Fuente: [GeeksforGeeks — What is Ridge Regression](https://www.geeksforgeeks.org/machine-learning/what-is-ridge-regression/)
-:::
-
-## Definición formal: penalización $L_2$
-
-Partimos de la pérdida logística y agregamos un costo por coeficientes grandes:
-
-$$
-\widehat{\boldsymbol\beta}^{\text{ridge}}
-=\arg\min_{\boldsymbol\beta}
-\left\{-\ell(\boldsymbol\beta)+\lambda \underbrace{\frac{1}{2}\sum_{j=1}^{p}\beta_j^2}_{P(\boldsymbol\beta)}\right\}.
-$$
-
-| Símbolo | Significado |
-|---|---|
-| $\ell(\boldsymbol\beta)$ | log-verosimilitud logística: qué tan bien predicen las probabilidades |
-| $P(\boldsymbol\beta)$ | penalización: qué tan grandes son los coeficientes |
-| $\lambda\ge 0$ | intensidad de la penalización: el "dial" que elegiremos con validación |
-
-$\lambda=0$ recupera el ajuste sin penalizar; $\lambda$ grande empuja todos los coeficientes hacia 0. El intercepto nunca se penaliza — no tiene sentido "encogerlo" hacia una demanda promedio de cero.
-
-## La verosimilitud que penalizamos
-
-Con log-odds $\eta_i=\beta_0+x_i^\top\boldsymbol\beta$ y $p_i=\sigma(\eta_i)$:
-
-$$
-\ell(\boldsymbol\beta)=\sum_{i=1}^{n}\big[\,y_i\,\eta_i-\log(1+e^{\eta_i})\,\big].
-$$
-
-- $y_i\in\{0,1\}$: demanda alta observada.
-- $\eta_i$: log-odds predicho; $p_i=\sigma(\eta_i)$: probabilidad predicha — el mismo logit de las clases 9 a 11.
-- Maximizar $\ell$ equivale a minimizar la **devianza** $-2\ell$.
-
-Minimizar $-\ell+\lambda P(\boldsymbol\beta)$ es, entonces, "ajustar bien las probabilidades **sin** coeficientes desmesurados".
-
-## Descomposición matemática: solución cerrada
-
-En regresión lineal, Ridge tiene solución explícita — útil para ver *qué hace* la penalización:
-
-$$
-\widehat{\boldsymbol\beta}^{\text{ridge}}=(X^\top X+\lambda I)^{-1}X^\top y.
-$$
-
-- Sumar $\lambda I$ vuelve **invertible** a $X^\top X$ aunque haya colinealidad casi perfecta (`temp` y `atemp`) — resuelve exactamente el problema que motivó esta técnica.
-- $\lambda=0$ recupera mínimos cuadrados; $\lambda\to\infty$ lleva $\widehat{\boldsymbol\beta}\to 0$.
-- En regresión logística no hay fórmula cerrada, pero la misma penalización $+\lambda I$ estabiliza cada paso del ajuste iterativo (IRLS).
-
-## Descomposición matemática: qué hace Ridge, dirección por dirección
-
-Con la descomposición $X=UDV^\top$ (columnas estandarizadas), las predicciones Ridge se contraen **dirección por dirección**:
-
-$$
-\widehat y=\sum_{j}u_j\,\frac{d_j^{2}}{d_j^{2}+\lambda}\,u_j^\top y.
-$$
-
-- $d_j$: valor singular de la dirección $j$ — cuánta varianza tiene esa combinación de predictores.
-- Factor de contracción $d_j^{2}/(d_j^{2}+\lambda)\in(0,1)$.
-- Direcciones de **poca varianza** (colineales, $d_j$ pequeño) se contraen **más** — son justo las que producen coeficientes inestables.
-
-```{r svd-shrinkage, echo=FALSE, fig.height=4.4}
-keep <- apply(x_train, 2, sd) > 0
-xs <- scale(x_train[, keep, drop = FALSE]) / sqrt(nrow(x_train))
-d_sv <- svd(xs)$d
-
-shrink <- map_dfr(c(0.001, 0.01, 0.1, 1), function(l) {
-  tibble(lambda = l, componente = seq_along(d_sv),
-         factor = d_sv^2 / (d_sv^2 + l))
-})
-
-shrink %>%
-  mutate(lambda = factor(lambda)) %>%
-  ggplot(aes(componente, factor, color = lambda)) +
-  geom_line(linewidth = 1.1) +
-  scale_color_course() +
-  scale_y_continuous(limits = c(0, 1)) +
-  labs(x = "Componente (de mayor a menor varianza)",
-       y = expression(d[j]^2 / (d[j]^2 + lambda)),
-       color = expression(lambda))
-```
-
-Las direcciones de menor varianza —donde viven combinaciones como `temp`$\approx$`atemp`— son las más contraídas. Ridge no las elimina; les quita influencia.
-
-## Por qué estandarizar antes de penalizar
-
-La penalización opera sobre el tamaño *numérico* de cada coeficiente. Si `temp` variara entre 0 y 1 y otra variable entre 0 y 1.000, una misma magnitud de coeficiente no sería comparable — la penalización castigaría por unidades, no por importancia real.
-
-$$z_{ij}=\frac{x_{ij}-\bar{x}_{j,\text{train}}}{s_{j,\text{train}}}.$$
-
-`glmnet` estandariza los predictores por defecto, usando solo estadísticas del conjunto de entrenamiento (nunca de validación o test).
-
-## Ridge: ejemplo empírico
-
-```{r ridge-path, fig.height=5}
-lambda_path <- exp(seq(log(100), log(0.001), length.out = 70))
-ridge_fit <- glmnet(
-  x_train, y_train, family = "binomial", alpha = 0,
-  lambda = lambda_path, standardize = TRUE
-)
-
-ridge_coef <- as.matrix(coef(ridge_fit))[-1, , drop = FALSE]
-ridge_long <- as_tibble(t(ridge_coef), .name_repair = "minimal") %>%
-  mutate(lambda = ridge_fit$lambda) %>%
-  pivot_longer(-lambda, names_to = "variable", values_to = "coefficient")
-
-ridge_long %>%
-  filter(variable %in% c("temp", "hum", "windspeed", "workingday")) %>%
-  ggplot(aes(log(lambda), coefficient, color = variable)) +
-  geom_hline(yintercept = 0, color = "grey50", linewidth = 0.7) +
-  geom_line(linewidth = 1.15) +
-  scale_color_course() +
-  labs(x = expression(log(lambda)), y = "Coeficiente", color = NULL)
-```
-
-## Interpretación: leer la trayectoria
-
-- Hacia la derecha aumenta $\lambda$; todos los coeficientes se contraen **suavemente**, sin saltos.
-- Ninguna variable desaparece de forma abrupta — consistente con lo que la SVD predijo.
-- El signo y el tamaño de cada coeficiente deben interpretarse condicionalmente al resto del modelo, igual que en cualquier GLM.
-- Esta trayectoria muestra **cómo cambia el modelo** con $\lambda$; todavía no nos dice cuál $\lambda$ predice mejor — eso lo resolveremos con validación, más adelante en la clase.
-
-# LASSO y Elastic Net {.inverse .center .middle}
-
-## Motivación: Ridge nunca elige
-
-Ridge resuelve la inestabilidad, pero deja un problema abierto: **nunca elimina un predictor**. Con muchas variables (interacciones, indicadores de calendario), sería útil que el propio ajuste nos dijera cuáles sobran — no solo que las encoja un poco.
-
-. . .
-
-**LASSO** cambia la forma de la penalización para lograr justamente eso: contracción **y** selección de variables, en el mismo procedimiento.
-
-## Intuición: por qué una forma distinta selecciona
-
-Ridge penaliza $\sum\beta_j^2$ (un círculo, en dos dimensiones). LASSO penaliza $\sum|\beta_j|$ (un diamante). La diferencia de forma no es cosmética: cambia dónde el óptimo puede caer.
-
-```{r l1l2-geometry, echo=FALSE, fig.height=4.6}
-beta_hat <- c(2.1, 1.6)
-A <- matrix(c(1, 0.6, 0.6, 1.3), 2, 2)
-quad <- function(b1, b2) {
-  d <- cbind(b1 - beta_hat[1], b2 - beta_hat[2])
-  rowSums((d %*% A) * d)
-}
-grid <- expand.grid(b1 = seq(-0.8, 3, length.out = 220),
-                    b2 = seq(-0.8, 3, length.out = 220))
-grid$z <- quad(grid$b1, grid$b2)
-
-circ <- tibble(theta = seq(0, 2 * pi, length.out = 200)) %>%
-  mutate(b1 = 1.2 * cos(theta), b2 = 1.2 * sin(theta))
-tt <- 1.35
-diam <- tibble(b1 = c(tt, 0, -tt, 0, tt), b2 = c(0, tt, 0, -tt, 0))
-
-ggplot() +
-  geom_contour(data = grid, aes(b1, b2, z = z),
-               breaks = as.numeric(quad(0, 0)) * c(0.15, 0.4, 0.8, 1.3),
-               color = course_palette[["series-3"]], linewidth = 0.6) +
-  geom_path(data = circ, aes(b1, b2),
-            color = course_palette[["primary"]], linewidth = 1.2) +
-  geom_path(data = diam, aes(b1, b2),
-            color = course_palette[["secondary"]], linewidth = 1.2) +
-  geom_point(aes(beta_hat[1], beta_hat[2]), size = 3) +
-  geom_point(aes(0, tt), color = course_palette[["secondary"]], size = 3) +
-  annotate("text", x = 0, y = tt + 0.28, label = "vértice: β₁ = 0", size = 3) +
-  coord_equal() +
-  labs(x = expression(beta[1]), y = expression(beta[2]))
-```
-
-Elipses = curvas de nivel de $-\ell$; círculo = restricción Ridge; diamante = restricción LASSO. El estimador penalizado vive donde esas curvas **tocan por primera vez** la región de restricción. El diamante tiene vértices sobre los ejes — es fácil tocar justo ahí, y en un vértice algún $\beta_j=0$. El círculo no tiene esquinas: contrae, pero casi nunca anula.
-
-## Definición formal: penalización $L_1$
-
-$$
-\widehat{\boldsymbol\beta}^{\text{lasso}}
-=\arg\min_{\boldsymbol\beta}
-\left\{-\ell(\boldsymbol\beta)+\lambda \underbrace{\sum_{j=1}^{p}|\beta_j|}_{P(\boldsymbol\beta)}\right\}.
-$$
-
-Misma estructura que Ridge — mismo $\ell$, mismo rol de $\lambda$ — la única diferencia es la forma de $P(\boldsymbol\beta)$. Eso basta para cambiar por completo el comportamiento del estimador, como acabamos de ver.
-
-La selección no implica causalidad: que un coeficiente sea exactamente 0 no prueba que esa variable sea irrelevante sustantivamente, solo que no ayudó a predecir en esta muestra bajo esta penalización.
-
-## Descomposición matemática: soft-thresholding
-
-Con predictores ortonormales, la solución LASSO es explícita — y deja ver el mecanismo exacto de la selección:
-
-$$
-\widehat\beta_j^{\text{lasso}}
-=\operatorname{sign}\!\big(\widehat\beta_j^{\text{OLS}}\big)\,
-\big(|\widehat\beta_j^{\text{OLS}}|-\lambda\big)_+ .
-$$
-
-- $(\cdot)_+$ = parte positiva: si $|\widehat\beta_j^{\text{OLS}}|<\lambda$, el coeficiente se vuelve **exactamente 0**.
-- Ridge, en cambio, **escala** todos por igual: $\widehat\beta_j^{\text{ridge}}=\widehat\beta_j^{\text{OLS}}/(1+\lambda)$ — nunca llega a 0 exacto.
-
-```{r soft-threshold, echo=FALSE, fig.height=4.2}
-lam <- 1
-tibble(beta_ols = seq(-3, 3, length.out = 400)) %>%
+## Generando 300 oraciones
+
+```{r generar-corpus, echo=TRUE}
+n_oraciones <- 300
+corpus <- tibble(id = 1:n_oraciones) %>%
   mutate(
-    Ridge = beta_ols / (1 + lam),
-    LASSO = sign(beta_ols) * pmax(abs(beta_ols) - lam, 0)
-  ) %>%
-  pivot_longer(c(Ridge, LASSO), names_to = "metodo", values_to = "beta_pen") %>%
-  ggplot(aes(beta_ols, beta_pen, color = metodo)) +
-  geom_abline(slope = 1, intercept = 0, color = "grey60", linetype = "dashed") +
-  geom_line(linewidth = 1.2) +
-  scale_color_course() +
-  coord_equal() +
-  labs(x = expression(hat(beta)[OLS]),
-       y = expression(hat(beta)[pen]), color = NULL)
+    sujeto  = sample(sujetos, n(), replace = TRUE),
+    verbo   = map_chr(sujeto, ~ sample(verbos, 1, prob = p_verbo_dado_sujeto[.x, ])),
+    objeto  = map_chr(verbo,  ~ sample(objetos, 1, prob = p_objeto_dado_verbo[.x, ])),
+    oracion = paste("el", sujeto, verbo, "los", objeto)
+  )
+
+corpus %>% select(sujeto, verbo, objeto, oracion) %>% head(6)
 ```
 
-## Cómo se optimiza en la práctica
+Cada fila es una "oración". `sujeto`, `verbo` y `objeto` son las palabras de contenido; `oracion` es el texto completo.
 
-`glmnet` usa **descenso por coordenadas**: fija todos los coeficientes menos uno y lo actualiza con la fórmula de soft-thresholding sobre los *residuos parciales*, ciclando hasta converger. En logística se combina con IRLS (mínimos cuadrados ponderados iterados, la misma idea que vimos en la clase de MLE).
+# Predicción binaria {.inverse .center .middle}
 
-- Existe un $\lambda_{\max}=\max_j |x_j^\top(y-\bar y)|/n$ donde **todos** los coeficientes son 0; por eso la trayectoria empieza vacía.
-- La ruta se calcula desde $\lambda_{\max}$ hacia abajo con *warm starts*: cada solución inicializa la siguiente.
-- Alternativa clásica con el mismo resultado: **LARS** (*Least Angle Regression*), un algoritmo distinto que también traza la ruta completa de LASSO.
+## El caso más simple: ¿la próxima palabra es "datos"?
 
-## LASSO: ejemplo empírico
+Antes del caso general, empecemos con una pregunta binaria: dado el verbo, **¿el objeto va a ser "datos" o no?**
 
-```{r lasso-path, fig.height=5}
-lasso_fit <- glmnet(
-  x_train, y_train, family = "binomial", alpha = 1,
-  lambda = lambda_path, standardize = TRUE
-)
+```{r bin-setup, echo=TRUE}
+corpus <- corpus %>% mutate(es_datos = as.integer(objeto == "datos"))
 
-lasso_coef <- as.matrix(coef(lasso_fit))[-1, , drop = FALSE]
-lasso_long <- as_tibble(t(lasso_coef), .name_repair = "minimal") %>%
-  mutate(lambda = lasso_fit$lambda) %>%
-  pivot_longer(-lambda, names_to = "variable", values_to = "coefficient")
-
-lasso_long %>%
-  group_by(variable) %>%
-  mutate(max_abs = max(abs(coefficient))) %>%
-  ungroup() %>%
-  filter(dense_rank(desc(max_abs)) <= 9) %>%
-  ggplot(aes(log(lambda), coefficient, color = variable)) +
-  geom_hline(yintercept = 0, color = "grey50", linewidth = 0.7) +
-  geom_line(linewidth = 1.05) +
-  scale_color_course() +
-  labs(x = expression(log(lambda)), y = "Coeficiente", color = NULL)
+m_bin <- glm(es_datos ~ verbo, data = corpus, family = binomial)
+summary(m_bin)$coefficients
 ```
 
-## Interpretación: a diferencia de Ridge
+- Esto es exactamente un `glm(family=binomial)`, como en la clase 6 — solo que el predictor es una palabra (categórica) y no una variable numérica como `temp`.
+- El coeficiente de `verboanaliza` (ausente = categoría de referencia) es más alto que el resto, reflejando que `analiza` predice "datos" con más frecuencia — así lo construimos en `p_objeto_dado_verbo`.
 
-Compare esta trayectoria con la de Ridge: aquí las variables **entran y salen** del modelo en puntos concretos de $\lambda$, no se contraen todas parejo. Cada vez que una línea toca el cero y se queda ahí, esa variable fue **excluida** para ese nivel de penalización.
+## De binario a multinomial
 
-## Motivación: cuando además hay bloques correlacionados
+Reducir "cuál es la próxima palabra" a una sola pregunta binaria descarta información: en un vocabulario de $J$ palabras hay $J$ posibles respuestas, no 2.
 
-LASSO selecciona, pero con predictores muy correlacionados (`temp`, `atemp`, mes, estacionalidad) tiende a **elegir uno arbitrariamente y descartar el resto** — muestras parecidas pueden terminar con variables distintas seleccionadas.
+. . .
 
-**Elastic Net** combina ambas penalizaciones para resolver esto:
+La generalización natural —y la que de verdad se usa— es la regresión logística **multinomial**, que ya vimos en la clase 9:
 
 $$
-P_{\alpha}(\boldsymbol\beta)=
-(1-\alpha)\frac{1}{2}\sum_j\beta_j^2+
-\alpha\sum_j|\beta_j|.
+\mathbb{P}(Y=j \mid X) = \frac{e^{X\beta_j}}{\sum_{k=1}^{J} e^{X\beta_k}}, \qquad j=1,\dots,J.
 $$
 
-| $\alpha$ | Modelo | Comportamiento típico |
-|---:|---|---|
-| 0 | Ridge | conserva todos los predictores |
-| 1 | LASSO | produce soluciones dispersas |
-| entre 0 y 1 | Elastic Net | combina estabilidad y selección |
+Esta fórmula —**softmax**— es, literalmente, la capa final de un LLM: convierte $J$ puntajes reales en una distribución de probabilidad sobre el vocabulario.
 
-El término $L_2$ reparte el peso entre variables correlacionadas (**efecto de agrupamiento**); el término $L_1$ conserva la capacidad de anular bloques irrelevantes.
+# Predicción multinomial {.inverse .center .middle}
 
-## Otros casos de uso
+## El softmax, término a término
 
-La misma familia de penalizaciones ($L_1$, $L_2$, combinadas) aparece, con el mismo objetivo — controlar complejidad cuando hay muchos predictores o predictores correlacionados —, en dominios muy distintos:
-
-| Dominio | Uso típico |
+| Símbolo | Significado |
 |---|---|
-| Genómica | LASSO para seleccionar genes relevantes entre miles, con pocos pacientes |
-| Finanzas | Ridge para estabilizar modelos de riesgo con indicadores macroeconómicos correlacionados |
-| Texto / NLP | LASSO sobre miles de frecuencias de palabras, para quedarse con las predictivas |
-| Marketing | Elastic Net en modelos de *churn* con decenas de variables de comportamiento correlacionadas |
-| Neuroimagen | Elastic Net para seleccionar vóxeles relevantes entre decenas de miles |
+| $J$ | tamaño del vocabulario (número de palabras posibles) |
+| $X\beta_j$ | puntaje (logit) de la palabra $j$, dado el contexto $X$ |
+| $e^{X\beta_j}$ | ese puntaje, convertido a un número positivo |
+| $\sum_k e^{X\beta_k}$ | normalización: hace que las $J$ probabilidades sumen 1 |
 
-En todos los casos, el problema de fondo es el mismo que vimos hoy: muchos predictores, posible colinealidad, y la necesidad de controlar complejidad sin decidir a mano qué variable entra.
+Con $J=2$, el softmax se reduce exactamente a la sigmoide de la regresión logística binaria — el mismo resultado que vimos en la clase 9 para el caso multinomial en general.
 
-## Comparación sistemática
+## Ajustemos el modelo multinomial
 
-| | Ridge | LASSO | Elastic Net |
-|---|---|---|---|
-| Penalización | $L_2$ | $L_1$ | $L_1+L_2$ |
-| Coeficientes | todos se achican, ninguno en 0 | algunos exactamente 0 | algunos en 0, resto achicado |
-| Supuesto implícito | todos los predictores aportan algo | pocos predictores realmente importan | hay bloques correlacionados |
-| Hiperparámetros | $\lambda$ | $\lambda$ | $\lambda$ y $\alpha$ (2 dimensiones) |
-| Costo computacional | bajo (ruta cerrada por dirección) | bajo (coordenadas) | bajo, pero grilla 2D más cara |
-| Interpretabilidad | media (todos los coeficientes activos) | alta (modelo disperso) | media-alta |
-| Debilidad típica | no simplifica el modelo | descarta arbitrariamente entre correlacionados | más costoso de tunear |
+```{r multinom-fit, echo=TRUE}
+m_objeto <- multinom(objeto ~ verbo, data = corpus, trace = FALSE)
 
-La decisión final es empírica: se compara desempeño de validación, no una preferencia a priori — lo hacemos a continuación.
+predict(m_objeto, newdata = tibble(verbo = "predice"), type = "probs")
+```
 
-## Extensiones
+Dado el verbo "predice", el modelo asigna la mayor probabilidad a "resultados" — exactamente el patrón que construimos en `p_objeto_dado_verbo`. El modelo **aprendió la estructura del corpus a partir de los datos**, sin que se la diéramos explícitamente.
 
-- **Adaptive LASSO**: pondera la penalización de cada coeficiente según una estimación previa, reduciendo el sesgo de selección de LASSO estándar.
-- **Group LASSO**: en vez de anular coeficientes individuales, anula **grupos completos** — por ejemplo, todos los indicadores de una variable categórica (como `factor(hr)`) entran o salen juntos.
-- **SCAD / MCP**: penalizaciones no convexas que corrigen el sesgo hacia cero que Ridge y LASSO imponen a coeficientes grandes.
+# Representación del contexto {.inverse .center .middle}
 
-Todas resuelven variantes del mismo problema — controlar complejidad automáticamente — con ajustes a cómo se reparte la penalización.
+## ¿Qué es "el contexto", en términos de $X$?
 
-# Validación {.inverse .center .middle}
+Para que el softmax funcione necesitamos convertir palabras en números. La forma más simple: variables **dummy**, una por cada palabra posible del contexto — exactamente como codificamos `factor(weathersit)` en clases anteriores.
 
-## Por qué la validación no es un anexo
+. . .
 
-Elegimos $\alpha$ y $\lambda$; ninguno de los dos se estima maximizando la verosimilitud del modelo. Si los eligiéramos mirando qué tan bien ajustan el conjunto de entrenamiento, siempre ganaría $\lambda=0$ — el problema con el que empezamos la clase. Por eso la validación no es un paso posterior: es la forma concreta de resolver el compromiso sesgo-varianza sin hacer trampa.
+Un LLM real reemplaza estas dummies por **embeddings**: vectores densos aprendidos que representan cada palabra. La lógica de "convertir una palabra en un vector de números" es la misma; lo que cambia es qué tan compacta y aprendida es esa representación.
 
-## Protocolo de tuning
+## Tres formas de representar el contexto
 
-1. Definir una grilla de $\alpha$.
-2. Ajustar una trayectoria de $\lambda$ en entrenamiento.
-3. Predecir validación para cada combinación.
-4. Elegir la menor pérdida de validación.
-5. Reajustar con entrenamiento + validación.
-6. Evaluar una vez en test.
+Comparemos tres representaciones, todas prediciendo el `objeto`:
 
-## Validación simple vs. validación cruzada
+```{r contexto-comparacion, echo=TRUE}
+m0 <- multinom(objeto ~ 1, data = corpus, trace = FALSE)                # sin contexto
+m1 <- multinom(objeto ~ verbo, data = corpus, trace = FALSE)            # 1 palabra de contexto
+m2 <- multinom(objeto ~ verbo * sujeto, data = corpus, trace = FALSE)   # 2 palabras de contexto
 
-La idea de fondo de cualquier validación: en vez de "memorizar una única prueba", evaluar el modelo como si rindiera **varios exámenes distintos** y ver si el desempeño es consistente.
+log_loss_multinom <- function(modelo, data, target) {
+  probs <- predict(modelo, newdata = data, type = "probs")
+  y <- data[[target]]
+  idx <- cbind(seq_along(y), match(y, colnames(probs)))
+  -mean(log(pmax(probs[idx], 1e-8)))
+}
+
+tibble(
+  modelo = c("Sin contexto", "1 palabra (verbo)", "2 palabras (verbo + sujeto)"),
+  log_loss = c(
+    log_loss_multinom(m0, corpus, "objeto"),
+    log_loss_multinom(m1, corpus, "objeto"),
+    log_loss_multinom(m2, corpus, "objeto")
+  ),
+  parámetros = c(length(coef(m0)), length(coef(m1)), length(coef(m2)))
+)
+```
+
+## Leer esta tabla
+
+- El log-loss —la misma métrica de la clase 3 y la clase 15— **baja** a medida que agregamos contexto: más contexto, mejor predicción.
+- El número de parámetros **sube** rápido: de 3, a 12, a 48. Con dos palabras de contexto ya necesitamos una interacción completa `verbo × sujeto`.
+- En un LLM real el contexto son cientos o miles de palabras anteriores. Modelar eso con dummies e interacciones completas —como acabamos de hacer— es completamente inviable: el número de parámetros explota. Los embeddings y la arquitectura Transformer existen, en gran medida, para resolver este mismo problema de forma escalable.
+
+# Ajuste e interpretación {.inverse .center .middle}
+
+## Interpretando el modelo elegido
+
+```{r objeto-final, echo=TRUE}
+predict(m1, newdata = tibble(verbo = verbos), type = "probs") %>%
+  as_tibble() %>%
+  mutate(verbo = verbos, .before = 1)
+```
+
+Cada fila es una distribución de probabilidad completa sobre el vocabulario de objetos, condicional en el verbo — exactamente lo que un LLM produce en cada paso, solo que aquí el "contexto" es una sola palabra categórica en vez de cientos de tokens representados con embeddings.
+
+## Esto ya es "entrenar un modelo de lenguaje"
+
+- **Estimar** `m1` (vía `multinom`, que maximiza verosimilitud) es, conceptualmente, lo mismo que "entrenar" una red que predice el siguiente token: ambos minimizan cross-entropy / log-loss (clase 3) sobre ejemplos de contexto → palabra siguiente.
+- La diferencia no es el objetivo de entrenamiento — es **la familia de funciones** que se usa para pasar del contexto a los puntajes $X\beta_j$: aquí, una combinación lineal de dummies; en un LLM, muchas capas de una red neuronal (clase 18) operando sobre embeddings.
+
+# Generación secuencial {.inverse .center .middle}
+
+## El ciclo de generación
+
+Generar texto, token a token, es un ciclo de cuatro pasos que se repite:
+
+1. Tomar el contexto actual.
+2. Calcular la distribución de probabilidad sobre la siguiente palabra (softmax).
+3. **Muestrear** una palabra de esa distribución (no necesariamente la más probable).
+4. Agregar la palabra elegida al contexto, y volver a 1.
+
+## Generando oraciones con nuestro modelo
+
+```{r generar-modelo-verbo, echo=TRUE}
+m_verbo <- multinom(verbo ~ sujeto, data = corpus, trace = FALSE)
+```
+
+```{r generar-oraciones, echo=TRUE}
+generar_oracion <- function() {
+  sujeto <- sample(sujetos, 1)
+
+  p_verbo <- predict(m_verbo, newdata = tibble(sujeto = sujeto), type = "probs")
+  verbo <- sample(names(p_verbo), 1, prob = p_verbo)
+
+  p_objeto <- predict(m1, newdata = tibble(verbo = verbo), type = "probs")
+  objeto <- sample(names(p_objeto), 1, prob = p_objeto)
+
+  paste("el", sujeto, verbo, "los", objeto)
+}
+
+set.seed(1)
+map_chr(1:5, ~ generar_oracion())
+```
+
+En cada llamada, el modelo: (1) elige un sujeto, (2) predice un verbo condicional en ese sujeto y **muestrea** uno, (3) predice un objeto condicional en ese verbo y muestrea uno. Es exactamente el ciclo de la lámina anterior, aplicado dos veces.
+
+## Temperatura: controlando qué tan "arriesgada" es la generación
+
+Antes de muestrear, un LLM suele reescalar los puntajes con un parámetro de **temperatura** $T$:
 
 $$
-\text{CV}(\lambda)=\frac{1}{k}\sum_{f=1}^{k}\text{pérdida}_f(\lambda).
+\mathbb{P}(Y=j) = \frac{e^{X\beta_j / T}}{\sum_k e^{X\beta_k/T}}.
 $$
 
-![k-fold cross-validation: los datos se dividen en k bloques; en cada ronda uno actúa como validación y el resto como entrenamiento.](https://media.geeksforgeeks.org/wp-content/uploads/20250927122541290704/222.webp){fig-align="center" width="50%"}
+- $T \to 0$: la distribución se concentra en la palabra más probable (generación "conservadora", casi determinística).
+- $T = 1$: las probabilidades originales del softmax, sin modificar.
+- $T$ grande: la distribución se aplana — todas las palabras se vuelven casi igual de probables (generación "creativa", más ruidosa).
 
-::: {.footnote}
-Fuente: [GeeksforGeeks — Cross Validation in Machine Learning](https://www.geeksforgeeks.org/machine-learning/cross-validation-machine-learning/)
-:::
+Muestrear en vez de tomar siempre el máximo —y ajustar $T$— es lo que hace que la generación de texto no sea siempre la misma oración, exactamente como en nuestro generador de arriba.
 
-Con dependencia temporal como la nuestra, la CV aleatoria de la figura es **optimista**: horas vecinas se filtran entre pliegues. Por eso usamos un conjunto de validación fijo, cronológico.
+# Conexión con los LLM {.inverse .center .middle}
 
-## Validación cronológica ("rolling-origin")
+## Tabla comparativa: nuestro modelo vs. un LLM
 
-El análogo correcto de k-fold cuando los datos son series de tiempo se llama **validación cruzada de series de tiempo** (*rolling-origin* / *walk-forward*): cada "pliegue" entrena solo con el pasado y valida con un bloque futuro, avanzando el origen de entrenamiento en cada ronda. Es la generalización, a $k$ rondas, de la partición cronológica única que usamos hoy.
+| Elemento | Nuestro modelo de juguete | Un LLM |
+|---|---|---|
+| Vocabulario | 12 palabras | decenas de miles de *tokens* |
+| Representación de entrada | variables dummy | *embeddings* (vectores densos aprendidos) |
+| Contexto usado | 1–2 palabras anteriores | cientos o miles de tokens anteriores |
+| Función de contexto → puntajes | combinación lineal (logit multinomial) | red profunda tipo Transformer (atención) |
+| Capa de salida | softmax sobre `objeto` | softmax sobre todo el vocabulario |
+| Función de pérdida al entrenar | log-loss / cross-entropy | log-loss / cross-entropy (la misma) |
+| Número de parámetros | decenas | miles de millones |
 
-Otras alternativas para elegir $\lambda$ sin re-ajustar muchas veces: **validación cruzada generalizada (GCV)**, y criterios de información como AIC/BIC.
+## Qué comparten, y qué no
 
-## Validación de α y λ: ejemplo empírico
+**Comparten**: la formulación del problema (predecir el siguiente token es clasificación multinomial), la función de pérdida (cross-entropy), y el ciclo de generación (contexto → probabilidad → muestreo → repetir).
 
-```{r tuning, cache=TRUE}
-alpha_grid <- c(0, 0.5, 1)
-lambda_grid <- exp(seq(log(30), log(0.003), length.out = 45))
+. . .
 
-validation <- map_dfr(alpha_grid, function(a) {
-  fit <- glmnet(
-    x_train, y_train, family = "binomial", alpha = a,
-    lambda = lambda_grid, standardize = TRUE
-  )
-  prob <- predict(fit, newx = x_valid, type = "response")
-  tibble(
-    alpha = a,
-    lambda = fit$lambda,
-    loss = map_dbl(seq_len(ncol(prob)), ~ log_loss(y_valid, prob[, .x]))
-  )
-})
+**No comparten**: la forma de representar el contexto (dummies vs. embeddings aprendidos), la función que va de contexto a puntajes (lineal vs. Transformer con atención), y, sobre todo, la escala.
 
-validation %>% arrange(loss) %>% slice_head(n = 5)
-```
+. . .
 
-```{r validation-plot, fig.height=4.6}
-validation %>%
-  mutate(alpha = factor(alpha)) %>%
-  ggplot(aes(log(lambda), loss, color = alpha)) +
-  geom_line(linewidth = 1.2) +
-  geom_point(data = ~ slice_min(.x, loss, n = 1), size = 3) +
-  scale_color_course() +
-  labs(
-    x = expression(log(lambda)), y = "Log-loss de validación",
-    color = expression(alpha)
-  )
-```
-
-## Reajuste final y test: ejemplo empírico
-
-```{r final-fit}
-best <- validation %>% slice_min(loss, n = 1, with_ties = FALSE)
-tuned_train_fit <- glmnet(
-  x_train, y_train, family = "binomial",
-  alpha = best$alpha, lambda = best$lambda,
-  standardize = TRUE
-)
-validation_prob <- as.numeric(predict(
-  tuned_train_fit, newx = x_valid, type = "response"
-))
-
-thresholds <- seq(0.1, 0.9, by = 0.05)
-threshold_choice <- map_dfr(thresholds, function(t) {
-  class_metrics(y_valid, validation_prob, t) %>% mutate(threshold = t)
-}) %>%
-  mutate(balanced_accuracy = (sensitivity + specificity) / 2) %>%
-  slice_max(balanced_accuracy, n = 1, with_ties = FALSE)
-selected_threshold <- threshold_choice$threshold
-
-x_dev <- rbind(x_train, x_valid)
-y_dev <- c(y_train, y_valid)
-
-final_fit <- glmnet(
-  x_dev, y_dev, family = "binomial",
-  alpha = best$alpha, lambda = best$lambda,
-  standardize = TRUE
-)
-test_prob <- as.numeric(predict(final_fit, newx = x_test, type = "response"))
-
-best %>% select(alpha, lambda, validation_log_loss = loss)
-```
-
-El umbral de clasificación se elige en validación maximizando accuracy balanceada — la misma lógica de la clase 18, ahora aplicada tras el tuning. El test no participó en ninguna de estas decisiones.
-
-## Interpretación: ¿la penalización aporta?
-
-```{r}
-baseline_fit <- glm.fit(
-  x = cbind(`(Intercept)` = 1, x_dev), y = y_dev,
-  family = binomial()
-)
-baseline_prob <- as.numeric(plogis(
-  cbind(`(Intercept)` = 1, x_test) %*% coef(baseline_fit)
-))
-
-bind_rows(
-  class_metrics(y_test, baseline_prob, selected_threshold) %>%
-    mutate(modelo = "Logit sin penalizar"),
-  class_metrics(y_test, test_prob, selected_threshold) %>%
-    mutate(modelo = "Elastic Net")
-) %>%
-  select(modelo, everything())
-```
-
-Regularizar se justifica por desempeño y estabilidad fuera de muestra — comparado explícitamente aquí contra el logit sin penalizar de las clases 9–11 — no porque el método sea más reciente.
-
-## Interpretación: clasificación y calibración
-
-```{r}
-test_class <- factor(
-  if_else(test_prob >= selected_threshold, "alta", "baja"),
-  levels = c("baja", "alta")
-)
-observed <- factor(if_else(y_test == 1, "alta", "baja"), levels = c("baja", "alta"))
-table(observado = observed, predicho = test_class)
-```
-
-```{r calibration, fig.height=4.4}
-calibration <- tibble(y = y_test, p = test_prob) %>%
-  mutate(bin = ntile(p, 10)) %>%
-  group_by(bin) %>%
-  summarise(predicted = mean(p), observed = mean(y), n = n(), .groups = "drop")
-
-calibration %>%
-  ggplot(aes(predicted, observed, size = n)) +
-  geom_abline(slope = 1, intercept = 0, color = course_palette[["secondary"]]) +
-  geom_point(color = course_palette[["primary"]], alpha = 0.85) +
-  scale_x_continuous(limits = c(0, 1)) +
-  scale_y_continuous(limits = c(0, 1)) +
-  labs(x = "Probabilidad media predicha", y = "Proporción observada", size = "Horas")
-```
-
-Los falsos negativos son horas de demanda alta que el sistema no anticipó. Discriminación (matriz de confusión) y calibración (¿las probabilidades predichas se cumplen en la frecuencia correcta?) son propiedades distintas — un modelo puede discriminar bien y calibrar mal, o viceversa.
-
-## Interpretación: ¿qué variables quedan?
-
-```{r}
-selected <- as.matrix(coef(final_fit)) %>%
-  as_tibble(rownames = "variable") %>%
-  rename(coefficient = 2) %>%
-  filter(variable != "(Intercept)") %>%
-  mutate(selected = abs(coefficient) > 1e-8) %>%
-  arrange(desc(abs(coefficient)))
-
-selected %>% slice_head(n = 10)
-```
-
-Un coeficiente igual a cero no demuestra irrelevancia sustantiva: solo dice que, bajo esta penalización y esta muestra, esa variable no ayudó a predecir. La selección puede cambiar entre muestras parecidas — no es una prueba de hipótesis.
-
-## Comparación con selección clásica
-
-| Método | Controla complejidad | Selección | Nota |
-|---|---|---|---|
-| Mejor subconjunto | prueba todas las combinaciones | dura (0/1) | inviable con $p$ grande |
-| Paso a paso (stepwise) | agrega/quita una variable a la vez | dura | *greedy*, inestable |
-| Ridge / LASSO / Elastic Net | penalización continua | según método | convexo, reproducible |
-
-La regularización reemplaza la selección **discreta** (combinatoria, inestable, la que un GLM clásico haría "a mano" comparando AIC entre modelos) por una **continua** — el mismo objetivo del stepwise selection de la clase 18, resuelto de forma más estable.
-
-## Cuándo puede engañar
-
-- **Correlación fuerte**: LASSO elige arbitrariamente entre predictores casi equivalentes.
-- **Inferencia post-selección**: los $p$-valores clásicos no son válidos tras seleccionar con los mismos datos que se usan para inferencia.
-- **$p\gg n$**: LASSO selecciona a lo sumo $n$ variables, aunque más sean relevantes.
-- **Escalas ignoradas**: sin estandarizar, la penalización castiga por unidades, no por importancia.
-- **Fuga de información**: estandarizar o elegir $\lambda$ mirando el test infla el desempeño reportado.
-
-## Síntesis conceptual
-
-La regularización es una respuesta directa al compromiso sesgo–varianza con el que abrimos la clase: introducimos un sesgo controlado ($\lambda P_\alpha$) a cambio de mucha menos varianza y un ajuste reproducible.
-
-- **Ridge** ($L_2$): estabiliza, no selecciona; resuelve la colinealidad.
-- **LASSO** ($L_1$): contrae y selecciona vía soft-thresholding.
-- **Elastic Net**: combina ambos cuando hay bloques correlacionados.
-
-Todo el resto del flujo —partición, estandarización, test intacto, calibración— existe para que ese compromiso se resuelva **honestamente**, sin volver a caer en la curva de sobreajuste del comienzo.
+Por eso la advertencia del comienzo: esto **no es un LLM pequeño**. Es la misma pregunta estadística, resuelta con las herramientas más simples posibles, para que la pregunta —no la ingeniería— quede clara.
 
 ## Ejercicio
 
-1. Agregue una interacción entre `workingday` y `factor(hr)`.
-2. Repita el tuning sin observar el test.
-3. Compare log-loss y calibración contra el modelo de esta clase.
-4. Examine qué coeficientes sobreviven con LASSO.
-5. Explique por qué una mejora predictiva no basta para hablar de causalidad.
-
-## La pregunta que queda abierta
-
-Regularización controla la complejidad de un modelo cuya **forma** seguimos eligiendo nosotros: seguimos escribiendo a mano `I(temp^2)`, `factor(hr) * workingday`, y esperando haber adivinado las interacciones correctas.
-
-. . .
-
-**¿Qué pasa si no sabemos qué interacciones importan?** ¿Puede el algoritmo, además de controlar cuánta complejidad usar, **descubrir por sí solo** qué variables interactúan y cómo? Esa es exactamente la pregunta que abre la próxima clase.
-
-Seguimos usando bicicletas como único caso — pero el mismo procedimiento (penalizar, validar sin mirar el test, elegir hiperparámetros honestamente) es exactamente el que corre detrás de un puntaje de crédito o un score de riesgo: la disciplina que practicamos aquí es la misma que se exige cuando el error afecta a una persona, no a una bicicleta.
+1. Cambie las matrices `p_verbo_dado_sujeto` / `p_objeto_dado_verbo` para crear una estructura distinta y verifique que `multinom` la recupera.
+2. Ajuste un modelo `objeto ~ verbo + sujeto` (sin interacción) y compare su log-loss y número de parámetros contra `m1` y `m2`.
+3. Modifique `generar_oracion()` para que, en vez de muestrear, siempre elija la palabra más probable (`which.max`). Compare la diversidad de oraciones generadas.
+4. Implemente el reescalamiento por temperatura en `generar_oracion()` y observe qué pasa con $T=0.1$ y $T=5$.
 
 ## En resumen
 
-- Un modelo demasiado flexible ajusta mejor el entrenamiento pero predice peor datos nuevos: sesgo-varianza.
-- Ridge estabiliza modelos con predictores correlacionados, sin seleccionar.
-- LASSO favorece parsimonia y selección vía soft-thresholding.
-- Elastic Net ofrece un continuo entre ambos cuando hay bloques correlacionados.
-- $\alpha$ y $\lambda$ se eligen con validación, nunca maximizando el ajuste en entrenamiento.
-- La forma funcional del modelo, sin embargo, la seguimos eligiendo nosotros — eso cambia en la próxima clase.
+- Predecir la siguiente palabra es un problema de clasificación multinomial — el mismo que vimos en la clase 9.
+- Softmax convierte puntajes en probabilidades sobre un vocabulario; con dos categorías, se reduce a la regresión logística binaria.
+- Más contexto mejora la predicción (menor log-loss) pero aumenta rápidamente el número de parámetros — el problema que los embeddings y los Transformers resuelven a escala.
+- Generar texto es muestrear, repetidamente, de la distribución que el modelo predice — el mismo ciclo, ya sea con un logit multinomial o con un LLM de miles de millones de parámetros.
+
+## Mapa conceptual del curso
+
+$$
+\text{probabilidad y GLM}
+\;\longrightarrow\;
+\text{logit, multinomial, Poisson}
+\;\longrightarrow\;
+\text{causalidad}
+\;\longrightarrow\;
+\text{predicción y regularización}
+\;\longrightarrow\;
+\text{árboles, redes, LLMs}.
+$$
+
+En cada clase preguntamos lo mismo: ¿qué outcome predecimos o explicamos, qué distribución supone el modelo, cómo se estima, y qué podemos —y no podemos— concluir de él?
 
 ## Gracias {.inverse .center .middle .closing}
 
-**Hasta la próxima clase**
+**Fin del curso**
 
 Mauricio Bucca

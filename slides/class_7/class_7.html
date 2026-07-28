@@ -143,13 +143,13 @@
     }
   </style>
 </head>
-<body class="theme-boca quarto-light">
+<body class="theme-juventus quarto-light">
   <div class="reveal">
     <div class="slides">
 
-<section id="title-slide" data-background-color="#003B7A" class="quarto-title-block center">
+<section id="title-slide" data-background-color="#6B2D5C" class="quarto-title-block center">
   <h1 class="title">Análisis de Datos Categóricos (SOC3070)</h1>
-  <p class="subtitle">Regresión Lineal y el Modelo Lineal de Probabilidad</p>
+  <p class="subtitle">Efectos en Regresión Logística</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -166,938 +166,676 @@ Mauricio Bucca · Sociología UC
 <div class="full-width">
 <div class="content-box">
 <p><strong>Antes</strong></p>
-<p>estimación, MLE y funciones de pérdida.</p>
+<p>regresión logística y máxima verosimilitud.</p>
 </div>
 <div class="content-box-primary">
 <p><strong>Hoy</strong></p>
-<p>modelo lineal de probabilidad y sus límites.</p>
+<p>interpretación de efectos y efectos marginales.</p>
 </div>
 <div class="content-box-secondary">
 <p><strong>Después</strong></p>
-<p>modelos lineales generalizados.</p>
+<p>inferencia y bootstrap.</p>
 </div>
-</div>
-</section>
-<section id="un-mismo-conjunto-de-modelos-dos-usos-distintos" class="slide level2">
-<h2>Un mismo conjunto de modelos, dos usos distintos</h2>
-<p>Las próximas clases (7 a 15) presentan un conjunto de modelos —LPM, GLM, logit, logit multinomial, Poisson— con un uso <strong>explicativo/inferencial</strong>: nos interesa el efecto de cada predictor, su significancia, su interpretación sustantiva.</p>
-<div class="fragment">
-<p>Más adelante en el curso (clases 17 a 22) <strong>no vamos a introducir modelos distintos</strong>: vamos a retomar exactamente estos mismos modelos, pero usados con un fin <strong>predictivo/clasificatorio</strong> — qué tan bien anticipan casos nuevos, no solo qué tan bien explican los datos que ya tenemos.</p>
-</div>
-<div class="fragment">
-<p>Misma matemática, dos preguntas distintas. Vale la pena tenerlo en mente desde ahora.</p>
 </div>
 </section>
 <section>
-<section id="modelo-lineal-de-probabilidad" class="title-slide slide level1 inverse center middle" data-background-color="#E6A700">
-<h1>Modelo Lineal de Probabilidad</h1>
+<section id="regresión-logística" class="title-slide slide level1 inverse center middle" data-background-color="#C69214">
+<h1>Regresión Logística</h1>
 
 </section>
-<section id="modelos-de-regresión-para-variable-dependiente-categórica" class="slide level2">
-<h2>Modelos de regresión para variable dependiente categórica</h2>
+<section id="interpretación-de-efectos" class="slide level2">
+<h2>Interpretación de efectos</h2>
 </section>
-<section id="repaso-regresión-lineal" class="slide level2">
-<h2>Repaso: regresión lineal</h2>
+<section id="configuración" class="slide level2">
+<h2>Configuración</h2>
+<div class="fragment">
+<ul>
+<li>Tenemos <span class="math inline">y_{1}, \dots y_{n}</span> son <span class="math inline">n</span> variables independientes con distribución <span class="math inline">\text{Bernoulli}(p_{i})</span></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li><span class="math inline">\mathbb{E}(y_{i} \mid x_{i1}, \dots,x_{ik}) = \mathbb{P}(y_{i}=1 \mid x_{i1}, \dots,x_{ik}) = p_{i}</span></li>
+</ul>
+</div>
+<div class="fragment">
+<p>donde, <span class="math display">\ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></p>
+</div>
+</section>
+<section id="configuración-1" class="slide level2">
+<h2>Configuración</h2>
+<ul>
+<li>Tenemos <span class="math inline">y_{1}, \dots y_{n}</span> son <span class="math inline">n</span> variables independientes con distribución <span class="math inline">\text{Bernoulli}(p_{i})</span></li>
+<li><span class="math inline">\mathbb{E}(y_{i} \mid x_{i1}, \dots,x_{ik}) = \mathbb{P}(y_{i}=1 \mid x_{i1}, \dots,x_{ik}) = p_{i}</span></li>
+</ul>
+<p>donde, <span class="math display">\underbrace{\ln \frac{p_{i}}{1 - p_{i}}}_{\text{Link logit}(p_{i})} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></p>
+</section>
+<section id="configuración-2" class="slide level2">
+<h2>Configuración</h2>
+<ul>
+<li>Tenemos <span class="math inline">y_{1}, \dots y_{n}</span> son <span class="math inline">n</span> variables independientes con distribución <span class="math inline">\text{Bernoulli}(p_{i})</span></li>
+<li><span class="math inline">\mathbb{E}(y_{i} \mid x_{i1}, \dots,x_{ik}) = \mathbb{P}(y_{i}=1 \mid x_{i1}, \dots,x_{ik}) = p_{i}</span></li>
+</ul>
+<p>donde, <span class="math display">\ln \frac{p_{i}}{1 - p_{i}} = \underbrace{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}_{\text{Predictor lineal  } \eta_{i}}</span></p>
+<div class="fragment">
+<ul>
+<li>Interpretación: ¿cuál es el significado de <span class="math inline">\beta_{0},\beta_{1}, \dots, \beta_{k}</span>?</li>
+</ul>
+</div>
+</section>
+<section id="un-ejemplo-empírico" class="slide level2">
+<h2>Un ejemplo empírico</h2>
 <div class="pull-left">
-<div class="quarto-figure quarto-figure-center">
+<p>Continuando con los datos de demanda de bicicletas, ajustaremos el siguiente modelo:</p>
+<p><span class="math display">\underbrace{\ln \frac{p_{i}}{ 1 - p_{i}}}_{\text{logit}(p_{i})}    = \beta_{0} + \beta_{1}\text{hábil}_{i} + \beta_{2}\text{temp}_{i}</span></p>
+<p>donde:</p>
+<ul>
+<li><span class="math inline">p_{i} =\mathbb{P}(\text{alta demanda}_{i}=1)</span></li>
+<li><span class="math inline">\text{logit}(p_{i})</span> es el <span class="bold">log odds</span> de que una hora sea de alta demanda</li>
+<li><span class="math inline">p_{i}</span> y <span class="math inline">\text{logit}(p_{i})</span> son una función del tipo de día (hábil) y la temperatura (temp).</li>
+</ul>
+</div>
+<div class="fragment">
+<div class="pull-right">
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = high_demand ~ factor(workingday) + temp, family = binomial(link = "logit"), 
+    data = bikedata)
+
+Coefficients:
+                    Estimate Std. Error z value             Pr(&gt;|z|)    
+(Intercept)          -3.469     0.097  -35.760 &lt; 0.000 ***
+factor(workingday)1  -0.362     0.057   -6.330        0.000 ***
+temp                  4.894     0.155   31.500 &lt; 0.000 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 9711.200  on 8644  degrees of freedom
+Residual deviance: 8473.600  on 8642  degrees of freedom
+AIC: 8480
+
+Number of Fisher Scoring iterations: 4</code></pre>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="efectos-marginales-sobre-el-logit" class="slide level2 inverse center middle" data-background-color="#C69214">
+<h2>Efectos marginales sobre el logit</h2>
+</section>
+<section id="efectos-marginales-sobre-el-logit-1" class="slide level2">
+<h2>Efectos marginales sobre el logit</h2>
+<div class="center">
+<div class="cell">
+<div class="cell-output-display">
+<div>
 <figure>
-<p><img data-src="allen.jpg"></p>
-<figcaption>allen</figcaption>
+<p><img data-src="class_7_files/figure-revealjs/unnamed-chunk-3-1.png" width="576"></p>
 </figure>
 </div>
 </div>
+</div>
+</div>
+</section>
+<section id="efectos-marginales-sobre-el-logit-2" class="slide level2">
+<h2>Efectos marginales sobre el logit</h2>
+<p>Dado el siguiente modelo de regresión logística: <span class="math display">\text{logit}(p_{i}) = \ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></p>
+<div class="fragment">
+<ul>
+<li>El intercepto <span class="math inline">\beta_{0}</span> corresponde al logit de la probabilidad de éxito cuando <span class="math inline">x_{1} = \dots = x_{k} = 0</span></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>El efecto marginal de <span class="math inline">x_{k}</span> sobre el logit de la probabilidad de éxito está dado por:</li>
+</ul>
+<div class="pull-left">
+<div class="content-box-blue">
+<p><span class="math display">\frac{\partial\text{logit}(p_{i})}{\partial x_{k}} = \beta_{k}</span></p>
+</div>
+</div>
 <div class="pull-right">
-<div class="huge">
-<div class="bold">
-<p>Todo lo que siempre quisiste saber sobre regresión lineal (ˆ)</p>
+<div class="content-box-yellow">
+<p>“Un cambio infinitesimal en <span class="math inline">x_{k}</span> <span class="math inline">\big(\partial x_{k}\big)</span> se traduce en un cambio en <span class="math inline">\partial x_{k} \beta_{k}</span> unidades en el logit de p”</p>
 </div>
 </div>
-<p>(ˆ) <span class="bold"><em>Pero nunca te atreviste a preguntar</em></span></p>
+</div>
+<div class="fragment">
+<p>¿Por qué?</p>
+</div>
+<div class="fragment">
+<p>Asumamos que sólo la variable <span class="math inline">x_{k}</span> cambia en una unidad, de <span class="math inline">x_{k}=c</span> a <span class="math inline">x_{k}=c+1</span>. Entonces:</p>
+</div>
+<div class="fragment">
+<p><span class="math display">\begin{align}
+  \frac{\Delta\text{logit}(p_{i}) }{\Delta x_{k}} &amp;= (\beta_{0} + \beta_{1}x_{1} +  \dots + \beta_{k}(c+1)) - (\beta_{0} + \beta_{1}x_{1} + \dots + \beta_{k}c)  \\
+  &amp;=  \beta_{k}(c+1) - \beta_{k}c = \beta_{k}
+\end{align}</span></p>
 </div>
 </section>
-<section id="estructura-de-un-modelo-de-regresión-lineal" class="slide level2">
-<h2>Estructura de un modelo de regresión lineal</h2>
-<p>Un modelo de regresión lineal estándar tiene la siguiente estructura:</p>
-<p><span class="math display">y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}}^{\hat{y}} + e_{i}</span> donde:</p>
+<section id="efectos-marginales-sobre-el-logit-3" class="slide level2">
+<h2>Efectos marginales sobre el logit</h2>
+<p>En nuestro ejemplo: <span class="math inline">\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i}</span></p>
+<div class="pull-left">
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>                    Estimate Std. Error
+(Intercept)          -3.469    0.097
+factor(workingday)1  -0.362    0.057
+temp                  4.894    0.155</code></pre>
+</div>
+</div>
+</div>
+<div class="pull-right">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_7_files/figure-revealjs/unnamed-chunk-5-1.png" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="efectos-multiplicativos-sobre-las-odds-de-éxito" class="slide level2 inverse center middle" data-background-color="#C69214">
+<h2>Efectos multiplicativos sobre las odds de éxito</h2>
+</section>
+<section id="efectos-multiplicativos-sobre-las-odds" class="slide level2">
+<h2>Efectos multiplicativos sobre las odds</h2>
+<p>Dado el siguiente modelo de regresión logística: <span class="math display">\text{logit}(p_{i}) = \ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></p>
+<div class="fragment">
+<p>exponenciando a ambos lados obtenemos las <span class="bold">odds de éxito</span>: <span class="math display">\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}</span></p>
+</div>
+<div class="fragment">
+<p>equivalentemente</p>
+<div class="content-box-blue">
+<p><span class="math display">\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots e^{\beta_{k} x_{ik}}</span></p>
+</div>
+</div>
+</section>
+<section id="efectos-multiplicativos-sobre-las-odds-1" class="slide level2">
+<h2>Efectos multiplicativos sobre las odds</h2>
+<p><span class="math display">\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots e^{\beta_{k} x_{ik}}</span></p>
+<div class="fragment">
+<p>Examinando esta ecuación observamos que cuando <span class="math inline">x_1 = \dots = x_k = 0</span>,</p>
+<p><span class="math display">\frac{p_{i}}{1 - p_{i}}=  e^{\beta_{0}}</span> Es decir, cuando <span class="math inline">x_1 = \dots = x_k = 0</span> las odds de éxito están dadas por <span class="math inline">e^{\beta_{0}}</span>.</p>
+</div>
+<div class="fragment">
+<p>Generalizando, observamos que cuando <span class="math inline">x_1 = c_1  \dots = x_k = c_k</span>, las odds de éxito están dadas por</p>
+<p><span class="math display">\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0}} \cdot e^{\beta_{1} c_{1}}  \dots e^{\beta_{k} c_{k}}</span></p>
+</div>
+</section>
+<section id="efectos-multiplicativos-sobre-las-odds-odds-ratios" class="slide level2">
+<h2>Efectos multiplicativos sobre las odds: odds ratios</h2>
+<p>Considera la situación en que <span class="math inline">i</span> y <span class="math inline">j</span> son dos observaciones con <span class="math inline">x_{k}=c</span> y <span class="math inline">x_{k}=c+1</span>, respectivamente. El resto de las covariables toman valores idénticos.</p>
+<div class="fragment">
+<p>Las odds de éxito para cada caso son:</p>
+<ul>
+<li><span class="math inline">p_{i}/(1 - p_{i}) = e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c}</span></li>
+<li><span class="math inline">p_{j}/(1 - p_{j}) = e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c+1}</span></li>
+</ul>
+</div>
+<div class="fragment">
+<p>El ratio de las odd de éxito entre <span class="math inline">j</span> e <span class="math inline">i</span> está dado por:</p>
+<p><span class="math display">\begin{align}
+\frac{p_{j}/(1 - p_{j})}{p_{i}/(1 - p_{i})} &amp;= \frac{e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c+1}}{e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c}} \\ \\
+&amp;= e^{\beta_{k}}
+\end{align}</span> En otras palabras, manteniendo otros factores constantes, <span class="math inline">e^{\beta_{k}}</span> representa la odds ratio entre el caso con <span class="math inline">x_{k}</span> aumentado en una unidad, y el caso con <span class="math inline">x_{k}</span> en un nivel basal dado.</p>
+</div>
+</section>
+<section id="efectos-multiplicativos-sobre-las-odds-2" class="slide level2">
+<h2>Efectos multiplicativos sobre las odds</h2>
+<div class="content-box-yellow">
+<p>“Un cambio en <span class="math inline">\Delta</span> unidades de <span class="math inline">x_{k}</span> multiplica las las odds de éxito por <span class="math inline">e^{\Delta \beta_{k}}</span>”</p>
+</div>
+<p><span class="bold">Propiedades</span>:</p>
 <div class="fragment">
 <ul>
-<li><span class="math inline">y</span> es la variable dependiente</li>
-<li><span class="math inline">x_{1} \dots x_{k}</span> son predictores o variables independientes</li>
-<li><span class="math inline">\beta_{1} \dots \beta_{k}</span> son los respectivos “efectos” de los predictores sobre <span class="math inline">y</span></li>
-<li><span class="math inline">e</span> es un término de error aleatorio (“white noise”)</li>
-<li><span class="math inline">\hat{y} \perp e</span></li>
+<li><span class="math inline">e^{\beta_{k}}</span> está restringido al rango <span class="math inline">[0,\infty+)</span>. Es una constante que “comprime” o amplifica las odds de éxito.</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Si <span class="math inline">\beta_{k} &lt; 0  \to  (0 &lt; e^{\beta_{k}} &lt; 1)</span>. Es decir, un aumento en <span class="math inline">x_{k}</span> está asociado con una reducción (multiplicativa) de las odds de éxito.</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Si <span class="math inline">\beta_{k} = 0  \to  (e^{\beta_{k}} =1)</span>. Es decir, un cambio en <span class="math inline">x_{k}</span> está asociado a un cambio nulo en las odds de éxito.</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Si <span class="math inline">\beta_{k} &gt; 0  \to  (e^{\beta_{k}} &gt; 1)</span>. Es decir, un aumento en <span class="math inline">x_{k}</span> está asociado a aumento (multiplicativo) en de las odds de éxito.</li>
 </ul>
 </div>
 </section>
-<section id="estructura-de-un-modelo-de-regresión-lineal-1" class="slide level2">
-<h2>Estructura de un modelo de regresión lineal</h2>
-<p>Podemos repensar el LM de la siguiente forma:</p>
+<section id="efectos-multiplicativos-sobre-las-odds-3" class="slide level2">
+<h2>Efectos multiplicativos sobre las odds</h2>
+<p>En nuestro ejemplo: <span class="math inline">\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i}</span>, por tanto:</p>
+<div class="pull-left">
+<p><span class="math inline">\frac{p_{i}}{1 -p_{i}} = e^{\beta_{0}} \cdot  e^{\beta_{1}*\text{hábil}_{i}} \cdot e^{\beta_{2}\text{temp}_{i}}</span></p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>                    Estimate Std. Error
+(Intercept)          -3.469    0.097
+factor(workingday)1  -0.362    0.057
+temp                  4.894    0.155</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        (Intercept) factor(workingday)1                temp 
+            0.031             0.696           133.533 </code></pre>
+</div>
+</div>
+</div>
 <div class="fragment">
-<p><span class="bold">Setup</span></p>
+<div class="pull-right">
+<div class="cell" data-warnings="false">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_7_files/figure-revealjs/unnamed-chunk-7-1.png" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-éxito" class="slide level2 inverse center middle" data-background-color="#C69214">
+<h2>Efectos marginales sobre la probabilidad de éxito</h2>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-1" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de éxito</h2>
+<div class="center">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_7_files/figure-revealjs/unnamed-chunk-8-1.png" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-2" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de éxito</h2>
+<p>Dado el siguiente modelo de regresión logística: <span class="math display">\ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></p>
+<div class="fragment">
+<p>Queremos saber el <span class="bold">efecto marginal</span> de los predictores sobre la <span class="bold">probabilidad</span> de éxito. Formalmente</p>
+</div>
+<div class="fragment">
+<p><span class="math display">\frac{\partial p_{i}}{\partial x_{k}}</span></p>
+</div>
+<div class="fragment">
+<p><span class="bold">Paso a paso…</span></p>
+<div class="img-right">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="mostaza-merlo.jpg"></p>
+<figcaption>mostaza</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="fragment">
 <ul>
-<li>Tenemos <span class="math inline">n</span> observaciones (individuos) independientes: <span class="math inline">i = 1, \dots, n</span></li>
+<li><span class="bold">Paso 1</span>: reexpresar la ecuación de regresión como</li>
+</ul>
+<p><span class="math display">\ln(p_{i}) - \ln(1-p_{i}) = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></p>
+</div>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-3" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de éxito</h2>
+<ul>
+<li><span class="bold">Paso 1</span>: reexpresar la ecuación de regresión como <span class="math display">\ln(p_{i}) - \ln(1-p_{i}) = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></li>
+</ul>
+<div class="fragment">
+<ul>
+<li><span class="bold">Paso 2</span>: usando diferenciación implícita y tomando derivada con respecto a <span class="math inline">x_{k}</span> en ambos lados, obtenemos: <span class="math display">\frac{\partial p_{i} }{\partial x_{k}} \frac{1}{p_{i}} + \frac{\partial p_{i} }{\partial x_{k}} \frac{1}{(1 - p_{i})} = \beta_{k}</span></li>
 </ul>
 </div>
 <div class="fragment">
 <ul>
-<li>Para cada individuo observamos un valor en la variable dependiente <span class="math inline">y_{i}</span>, tal que <span class="math inline">y_{i} \in \mathbb{R}</span></li>
+<li><span class="bold">Paso 3</span>: re-agrupando: <span class="math display">\frac{\partial p_{i} }{\partial x_{k}} \frac{1}{p_{i}(1 - p_{i})}= \beta_{k}</span></li>
+</ul>
+</div>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-4" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de éxito</h2>
+<ul>
+<li><span class="bold">Paso 3</span>: re-agrupando: <span class="math display">\frac{\partial p_{i} }{\partial x_{k}} \frac{1}{p_{i}(1 - p_{i})}= \beta_{k}</span></li>
+</ul>
+<div class="fragment">
+<ul>
+<li><span class="bold">Paso 4</span>: re-ordenando los términos obtenemos el efecto marginal que buscamos:</li>
+</ul>
+<div class="content-box-blue">
+<p><span class="math display">\frac{\partial p_{i}}{\partial x_{k}}= \beta_{k} \cdot p_{i}(1 - p_{i})</span></p>
+</div>
+</div>
+<div class="fragment">
+<p>recordar que … <span class="math display">p_{i} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik})}}</span></p>
+</div>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-5" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de éxito</h2>
+<ul>
+<li><span class="bold">Paso 5</span>: reemplazando, <span class="math display">\frac{\partial p_{i}}{\partial x_{k}}= \beta_{k} \cdot \Bigg(\frac{1}{1 + e^{-(\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}})}\Bigg) \Bigg(1 - \frac{1}{1 + e^{-(\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik})}}\Bigg)</span></li>
+</ul>
+<div class="fragment">
+<p>Corolario:</p>
+</div>
+<div class="fragment">
+<ul>
+<li>Dado que <span class="math inline">p_{i}(1-p_{i})</span> es estrictamente positivo,</li>
+<li><span class="math inline">\beta_{k}&gt;0</span> indica que variable <span class="math inline">x_{k}</span> tienen un efecto positivo sobre la probabilidad de éxito</li>
+<li><span class="math inline">\beta_{k}&lt;0</span> indica que <span class="math inline">x_{k}</span> tiene un efecto negativo.</li>
 </ul>
 </div>
 <div class="fragment">
 <ul>
-<li>Estos resultados son realizaciones de variables aleatorias <span class="math inline">\text{Normal}(\mu_{i}, \sigma_{i})</span> con media y varianza desconocida: misma distribución pero parámetros (potencialmente) distintos
+<li>El <span class="bold">efecto marginal</span> de <span class="math inline">x_{k}</span> no depende sólo de <span class="math inline">\beta_{k}</span> sino varía dependiendo del valor de <span class="math inline">x_{k}</span> y del valor de todas las otras covariables.</li>
+</ul>
+</div>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-6" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de éxito</h2>
+<p><span class="math display">\frac{\partial p_{i}}{\partial x_{k}}= \beta_{k} \cdot \Bigg(\frac{1}{1 + e^{-(\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}})}\Bigg) \Bigg(1 - \frac{1}{1 + e^{-(\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik})}}\Bigg)</span></p>
+<div class="fragment">
+<p>Corolario,</p>
+</div>
+<div class="fragment">
 <ul>
-<li>Notar que es imposible identificar estos parámetros individualmente ( <span class="math inline">n</span> observaciones y <span class="math inline">2n</span> parámetros)</li>
+<li>A medida que la <span class="math inline">p_{i}</span> se aproxima a 0, <span class="math inline">\frac{\partial p_{i}}{\partial x_{k}}</span> tiende a 0.</li>
+<li>A medida que la <span class="math inline">p_{i}</span> se aproxima a 1, <span class="math inline">\frac{\partial p_{i}}{\partial x_{k}}</span> tiende a 0.</li>
+<li>A medida que la <span class="math inline">p_{i}</span> se acerca a 0.5, <span class="math inline">\frac{\partial p_{i}}{\partial x_{k}}</span> tiende a <span class="math inline">\beta_{k}/4</span>.</li>
+</ul>
+</div>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-7" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de éxito</h2>
+<p>En nuestro ejemplo: <span class="math inline">\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i}</span>, por tanto: <span class="math display">p_{i} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i})} }</span></p>
+<div class="pull-left">
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>                    Estimate Std. Error
+(Intercept)          -3.469    0.097
+factor(workingday)1  -0.362    0.057
+temp                  4.894    0.155</code></pre>
+</div>
+</div>
+</div>
+<div class="pull-right">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_7_files/figure-revealjs/unnamed-chunk-10-1.png" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-8" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de éxito</h2>
+<div class="pull-left">
+<p><span class="math display">p_{i} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i})}}</span></p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_7_files/figure-revealjs/unnamed-chunk-11-1.png" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div class="fragment">
+<div class="pull-right">
+<p><span class="math display">\frac{\partial p_{i}}{\partial \text{temp} }= \beta_{\text{temp}} \cdot p_{i}(1 - p_{i})</span></p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_7_files/figure-revealjs/unnamed-chunk-12-1.png" width="576"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-9" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de éxito</h2>
+<ul>
+<li>Efectos marginales son <em>esencialmente</em> heterogeneos. No hay un efecto sino muchos.</li>
+</ul>
+<div class="fragment">
+<ul>
+<li>Heterogeneidad crece con la complejidad del modelo: número de predictores, interacciones, etc.</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>En la práctica, muchas veces queremos UN número que resuma el efecto marginal.</li>
+</ul>
+</div>
+<div class="fragment">
+<div class="pull-left">
+<p><strong>Objetivo:</strong> obtener un resumen único sin ocultar que el efecto varía entre observaciones.</p>
+</div>
+</div>
+<div class="fragment">
+<p>Cantidades de interes:</p>
+<div class="pull-right">
+<ul>
+<li>Average Marginal Effects (AME)</li>
+<li>Marginal Effects at the Mean (MEM)</li>
+<li>Marginal Effects at Representative Values (MER)</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-ame" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de éxito: AME</h2>
+<p><span class="bold">AME</span>: Efecto marginal promedio (en muestra)</p>
+<div class="fragment">
+<p>En <code>R</code> pueden usar el nuevo paquete <code>marginaleffects</code> (o comando <code>margins</code> en <code>Stata</code> )</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+       Term Contrast Estimate Std. Error     z Pr(&gt;|z|)    S   2.500 %  97.500 %
+ temp          dY/dX   0.787    0.020 39.050   &lt;0.001  Inf  0.748  0.827
+ workingday    1 - 0  -0.060    0.010 -6.220   &lt;0.001 30.900 -0.079 -0.041
+
+Type: response</code></pre>
+</div>
+</div>
+</div>
+<div class="fragment">
+<div class="pull-left">
+<p><span class="bold">¿De donde vienen estos números?</span></p>
+</div>
+</div>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-ame-1" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de éxito: AME</h2>
+<p><span class="bold">(a) Solución análítica</span>, usando <span class="math display">\frac{\partial p_{i}}{\partial \text{temp} }= \beta_{\text{temp}} \cdot p_{i}(1 - p_{i})</span></p>
+<div class="fragment">
+<p>En <code>R</code>:</p>
+</div>
+<div class="fragment">
+<div class="pull-left">
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 8,645 × 3
+        p beta_temp    me
+    &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt;
+ 1 0.092      4.890 0.407
+ 2 0.084      4.890 0.376
+ 3 0.084      4.890 0.376
+ 4 0.092      4.890 0.407
+ 5 0.092      4.890 0.407
+ 6 0.092      4.890 0.407
+ 7 0.084      4.890 0.376
+ 8 0.077      4.890 0.346
+ 9 0.092      4.890 0.407
+10 0.130       4.890 0.553
+# ℹ 8,635 more rows</code></pre>
+</div>
+</div>
+</div>
+<div class="pull-right">
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "AME Temperatura: 0.787"</code></pre>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-ame-2" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de éxito: AME</h2>
+<p><span class="bold">(b) Aproximación numérica</span>, usando la definición la derivada:</p>
+<div class="fragment">
+<p><span class="math display">\frac{\partial p_{i}}{\partial \text{temp}} \approx  \frac{p_{i}(x_{1}, \dots ,\text{temp} = c + \delta) - p_{i}(x_{1}, \dots ,\text{temp} = c )}{\delta}</span></p>
+</div>
+<div class="fragment">
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.794</code></pre>
+</div>
+</div>
+</div>
+</section>
+<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-mem" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de éxito: MEM</h2>
+<p><span class="bold">MEM</span>: Efecto marginal al valor promedio (en muestra)</p>
+<div class="fragment">
+<div class="pull-left">
+<ul>
+<li>¿Qué promedio?
+<ul>
+<li>¿Promedio de “temperatura” para cada tipo de día por separado?</li>
+<li>¿Promedio global de “temperatura” por cada tipo de día por separado?</li>
+<li>¿Promedio global de “temperatura” y la media del tipo de día (como var. continua)?</li>
 </ul></li>
 </ul>
 </div>
-</section>
-<section id="estructura-de-un-modelo-de-regresión-lineal-2" class="slide level2">
-<h2>Estructura de un modelo de regresión lineal</h2>
-<p>El modelo de regresión lineal estándar “resuelve” este problema de la siguiente manera <span class="math display">y_{i} \sim \text{Normal}(\mu_{i}, \sigma_{i}) \quad \quad \text{ donde}</span></p>
-<div class="fragment">
-<ul>
-<li><span class="math inline">\mu_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}</span></li>
-</ul>
 </div>
 <div class="fragment">
-<p><span class="math inline">\quad =\mathbb{E}(y_{i} \mid x_{1}, \dots, x_{k})</span></p>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="math inline">\sigma^{2}_{i} =  \sigma^{2}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<p><span class="math inline">\quad =\operatorname{Var}(y_{i} \mid x_{1}, \dots, x_{k})</span></p>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="math inline">x_{1}, \dots, x_{k}</span> son valores fijos, no variables aleatorias</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Todo lo anterior implica que, si <span class="math inline">(e_{i} = y_{i} - \mu_{i})</span>, entonces</li>
-</ul>
-</div>
-<div class="fragment">
-<p><span class="math inline">\quad e_{i} = \text{Normal}(\mu_{i}, \sigma) - \mu_{i} \sim  \text{Normal}(0, \sigma)</span></p>
-</div>
-<div class="fragment">
-<p>En resumen,</p>
-<div class="content-box-primary">
-<p><span class="math display">\color{white}{ y_{i} \sim \text{Normal}(\mu_{i}, \sigma) \quad  \text{ o, equivalentemente: } \quad  y_{i} = \mu_{i} + \text{Normal}(0, \sigma)}</span></p>
-</div>
-</div>
-<div class="fragment">
-<p>Notar que LM describe los datos con <span class="math inline">k + 2</span> parámetros: <span class="math inline">\beta_{0}, \beta_{1}, \dots, \beta_{k}, \sigma</span></p>
-</div>
-</section>
-<section id="estructura-de-un-modelo-de-regresión-lineal-3" class="slide level2">
-<h2>Estructura de un modelo de regresión lineal</h2>
-<p>Es común encontrar el modelo lineal escrito en forma matricial:</p>
-<div class="pull-left">
-<p><span class="math display">\boldsymbol{y} \sim \text{Normal}_{n}(\boldsymbol{X}\boldsymbol{\beta},\boldsymbol{\Sigma}) \quad \text{ donde ...}</span></p>
-</div>
 <div class="pull-right">
-<ul>
-<li><span class="math inline">\boldsymbol{y}</span> es un vector que contiene las diferentes <span class="math inline">y_{i}, \dots, y_{n}</span></li>
-<li><span class="math inline">\boldsymbol{\mu} = \boldsymbol{X}\boldsymbol{\beta} = \beta_{0} + \beta_{1}\boldsymbol{x}_{1} + \dots + \beta_{k}\boldsymbol{x}_{k}</span></li>
-<li><span class="math inline">\boldsymbol{\Sigma}</span> es la matriz de varianza-covarianza entre las observaciones</li>
-</ul>
+<p><strong>La elección depende de la pregunta sustantiva y de qué población queremos resumir.</strong></p>
+</div>
 </div>
 <div class="fragment">
-<p>visualmente: <span class="math display">\begin{bmatrix}
-y_{1} \\  \vdots \\ y_{n}
-\end{bmatrix}_{(n,1)} \sim \text{Normal}_{n}\Bigg(  \boldsymbol{\mu} = \begin{bmatrix}
-\beta_{0} + \beta_{1}x_{11} + \dots \beta_{k}x_{k1} \\
-\vdots \\ \beta_{0} + \beta_{1}x_{1n} + \dots \beta_{k}x_{kn}
-\end{bmatrix}_{(n,1)} , \boldsymbol{\Sigma} = \begin{bmatrix}
-    \sigma^{2}    &amp; 0      &amp; \ldots         &amp; 0      \\
-    0      &amp; \sigma^{2}     &amp; \ldots         &amp; 0      \\
-    \vdots &amp; \vdots &amp; \sigma^{2}   &amp; \vdots \\
-    0      &amp; 0      &amp; \ldots         &amp; \sigma^{2}
-\end{bmatrix}_{(n,n)}\Bigg)</span></p>
+<p>Depende de que lo que queremos …</p>
 </div>
 </section>
-<section id="modelo-de-regresión-lineal" class="slide level2">
-<h2>Modelo de regresión lineal</h2>
-<p>“Ensamblemos” el modelo via Monte Carlo Simulation. “Data Generating Process” (<span class="bold">DGP</span>):</p>
+<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-mem-1" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de éxito: MEM</h2>
+<p>Implementamos la tercera opción usando <code>marginaleffects</code> en <code>R</code>: efecto marginal para temperatura y tipo de día fijos a su promedio global.</p>
 <div class="fragment">
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code> int [1:5000] 29 19 62 6 62 90 6 83 65 76 ...</code></pre>
+<pre><code>      Promedio temp Promedio workingday 
+             0.489              0.684 </code></pre>
 </div>
-</div>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code> num [1:5000] 41.900 30.900 78.200 16.600 78.200 ...</code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code> num [1:5000] 44.400 37.030 81.880 9.850 81.410 ...</code></pre>
-</div>
-</div>
-</div>
-</section>
-<section id="estimación-modelo-de-regresión-lineal" class="slide level2">
-<h2>Estimación modelo de regresión lineal:</h2>
-<div class="pull-left">
-<div class="content-box-primary">
-<p><span class="bold">OLS</span> <span class="math display">\color{white}{\hat{\boldsymbol{\beta}}_{OLS} = \underset{\beta}{\arg\min\ } \sum_{i=1}^{n} (y_{i} - \boldsymbol{X}_{i}'\boldsymbol{\beta})^{2} \quad \text{ donde}}</span></p>
-</div>
-</div>
-<div class="pull-right">
-<ul>
-<li><span class="math inline">\boldsymbol{y}</span> es el vector <span class="math inline">y_{i}, \dots, y_{n}</span></li>
-<li><span class="math inline">\boldsymbol{X}_{i}'\boldsymbol{\beta} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<div class="pull-left">
-<div class="content-box-primary">
-<p><span class="bold">MLE</span> <span class="math display">\color{white}{\hat{\boldsymbol{\beta}}_{MLE} = \underset{\beta}{\arg\max\ } \prod_{i=1}^{n} \frac{1}{\sqrt{2\pi\sigma^{2}}} e^{- \frac{(y_{i} - \boldsymbol{X}_{i}'\boldsymbol{\beta})^{2}}{2\sigma^{2}}} \quad \text{ donde}}</span></p>
-</div>
-</div>
-<div class="pull-right">
-<ul>
-<li><span class="math inline">\frac{1}{\sqrt{2\pi\sigma^{2}}} e^{- \frac{(x - \mu)^{2}}{2\sigma^{2}}}</span> es la densidad de probabilidad de una variable aleatoria <span class="math inline">X \sim \mathcal{N}(\mu,\sigma^2)</span></li>
-</ul>
-</div>
-<div class="cell">
-<style type="text/css">
-.pull-right ~ * { clear: unset; }
-.pull-right + * { clear: both; }
-</style>
 </div>
 </div>
 <div class="fragment">
-<p>Ambos métodos producen mismos resultados en el caso de LM.</p>
-</div>
-</section>
-<section id="modelo-de-regresión-lineal-1" class="slide level2">
-<h2>Modelo de regresión lineal</h2>
-<p>Ahora estimemos los parámetros de nuestro modelo via OLS</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>
-Call:
-lm(formula = y ~ x, data = our_data)
+       Term Contrast Estimate Std. Error     z Pr(&gt;|z|)     S   2.500 %  97.500 %
+ temp          dY/dX   0.813     0.023 34.720   &lt;0.001 875.000  0.767  0.859
+ workingday    1 - 0  -0.062     0.010 -6.120   &lt;0.001  30.000 -0.082 -0.042
 
-Residuals:
-    Min      1Q  Median      3Q     Max 
--24.978  -4.644   0.035   4.642  25.185 
-
-Coefficients:
-            Estimate Std. Error t value            Pr(&gt;|t|)    
-(Intercept) 10.169    0.193    52.600 &lt;0.000 ***
-x            1.095    0.003   323.800 &lt;0.000 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
-
-Residual standard error: 6.940 on 4998 degrees of freedom
-Multiple R-squared:  0.955, Adjusted R-squared:  0.954 
-F-statistic: 105000.000 on 1 and 4998 DF,  p-value: &lt;0.000</code></pre>
+Type: response</code></pre>
+</div>
 </div>
 </div>
 </section>
-<section id="modelo-de-regresión-lineal-2" class="slide level2">
-<h2>Modelo de regresión lineal</h2>
-<p>Ahora estimemos los parámetros via MLE</p>
+<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-mer" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de éxito: MER</h2>
+<p>Una versión más general de MEM es calcular los efectos marginales para “valores representativos”.</p>
+<div class="fragment">
+<p>En <code>R</code></p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>
-Call:
-glm(formula = y ~ x, family = "gaussian", data = our_data)
+ Estimate Std. Error    z Pr(&gt;|z|)     S 2.500 % 97.500 %
+    0.346    0.014 23.900   &lt;0.001 418.200 0.318  0.374
+    0.253    0.009 27.600   &lt;0.001 555.200 0.235  0.271
+    0.953    0.034 28.000   &lt;0.001 570.600 0.886  1.019
+    0.785    0.024 32.300   &lt;0.001 755.900 0.737  0.832
+    1.164    0.029 39.500   &lt;0.001   Inf 1.107  1.222
+    1.221    0.037 32.900   &lt;0.001 788.400 1.149  1.294
 
-Coefficients:
-            Estimate Std. Error t value            Pr(&gt;|t|)    
-(Intercept) 10.169    0.193    52.600 &lt;0.000 ***
-x            1.095    0.003   323.800 &lt;0.000 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
-
-(Dispersion parameter for gaussian family taken to be 48.210)
-
-    Null deviance: 5295609  on 4999  degrees of freedom
-Residual deviance:  240941  on 4998  degrees of freedom
-AIC: 33571
-
-Number of Fisher Scoring iterations: 2</code></pre>
-</div>
-</div>
-</section>
-<section id="modelo-de-regresión-lineal-3" class="slide level2">
-<h2>Modelo de regresión lineal</h2>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_7_files/figure-revealjs/unnamed-chunk-11-1.png" width="960"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="fragment">
-<div class="pull-right">
-<p>Observamos que:</p>
-<ul>
-<li><span class="math inline">\mathbb{E}(y_{i} \mid x = 50) = 64.9</span></li>
-<li><span class="math inline">\mathbb{E}(y_{i} \mid x = 60) = 75.9</span></li>
-<li>Estas “medias condicionales” no son determinísticas sino <span class="bold"><em>probabilísticas</em></span>.</li>
-<li>Específicamente, sabemos que:
-<ul>
-<li><span class="math inline">y_{i} \mid x = 50  \sim \text{Normal}(\mu= 64.9, \sigma=7)</span></li>
-<li><span class="math inline">y_{i} \mid x = 60  \sim \text{Normal}(\mu= 75.9, \sigma=7)</span></li>
-</ul></li>
-</ul>
-</div>
-</div>
-</section>
-<section id="modelo-de-regresión-lineal-4" class="slide level2">
-<h2>Modelo de regresión lineal</h2>
-<div class="pull-left">
-<p>Así se ve:</p>
-<ul>
-<li><span class="math inline">\mathbb{E}(y_{i} \mid x = 50) = 64.9</span></li>
-<li><span class="math inline">\mathbb{E}(y_{i} \mid x = 60) = 75.9</span></li>
-</ul>
-<p>donde: - <span class="math inline">y_{i} \mid x = 50  \sim \text{Normal}(\mu= 64.9, \sigma=7)</span> - <span class="math inline">y_{i} \mid x = 60  \sim \text{Normal}(\mu= 75.9, \sigma=7)</span></p>
-</div>
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_7_files/figure-revealjs/unnamed-chunk-12-1.png" width="960"></p>
-</figure>
-</div>
+Term: temp
+Type: response
+Comparison: dY/dX</code></pre>
 </div>
 </div>
 </div>
 </section>
-<section id="interpretación-coeficientes-en-lm" class="slide level2">
-<h2>Interpretación coeficientes en LM</h2>
-<p><span class="math display">\text{Si } \quad \quad y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}}^{\mathbb{E}(y_{i} \mid x_{1}, \dots, x_{k})} + \underbrace{e_i}_{\sim \text{Normal}(0,\sigma)}</span></p>
-</section>
-<section id="interpretación-coeficientes-en-lm-1" class="slide level2">
-<h2>Interpretación coeficientes en LM</h2>
-<p><span class="math display">\text{Si } \quad \quad y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}}^{\mathbb{E}(y_{i} \mid x_{1}, \dots, x_{k})} + \underbrace{e_{i}}_{\sim \text{Normal}(0,\sigma)}</span></p>
-<p>Entonces decimos que el efecto de <span class="math inline">x_{k}</span> sobre <span class="math inline">y</span> es <span class="math inline">\beta_{k}</span>. ¿Qué significa?</p>
-<div class="pull-left">
-<p><span class="math display">\frac{\partial \mathbb{E}(y_{i} \mid x_{1}, \dots, x_{k})}{\partial x_{k}} = \beta_{k}</span></p>
-</div>
-<div class="pull-right">
-<p>“Un cambio en <span class="math inline">\Delta</span> unidades de <span class="math inline">x_{k}</span> se traduce en un cambio en <span class="math inline">\Delta</span> <span class="math inline">\beta_{k}</span> unidades en el valor esperado de <span class="math inline">y_{i}</span>”</p>
-</div>
-</section>
-<section id="interpretación-coeficientes-en-lm-2" class="slide level2">
-<h2>Interpretación coeficientes en LM</h2>
-<p>En nuestro ejemplo:</p>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = y ~ x, data = our_data)
-
-Coefficients:
-(Intercept)            x  
-       10.200          1.100  </code></pre>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<p>Si <code>x=50</code>, entonces <code>y</code>=</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 65.200</code></pre>
-</div>
-</div>
-<p>Si <code>x=51</code>, entonces <code>y</code>=</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 66.300</code></pre>
-</div>
-</div>
-<p>Por tanto, <span class="math inline">\beta</span>=</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 1.100</code></pre>
-</div>
-</div>
-</div>
-</section>
-<section id="interpretación-coeficientes-en-lm-3" class="slide level2">
-<h2>Interpretación coeficientes en LM</h2>
-<p>Un ejemplo más complejo: podemos incluir interacciones y efectos no lineales</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code> 'AsIs' num [1:10000] 114.063.... -6.405.... 472.901.... 36.265.... 387.721.... ...</code></pre>
-</div>
-</div>
-</section>
-<section id="interpretación-coeficientes-en-lm-4" class="slide level2">
-<h2>Interpretación coeficientes en LM</h2>
-<p>Estimamos los parámetros via OLS</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = y ~ I(x^2) * factor(d), data = our_data2)
-
-Residuals:
-    Min      1Q  Median      3Q     Max 
--203.600  -32.740    0.050   33.050  181.900 
-
-Coefficients:
-                  Estimate Std. Error t value            Pr(&gt;|t|)    
-(Intercept)       9.376   1.049    8.930 &lt;0.000 ***
-I(x^2)            0.100   0.000  429.990 &lt;0.000 ***
-factor(d)1        0.135   1.484    0.090                0.930    
-I(x^2):factor(d)1 0.050   0.000  151.250 &lt;0.000 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
-
-Residual standard error: 49.500 on 9996 degrees of freedom
-Multiple R-squared:  0.984, Adjusted R-squared:  0.984 
-F-statistic: 209000.000 on 3 and 9996 DF,  p-value: &lt;0.000</code></pre>
-</div>
-</div>
-</section>
-<section id="interpretación-coeficientes-en-lm-5" class="slide level2">
-<h2>Interpretación coeficientes en LM</h2>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_7_files/figure-revealjs/unnamed-chunk-22-1.png" width="960"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="fragment">
-<div class="pull-right">
-<p><span class="math display">y_{i} = \beta_{0} + \beta_{1} x^{2}_{i} +  \beta_{2}d_{i} + \beta_{3} x^{2}_{i} \cdot d_{i} + e_{i}</span></p>
-<p>Por tanto:</p>
-<p><span class="math display">\begin{align}
-\mathbb{E}(y_{i} \mid x, d) =
-  \begin{cases}
-    \beta_{0} + \beta_{1} x^{2}_{i}   &amp;\quad \text{ si } d_{i}=0 \\ \\
-    (\beta_{0} + \beta_{2}) + (\beta_{1} + \beta_{3}) x^{2}_{i} &amp;\quad  \text{ si } d_{i}=1
-  \end{cases}
-\end{align}</span></p>
-<p>Específicamente:</p>
-<p><span class="math display">\begin{align}
-\frac{\partial \mathbb{E}(y_{i} \mid x, d) }{\partial x} =
-  \begin{cases}
-    2 \beta_{1}x &amp; \quad \text{ si } d_{i}=0 \\ \\
-    2(\beta_{1} + \beta_{3})x &amp; \quad \text{ si } d_{i}=1
-  \end{cases}
-\end{align}</span></p>
-</div>
-</div>
-</section>
-<section id="el-modelo-lineal-de-probabilidad-lpm" class="slide level2 inverse center middle" data-background-color="#E6A700">
-<h2>El Modelo Lineal de Probabilidad (LPM)</h2>
-</section>
-<section id="el-modelo-lineal-de-probabilidad-lpm-1" class="slide level2">
-<h2>El Modelo Lineal de Probabilidad (LPM)</h2>
-<p><span class="bold">LMP</span> es simplemente un modelo de regresión lineal aplicado a una variable dicotómica. Un LMP estándar tiene la siguiente forma:</p>
-<div class="fragment">
-<p><span class="math display">y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}}^{\mathbb{E}(y_{i} \mid x_{1}, \dots, x_{k})} +  e_{i} \quad \quad \text{ donde } y_{i} \in \{0,1\}</span> Dado que <span class="math inline">y_{i} \in \{0,1\}</span>,</p>
-<ul>
-<li><span class="math inline">\mathbb{E}(y_{i} \mid x_{1}, \dots, x_{k}) \equiv \mathbb{P}(y_{i} =1 \mid x_{1}, \dots, x_{k})</span></li>
-<li>Equivalentemente, <span class="math inline">\mu_{i} \equiv p_{i}</span> <br> <br></li>
-</ul>
-</div>
-<div class="fragment">
-<p>Por tanto, en un LPM</p>
-<div class="content-box-primary">
-<p><span class="math display">\color{white}{y_{i} \sim \text{Normal}(p_{i}, \sigma) \quad  \text{ o, equivalentemente: } \quad  y_{i} = p_{i} + \text{Normal}(0, \sigma)}</span></p>
-</div>
-</div>
-</section>
-<section id="lmp-en-la-práctica" class="slide level2">
-<h2>LMP en la práctica</h2>
-<p>Para ejemplificar el uso del LPM trabajaremos con los datos de demanda de bicicletas de <em>Capital Bikeshare</em>.</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 15 × 6
-   bikers high_demand demand  temp   hum weathersit
-    &lt;dbl&gt;       &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;fct&gt;     
- 1     90           0 baja    0.380  0.760 clear     
- 2    128           0 baja    0.400   0.760 clear     
- 3    217           1 alta    0.420  0.710 clear     
- 4    273           1 alta    0.520  0.390 clear     
- 5    313           1 alta    0.500   0.420 clear     
- 6    300           1 alta    0.460  0.510 clear     
- 7    253           1 alta    0.460  0.470 clear     
- 8    195           0 baja    0.440  0.510 clear     
- 9    129           0 baja    0.420  0.540 clear     
-10     93           0 baja    0.420  0.540 clear     
-11     92           0 baja    0.420  0.540 clear     
-12     71           0 baja    0.420  0.540 clear     
-13     52           0 baja    0.400   0.580 clear     
-14     38           0 baja    0.380  0.620 clear     
-15     31           0 baja    0.360  0.660 clear     </code></pre>
-</div>
-</div>
-</section>
-<section id="lmp-en-la-práctica-1" class="slide level2">
-<h2>LMP en la práctica</h2>
-<p>Ajustaremos el siguiente modelo: <span class="math inline">\text{alta demanda}_{i} = \beta_{0} + \beta_{1}*\text{temp}_{i}</span>, que modela la probabilidad de que una hora sea de alta demanda como función de la temperatura (normalizada).</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = high_demand ~ temp, data = bikedata)
-
-Residuals:
-   Min     1Q Median     3Q    Max 
--0.620 -0.289 -0.132  0.120  1.057 
-
-Coefficients:
-            Estimate Std. Error t value            Pr(&gt;|t|)    
-(Intercept)  -0.135     0.012   -11.700 &lt;0.000 ***
-temp          0.787     0.022    35.900 &lt;0.000 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
-
-Residual standard error: 0.404 on 8643 degrees of freedom
-Multiple R-squared:  0.130, Adjusted R-squared:  0.129 
-F-statistic: 1290.000 on 1 and 8643 DF,  p-value: &lt;0.000</code></pre>
-</div>
-</div>
-</section>
-<section id="lmp-en-la-práctica-2" class="slide level2">
-<h2>LMP en la práctica</h2>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_7_files/figure-revealjs/unnamed-chunk-25-1.png" width="960"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="fragment">
-<div class="pull-right">
-<p><span class="bold">Modelo</span> <span class="math inline">\text{alta demanda}_{i} = \beta_{0} + \beta_{1}*\text{temp}_{i}</span> Específicamente: <span class="math inline">\frac{\partial \mathbb{P}(\text{alta demanda}_{i}=1 \mid \text{ temp}) }{\partial \text{ temp}} = \beta_{1} = 0.787</span> <span class="bold">Interpretación</span>: “Un cambio en <span class="math inline">\Delta</span> unidades en la temperatura se traduce en un cambio en <span class="math inline">\Delta</span> <span class="math inline">\beta_{1}</span> unidades la probabilidad de que la hora sea de alta demanda” <span class="bold">Ejemplo</span>: Diferencia en probabilidad de alta demanda entre una hora de temperatura máxima (1) y una de temperatura mínima (0): <span class="math inline">(\beta_{0} + \beta_{1} \cdot 1) - (\beta_{0} + \beta_{1} \cdot 0) = \beta_{1} = 0.787</span></p>
-</div>
-</div>
-</section>
-<section id="lmp-en-la-práctica-3" class="slide level2">
-<h2>LMP en la práctica</h2>
-<div class="content-box-primary">
-<p><span class="math display">\color{white}{\text{LPM asume que: } \quad y_{i} \sim \text{Normal}(p_{i}, \sigma) \quad  \text{ o, equivalentemente: } \quad  y_{i} = p_{i} + \text{Normal}(0, \sigma)}</span></p>
-</div>
-<p>En este caso: <span class="math display">\text{alta demanda}_{i} \sim \text{Normal}(\hat{p}_{i}= -0.135 + 0.787*\text{temp}_{i}, \hat{\sigma}=0.404)</span> donde <span class="math inline">\hat{p}_{i} \in (-0.135, 0.651)</span></p>
-<div class="fragment">
-<p>Hasta aquí todo bien, pero …</p>
-</div>
-</section>
-<section id="limitaciones-del-lmp" class="slide level2">
-<h2>Limitaciones del LMP</h2>
-<div class="content-box-primary">
-<p><span class="math display">\color{white}{\text{LPM asume que: } \quad  y_{i} \sim \text{Normal}(p_{i}, \sigma) \quad  \text{ o, equivalentemente: } \quad  y_{i} = p_{i} + \text{Normal}(0, \sigma)}</span></p>
-</div>
-<p><span class="bold">1) Distribución y rango</span></p>
-<ul>
-<li>LPM asume que las observaciones <span class="math inline">y_{i}, \dots, y_{n}</span> siguen una distribución normal, pero sabemos que no es así. <span class="math inline">y_{i} \in \{0,1\}</span>.</li>
-</ul>
-<div class="fragment">
-<p>Derivado de lo anterior,</p>
-<ul>
-<li>A pesar de que <span class="math inline">y_{i} \in \{0,1\}</span>, las predicciones de un LPM no están restringidas a este rango. Teóricamente, <span class="math inline">p_{i} \in \{-\infty,\infty+\}</span>. En la práctica <span class="math inline">\hat{p}_{i}</span> puede salir de rango <span class="math inline">\{0,1\}</span>, especialmente cuando la probabilidad marginal <span class="math inline">\mathbb{P}(y=1)</span> es cercana a <span class="math inline">0</span> o <span class="math inline">1</span>.</li>
-</ul>
-</div>
-</section>
-<section id="limitaciones-del-lmp-1" class="slide level2">
-<h2>Limitaciones del LMP</h2>
-<p><span class="bold">1) Distribución y rango</span> - El problema no es sólo que obtener probabilidades predichas menores que 0 o mayores que 1 no tiene sentido. - Cuando esto ocurre, los coeficientes estimados por el LMP son <span class="bold">sesgados</span> e <span class="bold">inconsistentes</span> - Más aún, en muestras grandes el problema es peor: converge hacia valores erróneos - Problema especialmente serio cuando el modelo produce una proporción alta de predicciones fuera de rango</p>
-<div class="pull-left">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="oaxaca1.png"></p>
-<figcaption>oaxaca1</figcaption>
-</figure>
-</div>
-</div>
-<div class="pull-left">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="oaxaca2.png"></p>
-<figcaption>oaxaca2</figcaption>
-</figure>
-</div>
-</div>
-</section>
-<section id="paréntesis-sesgo-y-consistencia" class="slide level2">
-<h2>Paréntesis: sesgo y consistencia</h2>
-<p><span class="bold">Paréntesis: Sesgo (Bias) y Consistencia (Consistency) de un estimador</span></p>
-<div class="fragment">
-<div class="pull-left">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="unbiased_consistent.png"></p>
-<figcaption>unb_cons</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<div class="fragment">
-<div class="pull-right">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="biased_inconsistent.png"></p>
-<figcaption>b_incons</figcaption>
-</figure>
-</div>
-</div>
-</div>
-</section>
-<section id="paréntesis-sesgo-y-consistencia-1" class="slide level2">
-<h2>Paréntesis: sesgo y consistencia</h2>
-<p><span class="bold">Paréntesis: Sesgo (Bias) y Consistencia (Consistency) de un estimador</span></p>
-<div class="fragment">
-<div class="pull-left">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="biased_consistent.png"></p>
-<figcaption>b_cons</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<div class="fragment">
-<div class="pull-right">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="unbiased_inconsistent.png"></p>
-<figcaption>unb_incons</figcaption>
-</figure>
-</div>
-</div>
-</div>
-</section>
-<section id="limitaciones-del-lmp-2" class="slide level2">
-<h2>Limitaciones del LMP</h2>
-<div class="content-box-primary">
-<p><span class="math display">\color{white}{\text{LPM asume que: } \quad  y_{i} \sim \text{Normal}(p_{i}, \sigma) \quad  \text{ o, equivalentemente: } \quad  y_{i} = p_{i} + \text{Normal}(0, \sigma)}</span></p>
-</div>
-<p><span class="bold">2) Observaciones con varianza heterogénea (o, errores heterocedásticos)</span></p>
-<p><span class="math display">\begin{align}
-  \operatorname{Var}(y_{i}) &amp;=  \sum_{\text{valores } y_{i}} (y_{i} - \mathbb{E}(y_{i}) )^{2} \cdot \mathbb{P}(y_{i}) \\
-             &amp;= \sum_{\text{valores } y_{i}} (y_{i} - p_{i})^{2} \cdot \mathbb{P}(y_{i})
-\end{align}</span></p>
-</section>
-<section id="limitaciones-del-lmp-3" class="slide level2">
-<h2>Limitaciones del LMP</h2>
-<div class="content-box-primary">
-<p><span class="math display">\text{LPM asume que: } \quad  y_{i} \sim \text{Normal}(p_{i}, \sigma) \quad  \text{ o, equivalentemente: } \quad  y_{i} = p_{i} + \text{Normal}(0, \sigma)</span></p>
-</div>
-<p><span class="bold">2) Observaciones con varianza heterogenea (o, errores heterocedásticos)</span></p>
-<p><span class="math display">\begin{align}
-  \operatorname{Var}(y_{i}) &amp;=  \sum_{\text{valores } y_{i}} (y_{i} - \mathbb{E}(y_{i}) )^{2} \cdot \mathbb{P}(y_{i}) \\
-             &amp;= \sum_{\text{valores } y_{i}} (y_{i} - p_{i})^{2} \cdot \mathbb{P}(y_{i}) \\  \\
-             &amp;=   (1 - p_{i})^{2} \cdot \mathbb{P}(y_{i}=1) + (0 - p_{i})^{2} \cdot \mathbb{P}(y_{i}=0) \\
-             &amp;=   (1 - p_{i})^{2}p_{i} + (0 - p_{i})^{2} (1-p_{i}) \\
-             &amp;= p_{i}(1-p_{i})
-\end{align}</span></p>
-</section>
-<section id="limitaciones-del-lmp-4" class="slide level2">
-<h2>Limitaciones del LMP</h2>
-<p><span class="bold">2) Observaciones con varianza heterogénea (o, errores heterocedásticos)</span></p>
-<p><span class="math display">\begin{align}
-  \operatorname{Var}(y_{i}) &amp;=  p_{i}(1-p_{i}) \\
-                      &amp;= (\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})\Big(1 - (\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki})\Big)
-\end{align}</span></p>
-<div class="fragment">
-<p>Por tanto,</p>
-<div class="content-box-primary">
-<p><span class="math display">\color{white}{\text{LPM asume que: } \quad  y_{i} \sim \text{Normal}(p_{i}, \sigma) \quad  \text{ o, equivalentemente: } \quad  y_{i} = p_{i} + \text{Normal}(0, \sigma)}</span></p>
-</div>
-</div>
-<div class="fragment">
-<p>pero en realidad,</p>
-<div class="content-box-secondary">
-<p><span class="math display">\color{white}{y_{i} \sim \text{Normal}(p_{i}, \sigma_{i} = p_{i}(1-p_{i})) \quad  \text{ o, equivalentemente: } \quad  y_{i} = p_{i} + \text{Normal}(0, \sigma_{i} = p_{i}(1-p_{i}))}</span></p>
-</div>
-</div>
-</section>
-<section id="limitaciones-del-lmp-en-la-práctica" class="slide level2">
-<h2>Limitaciones del LMP en la práctica</h2>
-<p>Para ejemplificar estas limitaciones del LPM estimemos un modelo ligeramente más complejo: <span class="math inline">\text{alta demanda}_{i} = \beta_{0} + \beta_{1}*\text{temp}_{i} + \beta_{2}*\text{temp}^{2}_{i} + \sum_{j}\boldsymbol{1} \{\text{clima}=j\}\Big( \beta_{0j} + \beta_{1j} \cdot \text{temp}_{i} + \beta_{2j} \cdot \text{temp}^{2}_{i}\Big)</span></p>
-</section>
-<section id="limitaciones-del-lmp-en-la-práctica-1" class="slide level2">
-<h2>Limitaciones del LMP en la práctica</h2>
-<p><span class="math inline">\text{alta demanda}_{i} = \beta_{0} + \beta_{1}*\text{temp}_{i} + \beta_{2}*\text{temp}^{2}_{i} + \sum_{j}\boldsymbol{1} \{\text{clima}=j\}\Big( \beta_{0j} + \beta_{1j} \cdot \text{temp}_{i} + \beta_{2j} \cdot \text{temp}^{2}_{i}\Big)</span></p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>                                            Estimate Std. Error t value      Pr(&gt;|t|)
-(Intercept)                                 -0.099    0.029 -3.409 0.001
-temp                                         0.695    0.128  5.412 0.000
-factor(weathersit)cloudy/misty               0.050    0.062  0.802 0.423
-factor(weathersit)light rain/snow            0.180    0.107  1.685 0.092
-factor(weathersit)heavy rain/snow           -0.059    0.402 -0.148 0.883
-I(temp^2)                                    0.107    0.128  0.842 0.400
-temp:factor(weathersit)cloudy/misty         -0.305    0.280 -1.087 0.277
-temp:factor(weathersit)light rain/snow      -1.353    0.499 -2.713 0.007
-factor(weathersit)cloudy/misty:I(temp^2)     0.230    0.290  0.791 0.429
-factor(weathersit)light rain/snow:I(temp^2)  1.276    0.540  2.362 0.018</code></pre>
-</div>
-</div>
-</section>
-<section id="limitaciones-del-lmp-en-la-práctica-2" class="slide level2">
-<h2>Limitaciones del LMP en la práctica</h2>
-<p><span class="bold">Predicciones fuera de rango, sesgo e inconsistencia</span></p>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_7_files/figure-revealjs/unnamed-chunk-26-1.png" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="fragment">
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_7_files/figure-revealjs/unnamed-chunk-27-1.png" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="limitaciones-del-lmp-en-la-práctica-3" class="slide level2">
-<h2>Limitaciones del LMP en la práctica</h2>
-<p><span class="bold">Errores heterocedásticos</span></p>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_7_files/figure-revealjs/unnamed-chunk-28-1.png" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="fragment">
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_7_files/figure-revealjs/unnamed-chunk-29-1.png" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="ventajas-del-lmp" class="slide level2">
-<h2>Ventajas del LMP</h2>
-<div class="fragment">
-<ul>
-<li>Fácil de estimar: OLS</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Fácil de interpretar: los coeficientes tienen una interpretación directa en términos de efectos parciales (marginales) sobre la <em>probabilidad</em> de éxito en la variable dependiente.
-<ul>
-<li>Especialmente importante cuando trabajamos con modelos complejos: interacciones, efectos no-lineales, etc.</li>
-</ul></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Permite una serie de extensiones propias de cualquier LM (<span class="bold">mediación</span>, variables instrumentales, efectos fijos) que con otros modelos para datos categóricos (ej, logit) no son posibles o son muy complejas.</li>
-</ul>
-</div>
-<div class="fragment">
-<div class="pull-left">
-<p>Por lo mismo, hay <span class="bold">mucho</span> interés en “rescatar” el LPM</p>
-</div>
-<div class="pull-right">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="rescue.jpg"></p>
-<figcaption>rescue</figcaption>
-</figure>
-</div>
-</div>
-</div>
-</section>
-<section id="al-rescate-de-lpm" class="slide level2">
-<h2>Al rescate de LPM</h2>
-<p><span class="bold">Problema: Observaciones con varianza heterogénea (heterocedasticidad)</span> <span class="math inline">\quad \quad \Box</span> <span class="bold">Solución: Errores Estándar “Robustos”</span></p>
-</section>
-<section id="al-rescate-de-lpm-1" class="slide level2">
-<h2>Al rescate de LPM</h2>
-<p><span class="bold">Problema: Observaciones con varianza heterogenea (heterocedásticidad)</span> <span class="math inline">\quad \quad \Box</span> <span class="bold">Solución: Errores Estándar “Robustos”</span></p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
-t test of coefficients:
-
-                                            Estimate Std. Error t value             Pr(&gt;|t|)    
-(Intercept)                                 -0.099    0.022   -4.570         0.000 ***
-temp                                         0.695    0.118    5.900         0.000 ***
-factor(weathersit)cloudy/misty               0.050    0.044    1.120              0.263    
-factor(weathersit)light rain/snow            0.180    0.067    2.700              0.007 ** 
-factor(weathersit)heavy rain/snow           -0.059    0.006  -10.750 &lt; 0.000 ***
-I(temp^2)                                    0.107    0.128    0.840              0.402    
-temp:factor(weathersit)cloudy/misty         -0.305    0.244   -1.250              0.212    
-temp:factor(weathersit)light rain/snow      -1.353    0.385   -3.510              0.000 ***
-factor(weathersit)cloudy/misty:I(temp^2)     0.230    0.278    0.820              0.410    
-factor(weathersit)light rain/snow:I(temp^2)  1.276    0.474    2.690              0.007 ** 
----
-Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1</code></pre>
-</div>
-</div>
-</section>
-<section id="al-rescate-de-lpm-2" class="slide level2">
-<h2>Al rescate de LPM</h2>
-<p><span class="bold">Problema: Predicciones fuera de rango, sesgo e inconsistencia</span> <span class="math inline">\quad \quad \Box</span> <span class="bold">Solución: No hay</span></p>
-<div class="fragment">
-<p><span class="math inline">\quad \quad \Box</span> <span class="bold">Paleativo: “trimming”</span></p>
-<div class="pull-left">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="oaxaca1.png"></p>
-<figcaption>oaxaca1</figcaption>
-</figure>
-</div>
-</div>
-<div class="pull-left">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="oaxaca3.png"></p>
-<figcaption>oaxaca2</figcaption>
-</figure>
-</div>
-</div>
-</div>
-</section>
-<section id="al-rescate-de-lpm-3" class="slide level2">
-<h2>Al rescate de LPM</h2>
-<p><span class="bold">Problema: Predicciones fuera de rango, sesgo e inconsistencia</span> <span class="math inline">\quad \quad \Box</span> <span class="bold">Paleativo: “trimming”</span></p>
-</section>
-<section id="al-rescate-de-lpm-4" class="slide level2">
-<h2>Al rescate de LPM</h2>
-<p><span class="bold">Problema: Predicciones fuera de rango, sesgo e inconsistencia</span> <span class="math inline">\quad \quad \Box</span> <span class="bold">Paleativo: “trimming”</span></p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = high_demand ~ temp * factor(weathersit) + I(temp^2) * 
-    factor(weathersit), data = trimmed_sample)
-
-Residuals:
-   Min     1Q Median     3Q    Max 
--0.656 -0.278 -0.122  0.394  1.012 
-
-Coefficients:
-                                            Estimate Std. Error t value    Pr(&gt;|t|)    
-(Intercept)                                  -0.124     0.034   -3.630     0.000 ***
-temp                                          0.798     0.148    5.400 0.000 ***
-factor(weathersit)cloudy/misty                0.069     0.068    1.020     0.310    
-factor(weathersit)light rain/snow             0.206     0.109    1.880     0.060 .  
-I(temp^2)                                     0.016     0.143    0.110     0.912    
-temp:factor(weathersit)cloudy/misty          -0.381     0.305   -1.250     0.211    
-temp:factor(weathersit)light rain/snow       -1.455     0.507   -2.870     0.004 ** 
-factor(weathersit)cloudy/misty:I(temp^2)      0.297     0.312    0.950     0.342    
-factor(weathersit)light rain/snow:I(temp^2)   1.367     0.548    2.500     0.013 *  
----
-Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
-
-Residual standard error: 0.404 on 8506 degrees of freedom
-Multiple R-squared:  0.136, Adjusted R-squared:  0.135 
-F-statistic:  168 on 8 and 8506 DF,  p-value: &lt;0.000</code></pre>
-</div>
-</div>
-</section>
-<section id="al-rescate-de-lpm-5" class="slide level2">
-<h2>Al rescate de LPM</h2>
-<p><span class="bold">Problema: Predicciones fuera de rango, sesgo e inconsistencia</span> <span class="math inline">\quad \quad \Box</span> <span class="bold">Paleativo: “trimming”</span></p>
-<div class="pull-left">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_7_files/figure-revealjs/unnamed-chunk-30-1.png" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure>
-<p><img data-src="class_7_files/figure-revealjs/unnamed-chunk-31-1.png" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="esto-no-para-wooldridge-et-al-iterative-trimming" class="slide level2">
-<h2>Esto no para …[Wooldridge et al: “iterative trimming”]</h2>
-<div class="pull-left">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="lmp1.png"></p>
-<figcaption>lmp1</figcaption>
-</figure>
-</div>
-</div>
-<div class="pull-right">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="lmp2.png"></p>
-<figcaption>lmp2</figcaption>
-</figure>
-</div>
-</div>
+<section id="efectos-marginales-sobre-la-probabilidad-de-éxito-mer-1" class="slide level2">
+<h2>Efectos marginales sobre la probabilidad de éxito: MER</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 19%">
+<col style="width: 29%">
+<col style="width: 21%">
+<col style="width: 29%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Método</th>
+<th>Definición</th>
+<th>Ventaja</th>
+<th>Limitación</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>AME</strong></td>
+<td>Promedio del efecto marginal sobre todos los casos</td>
+<td>Resume heterogeneidad en 1 número</td>
+<td>Puede ocultar variación</td>
+</tr>
+<tr class="even">
+<td><strong>MEM</strong></td>
+<td>Efecto en covariables fijadas en su promedio</td>
+<td>Fácil de interpretar</td>
+<td>“Promedio” puede no ser realista</td>
+</tr>
+<tr class="odd">
+<td><strong>MER</strong></td>
+<td>Efectos en valores representativos</td>
+<td>Ilustra heterogeneidad</td>
+<td>Depende de la elección de escenarios</td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="en-resumen" class="slide level2">
 <h2>En resumen</h2>
-<div class="fragment">
 <ul>
-<li>LMP tiene muchas ventajas y muchos adeptos (economistas) debido a su parsimonia</li>
-<li>LMP tiene también muchos problemas</li>
+<li>Un mismo coeficiente <span class="math inline">\beta_{k}</span> admite tres lecturas: efecto aditivo sobre el logit (<span class="math inline">\beta_{k}</span>), efecto multiplicativo sobre las odds (<span class="math inline">e^{\beta_{k}}</span> = odds ratio), y efecto marginal (no lineal) sobre la probabilidad (<span class="math inline">\beta_{k} \cdot p_{i}(1-p_{i})</span>).</li>
+<li>El efecto marginal sobre la probabilidad no es constante: depende de <span class="math inline">p_{i}</span>, y por tanto de los valores de todas las covariables — es máximo cuando <span class="math inline">p_{i} \approx 0.5</span> y se aproxima a 0 en los extremos.</li>
+<li>Para resumir esta heterogeneidad en un solo número usamos AME, MEM o MER, según la pregunta sustantiva.</li>
+<li>La próxima clase: inferencia y bootstrap.</li>
 </ul>
-</div>
-<div class="fragment">
-<p>¿Son esas ventajas suficientes para contrapesar las desventajas?</p>
-</div>
-<div class="fragment">
-<p>Depende del contexto, pero:</p>
-<p><strong>Precaución:</strong> usar el LPM exige justificar el rango de predicción y corregir la inferencia por heterocedasticidad.</p>
-</div>
 </section>
-<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#003B7A">
+<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#6B2D5C">
 <h2>Gracias</h2>
 <p><strong>Hasta la próxima clase</strong></p>
 <p>Mauricio Bucca</p>

@@ -32,6 +32,72 @@
       margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
       vertical-align: middle;
     }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      { color: #24292e;  }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #24292e; } /* Normal */
+    code span.al { color: #ff5555; font-weight: bold; } /* Alert */
+    code span.an { color: #6a737d; } /* Annotation */
+    code span.at { color: #d73a49; } /* Attribute */
+    code span.bn { color: #005cc5; } /* BaseN */
+    code span.bu { color: #d73a49; } /* BuiltIn */
+    code span.cf { color: #d73a49; } /* ControlFlow */
+    code span.ch { color: #032f62; } /* Char */
+    code span.cn { color: #005cc5; } /* Constant */
+    code span.co { color: #6a737d; } /* Comment */
+    code span.cv { color: #6a737d; } /* CommentVar */
+    code span.do { color: #6a737d; } /* Documentation */
+    code span.dt { color: #d73a49; } /* DataType */
+    code span.dv { color: #005cc5; } /* DecVal */
+    code span.er { color: #ff5555; text-decoration: underline; } /* Error */
+    code span.ex { color: #d73a49; font-weight: bold; } /* Extension */
+    code span.fl { color: #005cc5; } /* Float */
+    code span.fu { color: #6f42c1; } /* Function */
+    code span.im { color: #032f62; } /* Import */
+    code span.in { color: #6a737d; } /* Information */
+    code span.kw { color: #d73a49; } /* Keyword */
+    code span.op { color: #24292e; } /* Operator */
+    code span.ot { color: #6f42c1; } /* Other */
+    code span.pp { color: #d73a49; } /* Preprocessor */
+    code span.re { color: #6a737d; } /* RegionMarker */
+    code span.sc { color: #005cc5; } /* SpecialChar */
+    code span.ss { color: #032f62; } /* SpecialString */
+    code span.st { color: #032f62; } /* String */
+    code span.va { color: #e36209; } /* Variable */
+    code span.vs { color: #032f62; } /* VerbatimString */
+    code span.wa { color: #ff5555; } /* Warning */
   </style>
   <link rel="stylesheet" href="class_6_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
   <link rel="stylesheet" href="../_shared/course.css">
@@ -143,13 +209,13 @@
     }
   </style>
 </head>
-<body class="theme-tottenham quarto-light">
+<body class="theme-liverpool quarto-light">
   <div class="reveal">
     <div class="slides">
 
-<section id="title-slide" data-background-color="#132257" class="quarto-title-block center">
+<section id="title-slide" data-background-color="#007A75" class="quarto-title-block center">
   <h1 class="title">Análisis de Datos Categóricos (SOC3070)</h1>
-  <p class="subtitle">Estimación, MLE y Funciones de Pérdida</p>
+  <p class="subtitle">GLM, Regresión Logística &amp; MLE</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -166,50 +232,302 @@ Mauricio Bucca · Sociología UC
 <div class="full-width">
 <div class="content-box">
 <p><strong>Antes</strong></p>
-<p>valor esperado y varianza.</p>
+<p>componentes de un GLM y funciones de enlace.</p>
 </div>
 <div class="content-box-primary">
 <p><strong>Hoy</strong></p>
-<p>máxima verosimilitud (MLE) y funciones de pérdida.</p>
+<p>regresión logística y máxima verosimilitud.</p>
 </div>
 <div class="content-box-secondary">
 <p><strong>Después</strong></p>
-<p>regresión lineal y el modelo lineal de probabilidad.</p>
+<p>regresión logística: interpretación de parámetros.</p>
 </div>
 </div>
 </section>
 <section>
-<section id="estimación" class="title-slide slide level1 inverse center middle" data-background-color="#C8102E">
-<h1>Estimación</h1>
+<section id="modelos-lineales-generalizados-glm" class="title-slide slide level1 inverse center middle" data-background-color="#C8102E">
+<h1>Modelos Lineales Generalizados (GLM)</h1>
 
 </section>
-<section id="maximum-likelihood-estimation-mle" class="slide level2">
-<h2>Maximum Likelihood Estimation (MLE)</h2>
-</section>
-<section id="estimación-1" class="slide level2">
-<h2>Estimación</h2>
-<div class="center">
+<section id="recordando-qué-es-un-glm" class="slide level2">
+<h2>Recordando: ¿qué es un GLM?</h2>
+<p>La clase anterior definimos un GLM por tres piezas — repasemos antes de usarlas hoy con un caso concreto:</p>
+<div class="pull-left">
+<ul>
+<li><strong>Componente aleatorio</strong>: distribución de <span class="math inline">y_i</span> (familia exponencial).</li>
+<li><strong>Componente sistemático</strong>: <span class="math inline">\eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span>.</li>
+<li><strong>Función de enlace</strong>: <span class="math inline">g(\mu_{i}) = \eta_{i}</span>.</li>
+</ul>
+</div>
+<div class="pull-right">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="estimado.jpeg"></p>
-<figcaption>estimado</figcaption>
+<p><img data-src="nelder.png"></p>
+<figcaption>nelder</figcaption>
 </figure>
 </div>
 </div>
-</section>
-<section id="estimación-2" class="slide level2">
-<h2>Estimación</h2>
-<p><span class="bold">Modelos estadísticos</span>: ¿Cuáles son los valores más <span class="bold">plausibles</span>[1]</p>
-<div class="footnote">
-<p>[1] Notar que no dice “más probables”!</p>
+<div class="fragment">
+<p><span class="math display">
+GLM:
+\begin{cases}
+&amp;y_{i} \sim f(\mu_{i},\sigma_{i}) \\ \\
+&amp; g(\mu_{i}) = \eta_{i}
+\end{cases}
+</span></p>
+<p>Hoy fijamos <span class="math inline">y_{i} \sim \text{Bernoulli}(p_{i})</span> y <span class="math inline">g(\cdot) = \text{logit}(\cdot)</span>: la regresión logística es exactamente un GLM con esa combinación particular.</p>
 </div>
-<p>de los <em>parámetros</em> dado los <em>datos</em> que observamos? Ej. Supongamos que alguien lanza 100 veces la misma moneda y registra los resultados en una base de datos. Los datos se ven así:</p>
+</section></section>
+<section>
+<section id="regresión-logística" class="title-slide slide level1 inverse center middle" data-background-color="#C8102E">
+<h1>Regresión Logística</h1>
+
+</section>
+<section id="estructura-de-un-modelo-de-regresión-logística" class="slide level2">
+<h2>Estructura de un modelo de regresión logística</h2>
+<p>Podemos pensar en un modelo de regresión logística de la siguiente forma:</p>
+<div class="fragment">
+<p><span class="bold">Configuración</span></p>
+<ul>
+<li>Tenemos <span class="math inline">n</span> observaciones (individuos) independientes: <span class="math inline">i = 1, \dots, n</span></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Para cada observación observamos datos <span class="math inline">y_{i}, \dots , y_{n}</span> que actuan como variable dependiente, donde <span class="math inline">y_{i} \in \{0,1\}</span></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Asumimos que estos datos son realizaciones de <span class="math inline">n</span> variables aleatorias Bernoulli con probabilidades desconocidas: <span class="math inline">Y_{i} \sim \text{Bernoulli}(p_{i})</span>
+<ul>
+<li>Alternativamente, recuento de éxitos puede tratarse como una variable Binomial.</li>
+</ul></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Asumimos que dichas probabilidades pueden variar de individuo en individuo.
+<ul>
+<li>Un modelo con un <span class="math inline">p_{i}</span> para cada observación <span class="math inline">i</span> es un modelo “just-identified” (o saturado). Posible, pero no es un “modelo”.</li>
+</ul></li>
+</ul>
+</div>
+</section>
+<section id="estructura-de-un-modelo-de-regresión-logística-1" class="slide level2">
+<h2>Estructura de un modelo de regresión logística</h2>
+<p>Formalmente, <span class="math display">Y_{i} \sim \text{Bernoulli}(p_{i})</span> es decir <span class="math display">\quad \mathbb{P}(Y_{i}= y) = p_{i}^{y}(1-p_{i})^{1-y} \quad \text{ donde } \quad y \in \{0,1\}</span></p>
+<div class="fragment">
+<p>La pregunta es: ¿como estimamos <span class="math inline">p_{i}</span> de tal manera que … ?</p>
+</div>
+<div class="fragment">
+<ul>
+<li>Describamos <span class="math inline">p_{i}</span> con un número de parámetros <span class="math inline">k&lt;n</span></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li><span class="math inline">\hat{p}_{i} \in [0,1]</span></li>
+</ul>
+</div>
+</section>
+<section id="estructura-de-un-modelo-de-regresión-logística-2" class="slide level2">
+<h2>Estructura de un modelo de regresión logística</h2>
+<p>El modelo de regresión logística aborda este problema de la siguiente manera:</p>
+<div class="content-box-blue">
+<p><span class="math display">p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}} \quad \quad  \text{donde} \quad \quad \eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}</span></p>
+</div>
+<div class="fragment">
+<p><span class="bold">Importante</span> notar que:</p>
+</div>
+<div class="fragment">
+<ul>
+<li>Esta función (llamada <em>sigmoide</em>) tiene la propiedad clave de estar restringida al intervalo <span class="math inline">[0, 1]</span>.
+<ul>
+<li><span class="math inline">e^{\eta_{i}} &gt; 0</span>, de tal manera que el numerador es siempre menor que el denominador. Por lo tanto, <span class="math inline">0 &lt; p_{i} &lt;1</span>.</li>
+</ul></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li><span class="math inline">x_{1} \dots x_{k}</span> son predictores o variables independientes</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li><span class="math inline">\beta_{1} \dots \beta_{k}</span> son los respectivos “efectos” de los predictores sobre <span class="math inline">\eta_{i}</span></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li><span class="math inline">p_{i}</span> <span class="bold">no está relacionado linealmente</span> con sus predictores</li>
+</ul>
+</div>
+</section>
+<section id="estructura-de-un-modelo-de-regresión-logística-3" class="slide level2">
+<h2>Estructura de un modelo de regresión logística</h2>
+<p>Sin embargo, <span class="math inline">\eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}</span> si es una función lineal de los predictores.</p>
+<div class="fragment">
+<p>Por tanto, es conveniente expresar <span class="math inline">\eta</span> en función de <span class="math inline">p</span> …</p>
+</div>
+<div class="fragment">
+<p>Paso a paso:</p>
+<div class="img-right">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="mostaza-merlo.jpg"></p>
+<figcaption>mostaza</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="fragment">
+<p><span class="math inline">p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}} = \frac{1}{e^{- \eta_{i}} + 1}</span></p>
+</div>
+<div class="fragment">
+<p><span class="math inline">e^{-\eta_{i}} + 1 = \frac{1}{p_{i}}</span></p>
+</div>
+<div class="fragment">
+<p><span class="math inline">e^{- \eta_{i}} = \frac{1}{p_{i}} - 1 =  \frac{1 - p_{i}}{p_{i}}</span></p>
+</div>
+<div class="fragment">
+<p><span class="math inline">e^{\eta_{i}} = \frac{p_{i}}{1 - p_{i}}</span></p>
+</div>
+<div class="fragment">
+<p><span class="math inline">\eta_{i} = \ln \frac{p_{i}}{1 - p_{i}} \quad \quad</span></p>
+</div>
+<div class="fragment">
+<p>es decir, el log de las odds o log-odds</p>
+</div>
+<div class="fragment">
+<div class="content-box-yellow">
+<p><span class="math display">\text{Por tanto} \quad \quad  \ln \frac{p_{i}}{1 - p_{i}} = \eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}</span></p>
+</div>
+</div>
+</section>
+<section id="estructura-de-un-modelo-de-regresión-logística-4" class="slide level2">
+<h2>Estructura de un modelo de regresión logística</h2>
+
+<img data-src="class_6_files/figure-revealjs/unnamed-chunk-1-1.png" width="1152" class="r-stretch"></section>
+<section id="regresión-logística-es-un-tipo-de-glm" class="slide level2">
+<h2>Regresión Logística es un tipo de GLM</h2>
+<p>Regresión Logística es un GLM con componente aleatorio <span class="bold">Bernoulli/Binomial</span> y función de enlace <span class="bold">logit</span>.</p>
+<div class="fragment">
+<ul>
+<li>Componente aleatorio: <span class="math inline">y_{1}, \dots y_{n}</span> son <span class="math inline">n</span> variables independientes con distribución <span class="math inline">\text{Bernoulli}(p_{i})</span>
+<ul>
+<li>donde <span class="math inline">p_{i} \equiv \mu_{i}</span></li>
+</ul></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Función de enlace: <span class="math inline">\text{logit}(x) = \ln \frac{x}{1 - x}</span></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Componente sistemático: <span class="math inline">\ln \frac{p_{i}}{1 - p_{i}} = \eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Función media: <span class="math inline">p_{i} = \text{logit}^{-1}(\eta_{i}) = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}}</span></li>
+</ul>
+</div>
+</section>
+<section id="regresión-logística-es-un-tipo-de-glm-1" class="slide level2">
+<h2>Regresión Logística es un tipo de GLM</h2>
+<ul>
+<li>Varianza <span class="math inline">\operatorname{Var}(y_{i}) = \phi V(p_{i}), \quad</span></li>
+</ul>
+<div class="fragment">
+<p><span class="math inline">\text{donde} \quad V(p_{i})= \frac{dp_{i}}{d\eta_{i}}</span>.</p>
+</div>
+<div class="fragment">
+<ul>
+<li><span class="math inline">\eta_{i} = \ln \frac{p_{i}}{1 - p_{i}}  =  \ln(p_{i}) - \ln(1 - p_{i})</span></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li><span class="math inline">\frac{d \eta_{i}}{d p_{i}} = \frac{1}{p_{i}} + \frac{1}{1 - p_{i}} = \frac{1}{p_{i}(1 - p_{i})}</span></li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li><span class="math inline">\frac{d p_{i}}{d \eta_{i}} = p_{i}(1 - p_{i})</span></li>
+</ul>
+</div>
+<div class="fragment">
+<p>Por tanto, <span class="math inline">\operatorname{Var}(y_{i}) = \phi V(p_{i}) = \phi p_{i}(1 - p_{i})</span>, con <span class="math inline">\phi=1</span></p>
+<p>En resumen, en un modelo de regresión logística</p>
+<div class="content-box-blue">
+<p><span class="math display">y_{i} \sim \text{Bernoulli}\Bigg(p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}}\Bigg)</span></p>
+</div>
+</div>
+</section>
+<section id="regresión-logística-en-la-práctica" class="slide level2">
+<h2>Regresión Logística en la práctica</h2>
+<p>Para ejemplificar el uso de regresión logística trabajaremos con los datos de demanda de bicicletas de <em>Capital Bikeshare</em>.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 15 × 6
+   bikers high_demand demand  temp   hum weathersit
+    &lt;dbl&gt;       &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;fct&gt;     
+ 1     90           0 baja    0.380  0.760 clear     
+ 2    128           0 baja    0.400   0.760 clear     
+ 3    217           1 alta    0.420  0.710 clear     
+ 4    273           1 alta    0.520  0.390 clear     
+ 5    313           1 alta    0.500   0.420 clear     
+ 6    300           1 alta    0.460  0.510 clear     
+ 7    253           1 alta    0.460  0.470 clear     
+ 8    195           0 baja    0.440  0.510 clear     
+ 9    129           0 baja    0.420  0.540 clear     
+10     93           0 baja    0.420  0.540 clear     
+11     92           0 baja    0.420  0.540 clear     
+12     71           0 baja    0.420  0.540 clear     
+13     52           0 baja    0.400   0.580 clear     
+14     38           0 baja    0.380  0.620 clear     
+15     31           0 baja    0.360  0.660 clear     </code></pre>
+</div>
+</div>
+</section>
+<section id="regresión-logística-en-la-práctica-1" class="slide level2">
+<h2>Regresión Logística en la práctica</h2>
+<p>Ajustaremos el siguiente modelo: <span class="math inline">\text{logit(alta demanda}_{i}) = \beta_{0} + \beta_{1}*\text{temp}_{i}</span>, que modela el log de la odd de que una hora sea de alta demanda como función de la temperatura (normalizada).</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = high_demand ~ temp, family = binomial(link = "logit"), 
+    data = bikedata)
+
+Coefficients:
+            Estimate Std. Error z value            Pr(&gt;|z|)    
+(Intercept)  -3.676     0.092   -39.800 &lt;0.000 ***
+temp          4.827     0.154    31.300 &lt;0.000 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 9711.200  on 8644  degrees of freedom
+Residual deviance: 8513.400  on 8643  degrees of freedom
+AIC: 8517
+
+Number of Fisher Scoring iterations: 4</code></pre>
+</div>
+</div>
+</section>
+<section id="regresión-logística-en-la-práctica-2" class="slide level2">
+<h2>Regresión Logística en la práctica</h2>
 <div class="pull-left">
 <div class="cell">
 <div class="cell-output-display">
 <div>
 <figure>
-<p><img data-src="class_6_files/figure-revealjs/unnamed-chunk-1-1.png" width="576"></p>
+<p><img data-src="class_6_files/figure-revealjs/unnamed-chunk-4-1.png" width="960"></p>
 </figure>
 </div>
 </div>
@@ -217,238 +535,185 @@ Mauricio Bucca · Sociología UC
 </div>
 <div class="fragment">
 <div class="pull-right">
-<ul>
-<li>Lo que vemos en la izquierda son <span class="bold">datos</span></li>
-<li>Datos: realización de <span class="math inline">n</span> variables aleatorias</li>
-<li>Normalmente <em>no conocemos</em> la distribución de las variables</li>
-<li>Datos nos dan una pista sobre cuál podría ser esa distribución</li>
-<li><span class="bold">Estadística</span>: aprender de los datos para <span class="bold"><em>estimar</em></span> los parámetros que los generan</li>
-</ul>
-</div>
-</div>
-</section>
-<section id="estimación-via-maximum-likelihood-mle" class="slide level2">
-<h2>Estimación via Maximum Likelihood (MLE)</h2>
-<p>Previamente lanzamos la misma moneda 100 veces y obtuvimos “Cara” (1) 82 veces.</p>
-<div class="fragment">
-<p>¿Qué valor de <span class="math inline">p</span> es más plausible (“likely”) que genere estos datos? MLE es justamente la formalización de esta pregunta. Pasos:</p>
-</div>
-<div class="fragment">
-<ol type="1">
-<li>Decidir sobre la distribución subyacente que genera los datos. En este caso, podemos asumir que:</li>
-</ol>
-<ul>
-<li>Cada lanzamiento <span class="math inline">X_{1}, X_{2}, \dots X_{100} \sim \text{Bernoulli}(p)</span>, donde X’s son <span class="math inline">iid</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ol start="2" type="1">
-<li>Escribir una función que cuantifique la plausibilidad de diferentes valores del parámetro. Dicha función se denomina <span class="bold">likelihood function</span>:</li>
-</ol>
-<ul>
-<li><span class="math inline">\mathcal{L}(p \mid \text{ Datos}) = \mathbb{P}(\text{ Datos : \{1,0,1,1,....0,1\}} | \text{ } p)</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="math inline">\mathcal{L}(p \mid \text{ Datos}) = \mathbb{P}(x_{1})\mathbb{P}(x_{2}) \dots \mathbb{P}(x_{100}) = p^{82}(1-p)^{18}</span></li>
-</ul>
-</div>
-</section>
-<section id="estimación-via-maximum-likelihood-mle-1" class="slide level2">
-<h2>Estimación via Maximum Likelihood (MLE)</h2>
-<p>Podemos inspeccionar visualmente la “likelihood” de diferentes valores <span class="math inline">p</span>.</p>
-<div class="center">
 <div class="cell">
 <div class="cell-output-display">
 <div>
 <figure>
-<p><img data-src="class_6_files/figure-revealjs/unnamed-chunk-2-1.png" width="864"></p>
+<p><img data-src="class_6_files/figure-revealjs/unnamed-chunk-5-1.png" width="960"></p>
 </figure>
 </div>
 </div>
 </div>
 </div>
-<p>Intuitivamente: habiendo obtenido 82 caras, <span class="math inline">p=0.82</span> es el valor más plausible de <span class="math inline">p</span></p>
-</section>
-<section id="estimación-via-maximum-likelihood-mle-2" class="slide level2">
-<h2>Estimación via Maximum Likelihood (MLE)</h2>
-<ol start="3" type="1">
-<li>Encontrar matemáticamente el valor de <span class="math inline">p</span> que maximiza <span class="math inline">\mathcal{L}(p \mid \text{ Datos})</span>.</li>
-</ol>
-<ul>
-<li><span class="math inline">\mathcal{L}(p \mid \text{ Datos}) = \mathbb{P}(x_{1})\mathbb{P}(x_{2}) \dots \mathbb{P}(x_{n}) =\prod_{i=1}^{n} f(x_{i}) =  p^{k}(1-p)^{n-k} \quad \text{   donde  } k= \sum x_{i}</span></li>
-</ul>
-<div class="fragment">
-<ul>
-<li>Para facilitar el cálculo tomamos logaritmo natural en ambos lados (<span class="bold">log-likelihood</span>)
-<ul>
-<li><span class="math inline">\ell\ell(p) = \ln \mathcal{L}(p \mid \text{ Datos})  = k \ln(p) + (n - k) \ln(1-p)</span></li>
-</ul></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Calcular la primera* derivada de <span class="math inline">\ell\ell(p)</span> con respecto a <span class="math inline">p</span>: pendiente de la curva en cada valor de <span class="math inline">p</span>.</li>
-<li><span class="math inline">\ell\ell^{\text{ '}}(p) = \frac{k}{p} -  \frac{n-k}{1-p}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Encontrar el máximo de la función <span class="math inline">\ell\ell(p)</span>: valor de <span class="math inline">p</span> en el cual la curva no cambia, es decir cuando <span class="math inline">\ell\ell^{\text{ '}}(p)=0</span>
-<ul>
-<li><span class="math inline">\frac{k}{p} -  \frac{n-k}{1-p} = 0</span></li>
-</ul></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Después de resolver por <span class="math inline">p</span> obtenemos: <span class="math display">p = \frac{k}{n} = \frac{\sum x_{i}}{n}</span></li>
-</ul>
 </div>
 </section>
-<section id="estimación-via-maximum-likelihood-mle-3" class="slide level2">
-<h2>Estimación via Maximum Likelihood (MLE)</h2>
-<ul>
-<li>El estimador ML de <span class="math inline">p</span> es ….</li>
-<li><span class="math inline">\hat{p} = \frac{\sum x_{i}}{n}</span></li>
-<li>Es decir, el porcentaje de 1’s en la muestra!</li>
-</ul>
-<div class="fragment">
-<ul>
-<li>Intuitivo y elegante</li>
-</ul>
-</div>
+<section id="estimación-mle" class="slide level2 inverse center middle" data-background-color="#C8102E">
+<h2>Estimación (MLE)</h2>
 </section>
-<section id="estimación-via-maximum-likelihood-mle-4" class="slide level2">
-<h2>Estimación via Maximum Likelihood (MLE)</h2>
-<p><span class="bold">Generalización</span></p>
-<p><span class="math display">\hat{\boldsymbol{\beta}}_{MLE} = \underset{\beta}{\arg\max\ } \mathcal{L}(\boldsymbol{\beta} \mid \boldsymbol{X})</span> <span class="math inline">\hat{\boldsymbol{\beta}}</span> es el MLE de <span class="math inline">\boldsymbol{\beta}</span> si es el(los) valor(es) que maximiza(n) la “likelihood function”, condicional en los datos observados.</p>
-<div class="fragment">
-<ul>
-<li>Recordar que <span class="math inline">\mathcal{L}(\boldsymbol{\beta} \mid \boldsymbol{X}) = \mathbb{P}(\boldsymbol{X} \mid \boldsymbol{\beta})</span>.</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Requiere especificar de antemano la distribución conjunta de las observaciones (dif. de OLS, por ejemplo).</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>ML es probablemente el approach de estimación más popular.</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Intuitivo, pero, por lo general, no tan simple como el ejemplo que vimos hoy.</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Normalmente la maximización se realiza numéricamente (ej. método Newton–Raphson)</li>
-</ul>
-</div>
-</section>
-<section id="estimación-via-maximum-likelihood-mle-5" class="slide level2 fullscreen left top text-white" data-background-image="valdorcia.jpeg">
-<h2>Estimación via Maximum Likelihood (MLE)</h2>
-</section></section>
-<section>
-<section id="funciones-de-pérdida" class="title-slide slide level1 inverse center middle" data-background-color="#C8102E">
-<h1>Funciones de pérdida</h1>
-
-</section>
-<section id="de-maximizar-a-minimizar" class="slide level2">
-<h2>De maximizar a minimizar</h2>
-<p>Todo lo que hicimos arriba tiene una lectura equivalente, muy usada en machine learning: en vez de <strong>maximizar la verosimilitud</strong>, podemos <strong>minimizar una función de pérdida (loss function)</strong>.</p>
-<div class="fragment">
-<ul>
-<li>Maximizar <span class="math inline">\mathcal{L}(p\mid\text{Datos})</span> ⟺ Maximizar <span class="math inline">\ell\ell(p) = \ln\mathcal{L}(p\mid\text{Datos})</span> ⟺ Minimizar <span class="math inline">-\ell\ell(p)</span>.</li>
-<li>El signo negativo es la única diferencia: “ajustar bien” y “perder poco” son la misma cosa vista al revés.</li>
-</ul>
-</div>
-</section>
-<section id="la-pérdida-para-nuestro-mismo-ejemplo" class="slide level2">
-<h2>La pérdida, para nuestro mismo ejemplo</h2>
-<p>Con <span class="math inline">n</span> lanzamientos y resultados <span class="math inline">y_1,\dots,y_n\in\{0,1\}</span>, la log-verosimilitud de Bernoulli que ya escribimos es:</p>
-<p><span class="math display">
-\ell(\boldsymbol{p}) = \sum_{i=1}^{n} \big[ y_i \ln p_i + (1-y_i) \ln(1-p_i) \big]
-</span></p>
-<div class="fragment">
-<p>En ML a <span class="math inline">-\ell(\boldsymbol p)</span> le llamamos <strong>log-loss</strong> o <strong>cross-entropy loss</strong>:</p>
-<p><span class="math display">
-\text{LogLoss} = -\ell(\boldsymbol p)
-</span></p>
-<ul>
-<li>Si las predicciones son correctas (<span class="math inline">y=1</span> y <span class="math inline">p</span> cercano a 1) → log-loss bajo.</li>
-<li>Si se equivocan (<span class="math inline">y=1</span> pero <span class="math inline">p</span> cercano a 0) → log-loss alto.</li>
-<li>Entrenar = <strong>ajustar los parámetros para minimizar log-loss</strong> (= maximizar likelihood).</li>
-</ul>
-</div>
-</section>
-<section id="log-loss-promedio" class="slide level2">
-<h2>Log-loss promedio</h2>
-<p>En machine learning se suele trabajar con la <strong>log-loss promedio</strong>, para obtener una pérdida por observación (comparable entre datasets de distinto tamaño):</p>
-<p><span class="math display">
-\text{LogLoss} = -\frac{1}{n}\,\ell(\boldsymbol p)
-</span></p>
+<section id="estimación-mle-1" class="slide level2">
+<h2>Estimación (MLE)</h2>
+<p>Retomando nuestro ejemplo anterior,</p>
+<div class="pull-left">
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.471</code></pre>
+<pre><code>
+Call:
+glm(formula = high_demand ~ temp, family = binomial(link = "logit"), 
+    data = bikedata)
+
+Coefficients:
+            Estimate Std. Error z value            Pr(&gt;|z|)    
+(Intercept)  -3.676     0.092   -39.800 &lt;0.000 ***
+temp          4.827     0.154    31.300 &lt;0.000 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 9711.200  on 8644  degrees of freedom
+Residual deviance: 8513.400  on 8643  degrees of freedom
+AIC: 8517
+
+Number of Fisher Scoring iterations: 4</code></pre>
 </div>
 </div>
-<p>Es exactamente <span class="math inline">-\ell\ell(\hat p)/n</span>: la misma cantidad que maximizamos arriba, reescalada y con el signo invertido.</p>
+</div>
+<div class="fragment">
+<div class="pull-right">
+<p><span class="bold">¿De donde vienen estos números?</span></p>
+</div>
+</div>
 </section>
-<section id="otras-funciones-de-pérdida" class="slide level2">
-<h2>Otras funciones de pérdida</h2>
-<p>El mismo principio —MLE bajo un supuesto de distribución equivale a minimizar una pérdida específica— se generaliza más allá de Bernoulli:</p>
-<table class="caption-top">
-<thead>
-<tr class="header">
-<th>Outcome</th>
-<th>Distribución supuesta</th>
-<th>Pérdida asociada</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Binario (0/1)</td>
-<td>Bernoulli</td>
-<td>log-loss / cross-entropy</td>
-</tr>
-<tr class="even">
-<td>Continuo</td>
-<td>Normal</td>
-<td>error cuadrático medio (MSE)</td>
-</tr>
-<tr class="odd">
-<td>Conteo</td>
-<td>Poisson</td>
-<td>devianza de Poisson</td>
-</tr>
-</tbody>
-</table>
-<p>No son fórmulas sueltas: <strong>toda pérdida que usaremos en este curso es, en el fondo, una log-verosimilitud negativa</strong> de algún supuesto sobre cómo se generan los datos.</p>
+<section id="estimación-mle-2" class="slide level2">
+<h2>Estimación (MLE)</h2>
+<p>Recordar que cada observación es una manifestación de una variable Bernoulli:</p>
+<div class="fragment">
+<p><span class="math inline">Y_{i} \sim \text{Bernoulli}(p_{i}) \quad \text{ es decir } \quad \mathbb{P}(Y_{i}= y) = p_{i}^{y}(1-p_{i})^{1-y} \quad \text{ donde } \quad y \in \{0,1\}</span></p>
+</div>
+<div class="fragment">
+<p>Por tanto, la probabilidad de observar estos datos es descrita por la siguiente función: <span class="math display">\mathbb{P}(y_{1}, \dots, y_{n}) = \prod_{i=1}^{n} p_{i}^{y_{i}}(1-p_{i})^{1-y_{i}}</span></p>
+</div>
+<div class="fragment">
+<p>En consecuencia, la <span class="bold">likelihood function</span> de <span class="math inline">p_{i}</span> es: <span class="math display">\mathcal{L}(\boldsymbol{p} \mid y_{1}, \dots, y_{n}) = \prod_{i=1}^{n} p_{i}^{y_{i}}(1-p_{i})^{1-y_{i}}</span></p>
+</div>
+<div class="fragment">
+<p>y la <span class="bold">log likelihood function</span> de <span class="math inline">p_{i}</span> es: <span class="math display">\ell(\boldsymbol{p} \mid y_{1}, \dots, y_{n}) = \sum_{i=1}^{n} \bigg( y_{i} \ln p_{i} + (1-y_{i}) \ln(1-p_{i}) \bigg)</span></p>
+</div>
 </section>
-<section id="por-qué-esto-importa-para-lo-que-viene" class="slide level2">
-<h2>Por qué esto importa para lo que viene</h2>
+<section id="estimación-mle-3" class="slide level2">
+<h2>Estimación (MLE)</h2>
+<p>La <span class="bold">log likelihood function</span> de <span class="math inline">p</span> es: <span class="math display">\ell(\boldsymbol{p} \mid y_{1}, \dots, y_{n}) = \sum_{i=1}^{n} \bigg( y_{i} \ln p_{i} + (1-y_{i}) \ln(1-p_{i}) \bigg)</span></p>
+<div class="fragment">
+<p>Pero no estamos estimando <span class="math inline">p_{i}</span> directamente, sino que lo modelamos como un función de otros predictores.</p>
+</div>
+<div class="fragment">
+<p>específicamente: <span class="math inline">p_{i} =\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}</span></p>
+</div>
+<div class="fragment">
+<p>por tanto, <span class="math display">\ell(\beta_{0},\beta_{1} \mid y_{1}, \dots, y_{n}) = \sum_{i=1}^{n} \bigg( y_{i} \ln \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}} + (1-y_{i}) \ln(1-\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}) \bigg)</span> En definitiva, nuestros MLE son: <span class="math display">\hat{\beta_{0}},\hat{\beta_{1}} = \underset{\beta_{0},\beta_{1}}{\arg\max\ } \sum_{i=1}^{n} \bigg( y_{i} \ln \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}} + (1-y_{i}) \ln(1-\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}) \bigg)</span></p>
+</div>
+</section>
+<section id="estimación-mle-4" class="slide level2">
+<h2>Estimación (MLE)</h2>
 <ul>
-<li>Cuando ajustemos un GLM (clase 8) o una regresión logística (clase 9), <strong>estimar el modelo</strong> va a significar, otra vez, encontrar los parámetros que maximizan una verosimilitud — o minimizan la pérdida asociada.</li>
-<li>Cuando tratemos la regresión logística como <strong>clasificador</strong> (clase 18), log-loss va a ser exactamente la métrica que usemos para comparar modelos.</li>
-<li>Cuando lleguemos a <strong>regularización</strong> (clase 19) y <strong>redes neuronales</strong> (clase 21), vamos a agregar un término extra a esta misma pérdida para controlar la complejidad del modelo — pero la pérdida de base sigue siendo esta.</li>
+<li>No hay solución analítica (en general) para esta maximización. Típicamente se usa Fisher’s Scoring Method (un algoritmo de búsqueda) para obtener los MLE.</li>
+<li>Para ejemplificar podemos implementar una optimización numérica simple e ineficiente para buscar los MLE.</li>
 </ul>
-<p>La idea de hoy —likelihood y pérdida son dos caras de la misma moneda— es una de las piezas que más se repite en el resto del curso.</p>
+<div class="fragment">
+<p>Para acelerar la búsqueda usaremos valores en la proximidad de las estimaciones reportadas arriba (que normalmente no conoceríamos): <span class="bold">Implementación en</span> <code>R</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a>ll <span class="ot">&lt;-</span> <span class="cf">function</span>(b0,b1) {</span>
+<span id="cb4-2"><a href=""></a>  y <span class="ot">=</span> bikedata<span class="sc">$</span>high_demand</span>
+<span id="cb4-3"><a href=""></a>  eta <span class="ot">=</span> b0 <span class="sc">+</span> b1<span class="sc">*</span>bikedata<span class="sc">$</span>temp</span>
+<span id="cb4-4"><a href=""></a>  ell <span class="ot">=</span> <span class="fu">sum</span>( y<span class="sc">*</span><span class="fu">log</span>(<span class="dv">1</span><span class="sc">/</span>(<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(<span class="sc">-</span>eta))) <span class="sc">+</span>  (<span class="dv">1</span><span class="sc">-</span>y)<span class="sc">*</span><span class="fu">log</span>(<span class="dv">1</span> <span class="sc">-</span> (<span class="dv">1</span><span class="sc">/</span>(<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(<span class="sc">-</span>eta)))))</span>
+<span id="cb4-5"><a href=""></a>  <span class="fu">return</span>(<span class="at">ll =</span> ell)</span>
+<span id="cb4-6"><a href=""></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<div class="fragment">
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] -5992</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] -5580</code></pre>
+</div>
+</div>
+</div>
+</section>
+<section id="estimación-mle-5" class="slide level2">
+<h2>Estimación (MLE)</h2>
+<p><span class="bold">Implementación en</span> <code>R</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href=""></a><span class="co"># Evaluar la log-likelihood function  para muchas combinaciones de posibles valores de  b0 y b1</span></span>
+<span id="cb7-2"><a href=""></a><span class="co"># centramos la grilla en torno a las estimaciones del modelo</span></span>
+<span id="cb7-3"><a href=""></a>b0_hat <span class="ot">&lt;-</span> <span class="fu">coef</span>(logit_demand_temp)[<span class="dv">1</span>]</span>
+<span id="cb7-4"><a href=""></a>b1_hat <span class="ot">&lt;-</span> <span class="fu">coef</span>(logit_demand_temp)[<span class="dv">2</span>]</span>
+<span id="cb7-5"><a href=""></a>parameter_space <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">beta0 =</span> <span class="fu">seq</span>(b0_hat<span class="dv">-1</span>, b0_hat<span class="sc">+</span><span class="dv">1</span>, <span class="at">length.out=</span><span class="dv">500</span>), <span class="at">beta1 =</span> <span class="fu">seq</span>(b1_hat<span class="dv">-1</span>, b1_hat<span class="sc">+</span><span class="dv">1</span>, <span class="at">length.out=</span><span class="dv">500</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-6"><a href=""></a>  <span class="fu">rowwise</span>() <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">loglik =</span> <span class="fu">ll</span>(beta0,beta1))</span>
+<span id="cb7-7"><a href=""></a></span>
+<span id="cb7-8"><a href=""></a><span class="co"># Encuentra el par de valores b0,b1 que dan el mayor valor para la log-likelihood function</span></span>
+<span id="cb7-9"><a href=""></a></span>
+<span id="cb7-10"><a href=""></a>m <span class="ot">&lt;-</span> parameter_space <span class="sc">%&gt;%</span> <span class="fu">as.matrix</span>()</span>
+<span id="cb7-11"><a href=""></a>m[<span class="fu">which.max</span>(m[,<span class="dv">3</span>]),]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    beta0     beta1    loglik 
+   -3.678     4.829 -4256.678 </code></pre>
+</div>
+</div>
+</section>
+<section id="estimación-mle-6" class="slide level2">
+<h2>Estimación (MLE)</h2>
+<div class="pull-left">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_6_files/figure-revealjs/unnamed-chunk-10-1.png" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div class="fragment">
+<div class="pull-right">
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = high_demand ~ temp, family = binomial(link = "logit"), 
+    data = bikedata)
+
+Coefficients:
+            Estimate Std. Error z value            Pr(&gt;|z|)    
+(Intercept)  -3.676     0.092   -39.800 &lt;0.000 ***
+temp          4.827     0.154    31.300 &lt;0.000 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 9711.200  on 8644  degrees of freedom
+Residual deviance: 8513.400  on 8643  degrees of freedom
+AIC: 8517
+
+Number of Fisher Scoring iterations: 4</code></pre>
+</div>
+</div>
+</div>
+</div>
 </section>
 <section id="en-resumen" class="slide level2">
 <h2>En resumen</h2>
 <ul>
-<li>MLE encuentra los parámetros que hacen más plausibles los datos observados.</li>
-<li>La condición de primer orden <span class="math inline">\ell\ell'(\hat\theta)=0</span> es, en general, cómo se resuelve ese problema.</li>
-<li>Minimizar una función de pérdida es lo mismo que maximizar una verosimilitud, con el signo invertido.</li>
-<li>Log-loss (cross-entropy) es la pérdida asociada a un outcome Bernoulli — la usaremos una y otra vez en el resto del curso.</li>
+<li>Regresión logística es un GLM con componente aleatorio Bernoulli/Binomial y enlace logit: <span class="math inline">\ln \frac{p_{i}}{1-p_{i}} = \eta_{i}</span>.</li>
+<li>La función media (sigmoide) <span class="math inline">p_{i} = \frac{e^{\eta_{i}}}{1+e^{\eta_{i}}}</span> mantiene <span class="math inline">p_{i}</span> restringido a <span class="math inline">[0,1]</span>.</li>
+<li>Los parámetros <span class="math inline">\beta</span> se estiman por máxima verosimilitud (MLE): no hay solución analítica cerrada, se usa un algoritmo de búsqueda numérica (ej. Fisher Scoring).</li>
+<li>La log-likelihood de una Bernoulli es <span class="math inline">\ell(\boldsymbol\beta \mid y) = \sum_{i=1}^{n}\big(y_{i}\ln p_{i} + (1-y_{i})\ln(1-p_{i})\big)</span>.</li>
+<li>La próxima clase: regresión logística — interpretación de parámetros.</li>
 </ul>
 </section>
-<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#132257">
+<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#007A75">
 <h2>Gracias</h2>
 <p><strong>Hasta la próxima clase</strong></p>
 <p>Mauricio Bucca</p>

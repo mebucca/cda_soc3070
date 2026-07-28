@@ -1,0 +1,229 @@
+---
+title: "Análisis de Datos Categóricos (SOC3070)"
+subtitle: "Presentación del curso"
+author: "Mauricio Bucca · Sociología UC"
+date: today
+body-classes: theme-barcelona
+course-team: barcelona
+filters: ["../_shared/course.lua"]
+format:
+  revealjs:
+    css: "../_shared/course.css"
+    slide-number: false
+    theme: default
+    highlight-style: github
+    code-block-font-size: 0.9em
+    width: 1600
+    height: 900
+    html-math-method: katex
+---
+
+```{r course-style, include=FALSE}
+source("../_shared/bikeshare.R")
+course_palette <- use_course_style("barcelona")
+```
+
+## Antes · Hoy · Después {.class-rhythm}
+
+::: {.full-width}
+
+::: {.content-box}
+**Antes**
+
+fundamentos de teoría de probabilidad.
+:::
+
+::: {.content-box-primary}
+**Hoy**
+
+presentación, expectativas y forma de trabajo.
+:::
+
+::: {.content-box-secondary}
+**Después**
+
+variables aleatorias y distribuciones discretas.
+:::
+
+:::
+
+
+# Presentación del curso {.inverse .center .middle}
+
+## Sobre mi
+  - Profesor Asistente, Sociología UC
+
+. . .
+
+  - Max Weber Postdoctoral Fellow, European University Institute, Firenze
+  - PhD en Sociología, Cornell University, NY
+    - PhD Minor en Estadística, Departamento de Estadística, Cornell University
+
+. . .
+
+  - Investigación: movilidad social intergeneracional,  desigualdades en el mercado laboral, creencias sobre las desigualdades, métodos cuantitativos
+  - Métodos: modelación estadística, estrategias empíricas para inferencia causal, métodos experimentales y computacionales
+    - Datos categóricos: desarrollos en "log-linear models"
+
+. . .
+
+[Información de contacto]{.bold}
+ - mail: mebucca@uc.cl
+ - webpage: https://mebucca.github.io/
+
+## Ayudantía
+
+::: {.pull-left}
+
+[Roberto Cantillán]{.bold}
+
+- Estudiante doctorado en Sociología PUC
+- Investigador Núcleo Milenio para el Estudio de Desajustes del Mercado Laboral (LM²C²)
+- Investigación: Desigualdades, sociología analítica, consolidación y homofilia, mercados laborales. 
+- Métodos: Análisis de redes sociales, modelos multinivel, inferencia causal. 
+
+:::
+
+::: {.figure-right}
+
+![ayudante](roberto.jpeg)
+
+:::
+
+# Logística del curso {.inverse .center .middle}
+
+## Contenidos
+
+::: {.pull-left}
+
+1. Fundamentos de teoría de la probabilidad
+2. Variables aleatorias y distribuciones discretas
+3. Estimación via Maximum Likelihood (MLE)
+4. Tablas de contingencia
+5. Modelo Lineal de Probabilidad (LPM)
+
+:::
+
+::: {.pull-right}
+
+6. Modelos Lineales Generalizados (GLM)
+7. Modelos de Regresión Logística
+8. Modelos de Regresión Logística Multinomial
+9. Modelos de Regresión Poisson y Quasi-Poisson
+10. Modelos Log-Lineales para tablas de contingencia
+
+:::
+
+## Evaluación
+
+::: {.content-box-primary}
+
+Tareas cortas (24%) · Trabajos (40%) · Trabajo Final (30%) · Participación (6%)
+
+:::
+
+. . .
+
+- [Tareas cortas:]{.bold} 4 tareas cortas, 6% cada una
+- [Trabajos:]{.bold} 2 trabajos de mediana extensión, 20% cada uno
+- [Trabajo final:]{.bold} 1 trabajo final (30%), aplicando contenidos del curso a un problema sustantivo
+- [Participación]{.bold} activa en clases y ayudantías
+
+## Políticas
+
+- [Asistencia:]{.bold} regular a clases es importante, esperada, pero no obligatoria
+- [Entregas:]{.bold} tareas y trabajos se entregan a más tardar el día indicado en el calendario del curso, a la hora señalada
+- [Uso de IA:]{.bold} permitido de forma ética y transparente, únicamente como herramienta de estudio o apoyo en la escritura de código. Debe declararse explícitamente qué herramientas fueron usadas y con qué propósito
+- [Honestidad académica:]{.bold} el desconocimiento de la política de honestidad académica de la universidad — incluyendo el uso de IA — no es una explicación razonable para su incumplimiento
+
+# Filosofía de enseñanza {.inverse .center .middle}
+
+---
+
+### 1. Los "atajos" estadísticos dificultan el aprendizaje
+
+. . .
+
+::: {.center}
+
+![pvalue](pvalue.png)
+
+:::
+
+---
+
+### 2. La sola intuición no es suficiente
+
+. . .
+
+::: {.pull-left}
+
+[Muchas cosas parecen más difíciles de lo que son]{.bold}
+[$$\int xf(x)dx := \mu $$]{.huge}
+
+:::
+
+. . .
+
+::: {.pull-right}
+
+[Otras parecen más simples de lo que son]{.bold}
+[ $$X   \text{ es una variable}$$]{.huge}
+
+:::
+
+. . .
+
+- Vacíos de conocimiento, notación, poca exposición a las matemáticas.
+- Este curso nivela estos vacíos activamente. No hay carta bajo la manga.
+
+---
+
+### 3. Menos es más
+
+. . .
+
+::: {.pull-left}
+
+[Muchos métodos]{.bold}
+![methods](methods.png)
+
+:::
+
+. . .
+
+::: {.pull-right}
+
+[Fundamentos sólidos]{.bold}
+![methods](foundations.jpg)
+
+:::
+
+# Recursos {.inverse .center .middle}
+
+## Repositorio Github
+Todo el material del curso será almacenado y actualizado regularmente en repositorio `Github`:
+
+::: {.center}
+
+![github](github.png)
+[https://github.com/mebucca/cda_soc3070]{.bold}
+
+:::
+
+## Horario de consulta y ayudantías
+
+::: {.center}
+
+![officehours](officehours.jpg)
+
+[Consulta:]{.bold} Lunes 14:30–15:30 (Mauricio Bucca, mebucca@uc.cl)
+[Ayudantía:]{.bold} Martes 12:20–13:30 (Roberto Cantillan, ricantillan@uc.cl)
+
+:::
+
+## Gracias {.inverse .center .middle .closing}
+
+**Hasta la próxima clase**
+
+Mauricio Bucca

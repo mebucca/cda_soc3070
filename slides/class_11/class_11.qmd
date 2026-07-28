@@ -1,10 +1,10 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Inferencia en Regresión Logística"
+subtitle: "Regresión Poisson"
 author: "Mauricio Bucca · Sociología UC"
 date: today
-body-classes: theme-inter
-course-team: inter
+body-classes: theme-napoli
+course-team: napoli
 filters: ["../_shared/course.lua"]
 format:
   revealjs:
@@ -20,7 +20,7 @@ format:
 
 ```{r course-style, include=FALSE}
 source("../_shared/bikeshare.R")
-course_palette <- use_course_style("inter")
+course_palette <- use_course_style("napoli")
 ```
 
 ## Antes · Hoy · Después {.class-rhythm}
@@ -30,247 +30,182 @@ course_palette <- use_course_style("inter")
 ::: {.content-box}
 **Antes**
 
-interpretación de efectos y efectos marginales.
+regresión logística multinomial: interpretación de efectos.
 :::
 
 ::: {.content-box-primary}
 **Hoy**
 
-inferencia y bootstrap en regresión logística.
+regresión Poisson y modelos de conteo.
 :::
 
 ::: {.content-box-secondary}
 **Después**
 
-regresión logística multinomial: estructura teórica.
+sobre-dispersión y quasi-Poisson.
 :::
 
 :::
 
 
 
-# Regresión Logística {.inverse .center .middle}
-## Inferencia
+# Regresión Poisson {.inverse .center .middle}
 
-## Configuración
+## Distribución Poisson {.inverse .center .middle}
 
-. . .
-
-- Tenemos $y_{1}, \dots y_{n}$ son $n$ variables independientes con distribución $\text{Bernoulli}(p_{i})$
+## Distribución Poisson
 
 . . .
 
-- $\mathbb{E}(y_{i} \mid x_{i1}, \dots,x_{ik}) = \mathbb{P}(y_{i}=1 \mid x_{i1}, \dots,x_{ik}) = p_{i}$ 
+En Capital Bikeshare se observan, en promedio, cerca de 144 arriendos por hora.
 
 . . .
 
-donde, 
-$$\ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$$
+- Pensemos este recuento como una manifestación de una variable aleatoria: bajo condiciones similares, la demanda de otra hora no sería exactamente igual.
 
-## Configuración
+. . .
 
-- Tenemos $y_{1}, \dots y_{n}$ son $n$ variables independientes con distribución $\text{Bernoulli}(p_{i})$
-- $\mathbb{E}(y_{i} \mid x_{i1}, \dots,x_{ik}) = \mathbb{P}(y_{i}=1 \mid x_{i1}, \dots,x_{ik}) = p_{i}$ 
+- Llamemos $Y$ a la cantidad de bicicletas arrendadas durante una hora.
 
-donde, 
+. . .
 
-::: {.content-box-blue}
+- $Y$ puede ser descrita con una distribución Poisson: $Y \sim \text{Poisson}(\mu)$
 
-$$\underbrace{\ln \frac{p_{i}}{1 - p_{i}}}_{\text{Link logit}(p_{i})} = \overbrace{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}^{\text{Predictor lineal  } \eta_{i}}$$
+. . .
+
+- donde $\mu$ corresponde al número esperado de arriendos por hora.
+  - Para ilustrar, supongamos que $\mu=144$.
+
+. . .
+
+. . .
+
+[Pregunta]{.bold}: ¿Cuál es la probabilidad de observar exactamente $y$ arriendos en una hora?
+
+. . .
+
+::: {.content-box-yellow}
+
+$$\quad  \quad \mathbb{P}(Y=y) = \frac{\mu^{y}}{y!}  e^{-\mu}, \quad \text{donde } \quad y \in \{0,1, 2, 3, \dots \} \quad \text{y } \mu>0$$
 
 :::
 
-. . .
+## Distribución Poisson
+$$ \text{En nuestro caso: } \quad \mathbb{P}(Y=y) = \frac{144^{y}}{y!}e^{-144} $$
 
-- [Inferencia]{.bold}: ¿que podemos decir sobre $\hat{\beta}_{0},\hat{\beta}_{1}, \dots, \hat{\beta}_{k}$  (o cualquier producto de éstos) más allá de nuestra muestra?
+::: {.center}
 
-## Inferencia estadística para regresión logística (y GLMs) {.inverse .center .middle}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4.5, fig.width=9}
 
-## Inferencia acerca de parámetros del modelo
-
-- Los coeficientes de un GLM son estimados via MLE.
-
-. . .
-
- Un ML "estimate" $\hat{\theta}$ tiene las siguientes propiedades:
-
-. . .
-
-::: {.img-right}
-
-![MLE_prop](unbiased_consistent.png)
-
-:::
-
-::: {.pull-left}
-
-- Es [consistente]{.bold}: $\hat{\theta} \xrightarrow{p} \theta$. Es decir, en la medida que $n \to \infty$, el  estimador $\hat{\theta}$ tiende en probabilidad a $\theta$, el valor verdadero del parámetro. 
-
-:::
-
-::: {.pull-right}
-
-:::
-
-. . .
-
-::: {.pull-left}
-
-- Es [insesgado]{.bold}: $\mathbb{E}(\hat{\theta}) = \theta$.
-
-:::
-
-::: {.pull-right}
-
-:::
-
-. . .
-
-::: {.pull-left}
-
-- Distribuye [asintónticamente normal]{.bold}: $\hat{\theta} \xrightarrow{d} \mathcal{N}(\theta, \frac{\sigma_{\theta}}{\sqrt{n}})$. Es decir, no solo converge al valor verdadero, sino que converge rápidamente ( $1/\sqrt{n}$ ).
-
-:::
-
-::: {.pull-right}
-
-:::
-
-. . .
-
-Notar que $\frac{\sigma_{\theta}}{\sqrt{n}}$ es el "standard error" (SE) de $\theta$.
-```{css, echo=FALSE}
-.pull-right ~ * { clear: unset; }
-.pull-right + * { clear: both; }
-```
-
-## Inferencia acerca de parámetros del modelo: intervalos de confianza
-Dado que $\hat{\theta} \sim \mathcal{N}(\theta, \frac{\sigma_{\theta}}{\sqrt{n}})$ ...
-
-. . .
-
-podemos construir un intervalo de confianza de la siguiente manera:
-$$(1 - \alpha) \text{ CI}_{\hat{\theta}} = \hat{\theta} \pm \Phi^{-1}(\alpha/2) \cdot SE_{\hat{\theta}}$$
-
-. . .
-
-Ejemplo, un intervalo al 95% de confianza está dado por:
-$$95\% \text{ CI}_{\hat{\theta}} = \hat{\theta} \pm 2 \cdot  \frac{\sigma_{\theta}}{\sqrt{n}}$$
-
-## Inferencia acerca de parámetros del modelo:  intervalos de confianza
-```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
-
-# datos de Capital Bikeshare del paquete "ISLR2"
+# librerías para las ilustraciones de la distribución Poisson
 library(pacman)
-p_load("ISLR2")
-p_load("viridis")
 p_load("tidyverse")
+p_load("viridis")
 p_load("modelr")
 p_load("cowplot")
 p_load("margins")
-p_load("rsample")
-p_load("arm")
-p_load("stargazer")
 
 theme_set(theme_julia())
 
-bikedata <- Bikeshare %>% as_tibble()
+rate <- 144
+mydata <- tibble(x = 90:200, probability = dpois(x, lambda = rate))
 
-# variable binaria: alta demanda = top 25% de las horas (umbral P75 de bikers)
-p75 <- quantile(bikedata$bikers, 0.75)
-bikedata <- bikedata %>%
-  mutate(demand = if_else(bikers > p75, "alta", "baja")) %>%
-  # codificación 0/1
-  mutate(high_demand = if_else(bikers > p75, 1, 0))
+ggplot(data = mydata, mapping = aes(x = x)) +
+    ## Entire curve
+    geom_path(aes(y = probability), color = course_palette[["series-1"]], linewidth = 1.5) +
+  labs(x="Y: arriendos de bicicletas por hora", y="P(Y=y)") +
+      geom_vline(xintercept = rate, color = course_palette[["series-3"]], linewidth = 1.5) +
+      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+      legend.text = element_text(size = 18), legend.position = "none")
 ```
-Retomando nuestro modelo de clases anteriores: $\ln \frac{p_{i}}{ 1 - p_{i}}    = \beta_{0} + \beta_{1}\text{hábil}_{i} + \beta_{2}\text{temp}_{i}$
-
-. . .
-
-```{r,echo=FALSE}
-logit_demand_wday_temp <-
-  glm(high_demand ~ factor(workingday) + temp,
-      family=binomial(link="logit"),
-      data=bikedata)
-logit_demand_wday_temp$formula
-summary(logit_demand_wday_temp)$coefficients
-```
-
-. . .
-
-::: {.content-box-blue}
-
-[Calculemos un IC al 95% para el efecto de la "temperatura" sobre el logit de alta demanda:]{.bold} $\beta_{2}$
 
 :::
 
 . . .
 
-```{r}
-beta2 <- summary(logit_demand_wday_temp)$coefficients["temp","Estimate"]
-se_beta2 <- summary(logit_demand_wday_temp)$coefficients["temp","Std. Error"]
-ci_beta2 <- beta2 + c(-2,2)*se_beta2; ci_beta2
-```
+Por ejemplo: $P(Y=144)=$ `r round(dpois(144, lambda = 144), 3)`.
+
+## Distribución Poisson
+
+- Una hora con 300 arriendos representa una demanda muy superior al promedio ilustrativo.
 
 . . .
 
-```{r}
-confint(logit_demand_wday_temp)
-```
-
-## Inferencia acerca de parámetros del modelo: tests
-```{r,echo=FALSE}
-summary(logit_demand_wday_temp)$coefficients
-```
+- ¿Cuál es la probabilidad de observar 300 arriendos si $Y \sim \text{Poisson}(\mu=144)$?
 
 . . .
 
-[¿Que significan los p-values en este contexto?]{.bold}
+$P(Y=300)=$ `r format(dpois(300, lambda = 144), scientific = TRUE, digits = 3)`.
 
-. . .
+::: {.center}
 
-::: {.img-right}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4.5, fig.width=9}
+rate <- 144
+mydata <- tibble(x = 90:320, probability = dpois(x, lambda = rate))
 
-![star](stars.jpg)
+ggplot(data = mydata, mapping = aes(x = x)) +
+    ## Entire curve
+    geom_path(aes(y = probability), color = course_palette[["series-1"]], linewidth = 1.5) +
+  labs(x="Y: arriendos de bicicletas por hora", y="P(Y=y)") +
+      geom_vline(xintercept = 300, color = course_palette[["series-3"]], linewidth = 1.5) +
+      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+      legend.text = element_text(size = 18), legend.position = "none")
+```
 
 :::
 
-```{r,echo=FALSE}
-stargazer(logit_demand_wday_temp, type = "text", single.row=TRUE)
+## Distribución Poisson
+
+::: {.img-left}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=8, fig.width=10}
+
+mydata <- tibble(x = seq(from = 0, to = 150))
+
+for (i in c(10,30,50,100)) {
+  col <- sym(paste0("y_",i))
+  mydata <- mydata %>%
+    mutate(!!col := dpois(x,lambda = i) ) 
+}
+
+ mydata <- mydata %>% pivot_longer(-x, names_to="Poisson_Lambda", values_to="density") %>%
+           separate(Poisson_Lambda, into=c("Poisson","Lambda"), sep="_")
+
+ggplot(data = mydata, mapping = aes(x = x)) +
+    ## Entire curve
+    geom_path(aes(y=density, colour=Lambda), size=1.5, alpha=0.8) +
+  labs(title="Distribución Poisson para diferentes valores de Lambda" ,x="y", y="P(Y=y)") +
+     scale_color_course() +
+      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+      legend.text = element_text(size = 18), legend.position = "bottom") 
 ```
-
-## Inferencia acerca de parámetros del modelo: tests
-```{r,echo=FALSE}
-summary(logit_demand_wday_temp)$coefficients
-```
-
-. . .
-
-[Test de hipótesis]{.bold}
-
-. . .
-
-1) $H_{0}:$ La temperatura no afecta la probabilidad de alta demanda ( $\beta_{2}=0$ )
-
-. . .
-
-2) ¿Cuál es la distribución de $\beta_{2}$ si la hipótesis nula es verdadera?
-
-. . .
-
-::: {.content-box-blue}
-
-$$\beta_{2} \mid H_{0} \sim \text{Normal}\Big(\mu_{\beta_{2}} = 0, \sigma_{\beta_{2}} = \text{SE}_{\beta_{2}}\Big)$$
 
 :::
 
 . . .
 
-3) Calcular [p-value]{.bold} (2 colas)
+::: {.pull-right}
 
-::: {.content-box-blue}
+Algunas características:
 
-$$\mathbb{P}( |\beta_{2}| > | \hat{\beta}_{2} |  \mid H_{0}) :=   \mathbb{P}\big(|\text{Normal}(\mu_{\beta_{2}} = 0, \sigma_{\beta_{2}} = \text{SE}_{\beta_{2}})|  > |\hat{\beta}_{2}| \big)$$
+- Sesgado hacia la derecha, pero sesgo decrece cuando aumenta $\mu$
+- Centrado en torno a $\mu$.
+- Dispersión aumenta cuando aumenta $\mu$.
+
+:::
+
+. . .
+
+::: {.pull-right}
+
+Específicamente,
+
+- Si $Y_{i} \sim \text{Poisson}(\mu)$, entonces:
+-  $\mathbb{E}(Y) =  \mu$
+- $\operatorname{Var}(Y) =  \mu$ y, por tanto, $\sigma= \sqrt{\mu}$.
 
 :::
 
@@ -279,84 +214,85 @@ $$\mathbb{P}( |\beta_{2}| > | \hat{\beta}_{2} |  \mid H_{0}) :=   \mathbb{P}\big
 .pull-right + * { clear: both; }
 ```
 
-## Inferencia acerca de parámetros del modelo: tests
-```{r,echo=FALSE}
-summary(logit_demand_wday_temp)$coefficients
-```
-```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
+## Fundamentos teóricos de regresión Poisson {.inverse .center .middle}
 
-# Extract coefficient estimate and standard error
-beta2_hat <- (summary(logit_demand_wday_temp)$coefficients)[3,1]
-beta2_se  <- (summary(logit_demand_wday_temp)$coefficients)[3,2]
-
-# Create a sequence of values around the estimate
-x_vals <- seq(-4*beta2_se, 4*beta2_se, length.out = 500)
-
-# Compute normal density
-dens_vals <- dnorm(x_vals, mean = 0, sd = beta2_se)
-
-# Plot
-tibble(x = x_vals, y = dens_vals) %>%
-  ggplot(aes(x = x, y = y)) +
-    geom_line(size = 1.2, colour = course_palette[["primary"]]) +
-    geom_vline(aes(xintercept = beta2_hat), size = 1.2, colour = course_palette[["secondary"]]) +
-    labs(x = expression(hat(beta)[2]), y = "Density") +
-    theme_julia() +
-    theme(
-      axis.text = element_text(size = 14),
-      axis.title = element_text(size = 16)
-    )
-```
-
-## Inferencia acerca de parámetros del modelo: ejemplo empírico
+## Estructura de un modelo de regresión Poisson
+Regresión Poisson es la herramienta estándar para modelar variables de conteo (e.j. cantidad de accidentes, tiempos de espera en línea, etc.).
 
 . . .
 
-::: {.content-box-blue}
+ Podemos pensar en un modelo de regresión Poisson de la siguiente forma:
 
-[Calculemos ahora un IC al 95% para el efecto multiplicativo de la "temperatura" sobre las odds de alta demanda:]{.bold} $e^{\beta_{2}}$= `r expbeta2=exp(beta2); expbeta2`
+. . .
+
+[Configuración]{.bold}
+
+- Tenemos $n$ observaciones independientes: $i = 1, \dots, n$
+
+. . .
+
+- Para cada observación observamos datos $y_{1}, \dots , y_{n}$ que actúan como variable dependiente.
+
+. . .
+
+- $y_{i} \in \mathbb{Z}^{*}$, es decir, es un entero no-negativo, tal que: $y_{i} \in \{0,1, 2, 3, \dots \}$
+
+. . .
+
+- Asumimos que estos datos son realizaciones de $n$ variables aleatorias Poisson con parámetros desconocidos: $Y_{i} \sim \text{Poisson}(\mu_{i})$
+
+. . .
+
+- Asumimos que dichos parámetros (media) pueden variar de observación en observación.
+  - Podemos describir estos parámetros en función de covariables.
+
+## Estructura de un modelo de regresión Poisson
+Específicamente, una regresión Poisson modela la media condicional de una variable de recuento de la siguiente manera:
+
+::: {.content-box-yellow}
+
+$$\mathbb{E}(y_{i} \mid x_{1i}, \dots, x_{ki}) = \mu_{i} = e^{\eta_{i}} \quad \quad  \text{donde} \quad \quad \eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$$
 
 :::
 
 . . .
 
-![michael](michael.gif)
+[Importante]{.bold} notar que:
 
 . . .
 
-¿Cuál es la sampling distribution de una función de nuestro estimate?
-
-## El test que acabamos de construir tiene nombre
-
-El procedimiento anterior —dividir el coeficiente por su error estándar y comparar con una Normal— es el **test de Wald**: usa la estimación y el error estándar de **un solo modelo ajustado**.
+- El rango de la función exponencial, $e^x \in (0, \infty+)$, asegura que la media condicional predicha por un modelo de regresión Poisson siempre sea [estrictamente positiva]{.bold}.
 
 . . .
 
-Existe una alternativa: el **test de razón de verosimilitudes (LR test)**. En vez de mirar un coeficiente aislado, compara la log-verosimilitud de dos modelos anidados —uno con la variable, otro sin ella:
-
-::: {.content-box-secondary}
-
-$$LR = -2\big[\ell(\text{modelo restringido}) - \ell(\text{modelo completo})\big] \sim \chi^{2}_{df}$$
-
-:::
+- $x_{1} \dots x_{k}$ son predictores o variables independientes
 
 . . .
 
-```{r}
-logit_sin_temp <- glm(high_demand ~ factor(workingday),
-                      family = binomial(link = "logit"), data = bikedata)
-anova(logit_sin_temp, logit_demand_wday_temp, test = "LRT")
-```
+- $\beta_{1} \dots \beta_{k}$ son los respectivos "efectos" de los predictores sobre $\eta_{i}$
 
-En regresión logística, el LR test suele ser más confiable que Wald —especialmente con muestras chicas o coeficientes grandes— porque no depende de la aproximación Normal para un único parámetro.
+. . .
 
-## Bootstrap Method {.inverse .center .middle}
+- $\mu_{i}$ [no está relacionado linealmente]{.bold} con sus predictores. 
 
----
+## Estructura de un modelo de regresión Poisson
+Sin embargo, $\eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$ si es una función lineal de los predictores.
+
+. . .
+
+Por tanto, es conveniente expresar $\eta_{i}$ en función de $\mu_{i}$. Si $\mu_{i} = e^{\eta_{i}}$, entonces ...
+
+. . .
 
 ::: {.pull-left}
 
-![boots](rambo.jpg)
+**Transformación clave:** modelamos el logaritmo de la media para mantener $\mu_i>0$.
+
+::: {.content-box-yellow}
+
+$$\quad \quad  \ln \mu_{i} = \eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$$
+
+:::
 
 :::
 
@@ -364,145 +300,17 @@ En regresión logística, el LR test suele ser más confiable que Wald —especi
 
 ::: {.pull-right}
 
-![boots](boots.jpg)
+- En resumen, un modelo de regresión Poisson describe $\ln \mathbb{E}(y_{i} \mid x_{1i}, \dots, x_{ki}) = \ln \mu_{i}$.
+- Recordar que esto es distinto de  modelar el logaritmo de la variable dependiente: $\mathbb{E}(\ln y_{i} \mid x_{1i}, \dots, x_{ki})$
 
 :::
 
-## Bootstrap Method
-[Intuición:]{.bold}
-
-. . .
-
-- Estimamos un modelo y tenemos una cierta "cantidad de interés" (estimate)
-
-. . .
-
-- No conocemos la distribución nuestro estimate a través de infinitas muestras porque sólo tenemos una muestra.
-
-. . .
-
-- Tampoco tenemos conocimiento teórico sobre la distribución de nuestro estimate.
-
-. . .
-
-- Podemos tomar muestras de nuestra muestra, preservando cualquier distribución desconocida subyacente.
-
-. . .
-
-- Podemos observar y estudiar el comportamiento de nuestro estimate en estas muestras de nuestras muestras.
-
-## Bootstrap Method
-[Muestrando desde la muestra:]{.bold}
-¿Cuántas muestras podemos tomar (con reemplazo) a partir de nuestra muestra?
-
-. . .
-
- [Respuesta]{.bold}: $n^n$
-
-. . .
-
-$$\text{muestra} : \left[\begin{array}{c}
-    1 \\
-    2 \\
-    3 
-    \end{array} \right]$$
-
-. . .
-
-$$\text{posibles muestras de la muesta:} \left[\begin{array}{c} 
-    1 \\
-    1 \\
-    1 
-    \end{array} \right] 
-    \text{ o}  \left[\begin{array}{c} 
-    1 \\
-    1 \\
-    2 
-    \end{array} \right] 
-    \text{ o}  \left[\begin{array}{c} 
-    1 \\
-    3 \\
-    2 
-    \end{array} \right] 
-    \text{ o}  \left[\begin{array}{c} 
-    3 \\
-    1 \\
-    2 
-    \end{array} \right] 
-    \text{ o}  \left[\begin{array}{c} 
-    3 \\
-    3 \\
-    3 
-    \end{array} \right]  ...$$
-
-## Bootstrap Method
-[Esquema del algoritmo]{.bold} (Bootstrap no paramétrico):
-
-. . .
-
-1. Asume que la distribución empírica del los datos refleja la distribución de probabilidad de las variables de interés.
-
-. . .
-
-2. A partir de la muestra obtenén una muestra aleatoria del mismo tamaño que la muestra original (N), con reemplazo:  $(y_{b},X_{b})$
-
-. . .
-
-3. Regresiona $y_{b}$ y $X_{b}$ para obtener el estimate $\hat{\theta}_{b}$
-
-. . .
-
-4. Repite los pasos 2 y 3 un gran número de veces B.
-
-. . .
-
-5. El conjunto de B resultados obtenidos corresponde a la "Bootstrap distribution" del estimate.
-
-. . .
-
-6. Evalúa la distribución del estimate (SE,CI, etc) o de cualquier cantidad derivada de éste.
-
-## Bootstrap Method: ejemplo empírico
-Siguiendo con $\ln \frac{p_{i}}{ 1 - p_{i}}    = \beta_{0} + \beta_{1}\text{hábil}_{i} + \beta_{2}\text{temp}_{i}$,
-
-. . .
-
-::: {.content-box-blue}
-
-[Calculemos un IC al 95% para el efecto de la "temperatura" sobre el logit de alta demanda:]{.bold} $\beta_{2}$
-
-:::
-
-. . .
-
-```{r}
-
-# Escribir una función que ejecute re-sampling y la estimación
-bs_beta2  <- function(x) {
-  data_b  <- sample_n(bikedata,size=nrow(bikedata),replace=TRUE)
-  logit_b <- glm(high_demand ~ factor(workingday) + temp, family=binomial(link="logit"), data=data_b)
-  beta2_b <- logit_b$coefficients[3]
-  return(beta2_b)
-}
-
-# Iterar función y almacenar resultados 
-nreps =1200
-betas2_bs <- replicate(nreps,bs_beta2()); head(betas2_bs)
-
-```
-
-## Bootstrap Method: ejemplo empírico
+## Regresión Poisson para modelar "tasas"
+Si bien la regresión Poisson es una herramienta para modelar conteos, muchas veces el verdadero fenómeno de interés es una "tasa".
 
 ::: {.pull-left}
 
-```{r}
-se_beta2_bs <- sd(betas2_bs)
-se_beta2_bs
-
-ci_beta2_bs <- 
-  quantile(betas2_bs, p=c(0.025,0.975))
-  ci_beta2_bs
-```
+![bici](bici.png)
 
 :::
 
@@ -510,275 +318,1082 @@ ci_beta2_bs <-
 
 ::: {.pull-right}
 
-```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
-ci95 = round(ci_beta2_bs, 3)
+Aumento en número de accidentes en bicicleta puede reflejar dos cosas (no excluyentes):
 
-betas2_bs %>% as_tibble() %>% ggplot(aes(x=value)) + 
-      geom_density(colour="black", fill=course_palette[["primary"]], alpha=0.1, size=1.5) +
-      scale_color_course() + 
-      geom_vline(aes(xintercept = beta2, colour=paste0("beta2=",course_number(beta2)) ), size=1.5) +
-      geom_vline(aes(xintercept = ci_beta2_bs[1],
-                     colour=paste0("95% CI: (",ci95[1],",",ci95[2],")")), linetype="dashed", size=1.5) +
-      geom_vline(aes(xintercept = ci_beta2_bs[2], 
-                     colour=paste0("95% CI: (",ci95[1],",",ci95[2],")")), linetype="dashed", size=1.5) +
-      guides(fill=FALSE) + labs(colour="", x="beta2") +
-      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
-      legend.text = element_text(size = 18), legend.position="bottom") +
-      guides(color=guide_legend(nrow=3,byrow=TRUE))
-```
+- Aumento de la propensión a sufrir un accidente ("tasa")
+- Aumento de la cantidad de ciclistas ("exposure")
+
+Formalmente:
+$$\mu_{i} = \underbrace{n_{i}}_{\text{exposición}} \cdot \underbrace{\theta_{i}}_{\text{tasa}}$$ 
 
 :::
 
-## Bootstrap Method: ejemplo empírico
+## Regresión Poisson para modelar "tasas"
+Usando la definición de tasa: $\theta_{i} = \frac{\mu_{i}}{n_{i}}$
 
-::: {.content-box-blue}
+. . .
 
-¿Un IC al 95% para el efecto de la "temperatura" como ["odds ratio"]{.bold}: $e^{\beta_{2}}$?
+Podemos modelar la tasa de ocurrencia de un evento de la siguiente manera:
+
+. . .
+
+$$\ln(\theta_{i}) = \ln \bigg(\frac{\mu_{i}}{n_{i}}\bigg) = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$$
+
+. . .
+
+$$\ln(\theta_{i})  = \ln(\mu_{i}) - \ln(n_{i}) = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$$
+
+. . .
+
+El modelo para la "tasa" puede ser re-expresado como un modelo de conteo:
+
+. . .
+
+::: {.content-box-yellow}
+
+$$\ln(\mu_{i}) = \ln(\theta_{i}) + \ln(n_{i}) = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki} + \ln(n_{i})$$
 
 :::
 
 . . .
 
-Bootstrapeando ...
+En jerga GLM $n_{i}$ es comúnmente referido como ["exposure"]{.bold} y $\ln(n_{i})$ como ["offset"]{.bold}.
 
-::: {.img-bottom-right}
+## Regresión Poisson para modelar "tasas"
+Dado
+$$\ln(\mu_{i})  = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki} + \ln(n_{i})$$
 
-![easy](easy.gif)
+. . .
 
-:::
+exponenciando en ambos lados de la ecuación obtenemos:
 
-## Bootstrap Method: ejemplo empírico
+. . .
 
-::: {.content-box-blue}
+$$\mu_{i}  = n_{i} \cdot \underbrace{e^{\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}}}_{\theta_{i}}$$
 
-¿Un IC al 95% para el efecto de la "temperatura" como ["odds ratio"]{.bold}: $e^{\beta_{2}}$?
+. . .
 
-:::
+En resumen:
 
-Bootstrapeando ...
-```{r}
+. . .
 
-# Escribir una función que ejecute re-sampling y la estimación
-bs_expbeta2  <- function(x) {
-  data_b  <- sample_n(bikedata,size=nrow(bikedata),replace=TRUE)
-  logit_b <- glm(high_demand ~ factor(workingday) + temp, family=binomial(link="logit"), data=data_b)
-  expbeta2_b <- exp(logit_b$coefficients[3])
-  return(expbeta2_b)
-}
+- En un modelo de regresión Poisson para [conteos]{.bold}:
+$$\mathbb{E}(y_{i} \mid x_{1i}, \dots, x_{ki}) = \mu_{i} = e^{\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}} \quad \quad  \text{donde} \quad y_{i} \sim \text{Poisson}(\mu_{i})$$
 
-# Iterar función y almacenar resultados 
-nreps = 2000 
-expbetas2_bs <- replicate(nreps,bs_expbeta2()); head(expbetas2_bs)
+. . .
 
+- En un modelo de regresión Poisson para [tasas]{.bold}:
+$$\mathbb{E}(y_{i} \mid x_{1i}, \dots, x_{ki}) = \mu_{i} = n_{i} \cdot  e^{\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}} \quad \quad  \text{donde} \quad y_{i} \sim \text{Poisson}(\mu_{i})$$
+
+## Regresión Poisson es un tipo de GLM
+
+Regresión Poisson es un GLM con componente aleatorio [Poisson]{.bold} y función de enlace [log]{.bold}. 
+
+. . .
+
+- Componente aleatorio: $y_{1}, \dots y_{n}$ son $n$ variables independientes con distribución $\text{Poisson}(\mu_{i})$
+
+. . .
+
+- Función de enlace: $\ln( x )$
+
+. . .
+
+- Componente sistemático: $\ln(\mu_{i}) = \eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$
+
+. . .
+
+- Función media: $\mu_{i} = {e^{\eta_{i}}}$ (para conteos), o $\mu_{i} = n_{i} \cdot {e^{\eta_{i}}}$ (para tasas)
+
+. . .
+
+- Varianza: $\operatorname{Var}(y_{i}) = \overbrace{\phi}^{\text{dispersion = 1 }} \overbrace{V(\mu)}^{\text{ función varianza}} = \phi \frac{d\mu_{i}}{d\eta_{i}} = \phi e^{\eta_{i}} = \mu_{i}$
+
+## Regresión Poisson en la práctica
+Para ejemplificar el uso de regresión Poisson trabajaremos con [datos mundiales de Covid-19](https://github.com/owid/covid-19-data/tree/master/public/data) disponibles al día 17 de Noviembre 2020.
+
+Hasell, J., Mathieu, E., Beltekian, D. et al. A cross-country database of COVID-19 testing. Sci Data 7, 345 (2020). https://doi.org/10.1038/s41597-020-00688-8
+
+```{r, echo=FALSE, message=F, warning=F}
+covid_data <- read_delim("covid_data.csv", delim=";")
+
+covid_subdata <- covid_data %>% filter(date==as.Date("2020-11-17")) %>%
+  dplyr::select(continent,location,total_cases,total_deaths, total_tests, population,population_density,
+          median_age, gdp_per_capita,human_development_index,diabetes_prevalence,hospital_beds_per_thousand)
+
+covid_subdata %>% glimpse()
 ```
 
-## Bootstrap Method: ejemplo empírico
+## Regresión Poisson para conteos (sin offset)
+Ajustaremos el siguiente modelo: $\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i}$.
+```{r}
+poisson_death_age <- glm(total_deaths ~ median_age, family=poisson(link="log"),
+                         data=covid_subdata); summary(poisson_death_age)
+```
+
+## Regresión Poisson para conteos (sin offset) en la práctica
 
 ::: {.pull-left}
 
-```{r}
-se_expbeta2_bs <- sd(expbetas2_bs)
-se_expbeta2_bs
-
-ci_expbeta2_bs <- 
-  quantile(expbetas2_bs, p=c(0.025,0.975))
-  ci_expbeta2_bs
-```
+Nuestro modelo:
+$\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i}$
 
 :::
-
-. . .
 
 ::: {.pull-right}
 
-```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
-ci95 = round(ci_expbeta2_bs, 3)
-
-expbetas2_bs %>% as_tibble() %>% ggplot(aes(x=value)) + 
-      geom_density(colour="black", fill=course_palette[["primary"]], alpha=0.1, size=1.5) +
-      scale_color_course() + 
-      geom_vline(aes(xintercept = expbeta2, colour=paste0("exp(beta2)=",course_number(expbeta2)) ), size=1.5) +
-      geom_vline(aes(xintercept = ci_expbeta2_bs[1],
-                     colour=paste0("95% CI: (",ci95[1],",",ci95[2],")")), linetype="dashed", size=1.5) +
-      geom_vline(aes(xintercept = ci_expbeta2_bs[2], 
-                     colour=paste0("95% CI: (",ci95[1],",",ci95[2],")")), linetype="dashed", size=1.5) +
-      guides(fill=FALSE) + labs(colour="", x="exp(beta2)") +
-      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
-      legend.text = element_text(size = 18), legend.position="bottom") +
-      guides(color=guide_legend(nrow=3,byrow=TRUE))
+```{r,echo=F, message=FALSE}
+summary(poisson_death_age)$coefficients[,c(1,2)]
 ```
 
 :::
-
-## Bootstrap Method: ejemplo empírico
-
-::: {.content-box-blue}
-
-[Calculemos ahora IC al 95% para el Average Marginal Effect de la "temperatura" sobre la probabilidad de alta demanda]{.bold}
-
-:::
-
-. . .
-
-Bootstrapeando ...
-
-::: {.img-bottom-right}
-
-![easy](easy.gif)
-
-:::
-
-## Bootstrap Method: ejemplo empírico
-
-::: {.content-box-blue}
-
-[Calculemos ahora IC al 95% para el Average Marginal Effect de la "temperatura" sobre la probabilidad de alta demanda]{.bold}
-
-:::
-
-Bootstrapeando ...
-```{r}
-
-# Escribir una función que ejecute re-sampling y la estimación
-bs_ame_temp  <- function(x) {
-  data_b   <- sample_n(bikedata,size=nrow(bikedata),replace=TRUE)
-  logit_b  <- glm(high_demand ~ factor(workingday) + temp, family=binomial(link="logit"), data=data_b)
-  beta2_b  <- logit_b$coefficients[3]
-  p_hat_b  <- predict(logit_b, type = "response")
-  me_temp_b   <- beta2_b*p_hat_b*(1-p_hat_b)
-  return(ame_temp_b = mean(me_temp_b))
-}
-
-# Iterar función y almacenar resultados
-nreps =1200
-ame_temp_bs <- replicate(nreps,bs_ame_temp()); head(ame_temp_bs)
-
-```
-
-## Bootstrap Method: ejemplo empírico
 
 ::: {.pull-left}
 
-```{r}
+```{r, echo=FALSE, fig.height=5, fig.width=6}
+grid <- covid_subdata %>% data_grid(median_age=seq_range(median_age,n=50),.model = poisson_death_age)
 
-p_hat   <- predict(logit_demand_wday_temp, type = "response")
-me_temp   <- beta2*p_hat*(1-p_hat)
-ame_temp  <- mean(me_temp); ame_temp
+predictions <- grid %>% mutate(log_mu = predict(poisson_death_age, newdata=grid, type="link"))
 
-se_ame_temp_bs <- sd(ame_temp_bs)
-se_ame_temp_bs
-
-ci_ame_temp_bs <-
-  quantile(ame_temp_bs, p=c(0.025,0.975))
-  ci_ame_temp_bs
-```
-
-:::
-
-. . .
-
-::: {.pull-right}
-
-```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
-ci95 = round(ci_ame_temp_bs,3)
-
-ame_temp_bs %>% as_tibble() %>% ggplot(aes(x=value)) +
-      geom_density(colour="black", fill=course_palette[["primary"]], alpha=0.1, size=1.5) +
-      scale_color_course() +
-      geom_vline(aes(xintercept = ame_temp, colour=paste0("AME(temp)=",course_number(ame_temp)) ), size=1.5) +
-      geom_vline(aes(xintercept = ci_ame_temp_bs[1],
-                     colour=paste0("95% CI: (",ci95[1],",",ci95[2],")")), linetype="dashed", size=1.5) +
-      geom_vline(aes(xintercept = ci_ame_temp_bs[2],
-                     colour=paste0("95% CI: (",ci95[1],",",ci95[2],")")), linetype="dashed", size=1.5) +
-      guides(fill=FALSE) + labs(colour="", x="AME(temp) BS") +
-      theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-      axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
-      legend.text = element_text(size = 18), legend.position="bottom") +
-      guides(color=guide_legend(nrow=3,byrow=TRUE))
-```
-
-:::
-
-## Bootstrap Method: más ...
-```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
-
-# function to implement within each sample (regression model)
-logit_fit <- function(split){
-  model_bs = glm(high_demand ~ factor(workingday) + temp, family=binomial(link="logit"), data=analysis(split))
-}
-
-boots <- bikedata  %>% bootstraps(times = nreps)
-```
-
-::: {.pull-left}
-
-```{r, echo=FALSE, fig.width=7, fig.height=6, warning=F}
-grid <- bikedata %>% data_grid(workingday, temp = seq_range(temp,20),.model=logit_demand_wday_temp)
-
-predict_new <- function(fit){
-  preds = predict(fit,newdata=grid, type = "response")
-  preds = cbind(grid,preds)
-  return(preds)
-}
-
-boots %>%
-  mutate(fit = map(splits, logit_fit)) %>%
-  mutate(newpred = map(fit,predict_new)) %>%
-  dplyr::select(id,newpred) %>%
-  mutate_if(is.list, map, as_tibble) %>%
-  unnest() %>%
-  ggplot(aes(x=temp,y=preds, group=interaction(id,workingday), colour=factor(workingday))) + geom_line(alpha=0.08) +
-  scale_color_course()  +
-  guides(color = guide_legend(override.aes = list(alpha = 1))) +
+predictions %>%
+  ggplot(aes(x=median_age, y=log_mu, colour="")) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
   theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
   axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-  legend.text = element_text(size = 18), legend.position="bottom") +
-  labs(x="temperatura", y="P(alta demanda) predicha", color="Día hábil")
+  legend.text = element_text(size = 18), legend.position = "none") +
+  labs(x="median age", y=expression(ln(mu)), title =expression(paste(mu, ":  cantidad de muertes predichas")))
 
 ```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, fig.height=5, fig.width=6}
+
+# reutiliza `grid`, calculado en el chunk anterior (misma lámina)
+predictions <- grid %>% mutate(log_mu = predict(poisson_death_age, newdata=grid, type="response"))
+
+predictions %>%
+  ggplot(aes(x=median_age, y=log_mu, colour="")) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
+  legend.text = element_text(size = 18), legend.position = "none") +
+  labs(x="median age", y=expression( mu ), title =expression(paste(mu, ": cantidad de muertes predichas")))
+```
+
+:::
+
+```{css, echo=FALSE}
+.pull-right ~ * { clear: unset; }
+.pull-right + * { clear: both; }
+```
+
+## Regresión Poisson para tasas (con offset)
+Ajustaremos el siguiente modelo: $\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \ln(\text{population}_{i})$.
+```{r}
+poisson_death_age_rate <- glm(total_deaths ~ median_age, family=poisson(link="log"),
+                         offset=log(population), data=covid_subdata); summary(poisson_death_age_rate )
+```
+
+## Regresión Poisson para tasas (con offset) en la práctica
+
+::: {.pull-left}
+
+Nuestro modelo:
+$\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \ln(\text{population}_{i})$
+
+:::
+
+::: {.pull-right}
+
+```{r,echo=F, message=FALSE}
+summary(poisson_death_age_rate)$coefficients[,c(1,2)]
+```
+
+:::
+
+::: {.pull-left}
+
+```{r, echo=FALSE, fig.height=5, fig.width=6}
+grid <- covid_subdata %>% data_grid(median_age=seq_range(median_age,n=50),population=1,.model = poisson_death_age_rate)
+
+predictions <- grid %>% mutate(log_mu = predict(poisson_death_age_rate, newdata=grid, type="link"))
+
+predictions %>%
+  ggplot(aes(x=median_age, y=log_mu, colour="")) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
+  legend.text = element_text(size = 18), legend.position = "none") +
+  labs(x="median age", y=expression(ln(mu)), title =expression(paste(mu, ":  tasa predicha de muertes por hab. (n=1)")))
+
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, fig.height=5, fig.width=6}
+
+# reutiliza `grid`, calculado en el chunk anterior (misma lámina)
+predictions <- grid %>% mutate(log_mu = predict(poisson_death_age_rate , newdata=grid, type="response"))
+
+predictions %>%
+  ggplot(aes(x=median_age, y=log_mu, colour="")) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
+  legend.text = element_text(size = 18), legend.position = "none") +
+  labs(x="median age", y=expression( mu ), title =expression(paste(mu, ":  tasa predicha de muertes por hab. (n=1)")))
+```
+
+:::
+
+```{css, echo=FALSE}
+.pull-right ~ * { clear: unset; }
+.pull-right + * { clear: both; }
+```
+
+## Estimación {.inverse .center .middle}
+
+## Estimación
+
+. . .
+
+- Coeficientes del modelo de regresión Poisson son estimados via MLE
+  - maximización via algoritmo Newton-Raphson
+
+. . .
+
+- (si han estudiado) ustedes pueden derivar la log-likelihood function a maximizar ...
+
+::: {.center}
+
+**La optimización es numérica:** el algoritmo itera hasta que la log-verosimilitud deja de mejorar de forma relevante.
+
+:::
+
+## Interpretación {.inverse .center .middle}
+
+## Un ejemplo empírico: media de muertes Covid-19 por país
+
+::: {.pull-left}
+
+```{r, echo=F, warning=FALSE, fig.width=6, fig.height=5}
+covid_subdata %>% ggplot(aes( colour="",  fill="", x = reorder(continent, -total_deaths), y = total_deaths)) + geom_bar(stat = "identity") +
+  labs(x="", y="Total de muertes por Covid-19") +
+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), legend.position = "none") +
+  scale_fill_course() + scale_color_course()
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=F, warning=FALSE, fig.width=6, fig.height=5}
+covid_subdata %>% ggplot(aes(colour="",  fill="", x = reorder(continent, -(total_deaths/population)), y = (total_deaths/population))) + geom_bar(stat = "identity") +
+  labs(x="", y="% muertes por Covid-19") +
+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), legend.position = "none") +
+  scale_fill_course()  + scale_color_course()
+```
+
+:::
+
+## Un ejemplo empírico: cantidad esperada de muertes Covid-19 por país (conteo)
+$$\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \sum_{j} \mathbb{1}\{\text{continent}=j\}\beta_{j}$$
+donde: cantidad esperada de muertes por Covid-19 es función de edad mediana del país (median age) y continente (continent)
+
+. . .
+
+```{r}
+poisson_death_agecont_mean <- glm(total_deaths ~ median_age + factor(continent),
+                                  family=poisson(link="log"), data=covid_subdata)
+```
+```{r, echo=FALSE}
+summary(poisson_death_agecont_mean)$coefficients
+```
+
+## Un ejemplo empírico: tasa de muertes Covid-19 por país (tasa)
+$$\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \sum_{j} \mathbb{1}\{\text{continent}=j\}\beta_{j} + \ln \text{(population}_{i})$$
+donde: tasa esperada de muertes por Covid-19 es función de edad mediana del país (median age) y continente (continent)
+
+. . .
+
+```{r}
+poisson_death_agecont_rate <- glm(total_deaths ~ median_age + factor(continent),
+                                  offset=log(population), family=poisson(link="log"),
+                                  data=covid_subdata)
+```
+```{r, echo=FALSE}
+summary(poisson_death_agecont_rate)$coefficients
+```
+
+## Efectos marginales sobre $\ln(\mu)$ {.center .middle}
+
+## Efectos marginales sobre $\ln(\mu)$, recuentos
+
+. . .
+
+Dado el siguiente modelo de regresión Poisson para recuentos: 
+
+$$\ln(\mu_{i})= \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$$
+
+. . .
+
+- El intercepto $\beta_{0}$ corresponde al logaritmo natural del recuento esperado cuando $x_{1} = \dots = x_{k} = 0$
+
+. . .
+
+- El efecto marginal de $x_{k}$ sobre el logaritmo natural del recuento esperado, $\ln(\mu)$, está dado por:
+
+::: {.pull-left}
+
+::: {.content-box-yellow}
+
+$$\frac{\partial \ln(\mu)}{\partial x_{k}} = \beta_{k}$$
+
+:::
+
+:::
+
+::: {.pull-right}
+
+::: {.content-box-yellow}
+
+"Un cambio (infinitesimal) en $\Delta$ unidades de $x_{k}$ se traduce en un cambio en $\Delta \beta_{k}$ unidades en $\ln(\mu)$"
+
+:::
+
+:::
+
+## Efectos marginales sobre $\ln(\mu)$, recuentos
+Nuestro modelo: $\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \sum_{j} \mathbb{1}\{\text{continent}=j\}\beta_{j}$
+
+::: {.pull-left}
+
+```{r, echo=FALSE}
+summary(poisson_death_agecont_mean)$coefficients[,c(1,2)]
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, fig.width=7, fig.height=6.5}
+
+grid <- covid_subdata %>% data_grid(median_age=seq_range(median_age,n=50),continent,.model = poisson_death_agecont_mean)
+
+predictions <- grid %>% mutate(log_mu = predict(poisson_death_agecont_mean, newdata=grid, type="link"))
+
+predictions %>%
+  ggplot(aes(x=median_age, y=log_mu, colour=continent)) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
+  legend.text = element_text(size = 18), legend.position = "bottom") +
+  labs(x="median age", y=expression( ln(mu) ), title =expression(paste("ln(",mu, "): ln cantidad de muertes predichas")))
+```
+
+:::
+
+## Efectos marginales sobre $\ln(\mu)$, tasas
+
+. . .
+
+Dado el siguiente modelo de regresión Poisson para tasas:
+
+$$\ln(\mu_{i})= \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik} + \ln(n_{i})$$
+
+. . .
+
+- El intercepto $\beta_{0}$ corresponde al logaritmo natural de la tasa esperada cuando $x_{1} = \dots = x_{k} = 0$ y $n_{i}=1$
+
+. . .
+
+- El efecto marginal de $x_{k}$ sobre el logaritmo natural de la tasa esperada, $\ln(\mu)$, está dado por:
+
+::: {.pull-left}
+
+::: {.content-box-yellow}
+
+$$\frac{\partial \ln(\mu)}{\partial x_{k}} = \beta_{k}$$
+
+:::
+
+:::
+
+::: {.pull-right}
+
+::: {.content-box-yellow}
+
+"Un cambio (infinitesimal) en $\Delta$ unidades de $x_{k}$ se traduce en un cambio en $\Delta \beta_{k}$ unidades en $\ln(\mu)$"
+
+:::
+
+:::
+
+## Efectos marginales sobre $\ln(\mu)$, tasas
+Nuestro modelo: $\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \sum_{j} \mathbb{1}\{\text{continent}=j\}\beta_{j} + \ln(n_{i})$
+
+::: {.pull-left}
+
+```{r, echo=FALSE}
+summary(poisson_death_agecont_rate)$coefficients[,c(1,2)]
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, fig.width=7, fig.height=6.5}
+
+grid <- covid_subdata %>% data_grid(median_age=seq_range(median_age,n=50),continent,population=1,
+                                    .model = poisson_death_agecont_rate)
+
+predictions <- grid %>% mutate(log_mu = predict(poisson_death_agecont_rate, newdata=grid, type="link"))
+
+predictions %>%
+  ggplot(aes(x=median_age, y=log_mu, colour=continent)) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
+  legend.text = element_text(size = 18), legend.position = "bottom") +
+  labs(x="median age", y=expression( ln(mu) ), title =expression(paste("ln(",mu, "): ln tasa predicha de muertes por hab. (n=1)")))
+```
+
+:::
+
+## Efectos marginales sobre $\ln(\mu)$: ilustración
+```{r, echo=FALSE}
+summary(poisson_death_agecont_rate)$coefficients[,c(1,2)]
+```
+
+::: {.pull-left}
+
+Si `continent="South America"` y `median_age=20`, entonces `ln(mu)` es:
+```{r}
+ln_mu_sa20= -9.98 +  3.16 - 0.0129*20; ln_mu_sa20
+```
+Si `continent="South America"` y `median_age=21`, entonces `ln(mu)` es:
+```{r}
+ln_mu_sa21= -9.98 +  3.16 - 0.0129*21; ln_mu_sa21
+```
+
+:::
+
+::: {.pull-right}
+
+Por tanto, el efecto de `median_age` es:
+```{r}
+ln_mu_sa21-ln_mu_sa20
+```
+
+:::
+
+## Efectos multiplicativos sobre $\mu$ {.center .middle}
+
+## Efectos multiplicativos sobre $\mu$, recuentos
+
+. . .
+
+Dado el siguiente modelo de regresión Poisson para recuentos: 
+
+$$\ln(\mu_{i})= \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$$
+
+. . .
+
+exponenciando a ambos lados obtenemos 
+$$\mu_{i} = e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \cdots e^{\beta_{k} x_{ik}}$$
+
+. . .
+
+Examinando esta ecuación observamos que cuando $x_1 = \dots = x_k = 0$, 
+$$\mu_{i} = e^{\beta_{0}}$$
+Es decir, $e^{\beta_{0}}$ es el recuento esperado cuando $x_1 = \dots = x_k = 0$.
+
+## Efectos multiplicativos sobre $\mu$, recuentos
+
+. . .
+
+Considera la situación en que $i$ y $i'$ son dos observaciones con $x_{k}=c$ y $x_{k}=c+1$, respectivamente. El resto de las covariables toman valores idénticos.
+
+. . .
+
+El ratio entre el recuento esperado de $i'$ e $i$ está dado por:
+
+\begin{align}
+\mu_{i'}/\mu_{i} &= \frac{e^{\beta_{0}} \cdot e^{\beta_{1} x_{i'1}}  \dots (e^{\beta_{k}})^{c+1}}{e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c}} \\ \\
+&= e^{\beta_{k}}
+\end{align}
+
+. . .
+
+En otras palabras,
+
+::: {.content-box-yellow}
+
+"Un cambio en $\Delta$ unidades de $x_{k}$ multiplica el recuento esperado por $e^{\Delta \beta_{k}}$"
 
 :::
 
 . . .
 
-::: {.pull-right}
+A $e^{\beta_{k}}$ se le llama **razón de tasas de incidencia** (*Incidence Rate Ratio*, IRR): el análogo, en regresión Poisson, de la odds ratio en regresión logística. Un $\text{IRR}=1.65$ se lee "65% más recuento esperado por unidad adicional de $x_k$".
 
-```{r, echo=FALSE, fig.width=7, fig.height=6, message=FALSE, warning=FALSE}
-grid <- bikedata %>% data_grid(workingday, temp = seq_range(temp,75),.model=logit_demand_wday_temp)
+## Efectos multiplicativos sobre $\mu$, tasas
 
-predict_new <- function(fit){
-  preds = predict(fit,newdata=grid, type = "response")
-  preds = cbind(grid,preds)
-  return(preds)
-}
+. . .
 
-boots %>%
-  mutate(fit = map(splits, logit_fit)) %>%
-  mutate(newpred = map(fit,predict_new)) %>%
-  dplyr::select(id,newpred) %>%
-  mutate_if(is.list, map, as_tibble) %>%
-  unnest() %>%
-  ggplot(aes(x=temp,y=preds, group=interaction(id,workingday), colour=factor(workingday))) + geom_line(alpha=0.08) +
-  scale_color_course()  +
-  guides(color = guide_legend(override.aes = list(alpha = 1))) +
-  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-  legend.text = element_text(size = 18), legend.position="bottom") +
-  labs(x="temperatura", y="P(alta demanda) predicha", color="Día hábil")
+Dado el siguiente modelo de regresión Poisson para tasas: 
+$$\ln(\mu_{i})= \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik} + \ln(n_{i})$$
 
+. . .
+
+exponenciando a ambos lados obtenemos 
+$$\mu_{i} = e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \cdots e^{\beta_{k} x_{ik}} \cdot n_{i}$$
+
+. . .
+
+Examinando esta ecuación observamos que cuando $x_1 = \dots = x_k = 0$, 
+$$\mu_{i} = e^{\beta_{0}} \cdot n_{i}$$
+
+. . .
+
+Es decir:
+
+- $e^{\beta_{0}}$ corresponde a la "tasa" de ocurrencia del evento cuando $x_1 = \dots = x_k = 0$
+- $e^{\beta_{0}} \cdot n_{i}$ es el recuento esperado cuando $x_1 = \dots = x_k = 0$.
+
+## Efectos multiplicativos sobre $\mu$, tasas
+Asimismo, si $i$ y $j$ son dos observaciones con $x_{k}=c$ y $x_{k}=c+1$ respectivamente, el ratio entre el recuento esperado de $i'$ e $i$ (otros factores constantes) está dado por:
+
+\begin{align}
+\mu_{i'}/\mu_{i} &= \frac{ n_{i'} \cdot e^{\beta_{0}} \cdot e^{\beta_{1} x_{i'1}}  \dots (e^{\beta_{k}})^{c+1}}{n_{i} \cdot e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c}} \\ \\
+&= e^{\beta_{k}}
+\end{align}
+
+. . .
+
+En otras palabras, 
+
+::: {.content-box-yellow}
+
+"Un cambio en $\Delta$ unidades de $x_{k}$ multiplica la tasa de ocurrencia por $e^{\Delta \beta_{k}}$"
+
+:::
+
+## Efectos multiplicativos sobre $\mu$: ilustración
+```{r, echo=FALSE}
+cbind(betas=summary(poisson_death_agecont_rate)$coefficients[,1],expbetas=exp(summary(poisson_death_agecont_rate)$coefficients[,1]))
+```
+
+::: {.pull-left}
+
+Si `continent="South America"` y `median_age=20`, entonces `ln(mu)` es:
+```{r}
+mu_sa20= exp(-9.98 +  3.16 - 0.0129*20); mu_sa20
+```
+Si `continent="South America"` y `median_age=21`, entonces `ln(mu)` es:
+```{r}
+mu_sa21= exp(-9.98 +  3.16 - 0.0129*21); mu_sa21
 ```
 
 :::
+
+::: {.pull-right}
+
+Por tanto, el efecto multiplicativo de `median_age` es:
+```{r}
+mu_sa21/mu_sa20
+```
+
+:::
+
+## Efectos marginales sobre $\mu$ {.center .middle}
+
+## Efectos marginales sobre $\mu$, recuentos
+
+. . .
+
+Dado el siguiente modelo de regresión Poisson para recuentos: 
+
+$$\mu_{i}= e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}$$
+
+. . .
+
+Queremos saber el [efecto marginal]{.bold} de los predictores sobre el recuento esperado. Formalmente:
+
+. . .
+
+\begin{align}
+\frac{\partial \mu_{i}}{\partial x_{k}} &=  \beta_{k} \cdot  e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}} \\ \\
+\frac{\partial \mu_{i}}{\partial x_{k}} &=  \beta_{k} \cdot  \mu_{i}
+\end{align}
+
+. . .
+
+- Dado que $\mu_{i}$ es estrictamente positivo, el efecto marginal y el coeficiente $\beta_{k}$ tienen el mismo signo.
+
+## Efectos marginales sobre $\mu$, recuentos
+Nuestro modelo: $\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \sum_{j} \mathbb{1}\{\text{continent}=j\}\beta_{j}$
+
+::: {.pull-left}
+
+```{r, echo=FALSE}
+summary(poisson_death_agecont_mean)$coefficients[,c(1,2)]
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, fig.width=7, fig.height=6.5}
+
+grid <- covid_subdata %>% data_grid(median_age=seq_range(median_age,n=50),continent,.model = poisson_death_agecont_mean)
+
+predictions <- grid %>% mutate(mu = predict(poisson_death_agecont_mean, newdata=grid, type="response"))
+
+predictions %>% 
+  ggplot(aes(x=median_age, y=mu, colour=continent)) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position = "bottom") +
+  labs(x="median age", y=expression( mu ), title =expression(paste(mu, ": cantidad de muertes predichas")))
+```
+
+:::
+
+## Efectos marginales sobre $\mu$, recuentos
+
+::: {.pull-left}
+
+$$\mu_{i}= e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}$$
+
+:::
+
+::: {.pull-right}
+
+$$\frac{\partial \mu_{i}}{\partial x_{k}} =  \beta_{k} \cdot  \mu_{i}$$
+
+:::
+
+::: {.pull-left}
+
+```{r, echo=FALSE, fig.width=6, fig.height=5.5}
+
+grid <- covid_subdata %>% data_grid(median_age=seq_range(median_age,n=50),continent,.model = poisson_death_agecont_mean)
+
+predictions <- grid %>% mutate(mu = predict(poisson_death_agecont_mean, newdata=grid, type="response"))
+
+predictions %>% 
+  ggplot(aes(x=median_age, y=mu, colour=continent)) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position = "bottom") +
+  labs(x="median age", y=expression( mu ), title =expression(paste(mu, ": cantidad de muertes predichas")))
+```
+
+:::
+
+::: {.pull-left}
+
+```{r, echo=FALSE, fig.width=6, fig.height=5.5}
+
+beta_age_mean  = poisson_death_agecont_mean$coefficients["median_age"]
+# reutiliza `grid`, calculado en el chunk anterior (misma lámina)
+
+predictions <- grid %>% mutate(mu = predict(poisson_death_agecont_mean, newdata=grid, type="response")) %>%
+  mutate(me = beta_age_mean*mu)
+
+predictions %>% 
+  ggplot(aes(x=median_age, y=me, colour=continent)) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position = "bottom") +
+  labs(x="median age", y="efecto marginal de median age", title =expression(paste(mu, ": cantidad de muertes predichas")))
+```
+
+:::
+
+```{css, echo=FALSE}
+.pull-right ~ * { clear: unset; }
+.pull-right + * { clear: both; }
+```
+
+## Efectos marginales sobre $\mu$, tasas
+
+. . .
+
+Dado el siguiente modelo de regresión Poisson para tasas: 
+
+$$\mu_{i}= n_{i} \cdot  \underbrace{e^{\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}}}_{\theta_{i}}$$
+
+. . .
+
+Queremos saber el [efecto marginal]{.bold} de los predictores sobre el recuento esperado. Formalmente:
+
+. . .
+
+\begin{align}
+\frac{\partial \mu_{i}}{\partial x_{k}} &=  \beta_{k} \cdot  n_{i} \cdot  e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}} \\ \\
+\frac{\partial \mu_{i}}{\partial x_{k}} &=  \beta_{k} \cdot  n_{i} \cdot  \theta_{i}
+\end{align}
+
+. . .
+
+- Dado que $\theta_{i}$ y $n_{i}$ son estrictamente positivos, el efecto marginal y el coeficiente $\beta_{k}$ tienen el mismo signo.
+
+## Efectos marginales sobre $\mu$, tasas
+Nuestro modelo: $\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \sum_{j} \mathbb{1}\{\text{continent}=j\}\beta_{j} + \ln(\text{population}_{i})$
+
+::: {.pull-left}
+
+```{r, echo=FALSE}
+summary(poisson_death_agecont_rate)$coefficients[,c(1,2)]
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, fig.width=6, fig.height=5.5}
+
+grid <- covid_subdata %>% data_grid(median_age=seq_range(median_age,n=50),population=1,continent,.model = poisson_death_agecont_rate)
+
+predictions <- grid %>% mutate(mu = predict(poisson_death_agecont_rate, newdata=grid, type="response"))
+
+predictions %>% 
+  ggplot(aes(x=median_age, y=mu, colour=continent)) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position = "bottom") +
+  labs(x="median age", y=expression( mu ), title =expression(paste(mu, ": tasa de muertes predichas por hab. (n1)")))
+```
+
+:::
+
+## Efectos marginales sobre $\mu$, tasas
+
+::: {.pull-left}
+
+$$\mu_{i}= n_{i} \cdot e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}$$
+
+:::
+
+::: {.pull-right}
+
+$$\frac{\partial \mu_{i}}{\partial x_{k}} =  \beta_{k} \cdot  \mu_{i}$$
+
+:::
+
+::: {.pull-left}
+
+```{r, echo=FALSE, fig.width=6, fig.height=5.5}
+
+grid <- covid_subdata %>% data_grid(median_age=seq_range(median_age,n=50),population=1,continent,.model = poisson_death_agecont_rate)
+
+predictions <- grid %>% mutate(mu = predict(poisson_death_agecont_rate, newdata=grid, type="response"))
+
+predictions %>% 
+  ggplot(aes(x=median_age, y=mu, colour=continent)) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position = "bottom") +
+  labs(x="median age", y=expression( mu ), title =expression(paste(mu, ": tasa de muertes por hab. (n=1)")))
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, fig.width=6, fig.height=5.5}
+
+beta_age_rate  = poisson_death_agecont_rate$coefficients["median_age"]
+# reutiliza `grid`, calculado en el chunk anterior (misma lámina)
+
+predictions <- grid %>% mutate(mu = predict(poisson_death_agecont_rate, newdata=grid, type="response"),
+                               me = beta_age_rate*mu)
+
+predictions %>%
+  ggplot(aes(x=median_age, y=me, colour=continent)) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
+  legend.text = element_text(size = 18), legend.position = "bottom") +
+  labs(x="median age", y=expression( mu ), title =expression(paste(mu, ": tasa de muertes por hab. (n=1)")))
+```
+
+:::
+
+```{css, echo=FALSE}
+.pull-right ~ * { clear: unset; }
+.pull-right + * { clear: both; }
+```
+
+## Efectos marginales sobre $\mu$, tasas
+
+::: {.pull-left}
+
+$$\mu_{i}= n_{i} \cdot e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}$$
+
+:::
+
+::: {.pull-right}
+
+$$\frac{\partial \mu_{i}}{\partial x_{k}} =  \beta_{k} \cdot  \mu_{i}$$
+
+:::
+
+::: {.pull-left}
+
+```{r, echo=FALSE, fig.width=6, fig.height=5.5}
+
+grid <- covid_subdata %>% data_grid(median_age=seq_range(median_age,n=50),population=1000000,continent,.model = poisson_death_agecont_rate)
+
+predictions <- grid %>% mutate(mu = predict(poisson_death_agecont_rate, newdata=grid, type="response"))
+
+predictions %>% 
+  ggplot(aes(x=median_age, y=mu, colour=continent)) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position = "bottom") +
+  labs(x="median age", y=expression( mu ), title =expression(paste(mu, ": tasa de muertes por millón de habs. (n=10^6)")))
+```
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, fig.width=6, fig.height=5.5}
+
+beta_age_rate  = poisson_death_agecont_rate$coefficients["median_age"]
+# reutiliza `grid`, calculado en el chunk anterior (misma lámina)
+
+predictions <- grid %>% mutate(mu = predict(poisson_death_agecont_rate, newdata=grid, type="response"),
+                               me = beta_age_rate*mu)
+
+predictions %>% 
+  ggplot(aes(x=median_age, y=me, colour=continent)) +
+  geom_path(alpha=0.5, size=1.5) +
+  scale_color_course() +  scale_fill_course() +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  legend.text = element_text(size = 18), legend.position = "bottom") +
+  labs(x="median age", y=expression( mu ), title =expression(paste(mu, ": tasa de muertes por millón de habs. (n=10^6)")))
+```
+
+:::
+
+```{css, echo=FALSE}
+.pull-right ~ * { clear: unset; }
+.pull-right + * { clear: both; }
+```
+
+## Efectos marginales sobre $\mu$, recuentos/tasas
+
+. . .
+
+- Efectos marginales son _esencialmente_ heterogéneos. No hay un efecto sino muchos.
+
+. . .
+
+- Heterogeneidad crece con la complejidad del modelo: número de predictores, interacciones, etc.
+
+. . .
+
+- En la práctica, muchas veces queremos UN número que resuma el efecto marginal. 
+
+. . .
+
+::: {.pull-left}
+
+**Objetivo:** obtener un resumen único sin ocultar que el efecto varía entre observaciones.
+
+:::
+
+. . .
+
+Cantidades de interés:
+
+::: {.pull-right}
+
+* Average Marginal Effects (AME)
+* Marginal Effects at the Mean (MEM)
+* Marginal Effects at Representative Values (MER)
+
+:::
+
+## Ejemplo: MER para tasa
+Ejemplo MER de "median age" (fijo al promedio global) sobre "tasa de muertes por millón de habitantes" por continente:
+
+. . .
+
+```{r,message=FALSE,warning=FALSE}
+grid <- covid_subdata %>% data_grid(median_age = mean(median_age,na.rm=T),continent,population=10^6)
+
+marginaleffects::slopes(poisson_death_agecont_rate, newdata = grid, variables = "median_age")
+```
+
+## Datos de recuento {.inverse .center .middle}
+
+###  Regresión Poisson y Quasi-Poisson
+
+## Regresión Poisson
+```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+p_load("ISLR2")
+p_load("tidyverse")
+p_load("viridis")
+p_load("modelr")
+p_load("MASS")
+p_load("cowplot")
+p_load("margins")
+p_load("sjPlot")
+p_load("stargazer")
+p_load("sjmisc")
+p_load("sjlabelled")
+p_load("nnet")
+p_load("lmtest")
+
+theme_set(theme_julia())
+
+# datos de demanda horaria de bicicletas (Capital Bikeshare, DC 2011-2012)
+# el conteo de interés es `bikers`: número de arriendos por hora
+bikedata <- Bikeshare %>% as_tibble()
+```
+```{r, warning=F, message=F}
+poisson_1 <- glm(bikers ~ temp, family=poisson(link="log"), data=bikedata)
+poisson_2 <- glm(bikers ~ temp + hum, family=poisson(link="log"), data=bikedata)
+```
+
+```{r, echo=F, warning=F, message=F}
+stargazer(poisson_1, poisson_2, type = "text", single.row = TRUE)
+```
+
+## Over-dispersion en regresión Poisson
+
+. . .
+
+- En un modelo de regresión Poisson cada $i$ sigue una distribución $y_{i} \sim \text{Poisson}(\mu_{i} = e^{X_{i}\beta})$
+
+. . .
+
+- No hay un parámetro adicional para la varianza. Por definición: $\operatorname{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}=e^{X_{i}\beta}$
+
+. . .
+
+- Esto puede resultar en una sub-estimación o sobre-estimación de la varianza de los datos. 
+  - Por lo general resulta en una subestimación de la varianza de los datos.
+
+. . .
+
+- Este caso se conoce como "over-dispersion". Los datos son más dispersos de lo esperado de acuerdo al modelo.
+  - Over-dispersion no afecta la estimación de los coeficientes pero vuelve la inferencia demasiado "liberal": errores estándar subestimados
+
+## Over-dispersion en regresión Poisson
+
+. . .
+
+- Es posible detectar over-dispersion inspeccionando los residuos "estandarizados" de un modelo Poisson. Formalmente:
+$$z_{i} = \frac{y_{i} - \mu_{i}}{\sigma_{i}} = \frac{y_{i} - \mu_{i}}{\sqrt{\mu_{i}}} = \frac{y_{i} - e^{X_{i}\beta}}{\sqrt{e^{X_{i}\beta}}}$$
+
+. . .
+
+- Si los $y_{i}$'s distribuyen Poisson entonces $z_{i} \sim \mathcal{N}(0,1)$. Luego, la presencia de residuos grandes indican over-dispersion. La "suma de residuos al cuadrado" resume esta información:
+$$\text{ssr} = \sum^{n}_{i=1} z^{2}_{i}$$
+
+. . .
+
+- Si el modelo Poisson es correcto $\text{ssr} \sim \chi^2_{\text{df}=n-k}$, con valor esperado $\mathbb{E}(\text{ssr})=n-k$
+
+. . .
+
+- El ratio entre ambos, $\frac{\text{ssr}}{n-k}$, es un estimado del "factor de dispersión".
+
+. . .
+
+- Obtenemos la inferencia correcta multiplicando los SE's por $\sqrt{\frac{\text{ssr}}{n-k}}$.
+
+## Over-dispersion en regresión Poisson
+
+. . .
+
+En nuestro modelo Poisson más complejo:
+```{r, warning=F, message=F}
+n = length(poisson_2$fitted.values); k = poisson_2$rank
+yhat <- predict(poisson_2, type="response")
+z <- (bikedata$bikers - yhat)/sqrt(yhat)
+rss = sum(z^2)
+```
+```{r, echo=F,warning=F, message=F}
+cat("rss = ", rss, " , rss esperado = ", n-k)
+```
+
+. . .
+
+En este caso el factor de over-dispersion es:
+```{r}
+cat("factor de dispersión = ", rss/(n-k))
+```
+
+## Regresión Quasi-Poisson
+La regresión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferencia del modelo.
+
+. . .
+
+$$y_{i} \sim \text{quasi-Poisson}(\mu_{i} = e^{X_{i}\beta}, \sigma= \sqrt{\omega \cdot  e^{X_{i}\beta}})$$
+
+donde $\omega$ es el factor de dispersion.
+
+. . .
+
+  - Regresión Poisson es un caso especial de quasi-Poisson ( $\omega=1$ ).
+
+. . .
+
+Implementación en `R`:
+```{r, warning=F, message=F}
+qpoisson_2 <- glm(bikers ~ temp + hum, family=quasipoisson(link="log"), data=bikedata)
+```
+```{r,echo=F}
+summary(qpoisson_2)$coefficients
+cat("dispersion = ", summary(qpoisson_2)$dispersion)
+```
+
+## Quasi-Poisson
+Comparando ambos modelos (mismos coeficientes, errores estándar corregidos por sobre-dispersión):
+```{r, echo=F}
+stargazer(poisson_2, qpoisson_2, type = "text", single.row = TRUE)
+```
 
 ## En resumen
 
-- Los estimadores MLE de un GLM (como la regresión logística) son consistentes, insesgados y asintóticamente normales — de ahí que $\hat\theta \pm z \cdot SE_{\hat\theta}$ sea un intervalo de confianza válido en muestras grandes.
-- Test de Wald: divide el coeficiente por su error estándar y lo compara con una Normal; usa la estimación de **un solo** modelo.
-- Test de razón de verosimilitudes (LR): compara la log-verosimilitud de dos modelos anidados; suele ser más confiable que Wald con muestras chicas o coeficientes grandes.
-- Bootstrap: remuestrea los datos con reemplazo para aproximar la distribución muestral de cualquier estimate (SE, CI) sin depender de fórmulas asintóticas.
-- La próxima clase extiende el modelo logístico a variables dependientes con más de dos categorías no ordenadas: regresión logística multinomial.
+- Regresión Poisson modela conteos: $\mathbb{E}(y_{i}\mid x_{i}) = \mu_{i} = e^{\eta_{i}}$, con $\ln(\mu_{i})=\eta_{i}$ como componente sistemático (función de enlace log).
+- Para modelar tasas se agrega un "offset" $\ln(n_{i})$, con $n_{i}$ la exposición.
+- $\beta_{k}$ es el efecto marginal de $x_{k}$ sobre $\ln(\mu)$; $e^{\beta_{k}}$ es la razón de tasas de incidencia (IRR), el efecto multiplicativo sobre $\mu$.
+- El modelo Poisson impone $\operatorname{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}$; cuando esto no se cumple hay over-dispersion.
+- Quasi-Poisson corrige los errores estándar con un factor de dispersión $\omega$, sin cambiar los coeficientes estimados.
+- La próxima clase pasa de la asociación a la causalidad: qué supuestos adicionales se necesitan para interpretar un coeficiente como un efecto causal.
 
 ## Gracias {.inverse .center .middle .closing}
 

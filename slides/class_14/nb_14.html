@@ -6,8 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="SOC3070 · Mauricio Bucca">
+<meta name="dcterms.date" content="2026-07-28">
 
-<title>Notebook clase #16: Regresión Poisson &amp; Quasi-Poisson</title>
+<title>Práctica: Evaluación de Modelos Logísticos y Cross-Validation</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -71,7 +73,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="nb_14_files/libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="nb_14_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="nb_14_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="nb_14_files/libs/bootstrap/bootstrap-138a6193a3bd40baf1e627da441a4734.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="nb_14_files/libs/bootstrap/bootstrap-cb6558daf035ca6ff986cccc73754e6e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
 
 </head>
@@ -84,14 +86,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Notebook clase #16: Regresión Poisson &amp; Quasi-Poisson</h1>
+<h1 class="title">Práctica: Evaluación de Modelos Logísticos y Cross-Validation</h1>
 </div>
 
 
 
 <div class="quarto-title-meta">
 
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>SOC3070 · Mauricio Bucca </p>
+          </div>
+  </div>
     
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">July 28, 2026</p>
+    </div>
+  </div>
   
     
   </div>
@@ -101,100 +115,242 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="problema" class="level2">
-<h2 class="anchored" data-anchor-id="problema">Problema</h2>
+<section id="contexto-y-objetivos" class="level3">
+<h3 class="anchored" data-anchor-id="contexto-y-objetivos">1. Contexto y objetivos</h3>
+<p>Evaluar el desempeño predictivo de un modelo logístico con cross-validation.</p>
+</section>
+<section id="cargar-y-preparar-los-datos" class="level3">
+<h3 class="anchored" data-anchor-id="cargar-y-preparar-los-datos">2. Cargar y preparar los datos</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargar las librerías necesarias</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pacman)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">p_load</span>(tidyverse)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">p_load</span>(carData)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">p_load</span>(modelr)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargar el conjunto de datos</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>data_arrest <span class="ot">&lt;-</span> carData<span class="sc">::</span>Arrests</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>contingency_table <span class="ot">&lt;-</span> data_arrest <span class="sc">%&gt;%</span> <span class="fu">with</span>(<span class="fu">ftable</span>(released,colour,sex,year))</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>grouped_data <span class="ot">&lt;-</span> contingency_table <span class="sc">%&gt;%</span> <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(colour,sex,year) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">n =</span> <span class="fu">sum</span>(Freq))</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(grouped_data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 48 × 6
-# Groups:   colour, sex, year [24]
-   released colour sex    year   Freq     n
-   &lt;fct&gt;    &lt;fct&gt;  &lt;fct&gt;  &lt;fct&gt; &lt;int&gt; &lt;int&gt;
- 1 No       Black  Female 1997      0     5
- 2 Yes      Black  Female 1997      5     5
- 3 No       White  Female 1997      2    27
- 4 Yes      White  Female 1997     25    27
- 5 No       Black  Male   1997     39   118
- 6 Yes      Black  Male   1997     79   118
- 7 No       White  Male   1997     75   342
- 8 Yes      White  Male   1997    267   342
- 9 No       Black  Female 1998      5    22
-10 Yes      Black  Female 1998     17    22
-# ℹ 38 more rows</code></pre>
+<pre class="python-output"><code>#&gt; Rows: 8,645
+#&gt; Columns: 22
+#&gt; $ season            &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,…
+#&gt; $ mnth              &lt;fct&gt; Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Ja…
+#&gt; $ day               &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2,…
+#&gt; $ hr                &lt;fct&gt; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, …
+#&gt; $ holiday           &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+#&gt; $ weekday           &lt;dbl&gt; 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 0, 0,…
+#&gt; $ workingday        &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+#&gt; $ weathersit        &lt;fct&gt; clear, clear, clear, clear, clear, cloudy/misty, clear, clear, clear, clear, clear, clear, c…
+#&gt; $ temp              &lt;dbl&gt; 0.240, 0.220, 0.220, 0.240, 0.240, 0.240, 0.220, 0.200, 0.240, 0.320, 0.380, 0.360, 0.420, 0.460, 0.460, 0.…
+#&gt; $ atemp             &lt;dbl&gt; 0.288, 0.273, 0.273, 0.288, 0.288, 0.258, 0.273, 0.258, 0.288, 0.348, 0.394, 0.330…
+#&gt; $ hum               &lt;dbl&gt; 0.810, 0.800, 0.800, 0.750, 0.750, 0.750, 0.800, 0.860, 0.750, 0.760, 0.760, 0.810, 0.770, 0.720, 0.720, 0.…
+#&gt; $ windspeed         &lt;dbl&gt; 0.000, 0.000, 0.000, 0.000, 0.000, 0.090, 0.000, 0.000, 0.000, 0.000, 0.254, 0.280…
+#&gt; $ casual            &lt;dbl&gt; 3, 8, 5, 3, 0, 0, 2, 1, 1, 8, 12, 26, 29, 47, 35, 40, 41, 15, 9, 6, 11, 3, 11, 15, 4, 1, 1, …
+#&gt; $ registered        &lt;dbl&gt; 13, 32, 27, 10, 1, 1, 0, 2, 7, 6, 24, 30, 55, 47, 71, 70, 52, 52, 26, 31, 25, 31, 17, 24, 13…
+#&gt; $ bikers            &lt;dbl&gt; 16, 40, 32, 13, 1, 1, 2, 3, 8, 14, 36, 56, 84, 94, 106, 110, 93, 67, 35, 37, 36, 34, 28, 39,…
+#&gt; $ high_demand       &lt;int&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+#&gt; $ demand            &lt;fct&gt; baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, ba…
+#&gt; $ demand_level      &lt;ord&gt; baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, media, media, media, media…
+#&gt; $ hour              &lt;int&gt; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, …
+#&gt; $ day_type          &lt;fct&gt; no hábil, no hábil, no hábil, no hábil, no hábil, no hábil, no hábil, no hábil, no hábil, no…
+#&gt; $ weather           &lt;fct&gt; clear, clear, clear, clear, clear, cloudy/misty, clear, clear, clear, clear, clear, clear, c…
+#&gt; $ high_demand_class &lt;fct&gt; baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, ba…</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>data_yes <span class="ot">&lt;-</span> grouped_data <span class="sc">%&gt;%</span> <span class="fu">filter</span>(released <span class="sc">==</span> <span class="st">"Yes"</span>)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">glm</span>(Freq <span class="sc">~</span> colour <span class="sc">+</span> sex <span class="sc">+</span> year, <span class="at">family =</span> <span class="st">"quasipoisson"</span>, <span class="at">offset =</span> <span class="fu">log</span>(n) , <span class="at">data=</span>data_yes) <span class="sc">%&gt;%</span> <span class="fu">summary</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="dos-modelos-de-distinta-complejidad" class="level3">
+<h3 class="anchored" data-anchor-id="dos-modelos-de-distinta-complejidad">3. Dos modelos de distinta complejidad</h3>
+<div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-glm(formula = Freq ~ colour + sex + year, family = "quasipoisson", 
-    data = data_yes, offset = log(n))
-
-Coefficients:
-            Estimate Std. Error t value  Pr(&gt;|t|)    
-(Intercept)  -0.3573     0.0547   -6.53 0.0000069 ***
-colourWhite   0.1434     0.0256    5.60 0.0000402 ***
-sexMale      -0.0225     0.0375   -0.60     0.557    
-year1998      0.0781     0.0444    1.76     0.097 .  
-year1999      0.0820     0.0427    1.92     0.073 .  
-year2000      0.1133     0.0417    2.72     0.015 *  
-year2001      0.0841     0.0421    2.00     0.063 .  
-year2002      0.0554     0.0590    0.94     0.361    
----
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-(Dispersion parameter for quasipoisson family taken to be 0.4858)
-
-    Null deviance: 28.026  on 23  degrees of freedom
-Residual deviance:  7.693  on 16  degrees of freedom
-AIC: NA
-
-Number of Fisher Scoring iterations: 3</code></pre>
+<pre class="python-output"><code>#&gt;                   Estimate Std. Error
+#&gt; (Intercept)       2.059     0.125
+#&gt; temp             -4.635     0.153
+#&gt; factor(holiday)1  0.004     0.169
+#&gt; hum               2.404     0.143</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(<span class="sc">-</span><span class="fl">0.27631</span> )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.7586</code></pre>
+<pre class="python-output"><code>#&gt;                                  Estimate Std. Error
+#&gt; (Intercept)                      31.142    515.362
+#&gt; factor(holiday)1               -129.688     30.668
+#&gt; temp                            -44.128      3.818
+#&gt; hum                              -8.492      1.608
+#&gt; I(temp^2)                        34.118      3.365
+#&gt; factor(hr)1                      -0.056    729.062
+#&gt; factor(hr)2                      -0.106    733.392
+#&gt; factor(hr)3                      -0.127    740.449
+#&gt; factor(hr)4                      -0.136    743.584
+#&gt; factor(hr)5                      -0.242    733.704
+#&gt; factor(hr)6                      -0.249    727.854
+#&gt; factor(hr)7                     -19.619    515.361
+#&gt; factor(hr)8                     -20.576    515.361
+#&gt; factor(hr)9                     -18.225    515.361
+#&gt; factor(hr)10                    -17.479    515.361
+#&gt; factor(hr)11                    -17.704    515.361
+#&gt; factor(hr)12                    -18.355    515.361
+#&gt; factor(hr)13                    -18.153    515.361
+#&gt; factor(hr)14                    -17.984    515.361
+#&gt; factor(hr)15                    -18.073    515.361
+#&gt; factor(hr)16                    -19.761    515.361
+#&gt; factor(hr)17                    -20.790    515.361
+#&gt; factor(hr)18                    -20.505    515.361
+#&gt; factor(hr)19                    -19.952    515.361
+#&gt; factor(hr)20                    -18.902    515.361
+#&gt; factor(hr)21                    -17.576    515.361
+#&gt; factor(hr)22                    -15.016    515.362
+#&gt; factor(hr)23                      0.081    726.445
+#&gt; factor(holiday)1:temp           544.347    120.676
+#&gt; factor(holiday)1:hum            251.785     63.866
+#&gt; temp:hum                         39.096      6.271
+#&gt; factor(holiday)1:I(temp^2)     -563.512    118.980
+#&gt; hum:I(temp^2)                   -34.056      5.808
+#&gt; factor(holiday)1:temp:hum      -999.431    239.168
+#&gt; factor(holiday)1:hum:I(temp^2)  983.159    223.606</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glm</span>(<span class="fu">factor</span>(released<span class="sc">==</span><span class="st">"Yes"</span>) <span class="sc">~</span> colour <span class="sc">+</span> sex, <span class="at">family =</span> <span class="st">"binomial"</span>, <span class="at">weights =</span> Freq<span class="sc">/</span><span class="fu">sum</span>(Freq), <span class="at">data=</span>grouped_data) <span class="sc">%&gt;%</span> <span class="fu">summary</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="evaluación-in-sample-aic-y-bic" class="level3">
+<h3 class="anchored" data-anchor-id="evaluación-in-sample-aic-y-bic">4. Evaluación in-sample: AIC y BIC</h3>
+<div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-glm(formula = factor(released == "Yes") ~ colour + sex, family = "binomial", 
-    data = grouped_data, weights = Freq/sum(Freq))
-
-Coefficients:
-            Estimate Std. Error z value Pr(&gt;|z|)
-(Intercept)     1.21      10.80    0.11     0.91
-colourWhite     0.74       5.67    0.13     0.90
-sexMale        -0.16      10.30   -0.02     0.99
-
-(Dispersion parameter for binomial family taken to be 1)
-
-    Null deviance: 0.91394  on 46  degrees of freedom
-Residual deviance: 0.89709  on 44  degrees of freedom
-AIC: 6
-
-Number of Fisher Scoring iterations: 5</code></pre>
+<pre class="python-output"><code>#&gt; # A tibble: 3 × 3
+#&gt;   Modelo                                                                    AIC   BIC
+#&gt;   &lt;chr&gt;                                                                   &lt;dbl&gt; &lt;dbl&gt;
+#&gt; 1 "high_demand_class ~ temp + factor(holiday) + hum"                      8230. 8258.
+#&gt; 2 "high_demand_class ~ factor(holiday) * temp * hum + factor(holiday) * " 5192. 5439.
+#&gt; 3 "    I(temp^2) * hum + factor(hr)"                                      5192. 5439.</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(<span class="fl">1.20533</span>)<span class="sc">/</span>(<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(<span class="fl">1.20533</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="limitación-posible-overfitting" class="level3">
+<h3 class="anchored" data-anchor-id="limitación-posible-overfitting">5. Limitación: posible overfitting</h3>
+<p>Usamos cross-validation para evaluar fuera de muestra.</p>
+</section>
+<section id="cross-validation-con-caret" class="level3">
+<h3 class="anchored" data-anchor-id="cross-validation-con-caret">6. Cross-validation con caret</h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> ctrl <span class="ot">&lt;-</span> <span class="fu">trainControl</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">method =</span> <span class="st">"repeatedcv"</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">number =</span> <span class="dv">10</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">savePredictions =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">classProbs =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">summaryFunction =</span> twoClassSummary</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> )</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> <span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> cv_m0 <span class="ot">&lt;-</span> <span class="fu">train</span>(</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   high_demand_class <span class="sc">~</span> temp <span class="sc">+</span> <span class="fu">factor</span>(holiday) <span class="sc">+</span> hum,</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">data =</span> bikedata, <span class="at">method =</span> <span class="st">"glm"</span>,</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">family =</span> <span class="st">"binomial"</span>, <span class="at">trControl =</span> ctrl,</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">metric =</span> <span class="st">"ROC"</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> )</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> cv_m1 <span class="ot">&lt;-</span> <span class="fu">train</span>(</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   high_demand_class <span class="sc">~</span> <span class="fu">factor</span>(holiday) <span class="sc">*</span> temp <span class="sc">*</span> hum <span class="sc">+</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>     <span class="fu">factor</span>(holiday) <span class="sc">*</span> <span class="fu">I</span>(temp<span class="sc">^</span><span class="dv">2</span>) <span class="sc">*</span> hum <span class="sc">+</span> <span class="fu">factor</span>(hr),</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">data =</span> bikedata, <span class="at">method =</span> <span class="st">"glm"</span>,</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">family =</span> <span class="st">"binomial"</span>, <span class="at">trControl =</span> ctrl,</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">metric =</span> <span class="st">"ROC"</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="resultados-del-cross-validation" class="level3">
+<h3 class="anchored" data-anchor-id="resultados-del-cross-validation">7. Resultados del cross-validation</h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> cv_m0<span class="sc">$</span>results</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.7695</code></pre>
+<pre class="python-output"><code>#&gt;   parameter    ROC   Sens   Spec   ROCSD  SensSD  SpecSD
+#&gt; 1      none 0.771 0.277 0.932 0.015 0.034 0.015</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> cv_m1<span class="sc">$</span>results</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre class="python-output"><code>#&gt;   parameter    ROC   Sens  Spec    ROCSD  SensSD   SpecSD
+#&gt; 1      none 0.920 0.648 0.925 0.007 0.036 0.008</code></pre>
 </div>
 </div>
+</section>
+<section id="matrices-de-confusión-promedio" class="level3">
+<h3 class="anchored" data-anchor-id="matrices-de-confusión-promedio">8. Matrices de confusión promedio</h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">confusionMatrix</span>(cv_m0)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre class="python-output"><code>#&gt; Cross-Validated (10 fold, repeated 1 times) Confusion Matrix 
+#&gt; 
+#&gt; (entries are percentual average cell counts across resamples)
+#&gt;  
+#&gt;           Reference
+#&gt; Prediction alta baja
+#&gt;       alta  6.900  5.100
+#&gt;       baja 18.000 70.000
+#&gt;                            
+#&gt;  Accuracy (average) : 0.769</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">confusionMatrix</span>(cv_m1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre class="python-output"><code>#&gt; Cross-Validated (10 fold, repeated 1 times) Confusion Matrix 
+#&gt; 
+#&gt; (entries are percentual average cell counts across resamples)
+#&gt;  
+#&gt;           Reference
+#&gt; Prediction alta baja
+#&gt;       alta 16.200  5.600
+#&gt;       baja  8.800 69.400
+#&gt;                            
+#&gt;  Accuracy (average) : 0.856</code></pre>
+</div>
+</div>
+</section>
+<section id="visualización-del-desempeño-cruzado" class="level3">
+<h3 class="anchored" data-anchor-id="visualización-del-desempeño-cruzado">9. Visualización del desempeño cruzado</h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> resamps <span class="ot">&lt;-</span> <span class="fu">resamples</span>(<span class="fu">list</span>(<span class="at">Simple =</span> cv_m0, <span class="at">Complejo =</span> cv_m1))</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">bwplot</span>(resamps, <span class="at">metric =</span> <span class="st">"ROC"</span>, <span class="at">main =</span> <span class="st">"Comparación de desempeño (10-fold CV)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="nb_14_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> cv_compare <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   cv_m0<span class="sc">$</span>resample <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Simple"</span>),</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   cv_m1<span class="sc">$</span>resample <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Complejo"</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> )</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> <span class="fu">ggplot</span>(cv_compare, <span class="fu">aes</span>(<span class="at">x =</span> modelo, <span class="at">y =</span> ROC, <span class="at">fill =</span> modelo)) <span class="sc">+</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">unname</span>(course_palette[<span class="fu">c</span>(<span class="st">"primary"</span>, <span class="st">"secondary"</span>)])) <span class="sc">+</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="fu">labs</span>(</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>     <span class="at">title =</span> <span class="st">"Desempeño en validación cruzada"</span>,</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>     <span class="at">subtitle =</span> <span class="st">"Comparación del área bajo la curva (ROC)"</span>,</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>     <span class="at">x =</span> <span class="st">""</span>, <span class="at">y =</span> <span class="st">"ROC promedio"</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   ) <span class="sc">+</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="fu">theme_course</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="nb_14_files/figure-html/unnamed-chunk-8-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="conclusión" class="level3">
+<h3 class="anchored" data-anchor-id="conclusión">10. Conclusión</h3>
+<p>Cross-validation permite estimar error fuera de muestra y evitar sobreajuste. En regresión logística, guía la selección de modelos con verdadero poder clasificador.</p>
 </section>
 
 </main>
