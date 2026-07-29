@@ -1,0 +1,205 @@
+---
+title: "Práctica: Inferencia con Bootstrap en la Regresión Logística"
+author: "SOC3070 · Mauricio Bucca"
+date: today
+format:
+  html:
+    theme: default
+    highlight: tango
+    code-copy: true
+    code-fold: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  comment = "#>",
+  prompt = TRUE,
+  class.source = "python-code",
+  class.output = "python-output"
+)
+
+# Packages
+library(pacman)
+p_load("tidyverse", "broom", "ggplot2", "marginaleffects", "rsample", "purrr")
+
+# Define julia-inspired palette
+julia <- list(
+  navy   = "#003f5c",
+  teal   = "#2f4b7c",
+  coral  = "#ff6361",
+  orange = "#ffa600",
+  sand   = "#f4e1a4"
+)
+
+theme_julia <- function() {
+  theme_minimal(base_family = "Inconsolata") +
+    theme(
+      plot.background = element_rect(fill = "white", color = NA),
+      panel.border = element_rect(fill=NA, color=julia$navy, size=0.6),
+      axis.text = element_text(color=julia$navy, size=13),
+      axis.title = element_text(color=julia$teal, size=15, face="bold"),
+      plot.title = element_text(color=julia$coral, size=18, face="bold"),
+      plot.subtitle = element_text(color=julia$orange, size=14),
+      legend.position = "right"
+    )
+}
+```
+
+```{css, echo=FALSE}
+pre.python-code, code.python-code {
+  background-color: #f7f7f7;
+  color: #222;
+  font-family: "Inconsolata", monospace;
+  font-size: 15px;
+  border-left: 4px solid #ff6361;
+  padding: 6px;
+}
+pre.python-output, code.python-output {
+  background-color: #ffffff;
+  color: #003f5c;
+  font-family: "Inconsolata", monospace;
+  font-size: 15px;
+  padding: 6px;
+}
+```
+
+---
+
+## 1. El Modelo Logístico
+
+Usaremos la base `bikedata` para predecir si un hora tiene alta demanda (`high_demand = 1`). Consideramos dos predictores:
+
+* **temp**: temperatura normalizada.  
+* **hum**: humedad normalizada.
+
+```{r}
+source("_shared/bikeshare.R"); course <- use_course_data("inter")
+bikedata <- course$data
+
+logit_model <- glm(high_demand ~ temp + hum, data = bikedata, family = binomial(link = "logit"))
+summary(logit_model)
+```
+
+---
+
+## 2. Bootstrap: Intuición
+
+El bootstrap es un procedimiento que nos permite **aproximar la distribución muestral de un estimador** sin depender de fórmulas analíticas complicadas. La idea central es simple:
+
+1. Partimos de la muestra original, que consideramos una aproximación de la población.
+2. Generamos nuevas muestras del mismo tamaño seleccionando casos al azar **con reemplazo**. Estas son nuestras *muestras bootstrap*.
+3. Ajustamos el modelo en cada muestra bootstrap y calculamos la cantidad de interés (ej. un coeficiente, un odds ratio, una predicción, etc.).
+4. La distribución de esas cantidades calculadas a lo largo de muchas muestras bootstrap nos da una estimación de la distribución muestral real. De ahí podemos obtener **errores estándar, intervalos de confianza o distribuciones completas**.
+
+Este procedimiento es especialmente útil cuando la cantidad de interés es una función complicada de los parámetros del modelo (por ejemplo, predicciones transformadas o promedios en subgrupos) y la inferencia analítica es intractable.
+
+---
+
+## 3. Bootstrap para Predicciones Variadas
+
+Queremos estudiar la **distribución bootstrap de las predicciones de probabilidad** de alta demanda para varios valores de `temp` (temperatura), manteniendo fija la humedad en su media. Esto nos permitirá construir intervalos de confianza para toda una curva de predicción.
+
+```{r}
+set.seed(123)
+
+# Valores de temp de interés
+wt_vals <- seq(min(bikedata$temp), max(bikedata$temp), length.out = 20)
+
+# Función que ajusta el modelo y devuelve predicciones en la grilla
+bs_preds <- function(split){
+  d <- analysis(split)  # extrae la muestra bootstrap
+  m <- glm(high_demand ~ temp + hum, data = d, family = binomial(link = "logit"))
+  newdata <- tibble(temp = wt_vals, hum = mean(bikedata$hum))
+  tibble(temp = wt_vals, pred = predict(m, newdata = newdata, type = "response"))
+}
+
+# Generar 200 muestras bootstrap
+boots <- bootstraps(bikedata, times = 200, apparent = TRUE)
+
+predict(logit_model)
+
+# Aplicar la función a cada muestra bootstrap y recolectar resultados
+boot_preds <- boots %>%
+  mutate(res = map(splits, bs_preds)) %>%
+  unnest(res)
+
+# Calcular intervalos de confianza punto a punto
+ci_preds <- boot_preds %>%
+  group_by(temp) %>%
+  summarise(
+    ci_low = quantile(pred, 0.025),
+    ci_high = quantile(pred, 0.975),
+    mean_pred = mean(pred)
+  )
+```
+
+**Explicación del código:**
+- `bootstraps(bikedata, times = 200, apparent = TRUE)` genera 200 muestras bootstrap y una réplica "aparente" con los datos originales.  
+- En cada muestra, la función `bs_preds` ajusta el modelo logístico y calcula predicciones en una grilla de valores de `temp`.  
+- Con `map()` y `unnest()` recolectamos todas las predicciones bootstrap en un solo data frame.  
+- Finalmente, usamos `quantile()` para obtener intervalos al 95% en cada punto de la curva.
+
+---
+
+## 4. Visualización de Intervalos de Confianza Bootstrap
+
+```{r}
+ggplot(ci_preds, aes(x = temp, y = mean_pred)) +
+  geom_line(color = julia$coral, linewidth = 1.2) +
+  geom_ribbon(aes(ymin = ci_low, ymax = ci_high), alpha = 0.2, fill = julia$teal) +
+  labs(
+    title = "Predicción bootstrap de P(high_demand=1)",
+    subtitle = "Curva con intervalos de confianza bootstrap",
+    x = "Temperatura normalizada (temp)",
+    y = "Probabilidad de alta demanda"
+  ) +
+  theme_julia()
+```
+
+En este gráfico:
+- La **línea coral** muestra la media de las predicciones bootstrap en cada punto.  
+- La **banda verde** corresponde al intervalo de confianza bootstrap al 95%.  
+- Vemos cómo la incertidumbre es mayor en los extremos de la distribución de `temp`, donde hay menos datos disponibles.
+
+---
+
+## 5. Variante: Curvas de Predicción Múltiples
+
+Otra manera de visualizar el procedimiento es graficar varias curvas bootstrap individuales. Esto ilustra la **variabilidad entre replicados** y nos da una idea intuitiva de cuán estable es la relación estimada.
+
+```{r}
+# Seleccionar hasta 30 IDs únicos de bootstrap
+ids <- unique(boot_preds$id)
+ids_sample <- sample(ids, min(30, length(ids)))
+
+# Filtrar solo esas curvas
+sample_curves <- boot_preds %>%
+  filter(id %in% ids_sample)
+
+ggplot(sample_curves, aes(x = temp, y = pred, group = id)) +
+  geom_line(alpha = 0.2, color = julia$navy) +
+  labs(
+    title = "Curvas de predicción bootstrap de P(high_demand=1)",
+    subtitle = "Hasta 30 replicados bootstrap",
+    x = "Temperatura normalizada (temp)",
+    y = "Probabilidad de alta demanda"
+  ) +
+  theme_julia()
+```
+
+Aquí:
+- Cada línea azul corresponde a una curva de predicción de una muestra bootstrap distinta.  
+- La dispersión entre curvas refleja la variabilidad de las estimaciones.  
+- Cuando las curvas están más juntas, hay más certeza; cuando divergen, la incertidumbre es mayor.
+
+---
+
+## 6. Conclusión
+
+* El bootstrap se puede aplicar a **predicciones transformadas** para las cuales la inferencia analítica es complicada.  
+* Usando `rsample::bootstraps` y predicciones sobre una grilla de valores, obtenemos intervalos de confianza para **curvas completas**.  
+* La visualización de intervalos promedio y de curvas individuales son complementarias: la primera es más sintética, la segunda más ilustrativa.  
+* Este enfoque es clave para comunicar la **incertidumbre en modelos no lineales**, especialmente en aplicaciones empíricas donde la forma funcional de la relación es compleja.

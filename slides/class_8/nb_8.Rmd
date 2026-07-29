@@ -76,7 +76,18 @@ Usaremos la base `bikedata` para predecir si un hora tiene alta demanda (`high_d
 * **hum**: humedad normalizada.
 
 ```{r}
-source("../_shared/bikeshare.R"); course <- use_course_data("inter")
+# Encuentra `_shared/bikeshare.R` sin depender del working directory.
+source(local({
+  d <- normalizePath(getwd(), mustWork = FALSE)
+  cands <- d
+  while (!identical(dirname(d), d)) { d <- dirname(d); cands <- c(cands, d) }
+  cands <- c(cands, Sys.glob(file.path(getwd(), c("*", "*/*", "*/*/*"))))
+  hits <- file.path(cands, "_shared", "bikeshare.R")
+  hits <- hits[file.exists(hits)]
+  if (!length(hits)) stop("No se encontró _shared/bikeshare.R desde ", getwd())
+  normalizePath(hits[[1]])
+}))
+course <- use_course_data("inter")
 bikedata <- course$data
 
 logit_model <- glm(high_demand ~ temp + hum, data = bikedata, family = binomial(link = "logit"))

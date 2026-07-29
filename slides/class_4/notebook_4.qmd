@@ -6,7 +6,7 @@ body-classes: theme-boca
 format:
   html:
     theme: default
-    css: "../_shared/course.css"
+    css: "_shared/course.css"
     highlight: tango
     code-copy: true
     code-fold: show
@@ -31,7 +31,17 @@ p_load(tidyverse)
 p_load(broom)
 p_load(ggplot2)
 p_load(marginaleffects)
-source("../_shared/bikeshare.R")
+# Encuentra `_shared/bikeshare.R` sin depender del working directory.
+source(local({
+  d <- normalizePath(getwd(), mustWork = FALSE)
+  cands <- d
+  while (!identical(dirname(d), d)) { d <- dirname(d); cands <- c(cands, d) }
+  cands <- c(cands, Sys.glob(file.path(getwd(), c("*", "*/*", "*/*/*"))))
+  hits <- file.path(cands, "_shared", "bikeshare.R")
+  hits <- hits[file.exists(hits)]
+  if (!length(hits)) stop("No se encontró _shared/bikeshare.R desde ", getwd())
+  normalizePath(hits[[1]])
+}))
 palette <- use_course_style("boca")
 ```
 ------------------------------------------------------------------------
@@ -39,7 +49,7 @@ palette <- use_course_style("boca")
 # 1. Explorar la base de datos `bikedata`
 
 ```{r}
-source("../_shared/bikeshare.R")
+source(shared_path("bikeshare.R"))
 course <- use_course_data("boca")
 bikedata <- course$data
 

@@ -1,5 +1,20 @@
 # Shared data and visual infrastructure for SOC3070.
 
+# Directory this file lives in, resolved at source() time so that callers can
+# reach sibling assets (course.css, course.lua) regardless of their working
+# directory.
+.shared_dir <- local({
+  ofile <- NULL
+  for (i in seq_len(sys.nframe())) {
+    frame_ofile <- sys.frame(i)$ofile
+    if (!is.null(frame_ofile)) ofile <- frame_ofile
+  }
+  if (is.null(ofile)) getwd() else dirname(normalizePath(ofile))
+})
+
+#' Path to a file inside `_shared/`, independent of the working directory.
+shared_path <- function(...) file.path(.shared_dir, ...)
+
 prepare_bikeshare <- function() {
   if (!requireNamespace("ISLR2", quietly = TRUE)) {
     stop("The ISLR2 package is required to use the course data.")
@@ -39,14 +54,9 @@ prepare_bikeshare <- function() {
   )
 }
 
-.course_shared_dir <- local({
-  source_file <- tryCatch(sys.frame(1)$ofile, error = function(e) NULL)
-  if (is.null(source_file)) getwd() else dirname(normalizePath(source_file))
-})
-
 course_css_path <- function() {
   candidates <- c(
-    file.path(.course_shared_dir, "course.css"),
+    file.path(.shared_dir, "course.css"),
     "../_shared/course.css",
     "slides/_shared/course.css"
   )

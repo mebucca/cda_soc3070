@@ -8,7 +8,7 @@ course-team: valencia
 filters: ["../_shared/course.lua"]
 format:
   revealjs:
-    css: "../_shared/course.css"
+    css: "_shared/course.css"
     theme: default
     highlight-style: github
     slide-number: false
@@ -24,7 +24,17 @@ execute:
 library(pacman)
 p_load(tidyverse)
 p_load(glmnet)
-source("../_shared/bikeshare.R")
+# Encuentra `_shared/bikeshare.R` sin depender del working directory.
+source(local({
+  d <- normalizePath(getwd(), mustWork = FALSE)
+  cands <- d
+  while (!identical(dirname(d), d)) { d <- dirname(d); cands <- c(cands, d) }
+  cands <- c(cands, Sys.glob(file.path(getwd(), c("*", "*/*", "*/*/*"))))
+  hits <- file.path(cands, "_shared", "bikeshare.R")
+  hits <- hits[file.exists(hits)]
+  if (!length(hits)) stop("No se encontró _shared/bikeshare.R desde ", getwd())
+  normalizePath(hits[[1]])
+}))
 course <- use_course_data("valencia")
 bikedata <- course$data %>% mutate(month = as.integer(mnth))
 course_palette <- course$palette
