@@ -1,0 +1,546 @@
+---
+title: "Análisis de Datos Categóricos (SOC3070)"
+subtitle: "Momentos"
+author: "Mauricio Bucca · Sociología UC"
+date: today
+body-classes: theme-man-city
+course-team: man-city
+filters: ["../_shared/course.lua"]
+format:
+  revealjs:
+    css: "_shared/course.css"
+    slide-number: false
+    theme: default
+    highlight-style: github
+    code-block-font-size: 0.9em
+    width: 1600
+    height: 900
+    html-math-method: katex
+---
+
+```{r course-style, include=FALSE}
+source("../_shared/bikeshare.R")
+course_palette <- use_course_style("man_city")
+```
+
+```{r prize-setup, include=FALSE}
+library(pacman)
+p_load("tidyverse")
+
+n <- 10  # Número de tiros de dado
+simulations <- 10000  # Número de veces que se simula el juego
+
+# Simular lanzar un dado n veces, repetido 'simulations' veces
+set.seed(123)  # Para reproducibilidad
+results <- replicate(simulations, sum(sample(1:6, n, replace = TRUE)))
+
+# Calcular el premio de cada simulación
+prizes <- 1000 + 100 * results
+
+# Crear data frame para graficar
+df <- tibble(prize = prizes)
+
+# Calcular media y desviación estándar de los premios
+mean_prize <- mean(prizes)
+std_dev <- sd(prizes)
+```
+
+## Antes · Hoy · Después {.class-rhythm}
+
+::: {.full-width}
+
+::: {.content-box}
+**Antes**
+
+variables aleatorias y distribuciones discretas.
+:::
+
+::: {.content-box-primary}
+**Hoy**
+
+valor esperado y varianza.
+:::
+
+::: {.content-box-secondary}
+**Después**
+
+estimación, MLE y funciones de pérdida.
+:::
+
+:::
+
+
+
+# Valor Esperado de variables discretas {.inverse .center .middle}
+
+## Valor Esperado
+El valor esperado de una variable es el análogo teórico de un promedio. Los posibles valores de la variable se ponderan por su probabilidad de ocurrencia. En el caso de variables discretas:
+
+. . .
+
+\begin{align}
+\mathbb{E}(X) &= \sum_{i} x_{i} \times \mathbb{P}(X=x_{i}) \\
+&\equiv  \sum_{i} x_{i} \times f(x_{i})
+\end{align}
+
+. . .
+
+Es teórico porque esta información la podemos saber *a priori*, sin necesidad de datos.
+
+. . .
+
+Análogamente, para variables continuas:
+
+\begin{align}
+\mathbb{E}(X) =  \int x f(x)dx
+\end{align}
+
+## Valor Esperado
+Por ejemplo, supongamos que $Y$ es una variable que resulta de tirar un dado "justo".  ¿Cuál es el valor esperado de $Y$?
+
+. . .
+
+\begin{align}
+\mathbb{E}(Y) &= \sum_{i}y_{i} \times \mathbb{P}(Y=y_{i})  \\ \\
+     &=  1 \times  \frac{1}{6}+ 2 \times \frac{1}{6} + \dots + 6 \times \frac{1}{6}  \\ \\
+     &= 3.5
+\end{align}
+
+## Valor Esperado, algunas propiedades útiles
+
+. . .
+
+1) El valor esperado de una constante es una constante.
+$$\mathbb{E}(c)=c$$
+
+. . .
+
+2) Si $X$ es una variable aleatoria y $c$ una constante, entonces
+$$\mathbb{E}(X + c)= \mathbb{E}(X) + c$$
+
+. . .
+
+3) Si $X$ es una variable aleatoria y $c$ una constante, entonces
+$$\mathbb{E}(c X)= c \mathbb{E}(X)$$
+
+. . .
+
+4) Si $X$ e $Y$ son variables aleatorias (sin importar si $X \bot Y$ o no), entonces
+$$\mathbb{E}(X + Y)=  \mathbb{E}(X) + \mathbb{E}(Y)$$
+
+## Valor Esperado, ejemplo
+Por ejemplo, supongamos que $X_{i}$ es la variable que resulta de tirar un dado "justo". Participamos de un concurso que consiste en tirar el mismo dado 10 veces. El premio (G) es $ $1000$ de base, más el resultado de cada dado $i$ multiplicado por 100.
+
+. . .
+
+ ¿Cuánto es el premio esperado?
+
+. . .
+
+::: {.center}
+
+```{r, echo=FALSE, fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
+# Reutiliza df, mean_prize y std_dev calculados en el chunk "prize-setup"
+
+# Gráfico de barras de los premios
+plot <- ggplot(df, aes(x = prize)) +
+  geom_bar(aes(y = ..prop..), fill = course_palette[["accent"]], color = "black", width = 100) +
+
+  # Agregar línea punteada para la media
+  geom_vline(aes(xintercept = mean_prize), linetype="dashed", size = 1) +
+
+  # Agregar etiqueta con la letra griega µ para la media
+  annotate("text", x = mean_prize + 150, y = 0.075, label = expression(mu), size = 5) +
+  labs(y = "P(Premio = x)", x = "Monto del Premio ($)", title = "Distribución del premio") +
+
+  theme_julia() +
+  theme(
+    axis.text.y = element_text(size = 22),
+    axis.text.x = element_text(size = 22),
+    axis.title.y = element_text(size = 24),
+    axis.title.x = element_text(size = 24),
+    panel.border = element_blank()
+  )
+
+print(plot)
+
+```
+
+:::
+
+## Valor Esperado, ejemplo
+Por ejemplo, supongamos que $X_{i}$ es la variable que resulta de tirar un dado "justo". Participamos de un concurso que consiste en tirar el mismo dado 10 veces. El premio (G) es $ $1000$ de base, más el resultado de cada dado $i$ multiplicado por 100. ¿Cuánto es el premio esperado?
+
+. . .
+
+$$G = 1000 + \sum_{i=1}^{10} X_{i} \times 100 \quad \text{ por tanto,}$$
+
+. . .
+
+$$\mathbb{E}(G) = \mathbb{E}(1000 + \sum_{i=1}^{10} X_{i} \times 100)$$
+
+. . .
+
+$$\mathbb{E}(G) = 1000 + 100 \times \sum_{i=1}^{10}\mathbb{E}(X_{i})$$
+
+. . .
+
+$$\mathbb{E}(G) = 1000 + 100(3.5 + 3.5 + \dots + 3.5) = 1000 + 100 \times 10 \times 3.5 = \$4500$$
+
+## Valor Esperado de variables discretas
+
+###  Bernoulli
+Si X es una variable Bernoulli, su valor esperado viene dado por:
+
+\begin{align}
+\mathbb{E}(X) = \sum_{i} x_{i} \times \mathbb{P}(X=x_{i}) &= \sum_{i} x_{i} \times p^{x_{i}}(1-p)^{1 - x_{i}} \\
+     &= 1 \times p + 0 \times (1-p) \\
+     &= p
+\end{align}
+
+. . .
+
+### Binomial
+Si X es una variable Binomial, su valor esperado viene dado por:
+
+\begin{align}
+\mathbb{E}(X) = np
+\end{align}
+
+. . .
+
+[Pregunta]{.bold}: ¿Cuántas "Caras" debo esperar si tiro 200 monedas "justas"?
+
+. . .
+
+[Respuesta]{.bold}: $np = 200 \times 0.5 = 100$
+
+# Varianza de variables discretas {.inverse .center .middle}
+
+## Varianza
+La varianza de una variable aleatoria es el análogo teórico de la varianza de los datos.
+
+. . .
+
+ Mide cuánta dispersión existe en torno al centro (la media). Formalmente, en el caso de variables aleatorias discretas:
+
+$$\operatorname{Var}(X) = \sum_{i} \bigg( x_{i} - \mathbb{E}(X) \bigg)^{2} \times f(x_{i})$$
+
+. . .
+
+Análogamente, para variables continuas:
+
+\begin{align}
+\operatorname{Var}(X) =  \int \bigg(x -  \mathbb{E}(X)\bigg)^{2} f(x)dx
+\end{align}
+
+. . .
+
+Equivalentemente,
+$$\operatorname{Var}(X)  = \mathbb{E}\bigg( [ X -\mathbb{E}(X)]^{2}\bigg)$$
+
+## Varianza, algunas propiedades útiles
+
+. . .
+
+1) La varianza de una constante es cero.
+$$\operatorname{Var}(c)=0$$
+
+. . .
+
+2) Si $X$ es una variable aleatoria y $c$ una constante, entonces
+$$\operatorname{Var}(X + c)= \operatorname{Var}(X)$$
+
+. . .
+
+3) Si $X$ es una variable aleatoria y $c$ una constante, entonces
+
+$$\operatorname{Var}(c X)= c^{2} \operatorname{Var}(X)$$
+
+. . .
+
+4) Si $X$ e $Y$ son dos variables aleatorias [independientes]{.bold}, entonces
+$$\operatorname{Var}(X \pm Y) =  \operatorname{Var}(X) + \operatorname{Var}(Y)$$
+
+## Varianza, ejemplo
+Por ejemplo, supongamos que $X_{i}$ es la variable que resulta de tirar un dado "justo". Participamos de un concurso que consiste en tirar el mismo dado 10 veces. El premio (G) es $ $1000$ de base, más el resultado de cada dado $i$ multiplicado por 100.
+
+. . .
+
+ ¿Cuánto es la desviación estándar del premio?
+
+. . .
+
+::: {.center}
+
+```{r, echo=FALSE, fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
+# Reutiliza df, mean_prize y std_dev calculados en el chunk "prize-setup"
+
+# Gráfico de barras de los premios
+plot <- ggplot(df, aes(x = prize)) +
+  geom_bar(aes(y = ..prop..), fill = course_palette[["accent"]], color = "black", width = 100) +
+
+  # Agregar línea punteada para la media
+  geom_vline(aes(xintercept = mean_prize), linetype="dashed", size = 1) +
+
+  # Agregar líneas punteadas para media ± 1 desviación estándar
+  geom_vline(aes(xintercept = mean_prize - std_dev), linetype="dashed", color = course_palette[["secondary"]], size = 1) +
+  geom_vline(aes(xintercept = mean_prize + std_dev), linetype="dashed", color = course_palette[["secondary"]], size = 1) +
+
+  # Agregar etiqueta con la letra griega µ para la media
+  annotate("text", x = mean_prize + 150, y = 0.075, label = expression(mu), size = 5) +
+
+  # Agregar etiqueta con la letra griega σ para la desviación estándar
+  annotate("text", x = mean_prize + std_dev + 150, y = 0.075, label = expression(sigma), size = 5, color = course_palette[["secondary"]]) +
+  annotate("text", x = mean_prize - std_dev - 150, y = 0.075, label = expression(-sigma), size = 5, color = course_palette[["secondary"]]) +
+
+  labs(y = "P(Premio = x)", x = "Monto del Premio ($)", title = "Distribución del premio") +
+
+  theme_julia() +
+  theme(
+    axis.text.y = element_text(size = 22),
+    axis.text.x = element_text(size = 22),
+    axis.title.y = element_text(size = 24),
+    axis.title.x = element_text(size = 24),
+    panel.border = element_blank()
+  )
+
+print(plot)
+
+```
+
+:::
+
+## Varianza, ejemplo
+Por ejemplo, supongamos que $X_{i}$ es la variable que resulta de tirar un dado "justo". Participamos de un concurso que consiste en tirar el mismo dado 10 veces. El premio (G) es $ $1000$ de base, más el resultado de cada dado $i$ multiplicado por 100. ¿Cuánto es la desviación estándar del premio?
+
+. . .
+
+$$G = 1000 + \sum_{i=1}^{10} X_{i} \times 100 \quad \text{ por tanto,}$$
+
+. . .
+
+$$\operatorname{Var}(G) = \operatorname{Var}(1000 + \sum_{i=1}^{10} X_{i} \times 100)$$
+
+. . .
+
+$$\operatorname{Var}(G) = \operatorname{Var}(1000) + 100^{2} \times \sum_{i=1}^{10}\operatorname{Var}(X_{i})$$
+
+. . .
+
+$$\operatorname{Var}(G) = 100^{2} \times 10 \times \frac{35}{12} = 291\,666.667$$
+
+. . .
+
+$$\sigma_{G} = \sqrt{100^{2} \times 10 \times \frac{35}{12}} = \sqrt{291\,666.667} \approx \$ 540.06$$
+
+## Varianza de variables discretas
+
+### Bernoulli
+Si X es una variable Bernoulli, su varianza viene dada por:
+
+\begin{align}
+\operatorname{Var}(X) &= \sum_{i} \bigg( x_{i} - \mathbb{E}(X) \bigg)^{2} \times f(x_{i})  \\ \\
+ &= (1 - \mathbb{E}(X))^{2} \times \mathbb{P}(X=1) + (0 - \mathbb{E}(X))^{2} \times \mathbb{P}(X=0) \\ \\
+ &= (1 - p)^{2} \times p +  (0 - p)^{2} \times (1-p) \\ \\
+ &=p^{2} − p^{3} + p − 2p^{2} + p^{3} \\ \\
+ &=p(1-p)
+\end{align}
+
+## Varianza de variables discretas
+
+### Binomial
+Si X es una variable Binomial, su varianza viene dada por:
+
+\begin{align}
+\operatorname{Var}(X) = n \times p(1-p)
+\end{align}
+
+. . .
+
+[Pregunta]{.bold}: ¿Cuánta variabilidad debo esperar en el número de "Caras" si tiro 200 monedas "justas"?
+
+. . .
+
+[Respuesta]{.bold}: varianza es $n \times p(1-p) = 200 \times 0.5 \times 0.5 = 50$. La desviación estándar es $\sqrt{50} = 7.01$.
+
+## Varianza de variables Binomial
+[Ilustración via Monte Carlo simulation]{.bold}
+```{r}
+
+# Repetir el experimento de lanzar 200 monedas 10000 veces
+coins200 <- rbinom(10000, size=200, p=0.5)
+glimpse(coins200)
+moments = list(mean=mean(coins200), var=var(coins200))
+print(moments)
+```
+
+## Varianza variable Bernoulli/Binomial
+
+::: {.center}
+
+```{r, echo=FALSE, fig.height=8, fig.width=12,  message=FALSE, warning=FALSE}
+
+p_load("tidyverse")
+
+n = 100
+p_values <- c(0.03, 0.5, 0.9)
+
+# Crear un dataset con distribuciones binomiales para cada p
+mydata <- tibble(
+  x = rep(seq(from = 0, to = n, by = 1), length(p_values)),
+  p = rep(p_values, each = n + 1),
+  y = rep(NA, (n + 1) * length(p_values))
+)
+
+# Calcular probabilidades para cada valor de p
+mydata$y <- with(mydata, dbinom(x, size = n, prob = p))
+
+# Crear una nueva columna para los títulos de cada facet
+mydata$facet_title <- with(mydata, sprintf("Var(X) = 100 * %.2f * (1 - %.2f) = %.2f", p, p, 100 * p * (1 - p)))
+
+# Crear el gráfico
+plot <- ggplot(data = mydata, mapping = aes(x = x, y = y)) +
+
+  # Barras de la binomial, con bordes negros y sin espacio entre barras
+  geom_bar(aes(fill = course_palette[["accent"]]), color = "black", stat = "identity", position = "dodge", width = 1) +
+
+  # Etiquetas y título
+  labs(y = "f(x)", x = "X = x", title = "Función de probabilidad de X | n=100, p") +
+
+  # Facet según el nuevo título
+  facet_wrap(~facet_title, scales = "free_y", ncol = 1) +
+
+  # Estilo con el theme del curso y sin leyendas
+  scale_fill_identity(guide = "none") +
+  theme_julia() +
+  theme(
+    axis.text.y = element_blank(), # Omite las etiquetas del eje y
+    axis.ticks.y = element_blank(), # Omite las marcas del eje y
+    axis.text.x = element_text(size = 22),
+    axis.title.y = element_text(size = 24),
+    axis.title.x = element_text(size = 24),
+    strip.text = element_text(size = 16, vjust = 0.5, hjust = 0.5),
+    strip.background = element_blank(),
+    panel.border = element_blank()
+  )
+
+print(plot)
+
+```
+
+:::
+
+## Varianza variable Binomial
+
+::: {.center}
+
+```{r, echo=FALSE, fig.height=8, fig.width=12,  message=FALSE, warning=FALSE}
+
+# Librerías
+p_load(ggplot2)
+
+# Definir la función de varianza binomial
+var_binom <- function(p, n) {
+  n * p * (1 - p)
+}
+
+# Crear el gráfico
+plot <- ggplot(data = data.frame(p = 0), mapping = aes(x = p)) +
+  stat_function(fun = var_binom, args = list(n = 1000), color = "black", size = 1.5) +
+  xlim(0, 1) +
+  labs(title = "Varianza Binomial(n,p)", x = "p", y = expression(paste(n * p * (1 - p)))) +
+  geom_point(aes(x = 0.5, y = 1000/4), fill = course_palette[["accent"]], shape=21, size = 8) +
+  annotate(geom = "text", x = 0.5, y = 1060/4, label = 'bold("n/4")', color = "black", parse = TRUE, size = 8) +
+
+  theme_julia() +
+  theme(
+    axis.text.y = element_text(size = 10),
+    axis.text.x = element_text(size = 16),
+    axis.title.y = element_text(size = 24),
+    axis.title.x = element_text(size = 24),
+    legend.position = "none",
+    panel.border = element_blank()
+  )
+
+plot
+
+```
+
+:::
+
+## Distribución Binomial es asintóticamente Normal
+
+::: {.pull-left}
+
+- Si $X \sim \text{Binomial}(n,p)$, entonces:
+$$ X \xrightarrow[]{d} \text{Normal}(\mu=np, \quad \sigma= \sqrt{np(1-p)})$$
+(cuando $n \to \infty$ )
+
+- Resultado muy conveniente
+
+:::
+
+::: {.pull-right}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=8}
+
+p_load("tidyverse")
+
+n = 60
+p = 0.3
+
+mydata <- tibble(x = seq(from = 0, to = n, by = 1),
+                 norm = dnorm(x, mean = n * p, sd = sqrt(n * p * (1 - p))),
+                 binom = dbinom(x, size = n, prob = p))
+
+plot <- ggplot(data = mydata, mapping = aes(x = x)) +
+  # Barras de la binomial, con bordes negros y sin espacio entre barras
+  geom_bar(aes(y = binom, fill = course_palette[["accent"]]), color = "black", stat = "identity", position = "dodge", width = 1) +
+  # Curva de aproximación normal
+  geom_line(aes(y = norm, color = course_palette[["secondary"]]), size = 1.5) +
+
+  labs(y = "f(x)", x = "x", title = "Función de probabilidad de X | n=60, p=0.3") +
+
+  scale_color_manual(name = "",
+                     values = c("black"),
+                     breaks = c("black"),
+                     labels = c("N(mean=np, var=np(1-p))"),
+                     guide = "legend") +
+
+  scale_fill_manual(name = "",
+                    values = c(course_palette[["accent"]]),
+                    breaks = c(course_palette[["accent"]]),
+                    labels = c("Binomial(n=60,p=0.3)"),
+                    guide = "legend") +
+
+  theme_julia() +
+  theme(
+    axis.text.y = element_text(size = 22),
+    axis.text.x = element_text(size = 22),
+    axis.title.y = element_text(size = 24),
+    axis.title.x = element_text(size = 24),
+    legend.text = element_text(size = 18),
+    legend.position = "bottom",
+    panel.border = element_blank()
+  )
+
+print(plot)
+
+```
+
+:::
+
+## En resumen
+
+- El valor esperado y la varianza son los "momentos" que resumen una variable aleatoria.
+- Para Bernoulli: $\mathbb{E}(X)=p$, $\operatorname{Var}(X)=p(1-p)$.
+- Para Binomial: $\mathbb{E}(X)=np$, $\operatorname{Var}(X)=np(1-p)$.
+- La Binomial se aproxima a una Normal cuando $n$ es grande — un resultado que usaremos más adelante.
+- La próxima clase usa estos momentos para preguntar: ¿cómo estimamos los parámetros ($p$, $\beta$) que no observamos directamente?
+
+## Gracias {.inverse .center .middle .closing}
+
+**Hasta la próxima clase**
+
+Mauricio Bucca

@@ -6,7 +6,7 @@ body-classes: theme-juventus
 format:
   html:
     theme: default
-    css: "../_shared/course.css"
+    css: "_shared/course.css"
     highlight: tango
     code-copy: true
     code-fold: show
@@ -26,7 +26,17 @@ knitr::opts_chunk$set(
 # Packages
 library(pacman)
 p_load("tidyverse", "broom", "ggplot2", "marginaleffects")
-source("../_shared/bikeshare.R")
+# Encuentra `_shared/bikeshare.R` sin depender del working directory.
+source(local({
+  d <- normalizePath(getwd(), mustWork = FALSE)
+  cands <- d
+  while (!identical(dirname(d), d)) { d <- dirname(d); cands <- c(cands, d) }
+  cands <- c(cands, Sys.glob(file.path(getwd(), c("*", "*/*", "*/*/*"))))
+  hits <- file.path(cands, "_shared", "bikeshare.R")
+  hits <- hits[file.exists(hits)]
+  if (!length(hits)) stop("No se encontró _shared/bikeshare.R desde ", getwd())
+  normalizePath(hits[[1]])
+}))
 palette <- use_course_style("juventus")
 ```
 
@@ -48,7 +58,7 @@ $$
 
 ```{r}
 # Cargar y preparar los datos
-source("../_shared/bikeshare.R")
+source(shared_path("bikeshare.R"))
 course <- use_course_data("juventus")
 bikedata <- course$data
 
