@@ -67,30 +67,26 @@ redes neuronales.
 
 ```{r setup-continued, include=FALSE}
 
-bikedata <- course$data %>%
-  mutate(
-    hour = as.integer(hour),
-    month = as.integer(mnth),
-    weather = factor(weather)
-  )
-
 set.seed(3070)
-days <- sort(unique(bikedata$day))
-n_train_days <- floor(0.60 * length(days))
-n_valid_days <- floor(0.20 * length(days))
-train_days <- days[seq_len(n_train_days)]
-valid_days <- days[n_train_days + seq_len(n_valid_days)]
-test_days <- days[-seq_len(n_train_days + n_valid_days)]
-id_train <- which(bikedata$day %in% train_days)
-id_valid <- which(bikedata$day %in% valid_days)
-id_test <- which(bikedata$day %in% test_days)
+setup <- bikeshare_learning_setup(course$data)
+bikedata <- setup$data %>%
+  mutate(
+    weather = factor(weather),
+    high_demand_num = setup$high_demand,
+    high_demand = factor(
+      if_else(high_demand_num == 1, "alta", "baja"),
+      levels = c("baja", "alta")
+    )
+  )
+days <- setup$days
+train_days <- setup$train_days
+valid_days <- setup$valid_days
+test_days <- setup$test_days
+id_train <- setup$id_train
+id_valid <- setup$id_valid
+id_test <- setup$id_test
+demand_cutoff <- setup$demand_cutoff
 
-demand_cutoff <- quantile(bikedata$bikers[id_train], 0.75)
-bikedata <- bikedata %>%
-  mutate(high_demand = factor(
-    if_else(bikers > demand_cutoff, "alta", "baja"),
-    levels = c("baja", "alta")
-  ))
 train <- bikedata[id_train, ]
 valid <- bikedata[id_valid, ]
 test <- bikedata[id_test, ]
@@ -102,13 +98,38 @@ predictors <- c(
 )
 reg_formula <- reformulate(predictors, "bikers")
 class_formula <- reformulate(predictors, "high_demand")
+boost_formula <- reformulate(predictors, "high_demand_num")
 
 rmse <- function(y, p) sqrt(mean((y - p)^2))
 mae <- function(y, p) mean(abs(y - p))
 log_loss <- function(y, p) {
-  truth <- as.integer(y == "alta")
+  truth <- if (is.factor(y)) as.integer(y == "alta") else as.integer(y)
   p <- pmin(pmax(p, 1e-8), 1 - 1e-8)
   -mean(truth * log(p) + (1 - truth) * log(1 - p))
+}
+
+class_metrics <- function(y, p, threshold) {
+  truth <- if (is.factor(y)) as.integer(y == "alta") else as.integer(y)
+  predicted <- as.integer(p >= threshold)
+  tp <- sum(predicted == 1 & truth == 1)
+  tn <- sum(predicted == 0 & truth == 0)
+  fp <- sum(predicted == 1 & truth == 0)
+  fn <- sum(predicted == 0 & truth == 1)
+  tibble(
+    log_loss = log_loss(truth, p),
+    sensitivity = tp / (tp + fn),
+    specificity = tn / (tn + fp),
+    precision = tp / (tp + fp),
+    cost_per_100 = 100 * (3 * fn + fp) / length(truth)
+  )
+}
+
+choose_threshold <- function(y, p) {
+  map_dfr(seq(0.05, 0.90, by = 0.01), function(threshold) {
+    class_metrics(y, p, threshold) %>% mutate(threshold = threshold)
+  }) %>%
+    slice_min(cost_per_100, n = 1, with_ties = FALSE) %>%
+    pull(threshold)
 }
 ```
 # Modelos basados en árboles {.inverse .center .middle}
@@ -122,6 +143,14 @@ log_loss <- function(y, p) {
 5. Comparar desempeño e interpretación.
 
 Referencia principal: James et al. (2021), *An Introduction to Statistical Learning*, 2ª ed., capítulo 8 ([sitio oficial](https://www.statlearning.com/)).
+
+## La solicitud predictiva no cambia
+
+> **Al cierre de cada día, estimar qué horas del día siguiente tendrán demanda alta, para priorizar el rebalanceo de bicicletas.**
+
+Mantenemos unidad, horizonte, predictores disponibles, partición temporal y costo 3:1 de las clases 15–16. Así, cualquier diferencia en desempeño proviene del modelo y no de haber cambiado la pregunta.
+
+Hoy preguntamos si reglas aprendidas de los datos pueden capturar picos, umbrales e interacciones sin escribir `I(temp^2)` o `factor(hr) * workingday` a mano.
 
 ## Retomando la pregunta de la clase pasada
 
@@ -384,8 +413,10 @@ tree_class <- rpart(
   control = rpart.control(cp = 0.003, minsplit = 60, xval = 8)
 )
 
+tree_valid_prob <- predict(tree_class, valid, type = "prob")[, "alta"]
+tree_threshold <- choose_threshold(valid$high_demand, tree_valid_prob)
 tree_prob <- predict(tree_class, test, type = "prob")[, "alta"]
-tree_class_hat <- factor(if_else(tree_prob >= 0.5, "alta", "baja"),
+tree_class_hat <- factor(if_else(tree_prob >= tree_threshold, "alta", "baja"),
                          levels = c("baja", "alta"))
 table(observado = test$high_demand, predicho = tree_class_hat)
 ```
@@ -393,15 +424,11 @@ table(observado = test$high_demand, predicho = tree_class_hat)
 ## Métricas de clasificación
 
 ```{r}
-tibble(
-  accuracy = mean(tree_class_hat == test$high_demand),
-  sensitivity = mean(tree_class_hat[test$high_demand == "alta"] == "alta"),
-  specificity = mean(tree_class_hat[test$high_demand == "baja"] == "baja"),
-  log_loss = log_loss(test$high_demand, tree_prob)
-)
+class_metrics(test$high_demand, tree_prob, tree_threshold) %>%
+  mutate(umbral = tree_threshold, .before = 1)
 ```
 
-Las probabilidades de un árbol son constantes dentro de cada hoja.
+Las probabilidades de un árbol son constantes dentro de cada hoja. El umbral se eligió por costo en validación, no mirando test.
 
 ## Una familia con nombres propios
 
@@ -548,22 +575,25 @@ rf_grid %>%
 ## Random Forest: ejemplo empírico
 
 ```{r rf-final, cache=TRUE}
-best_mtry <- rf_grid %>% slice_min(validation_loss, n = 1) %>% pull(mtry)
+best_rf <- rf_grid %>% slice_min(validation_loss, n = 1, with_ties = FALSE)
+best_mtry <- best_rf$mtry
+rf_valid_prob <- best_rf$probability[[1]]
+rf_threshold <- choose_threshold(valid$high_demand, rf_valid_prob)
 rf_final <- randomForest(
   class_formula, data = dev, ntree = 350, mtry = best_mtry,
   nodesize = 15, importance = TRUE
 )
 rf_prob <- predict(rf_final, test, type = "prob")[, "alta"]
-rf_class <- factor(if_else(rf_prob >= 0.5, "alta", "baja"),
+rf_class <- factor(if_else(rf_prob >= rf_threshold, "alta", "baja"),
                    levels = c("baja", "alta"))
 
-tibble(
-  modelo = c("Árbol", "Random Forest"),
-  accuracy = c(mean(tree_class_hat == test$high_demand),
-               mean(rf_class == test$high_demand)),
-  log_loss = c(log_loss(test$high_demand, tree_prob),
-               log_loss(test$high_demand, rf_prob))
-)
+bind_rows(
+  class_metrics(test$high_demand, tree_prob, tree_threshold) %>%
+    mutate(modelo = "Árbol"),
+  class_metrics(test$high_demand, rf_prob, rf_threshold) %>%
+    mutate(modelo = "Random Forest")
+) %>%
+  select(modelo, everything())
 ```
 
 ## Error out-of-bag
@@ -750,20 +780,23 @@ $$
 
 Es descenso de gradiente en el **espacio de funciones**: cada árbol es un paso que corrige el error actual.
 
-## El gradiente es el residuo
+## En clasificación, el gradiente es $y-p$
 
 ::: {.footnote}
 Recordatorio: el gradiente de la pérdida indica cuánto y hacia dónde hay que mover la predicción para reducir el error; boosting da un paso en la dirección de su negativo.
 :::
 
-Con pérdida cuadrática $L=\tfrac12\sum_i (y_i-f(x_i))^2$:
+Con pérdida logística Bernoulli y score $f(x_i)$:
 
 $$
--\frac{\partial L}{\partial f(x_i)}=y_i-f(x_i)=r_i.
+-\frac{\partial L}{\partial f(x_i)}
+=y_i-\sigma(f(x_i))
+=y_i-p_i.
 $$
 
-- Cada árbol se ajusta a los **residuos** del ensamble actual.
-- Con pérdida de Poisson (la que usamos para `bikers`) el gradiente es $y_i-e^{f(x_i)}$: mismo principio, distinta pérdida.
+- Cada árbol se ajusta a la diferencia entre la clase observada y la probabilidad actual.
+- Un falso negativo seguro tiene $y_i-p_i\approx1$: recibe una corrección grande.
+- Con pérdida cuadrática el gradiente sería el residuo $y_i-f(x_i)$: mismo principio, distinta pérdida.
 - Por eso boosting reduce **sesgo**: corrige sistemáticamente lo que el modelo aún no captura.
 
 ## La tasa de aprendizaje regulariza
@@ -802,66 +835,111 @@ Random Forest raramente sobreajusta al agregar árboles; boosting **sí** puede,
 boost_grid <- crossing(depth = c(1, 2, 3), shrinkage = c(0.03, 0.08)) %>%
   mutate(
     model = map2(depth, shrinkage, ~ gbm(
-      reg_formula, data = train, distribution = "poisson",
+      boost_formula, data = train, distribution = "bernoulli",
       n.trees = 260, interaction.depth = .x, shrinkage = .y,
       n.minobsinnode = 20, bag.fraction = 0.7, verbose = FALSE
     )),
-    prediction = map(model, ~ predict(.x, valid, n.trees = 260, type = "response")),
-    validation_rmse = map_dbl(prediction, ~ rmse(valid$bikers, .x))
+    probability = map(model, ~ predict(.x, valid, n.trees = 260, type = "response")),
+    validation_log_loss = map_dbl(
+      probability,
+      ~ log_loss(valid$high_demand_num, .x)
+    )
   )
 
-boost_grid %>% select(depth, shrinkage, validation_rmse) %>% arrange(validation_rmse)
+boost_grid %>%
+  select(depth, shrinkage, validation_log_loss) %>%
+  arrange(validation_log_loss)
 ```
 
 ## Gradient Boosting: ejemplo empírico
 
 ```{r boost-final, cache=TRUE}
-best_boost <- boost_grid %>% slice_min(validation_rmse, n = 1)
+best_boost <- boost_grid %>%
+  slice_min(validation_log_loss, n = 1, with_ties = FALSE)
+boost_valid_prob <- best_boost$probability[[1]]
+boost_threshold <- choose_threshold(valid$high_demand_num, boost_valid_prob)
 boost_final <- gbm(
-  reg_formula, data = dev, distribution = "poisson",
+  boost_formula, data = dev, distribution = "bernoulli",
   n.trees = 260,
   interaction.depth = best_boost$depth,
   shrinkage = best_boost$shrinkage,
   n.minobsinnode = 20, bag.fraction = 0.7, verbose = FALSE
 )
-boost_pred <- predict(boost_final, test, n.trees = 260, type = "response")
-poisson_baseline <- glm(reg_formula, data = dev, family = poisson())
-poisson_pred <- predict(poisson_baseline, test, type = "response")
+boost_prob <- predict(boost_final, test, n.trees = 260, type = "response")
 
+bind_rows(
+  class_metrics(test$high_demand, tree_prob, tree_threshold) %>%
+    mutate(modelo = "Árbol"),
+  class_metrics(test$high_demand, rf_prob, rf_threshold) %>%
+    mutate(modelo = "Random Forest"),
+  class_metrics(test$high_demand, boost_prob, boost_threshold) %>%
+    mutate(modelo = "Gradient Boosting")
+) %>%
+  select(modelo, everything())
+```
+
+Cada método conserva su umbral elegido en validación bajo el mismo costo 3:1. La comparación final usa las mismas filas y el mismo outcome.
+
+## Probabilidades por resultado observado
+
+```{r boost-fit-plot, fig.height=5.2}
 tibble(
-  modelo = c("Poisson", "Árbol podado", "Gradient Boosting"),
-  RMSE = c(rmse(test$bikers, poisson_pred),
-           rmse(test$bikers, tree_reg_pred), rmse(test$bikers, boost_pred)),
-  MAE = c(mae(test$bikers, poisson_pred),
-          mae(test$bikers, tree_reg_pred), mae(test$bikers, boost_pred))
+  observado = test$high_demand,
+  probabilidad = boost_prob
+) %>%
+  ggplot(aes(probabilidad, fill = observado)) +
+  geom_density(alpha = 0.55) +
+  scale_fill_course() +
+  labs(
+    x = "Probabilidad de demanda alta",
+    y = "Densidad",
+    fill = "Observado"
+  )
+```
+
+Mayor separación indica mejor ranking, pero la decisión final también depende de calibración y costo.
+
+## Error de probabilidad por hora
+
+```{r boost-residuals, fig.height=5}
+tibble(
+  hour = test$hour,
+  absolute_error = abs(test$high_demand_num - boost_prob)
+) %>%
+  group_by(hour) %>%
+  summarise(MAE_probabilidad = mean(absolute_error), .groups = "drop") %>%
+  ggplot(aes(hour, MAE_probabilidad)) +
+  geom_line(color = course_palette[["primary"]], linewidth = 1.2) +
+  geom_point(color = course_palette[["secondary"]], size = 2.4) +
+  scale_x_continuous(breaks = seq(0, 23, 3)) +
+  labs(x = "Hora", y = "|observado − probabilidad|")
+```
+
+Patrones persistentes indican franjas donde el ensamble todavía no captura toda la estructura.
+
+## Una predicción del ensamble, de punta a punta
+
+```{r ensemble-case}
+case_id <- which.max(boost_prob)
+tibble(
+  día = test$day[case_id],
+  hora = test$hour[case_id],
+  temperatura = test$temp[case_id],
+  profundidad = best_boost$depth,
+  tasa_aprendizaje = best_boost$shrinkage,
+  probabilidad = boost_prob[case_id],
+  umbral = boost_threshold,
+  acción = if_else(
+    boost_prob[case_id] >= boost_threshold,
+    "priorizar",
+    "no priorizar"
+  ),
+  demanda_observada = test$bikers[case_id],
+  clase_observada = test$high_demand[case_id]
 )
 ```
 
-## Observado versus predicho
-
-```{r boost-fit-plot, fig.height=5.2}
-tibble(observed = test$bikers, predicted = boost_pred) %>%
-  slice_sample(n = min(1400, nrow(test))) %>%
-  ggplot(aes(observed, predicted)) +
-  geom_point(color = course_palette[["primary"]], alpha = 0.35) +
-  geom_abline(slope = 1, intercept = 0,
-              color = course_palette[["secondary"]], linewidth = 1.2) +
-  coord_equal() +
-  labs(x = "Bikers observado", y = "Bikers predicho")
-```
-
-## Diagnóstico residual
-
-```{r boost-residuals, fig.height=5}
-tibble(predicted = boost_pred, residual = test$bikers - boost_pred) %>%
-  ggplot(aes(predicted, residual)) +
-  geom_hline(yintercept = 0, color = course_palette[["secondary"]]) +
-  geom_point(color = course_palette[["primary"]], alpha = 0.3) +
-  geom_smooth(se = FALSE) +
-  labs(x = "Predicción", y = "Residuo")
-```
-
-Patrones persistentes indican estructura que el ensamble todavía no captura.
+El ensamble aprende la forma; el protocolo conserva trazabilidad sobre qué fila recibió qué score y qué acción.
 
 ## Más allá de `gbm`
 

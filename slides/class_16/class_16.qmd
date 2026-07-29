@@ -94,11 +94,17 @@ log_loss <- function(y, p) {
 
 class_metrics <- function(y, p, threshold = 0.5) {
   predicted <- as.integer(p >= threshold)
+  tp <- sum(predicted == 1 & y == 1)
+  tn <- sum(predicted == 0 & y == 0)
+  fp <- sum(predicted == 1 & y == 0)
+  fn <- sum(predicted == 0 & y == 1)
   tibble(
     log_loss = log_loss(y, p),
     accuracy = mean(predicted == y),
-    sensitivity = mean(predicted[y == 1] == 1),
-    specificity = mean(predicted[y == 0] == 0)
+    sensitivity = tp / (tp + fn),
+    specificity = tn / (tn + fp),
+    precision = tp / (tp + fp),
+    cost_per_100 = 100 * (3 * fn + fp) / length(y)
   )
 }
 ```
@@ -111,11 +117,25 @@ Durante todo el curso, cada modelo (LPM, logit, Poisson) compartió un mismo sup
 
 . . .
 
-Las próximas tres clases (19, 20 y 21) exploran una pregunta distinta: **¿qué pasa cuando dejamos de confiar en que esa forma elegida a mano sea la correcta?** ¿Puede el propio procedimiento de ajuste decidir cuánta complejidad usar — o incluso qué forma tomar?
+Las clases 16–18 exploran una pregunta distinta: **¿qué pasa cuando dejamos de confiar en que esa forma elegida a mano sea la correcta?** ¿Puede el propio procedimiento de ajuste decidir cuánta complejidad usar — o incluso qué forma tomar?
 
 . . .
 
 Referencia principal para las tres clases: James et al. (2021), *An Introduction to Statistical Learning*, 2ª ed., capítulos 5–6, 8 y 10 ([sitio oficial](https://www.statlearning.com/)).
+
+## La solicitud predictiva no cambia
+
+> **Al cierre de cada día, estimar qué horas del día siguiente tendrán demanda alta, para priorizar el rebalanceo de bicicletas.**
+
+| Elemento | Se mantiene desde la clase 15 |
+|---|---|
+| Unidad y horizonte | una hora, hasta 24 horas |
+| Target | sobre el percentil 75 aprendido en train |
+| Información | calendario, hora y pronóstico meteorológico |
+| Costo | falso negativo = 3; falso positivo = 1 |
+| Evaluación | partición temporal 60/20/20 |
+
+Hoy no cambiamos la pregunta para favorecer al método. Cambiamos solo cómo se controla una matriz de predictores amplia y correlacionada.
 
 ## El problema, en carne propia
 
@@ -221,10 +241,10 @@ Todo lo que sigue en esta clase es la formalización — y luego la implementaci
 
 ## Configuración: outcome y partición
 
-El módulo completo (clases 19–22) comparte la misma preparación de datos. Primero definimos el outcome y partimos los datos:
+El módulo completo (clases 15–18) comparte la misma preparación de datos. Primero definimos el outcome y partimos los datos:
 
 ```{r config-split, eval=FALSE}
-# Preparación compartida por las clases 19-22 (ver _shared/bikeshare.R)
+# Preparación compartida por las clases 15-18 (ver _shared/bikeshare.R)
 setup <- bikeshare_learning_setup(bikedata)
 
 # Outcome binario: "alta demanda" = top 25% de las horas.
@@ -699,8 +719,7 @@ thresholds <- seq(0.1, 0.9, by = 0.05)
 threshold_choice <- map_dfr(thresholds, function(t) {
   class_metrics(y_valid, validation_prob, t) %>% mutate(threshold = t)
 }) %>%
-  mutate(balanced_accuracy = (sensitivity + specificity) / 2) %>%
-  slice_max(balanced_accuracy, n = 1, with_ties = FALSE)
+  slice_min(cost_per_100, n = 1, with_ties = FALSE)
 selected_threshold <- threshold_choice$threshold
 
 x_dev <- rbind(x_train, x_valid)
@@ -716,11 +735,24 @@ test_prob <- as.numeric(predict(final_fit, newx = x_test, type = "response"))
 best %>% select(alpha, lambda, validation_log_loss = loss)
 ```
 
-El umbral de clasificación se elige en validación maximizando accuracy balanceada — la misma lógica de la clase 15, ahora aplicada tras el tuning. El test no participó en ninguna de estas decisiones.
+El umbral se elige en validación minimizando el mismo costo de la clase 15: un falso negativo cuesta tres veces un falso positivo. El test no participó en ninguna de estas decisiones.
 
 ## Interpretación: ¿la penalización aporta?
 
 ```{r}
+baseline_train_fit <- glm.fit(
+  x = cbind(`(Intercept)` = 1, x_train), y = y_train,
+  family = binomial()
+)
+baseline_valid_prob <- as.numeric(plogis(
+  cbind(`(Intercept)` = 1, x_valid) %*% coef(baseline_train_fit)
+))
+baseline_threshold <- map_dfr(thresholds, function(t) {
+  class_metrics(y_valid, baseline_valid_prob, t) %>% mutate(threshold = t)
+}) %>%
+  slice_min(cost_per_100, n = 1, with_ties = FALSE) %>%
+  pull(threshold)
+
 baseline_fit <- glm.fit(
   x = cbind(`(Intercept)` = 1, x_dev), y = y_dev,
   family = binomial()
@@ -728,17 +760,22 @@ baseline_fit <- glm.fit(
 baseline_prob <- as.numeric(plogis(
   cbind(`(Intercept)` = 1, x_test) %*% coef(baseline_fit)
 ))
+penalty_name <- case_when(
+  best$alpha == 0 ~ "Ridge",
+  best$alpha == 1 ~ "LASSO",
+  TRUE ~ "Elastic Net"
+)
 
 bind_rows(
-  class_metrics(y_test, baseline_prob, selected_threshold) %>%
+  class_metrics(y_test, baseline_prob, baseline_threshold) %>%
     mutate(modelo = "Logit sin penalizar"),
   class_metrics(y_test, test_prob, selected_threshold) %>%
-    mutate(modelo = "Elastic Net")
+    mutate(modelo = penalty_name)
 ) %>%
   select(modelo, everything())
 ```
 
-Regularizar se justifica por desempeño y estabilidad fuera de muestra — comparado explícitamente aquí contra el logit sin penalizar de las clases 9–11 — no porque el método sea más reciente.
+La penalización se juzga contra el logit sin penalizar bajo el mismo protocolo. Puede mejorar log-loss o estabilidad sin reducir el costo operacional; en ese caso, la solicitud predictiva —no la novedad del método— decide cuál preferir.
 
 ## Interpretación: clasificación y calibración
 
@@ -767,6 +804,30 @@ calibration %>%
 ```
 
 Los falsos negativos son horas de demanda alta que el sistema no anticipó. Discriminación (matriz de confusión) y calibración (¿las probabilidades predichas se cumplen en la frecuencia correcta?) son propiedades distintas — un modelo puede discriminar bien y calibrar mal, o viceversa.
+
+## Una predicción regularizada, de punta a punta
+
+```{r regularized-case}
+case_id <- which.max(test_prob)
+tibble(
+  día = bikedata$day[id_test][case_id],
+  hora = bikedata$hour[id_test][case_id],
+  temperatura = bikedata$temp[id_test][case_id],
+  alpha = best$alpha,
+  lambda = best$lambda,
+  probabilidad = test_prob[case_id],
+  umbral = selected_threshold,
+  acción = if_else(
+    test_prob[case_id] >= selected_threshold,
+    "priorizar",
+    "no priorizar"
+  ),
+  demanda_observada = bikedata$bikers[id_test][case_id],
+  clase_observada = if_else(y_test[case_id] == 1, "alta", "baja")
+)
+```
+
+La regularización modifica cómo se estiman los coeficientes; la interfaz operacional sigue siendo la misma: fila futura → probabilidad → umbral → acción.
 
 ## Interpretación: ¿qué variables quedan?
 
@@ -815,9 +876,10 @@ Todo el resto del flujo —partición, estandarización, test intacto, calibraci
 
 1. Agregue una interacción entre `workingday` y `factor(hr)`.
 2. Repita el tuning sin observar el test.
-3. Compare log-loss y calibración contra el modelo de esta clase.
+3. Compare log-loss, costo y calibración contra el modelo de esta clase.
 4. Examine qué coeficientes sobreviven con LASSO.
-5. Explique por qué una mejora predictiva no basta para hablar de causalidad.
+5. Cambie el costo falso negativo:falso positivo de 3:1 a 5:1.
+6. Explique por qué una mejora predictiva no basta para hablar de causalidad.
 
 ## La pregunta que queda abierta
 

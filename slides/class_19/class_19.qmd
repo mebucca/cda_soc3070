@@ -1,6 +1,6 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Un \"Flavor\" de LLMs (usando Regresión Logística)"
+subtitle: "Clasificación de Texto: de Bag-of-Words a los LLM"
 author: "Mauricio Bucca · Sociología UC"
 date: today
 body-classes: theme-chelsea
@@ -12,7 +12,7 @@ format:
     slide-number: false
     theme: default
     highlight-style: github
-    code-block-font-size: 0.9em
+    code-block-font-size: 0.82em
     width: 1600
     height: 900
     html-math-method: katex
@@ -21,11 +21,12 @@ execute:
   message: false
 ---
 
-```{r course-style, include=FALSE}
-library(pacman)
-p_load(tidyverse)
-p_load(nnet)
-# Encuentra `_shared/bikeshare.R` sin depender del working directory.
+```{r setup, include=FALSE}
+library(tidyverse)
+library(Matrix)
+library(glmnet)
+
+# Infraestructura visual compartida, independiente del working directory.
 source(local({
   d <- normalizePath(getwd(), mustWork = FALSE)
   cands <- d
@@ -37,6 +38,197 @@ source(local({
   normalizePath(hits[[1]])
 }))
 course_palette <- use_course_style("chelsea")
+
+review_path <- local({
+  d <- normalizePath(getwd(), mustWork = FALSE)
+  cands <- d
+  while (!identical(dirname(d), d)) { d <- dirname(d); cands <- c(cands, d) }
+  candidates <- c(
+    file.path(cands, "class_19", "data", "capital_bikeshare_app_reviews.csv"),
+    file.path(cands, "data", "capital_bikeshare_app_reviews.csv")
+  )
+  hits <- candidates[file.exists(candidates)]
+  if (!length(hits)) stop("No se encontró el corpus de reseñas de Capital Bikeshare")
+  normalizePath(hits[[1]])
+})
+
+reviews <- read_csv(review_path, show_col_types = FALSE) %>%
+  mutate(
+    date = as.Date(date),
+    document = str_squish(paste(title, text)),
+    critical_review = as.integer(critical_review)
+  ) %>%
+  arrange(date, review_id)
+
+stop_words_en <- c(
+  "the", "and", "for", "that", "this", "with", "you", "your", "are", "was",
+  "were", "have", "has", "had", "but", "not", "from", "they", "their", "them",
+  "then", "than", "there", "here", "when", "where", "what", "who", "why", "how",
+  "can", "could", "would", "should", "will", "just", "into", "out", "about",
+  "after", "before", "because", "while", "also", "very", "really", "only", "more",
+  "most", "some", "any", "all", "our", "its", "it's", "i'm", "i've", "i'll",
+  "app", "bike", "bikes", "bikeshare", "capital", "ride", "riding", "use", "used"
+)
+
+tokenize_documents <- function(text) {
+  tibble(doc_id = seq_along(text), text = text) %>%
+    mutate(
+      token = text %>%
+        str_to_lower() %>%
+        str_replace_all("[^a-z']+", " ") %>%
+        str_split("\\s+")
+    ) %>%
+    select(-text) %>%
+    unnest(token) %>%
+    filter(
+      str_length(token) >= 3,
+      !token %in% stop_words_en,
+      !str_detect(token, "^'+$")
+    )
+}
+
+make_vocabulary <- function(text, min_docs = 3, max_share = 0.80) {
+  n <- length(text)
+  tokenize_documents(text) %>%
+    distinct(doc_id, token) %>%
+    count(token, name = "document_frequency") %>%
+    filter(document_frequency >= min_docs, document_frequency <= max_share * n) %>%
+    arrange(token) %>%
+    pull(token)
+}
+
+make_count_matrix <- function(text, vocabulary) {
+  tokens <- tokenize_documents(text) %>%
+    filter(token %in% vocabulary) %>%
+    count(doc_id, token, name = "count") %>%
+    mutate(term_id = match(token, vocabulary))
+
+  sparseMatrix(
+    i = tokens$doc_id,
+    j = tokens$term_id,
+    x = tokens$count,
+    dims = c(length(text), length(vocabulary)),
+    dimnames = list(NULL, vocabulary)
+  )
+}
+
+fit_tfidf <- function(counts) {
+  document_frequency <- colSums(counts > 0)
+  idf <- log((1 + nrow(counts)) / (1 + document_frequency)) + 1
+  weighted <- counts %*% Diagonal(x = as.numeric(idf))
+  norm <- sqrt(rowSums(weighted^2))
+  norm[norm == 0] <- 1
+  list(
+    matrix = Diagonal(x = 1 / norm) %*% weighted,
+    idf = as.numeric(idf)
+  )
+}
+
+apply_tfidf <- function(counts, idf) {
+  weighted <- counts %*% Diagonal(x = idf)
+  norm <- sqrt(rowSums(weighted^2))
+  norm[norm == 0] <- 1
+  Diagonal(x = 1 / norm) %*% weighted
+}
+
+log_loss <- function(y, p) {
+  p <- pmin(pmax(p, 1e-8), 1 - 1e-8)
+  -mean(y * log(p) + (1 - y) * log(1 - p))
+}
+
+roc_auc <- function(y, p) {
+  n1 <- sum(y == 1); n0 <- sum(y == 0)
+  (sum(rank(p, ties.method = "average")[y == 1]) - n1 * (n1 + 1) / 2) /
+    (n1 * n0)
+}
+
+classification_metrics <- function(y, p, threshold) {
+  predicted <- as.integer(p >= threshold)
+  tp <- sum(predicted == 1 & y == 1)
+  tn <- sum(predicted == 0 & y == 0)
+  fp <- sum(predicted == 1 & y == 0)
+  fn <- sum(predicted == 0 & y == 1)
+  tibble(
+    log_loss = log_loss(y, p),
+    ROC_AUC = roc_auc(y, p),
+    sensitivity = tp / (tp + fn),
+    specificity = tn / (tn + fp),
+    precision = tp / (tp + fp),
+    cost_per_100 = 100 * (3 * fn + fp) / length(y)
+  )
+}
+
+# Corte temporal 60/20/20: el modelo siempre predice reseñas posteriores.
+n_reviews <- nrow(reviews)
+n_train <- floor(0.60 * n_reviews)
+n_valid <- floor(0.20 * n_reviews)
+id_train <- seq_len(n_train)
+id_valid <- n_train + seq_len(n_valid)
+id_test <- (n_train + n_valid + 1):n_reviews
+
+train <- reviews[id_train, ]
+valid <- reviews[id_valid, ]
+test <- reviews[id_test, ]
+
+vocabulary <- make_vocabulary(train$document)
+train_counts <- make_count_matrix(train$document, vocabulary)
+valid_counts <- make_count_matrix(valid$document, vocabulary)
+test_counts <- make_count_matrix(test$document, vocabulary)
+
+tfidf_train <- fit_tfidf(train_counts)
+x_train <- tfidf_train$matrix
+x_valid <- apply_tfidf(valid_counts, tfidf_train$idf)
+x_test <- apply_tfidf(test_counts, tfidf_train$idf)
+y_train <- train$critical_review
+y_valid <- valid$critical_review
+y_test <- test$critical_review
+
+lambda_grid <- exp(seq(log(0.8), log(0.002), length.out = 60))
+text_path <- glmnet(
+  x_train, y_train, family = "binomial", alpha = 1,
+  lambda = lambda_grid, standardize = FALSE
+)
+valid_prob_path <- predict(text_path, newx = x_valid, type = "response")
+validation_curve <- tibble(
+  lambda = text_path$lambda,
+  log_loss = map_dbl(
+    seq_len(ncol(valid_prob_path)),
+    ~ log_loss(y_valid, valid_prob_path[, .x])
+  )
+)
+best_lambda <- validation_curve %>%
+  slice_min(log_loss, n = 1, with_ties = FALSE) %>%
+  pull(lambda)
+valid_prob <- as.numeric(predict(
+  text_path, newx = x_valid, s = best_lambda, type = "response"
+))
+
+# Un falso negativo (mensaje crítico no priorizado) cuesta tres veces un falso
+# positivo (mensaje no crítico revisado antes). El costo se fija antes del test.
+threshold_curve <- map_dfr(seq(0.10, 0.90, by = 0.02), function(threshold) {
+  predicted <- as.integer(valid_prob >= threshold)
+  tibble(
+    threshold = threshold,
+    false_negative = sum(predicted == 0 & y_valid == 1),
+    false_positive = sum(predicted == 1 & y_valid == 0)
+  )
+}) %>%
+  mutate(cost = 3 * false_negative + false_positive)
+selected_threshold <- threshold_curve %>%
+  slice_min(cost, n = 1, with_ties = FALSE) %>%
+  pull(threshold)
+
+# Reajuste final con train + valid, sin cambiar vocabulario, IDF, lambda ni umbral.
+x_dev <- rbind(x_train, x_valid)
+y_dev <- c(y_train, y_valid)
+text_final <- glmnet(
+  x_dev, y_dev, family = "binomial", alpha = 1,
+  lambda = best_lambda, standardize = FALSE
+)
+test_prob <- as.numeric(predict(
+  text_final, newx = x_test, s = best_lambda, type = "response"
+))
+test_pred <- as.integer(test_prob >= selected_threshold)
 ```
 
 ## Antes · Hoy · Después {.class-rhythm}
@@ -46,332 +238,518 @@ course_palette <- use_course_style("chelsea")
 ::: {.content-box}
 **Antes**
 
-redes neuronales para clasificación y regresión.
+modelos flexibles para predecir demanda con datos tabulares.
 :::
 
 ::: {.content-box-primary}
 **Hoy**
 
-un "flavor" de LLMs, usando regresión logística.
+convertir texto real de usuarios en una predicción operativa auditable.
 :::
 
 ::: {.content-box-secondary}
 **Después**
 
-cierre del curso.
+cierre: qué técnica usar, qué evidencia reportar y qué límites reconocer.
 :::
 
 :::
 
-# Un "flavor" de LLMs {.inverse .center .middle}
+# Texto como problema predictivo {.inverse .center .middle}
 
-## Una advertencia antes de empezar
+## La solicitud predictiva
 
-Lo que vamos a construir hoy **no es un LLM pequeño**. Es un modelo estadístico bien conocido —regresión logística multinomial, de la clase 9— aplicado a texto.
+> **Priorizar, al momento de llegada, mensajes de usuarios que probablemente describen una experiencia crítica, usando solo el título y el texto.**
 
-. . .
-
-Lo que sí es cierto, y es la razón de esta clase: **un LLM moderno resuelve, en su capa final, exactamente el mismo problema de clasificación multinomial que ya sabemos resolver.** La diferencia es la escala y cómo se construyen los predictores — no la formulación estadística del problema.
-
-## Ruta de la clase
-
-1. El lenguaje como variable categórica.
-2. Un caso simple: predicción binaria.
-3. El caso general: predicción multinomial.
-4. Cómo representar el contexto.
-5. Ajustar el modelo e interpretar sus probabilidades.
-6. Generación secuencial de texto.
-7. Qué le falta a esto para ser un LLM de verdad.
-
-# El lenguaje como variable categórica {.inverse .center .middle}
-
-## Qué hace, en el fondo, un LLM
-
-Cuando un modelo de lenguaje "escribe", en cada paso hace exactamente una cosa: dado el texto visto hasta ahora, **predice cuál es la siguiente palabra**, entre todas las palabras posibles de su vocabulario.
-
-. . .
-
-Eso es, formalmente, un problema que ya conocemos:
-
-$$
-\mathbb{P}(Y = j \mid X) = \text{softmax}(X\beta)_j, \qquad j = 1, \dots, J
-$$
-
-donde $Y$ es la próxima palabra (una categoría entre $J$ posibles) y $X$ es alguna representación de las palabras anteriores. **Esta es exactamente la regresión logística multinomial de la clase 9.**
-
-## Nuestro corpus de juguete
-
-Vamos a trabajar con oraciones de la forma "el SUJETO VERBO los OBJETO", generadas a partir de un vocabulario pequeño:
-
-```{r corpus, echo=TRUE}
-set.seed(3070)
-
-sujetos <- c("estudiante", "investigador", "modelo", "algoritmo")
-verbos  <- c("analiza", "estima", "predice", "explica")
-objetos <- c("datos", "resultados", "modelos", "problemas")
-```
-
-- Vocabulario total: $4+4+4=12$ palabras de contenido (más "el"/"los").
-- No es un corpus real: lo construimos con una estructura conocida, para poder verificar que el modelo efectivamente la aprende.
-
-## Construyendo el corpus
-
-Para que el ejercicio tenga sentido, el sujeto influye en qué verbo es más probable, y el verbo influye en qué objeto es más probable — igual que en el lenguaje real, donde el contexto restringe (sin determinar) la palabra que sigue.
-
-```{r corpus-probs, echo=TRUE}
-p_verbo_dado_sujeto <- matrix(c(
-  .50, .20, .20, .10,   # estudiante
-  .20, .50, .10, .20,   # investigador
-  .10, .10, .60, .20,   # modelo
-  .10, .10, .20, .60    # algoritmo
-), nrow = 4, byrow = TRUE, dimnames = list(sujetos, verbos))
-
-p_objeto_dado_verbo <- matrix(c(
-  .60, .20, .10, .10,   # analiza
-  .20, .20, .50, .10,   # estima
-  .10, .60, .10, .20,   # predice
-  .10, .10, .20, .60    # explica
-), nrow = 4, byrow = TRUE, dimnames = list(verbos, objetos))
-```
-
-## Generando 300 oraciones
-
-```{r generar-corpus, echo=TRUE}
-n_oraciones <- 300
-corpus <- tibble(id = 1:n_oraciones) %>%
-  mutate(
-    sujeto  = sample(sujetos, n(), replace = TRUE),
-    verbo   = map_chr(sujeto, ~ sample(verbos, 1, prob = p_verbo_dado_sujeto[.x, ])),
-    objeto  = map_chr(verbo,  ~ sample(objetos, 1, prob = p_objeto_dado_verbo[.x, ])),
-    oracion = paste("el", sujeto, verbo, "los", objeto)
-  )
-
-corpus %>% select(sujeto, verbo, objeto, oracion) %>% head(6)
-```
-
-Cada fila es una "oración". `sujeto`, `verbo` y `objeto` son las palabras de contenido; `oracion` es el texto completo.
-
-# Predicción binaria {.inverse .center .middle}
-
-## El caso más simple: ¿la próxima palabra es "datos"?
-
-Antes del caso general, empecemos con una pregunta binaria: dado el verbo, **¿el objeto va a ser "datos" o no?**
-
-```{r bin-setup, echo=TRUE}
-corpus <- corpus %>% mutate(es_datos = as.integer(objeto == "datos"))
-
-m_bin <- glm(es_datos ~ verbo, data = corpus, family = binomial)
-summary(m_bin)$coefficients
-```
-
-- Esto es exactamente un `glm(family=binomial)`, como en la clase 6 — solo que el predictor es una palabra (categórica) y no una variable numérica como `temp`.
-- El coeficiente de `verboanaliza` (ausente = categoría de referencia) es más alto que el resto, reflejando que `analiza` predice "datos" con más frecuencia — así lo construimos en `p_objeto_dado_verbo`.
-
-## De binario a multinomial
-
-Reducir "cuál es la próxima palabra" a una sola pregunta binaria descarta información: en un vocabulario de $J$ palabras hay $J$ posibles respuestas, no 2.
-
-. . .
-
-La generalización natural —y la que de verdad se usa— es la regresión logística **multinomial**, que ya vimos en la clase 9:
-
-$$
-\mathbb{P}(Y=j \mid X) = \frac{e^{X\beta_j}}{\sum_{k=1}^{J} e^{X\beta_k}}, \qquad j=1,\dots,J.
-$$
-
-Esta fórmula —**softmax**— es, literalmente, la capa final de un LLM: convierte $J$ puntajes reales en una distribución de probabilidad sobre el vocabulario.
-
-# Predicción multinomial {.inverse .center .middle}
-
-## El softmax, término a término
-
-| Símbolo | Significado |
+| Elemento | Decisión de diseño |
 |---|---|
-| $J$ | tamaño del vocabulario (número de palabras posibles) |
-| $X\beta_j$ | puntaje (logit) de la palabra $j$, dado el contexto $X$ |
-| $e^{X\beta_j}$ | ese puntaje, convertido a un número positivo |
-| $\sum_k e^{X\beta_k}$ | normalización: hace que las $J$ probabilidades sumen 1 |
+| Unidad | una reseña o mensaje |
+| Outcome histórico | 1 si la reseña recibió 1–2 estrellas |
+| Predictores | palabras del título y cuerpo |
+| Horizonte | clasificación inmediata |
+| Uso | ordenar una cola de revisión humana |
+| Costo | omitir un mensaje crítico cuesta 3× revisar uno no crítico |
 
-Con $J=2$, el softmax se reduce exactamente a la sigmoide de la regresión logística binaria — el mismo resultado que vimos en la clase 9 para el caso multinomial en general.
+El modelo **prioriza**; no elimina la revisión humana ni responde automáticamente.
 
-## Ajustemos el modelo multinomial
+## Por qué este problema sí es real
 
-```{r multinom-fit, echo=TRUE}
-m_objeto <- multinom(objeto ~ verbo, data = corpus, trace = FALSE)
-
-predict(m_objeto, newdata = tibble(verbo = "predice"), type = "probs")
-```
-
-Dado el verbo "predice", el modelo asigna la mayor probabilidad a "resultados" — exactamente el patrón que construimos en `p_objeto_dado_verbo`. El modelo **aprendió la estructura del corpus a partir de los datos**, sin que se la diéramos explícitamente.
-
-# Representación del contexto {.inverse .center .middle}
-
-## ¿Qué es "el contexto", en términos de $X$?
-
-Para que el softmax funcione necesitamos convertir palabras en números. La forma más simple: variables **dummy**, una por cada palabra posible del contexto — exactamente como codificamos `factor(weathersit)` en clases anteriores.
+Capital Bikeshare recibe texto libre sobre cobros, desbloqueo, estaciones, bicicletas y soporte. La tarea no es “generar una oración bonita”: es transformar ese texto en una señal útil para una decisión concreta.
 
 . . .
 
-Un LLM real reemplaza estas dummies por **embeddings**: vectores densos aprendidos que representan cada palabra. La lógica de "convertir una palabra en un vector de números" es la misma; lo que cambia es qué tan compacta y aprendida es esa representación.
+Las estrellas funcionan aquí como **etiqueta débil**: permiten aprender con historial ya disponible. El caso de uso relevante es aplicar el clasificador a canales sin rating estructurado —por ejemplo, formularios abiertos— y priorizar lectura.
 
-## Tres formas de representar el contexto
+. . .
 
-Comparemos tres representaciones, todas prediciendo el `objeto`:
+Una etiqueta débil reduce costo de anotación, pero no equivale a “urgencia verdadera”. Esa diferencia será parte de la evaluación.
 
-```{r contexto-comparacion, echo=TRUE}
-m0 <- multinom(objeto ~ 1, data = corpus, trace = FALSE)                # sin contexto
-m1 <- multinom(objeto ~ verbo, data = corpus, trace = FALSE)            # 1 palabra de contexto
-m2 <- multinom(objeto ~ verbo * sujeto, data = corpus, trace = FALSE)   # 2 palabras de contexto
+## El corpus: reseñas reales de Capital Bikeshare
 
-log_loss_multinom <- function(modelo, data, target) {
-  probs <- predict(modelo, newdata = data, type = "probs")
-  y <- data[[target]]
-  idx <- cbind(seq_along(y), match(y, colnames(probs)))
-  -mean(log(pmax(probs[idx], 1e-8)))
-}
-
+```{r corpus-summary}
 tibble(
-  modelo = c("Sin contexto", "1 palabra (verbo)", "2 palabras (verbo + sujeto)"),
-  log_loss = c(
-    log_loss_multinom(m0, corpus, "objeto"),
-    log_loss_multinom(m1, corpus, "objeto"),
-    log_loss_multinom(m2, corpus, "objeto")
-  ),
-  parámetros = c(length(coef(m0)), length(coef(m1)), length(coef(m2)))
+  documentos = nrow(reviews),
+  desde = min(reviews$date),
+  hasta = max(reviews$date),
+  porcentaje_crítico = scales::percent(mean(reviews$critical_review), accuracy = 0.1),
+  mediana_palabras = median(str_count(reviews$document, "\\S+"))
 )
 ```
 
-## Leer esta tabla
+El corpus es una instantánea desidentificada de reseñas públicas de la app: conserva fecha, estrellas, versión, título y texto; excluye nombres y perfiles.
 
-- El log-loss —la misma métrica de la clase 3 y la clase 15— **baja** a medida que agregamos contexto: más contexto, mejor predicción.
-- El número de parámetros **sube** rápido: de 3, a 12, a 48. Con dos palabras de contexto ya necesitamos una interacción completa `verbo × sujeto`.
-- En un LLM real el contexto son cientos o miles de palabras anteriores. Modelar eso con dummies e interacciones completas —como acabamos de hacer— es completamente inviable: el número de parámetros explota. Los embeddings y la arquitectura Transformer existen, en gran medida, para resolver este mismo problema de forma escalable.
+::: {.footnote}
+Fuente y descripción de la app: [Capital Bikeshare en Apple App Store](https://apps.apple.com/us/app/capital-bikeshare/id1233403073). Instantánea descargada el 29-07-2026; detalles en `data/SOURCE.txt`.
+:::
 
-# Ajuste e interpretación {.inverse .center .middle}
+## Antes de modelar: leer el outcome
 
-## Interpretando el modelo elegido
-
-```{r objeto-final, echo=TRUE}
-predict(m1, newdata = tibble(verbo = verbos), type = "probs") %>%
-  as_tibble() %>%
-  mutate(verbo = verbos, .before = 1)
+```{r rating-distribution, fig.height=4.8}
+reviews %>%
+  count(rating) %>%
+  ggplot(aes(rating, n, fill = factor(rating))) +
+  geom_col(show.legend = FALSE) +
+  scale_fill_course() +
+  scale_x_continuous(breaks = 1:5) +
+  labs(x = "Estrellas", y = "Número de reseñas")
 ```
 
-Cada fila es una distribución de probabilidad completa sobre el vocabulario de objetos, condicional en el verbo — exactamente lo que un LLM produce en cada paso, solo que aquí el "contexto" es una sola palabra categórica en vez de cientos de tokens representados con embeddings.
+Definimos “crítica” como 1–2 estrellas. No porque toda reseña de 2 estrellas sea urgente, sino porque necesitamos una regla histórica reproducible para construir el ejercicio predictivo.
 
-## Esto ya es "entrenar un modelo de lenguaje"
+## La partición respeta el tiempo
 
-- **Estimar** `m1` (vía `multinom`, que maximiza verosimilitud) es, conceptualmente, lo mismo que "entrenar" una red que predice el siguiente token: ambos minimizan cross-entropy / log-loss (clase 3) sobre ejemplos de contexto → palabra siguiente.
-- La diferencia no es el objetivo de entrenamiento — es **la familia de funciones** que se usa para pasar del contexto a los puntajes $X\beta_j$: aquí, una combinación lineal de dummies; en un LLM, muchas capas de una red neuronal (clase 18) operando sobre embeddings.
-
-# Generación secuencial {.inverse .center .middle}
-
-## El ciclo de generación
-
-Generar texto, token a token, es un ciclo de cuatro pasos que se repite:
-
-1. Tomar el contexto actual.
-2. Calcular la distribución de probabilidad sobre la siguiente palabra (softmax).
-3. **Muestrear** una palabra de esa distribución (no necesariamente la más probable).
-4. Agregar la palabra elegida al contexto, y volver a 1.
-
-## Generando oraciones con nuestro modelo
-
-```{r generar-modelo-verbo, echo=TRUE}
-m_verbo <- multinom(verbo ~ sujeto, data = corpus, trace = FALSE)
+```{r temporal-split}
+tibble(
+  conjunto = c("Entrenamiento", "Validación", "Test"),
+  documentos = c(nrow(train), nrow(valid), nrow(test)),
+  desde = c(min(train$date), min(valid$date), min(test$date)),
+  hasta = c(max(train$date), max(valid$date), max(test$date)),
+  proporción_crítica = scales::percent(
+    c(mean(y_train), mean(y_valid), mean(y_test)), accuracy = 0.1
+  )
+)
 ```
 
-```{r generar-oraciones, echo=TRUE}
-generar_oracion <- function() {
-  sujeto <- sample(sujetos, 1)
+- Entrenamiento aprende palabras y coeficientes.
+- Validación elige regularización y umbral.
+- Test representa los mensajes más recientes y se abre **una sola vez**.
 
-  p_verbo <- predict(m_verbo, newdata = tibble(sujeto = sujeto), type = "probs")
-  verbo <- sample(names(p_verbo), 1, prob = p_verbo)
+Una partición aleatoria mezclaría versiones antiguas y nuevas de la app, ocultando deriva temporal.
 
-  p_objeto <- predict(m1, newdata = tibble(verbo = verbo), type = "probs")
-  objeto <- sample(names(p_objeto), 1, prob = p_objeto)
+# De palabras a números {.inverse .center .middle}
 
-  paste("el", sujeto, verbo, "los", objeto)
+## Un modelo no recibe texto: recibe una matriz
+
+El pipeline básico tiene cuatro transformaciones:
+
+$$
+\text{documento}
+\rightarrow
+\text{tokens}
+\rightarrow
+\text{matriz documento–término}
+\rightarrow
+\text{TF–IDF}
+\rightarrow
+\widehat p(\text{crítica}\mid\text{texto}).
+$$
+
+Cada fila de $X$ es un documento. Cada columna es una palabra del vocabulario aprendido **solo en entrenamiento**.
+
+## Tokenizar es tomar decisiones
+
+```{r tokenize-example}
+tokenize_documents(train$document[1:3]) %>%
+  count(token, sort = TRUE) %>%
+  slice_head(n = 12)
+```
+
+En esta versión:
+
+- convertimos a minúsculas;
+- quitamos puntuación y tokens muy cortos;
+- excluimos palabras funcionales frecuentes;
+- excluimos términos obvios del dominio (`bike`, `app`) que aparecen casi siempre.
+
+No existe tokenización neutral: cada regla determina qué señal puede aprender el modelo.
+
+## El vocabulario se aprende sin mirar el futuro
+
+```{r vocabulary-summary}
+tibble(
+  términos = length(vocabulary),
+  documentos_train = nrow(train),
+  densidad = scales::percent(
+    length(train_counts@x) / (nrow(train_counts) * ncol(train_counts)),
+    accuracy = 0.01
+  )
+)
+```
+
+Conservamos palabras presentes en al menos 3 documentos de entrenamiento y en no más del 80%. La matriz es **dispersa**: casi todas sus celdas valen cero.
+
+Aprender el vocabulario con todo el corpus filtraría al pasado palabras que solo aparecen en el futuro.
+
+## Conteos: la representación más simple
+
+Sea $c_{ij}$ el número de veces que la palabra $j$ aparece en el documento $i$:
+
+$$X_{ij}=c_{ij}.$$
+
+Ventaja: es directo e interpretable.
+
+Problema: una palabra muy frecuente en todos los documentos puede dominar aunque discrimine poco. Además, documentos largos acumulan conteos mayores por construcción.
+
+## TF–IDF repondera señal y ubicuidad
+
+$$
+\operatorname{tfidf}_{ij}
+=
+\underbrace{c_{ij}}_{\text{frecuencia en el documento}}
+\times
+\underbrace{\left[
+\log\left(\frac{1+n}{1+\operatorname{df}_j}\right)+1
+\right]}_{\text{rareza en el corpus de entrenamiento}}.
+$$
+
+- `tf`: cuánto aparece el término dentro del documento;
+- `df`: en cuántos documentos aparece;
+- `idf`: resta peso a palabras ubicuas;
+- normalización $L_2$: evita que la longitud del documento decida por sí sola.
+
+## Qué información pierde bag-of-words
+
+“The bike **did not unlock**” y “The bike **did unlock**” comparten casi las mismas palabras.
+
+. . .
+
+Bag-of-words ignora:
+
+- orden;
+- negación de largo alcance;
+- ironía;
+- referencia entre frases;
+- significado de palabras no vistas.
+
+. . .
+
+Su fortaleza es otra: con pocos datos ofrece un baseline rápido, transparente y difícil de superar por casualidad.
+
+# Regresión logística para texto {.inverse .center .middle}
+
+## La teoría conocida reaparece
+
+Para un documento con vector TF–IDF $x_i$:
+
+$$
+\widehat p_i
+=\sigma\left(\beta_0+\sum_{j=1}^{p}x_{ij}\beta_j\right).
+$$
+
+- $\beta_j>0$: el término empuja hacia “crítica”;
+- $\beta_j<0$: empuja hacia “no crítica”;
+- $\widehat p_i$: probabilidad usada para ordenar la cola.
+
+Es el mismo clasificador logístico de la clase 15; cambió la representación de $X$.
+
+## La pérdida evalúa probabilidades, no solo etiquetas
+
+$$
+\operatorname{LogLoss}
+=-\frac1n\sum_{i=1}^{n}
+\left[y_i\log(\widehat p_i)+(1-y_i)\log(1-\widehat p_i)\right].
+$$
+
+Una predicción incorrecta y segura recibe una penalización fuerte. Esto importa en priorización: dos mensajes pueden terminar en la misma clase, pero el de $\widehat p=0.92$ debe aparecer antes que el de $\widehat p=0.54$.
+
+## Texto exige regularización
+
+Hay muchas columnas, alta correlación y pocos documentos. Ajustamos LASSO:
+
+$$
+\widehat{\boldsymbol\beta}
+=\arg\min_{\boldsymbol\beta}
+\left\{-\ell(\boldsymbol\beta)+\lambda\sum_j|\beta_j|\right\}.
+$$
+
+La penalización:
+
+- reduce varianza;
+- lleva palabras poco útiles exactamente a cero;
+- produce una explicación global compacta;
+- no convierte asociaciones lingüísticas en causas.
+
+## Dos hiperparámetros, dos trabajos
+
+| Decisión | Se elige con | Objetivo |
+|---|---|---|
+| $\lambda$ | log-loss de validación | buenas probabilidades |
+| umbral $t$ | costo de validación | buena decisión operativa |
+
+Confundirlos es común. $\lambda$ controla el **modelo**; $t$ traduce una probabilidad ya estimada en una **acción**.
+
+# Aplicación completa {.inverse .center .middle}
+
+## 1 · Ajustar una trayectoria de modelos
+
+```{r fit-path, eval=FALSE}
+text_path <- glmnet(
+  x_train, y_train,
+  family = "binomial", alpha = 1,
+  lambda = lambda_grid,
+  standardize = FALSE
+)
+
+valid_prob_path <- predict(
+  text_path, newx = x_valid, type = "response"
+)
+```
+
+Una sola llamada estima 60 modelos: desde fuerte contracción hasta un vocabulario más activo.
+
+## 2 · Elegir $\lambda$ sin abrir el test
+
+```{r validation-curve, fig.height=5}
+validation_curve %>%
+  ggplot(aes(log(lambda), log_loss)) +
+  geom_line(color = course_palette[["primary"]], linewidth = 1.25) +
+  geom_point(
+    data = ~ slice_min(.x, log_loss, n = 1),
+    color = course_palette[["secondary"]], size = 3.6
+  ) +
+  labs(x = expression(log(lambda)), y = "Log-loss de validación")
+```
+
+```{r best-lambda}
+tibble(
+  lambda_elegido = best_lambda,
+  log_loss_validación = min(validation_curve$log_loss),
+  términos_activos = sum(as.matrix(coef(text_path, s = best_lambda))[-1, ] != 0)
+)
+```
+
+## 3 · Convertir probabilidades en prioridad
+
+Fijamos antes del test:
+
+$$
+\operatorname{Costo}(t)=3\,FN(t)+1\,FP(t).
+$$
+
+```{r threshold-curve, fig.height=4.8}
+threshold_curve %>%
+  ggplot(aes(threshold, cost)) +
+  geom_line(color = course_palette[["primary"]], linewidth = 1.25) +
+  geom_point(
+    data = ~ slice_min(.x, cost, n = 1),
+    color = course_palette[["secondary"]], size = 3.6
+  ) +
+  labs(x = "Umbral de prioridad", y = "Costo en validación")
+```
+
+El umbral óptimo no tiene por qué ser 0.50: depende de la prevalencia y del costo relativo de los errores.
+
+## 4 · Reajustar y abrir el test una vez
+
+```{r final-test}
+bind_rows(
+  classification_metrics(
+    y_test,
+    rep(mean(y_train), length(y_test)),
+    threshold = selected_threshold
+  ) %>% mutate(modelo = "Prevalencia histórica"),
+  classification_metrics(
+    y_test, test_prob, threshold = selected_threshold
+  ) %>% mutate(modelo = "TF–IDF + LASSO")
+) %>%
+  select(modelo, everything())
+```
+
+El baseline emite la misma probabilidad para toda reseña. El modelo de texto debe mejorar **probabilidades**, **ranking** y **costo**, no solo accuracy.
+
+## 5 · Leer la matriz de confusión
+
+```{r confusion}
+table(
+  observado = factor(if_else(y_test == 1, "crítica", "no crítica"),
+                     levels = c("no crítica", "crítica")),
+  priorizado = factor(if_else(test_pred == 1, "sí", "no"),
+                      levels = c("no", "sí"))
+)
+```
+
+- Falso negativo: una reseña crítica queda abajo en la cola.
+- Falso positivo: una reseña no crítica se revisa antes.
+
+El costo 3:1 expresa que el primer error es operacionalmente más grave.
+
+## 6 · Inspeccionar qué aprendió
+
+```{r coefficient-plot, fig.height=5.2}
+text_coef <- as.matrix(coef(text_final, s = best_lambda))[-1, 1]
+coef_table <- tibble(
+  term = names(text_coef),
+  coefficient = as.numeric(text_coef)
+) %>%
+  filter(coefficient != 0) %>%
+  bind_rows(
+    tibble(term = vocabulary, coefficient = 0)
+  ) %>%
+  group_by(term) %>%
+  summarise(coefficient = first(coefficient), .groups = "drop")
+
+coef_table %>%
+  filter(coefficient != 0) %>%
+  slice_max(abs(coefficient), n = 16) %>%
+  ggplot(aes(coefficient, reorder(term, coefficient), fill = coefficient > 0)) +
+  geom_col(show.legend = FALSE) +
+  scale_fill_manual(values = c(
+    course_palette[["primary"]], course_palette[["secondary"]]
+  )) +
+  labs(x = "Coeficiente logístico", y = NULL)
+```
+
+Los términos positivos elevan la prioridad; los negativos la reducen. Son asociaciones condicionadas al vocabulario y al período de entrenamiento, no “causas” de una mala experiencia.
+
+## 7 · Seguir una predicción de punta a punta
+
+```{r case-trace}
+case_id <- which.max(test_prob)
+tibble(
+  fecha = test$date[case_id],
+  texto = str_trunc(test$document[case_id], 115),
+  probabilidad_crítica = test_prob[case_id],
+  umbral = selected_threshold,
+  decisión = if_else(test_pred[case_id] == 1, "priorizar", "cola normal"),
+  rating_observado = test$rating[case_id]
+)
+```
+
+Ésta es la unidad de uso real: texto nuevo → vector TF–IDF → probabilidad → regla de decisión → revisión humana.
+
+## 8 · Los errores enseñan más que el promedio
+
+```{r error-examples}
+tibble(
+  texto = str_trunc(test$document, 82),
+  rating = test$rating,
+  observado = if_else(y_test == 1, "crítica", "no crítica"),
+  probabilidad = test_prob,
+  error_absoluto = abs(y_test - test_prob),
+  error = case_when(
+    y_test == 1 & test_pred == 0 ~ "falso negativo",
+    y_test == 0 & test_pred == 1 ~ "falso positivo",
+    TRUE ~ "correcta"
+  )
+) %>%
+  filter(error != "correcta") %>%
+  arrange(desc(error_absoluto)) %>%
+  select(error, rating, probabilidad, texto) %>%
+  slice_head(n = 5)
+```
+
+Preguntas para leerlos:
+
+- ¿hay negación o ironía?
+- ¿el rating contradice el texto?
+- ¿aparecen funciones nuevas de la app?
+- ¿el vocabulario de entrenamiento no conocía el término decisivo?
+
+## 9 · Medir palabras fuera de vocabulario
+
+```{r out-of-vocabulary}
+oov_rate <- function(text, vocabulary) {
+  tokens <- tokenize_documents(text)
+  mean(!tokens$token %in% vocabulary)
 }
 
-set.seed(1)
-map_chr(1:5, ~ generar_oracion())
+tibble(
+  conjunto = c("Entrenamiento", "Validación", "Test"),
+  tasa_tokens_fuera_vocabulario = scales::percent(c(
+    oov_rate(train$document, vocabulary),
+    oov_rate(valid$document, vocabulary),
+    oov_rate(test$document, vocabulary)
+  ), accuracy = 0.1)
+)
 ```
 
-En cada llamada, el modelo: (1) elige un sujeto, (2) predice un verbo condicional en ese sujeto y **muestrea** uno, (3) predice un objeto condicional en ese verbo y muestrea uno. Es exactamente el ciclo de la lámina anterior, aplicado dos veces.
+Una tasa creciente indica deriva lingüística: versiones nuevas, precios nuevos o problemas nuevos generan palabras que el modelo no puede usar.
 
-## Temperatura: controlando qué tan "arriesgada" es la generación
+# Qué falta para llegar a un LLM {.inverse .center .middle}
 
-Antes de muestrear, un LLM suele reescalar los puntajes con un parámetro de **temperatura** $T$:
+## Bag-of-words y un LLM resuelven tareas distintas
 
-$$
-\mathbb{P}(Y=j) = \frac{e^{X\beta_j / T}}{\sum_k e^{X\beta_k/T}}.
-$$
-
-- $T \to 0$: la distribución se concentra en la palabra más probable (generación "conservadora", casi determinística).
-- $T = 1$: las probabilidades originales del softmax, sin modificar.
-- $T$ grande: la distribución se aplana — todas las palabras se vuelven casi igual de probables (generación "creativa", más ruidosa).
-
-Muestrear en vez de tomar siempre el máximo —y ajustar $T$— es lo que hace que la generación de texto no sea siempre la misma oración, exactamente como en nuestro generador de arriba.
-
-# Conexión con los LLM {.inverse .center .middle}
-
-## Tabla comparativa: nuestro modelo vs. un LLM
-
-| Elemento | Nuestro modelo de juguete | Un LLM |
+| Dimensión | Clasificador de hoy | LLM moderno |
 |---|---|---|
-| Vocabulario | 12 palabras | decenas de miles de *tokens* |
-| Representación de entrada | variables dummy | *embeddings* (vectores densos aprendidos) |
-| Contexto usado | 1–2 palabras anteriores | cientos o miles de tokens anteriores |
-| Función de contexto → puntajes | combinación lineal (logit multinomial) | red profunda tipo Transformer (atención) |
-| Capa de salida | softmax sobre `objeto` | softmax sobre todo el vocabulario |
-| Función de pérdida al entrenar | log-loss / cross-entropy | log-loss / cross-entropy (la misma) |
-| Número de parámetros | decenas | miles de millones |
+| Entrada | TF–IDF disperso | tokens + embeddings |
+| Orden | se pierde | se modela con posición y atención |
+| Objetivo | crítica / no crítica | próxima unidad de texto |
+| Datos | cientos de documentos | corpus masivos |
+| Salida | una probabilidad | distribución sobre vocabulario |
+| Interpretación | coeficientes por palabra | representaciones distribuidas |
 
-## Qué comparten, y qué no
+Comparten pérdida probabilística y optimización; no comparten escala ni representación.
 
-**Comparten**: la formulación del problema (predecir el siguiente token es clasificación multinomial), la función de pérdida (cross-entropy), y el ciclo de generación (contexto → probabilidad → muestreo → repetir).
+## La próxima palabra también es categórica
 
-. . .
+Un LLM estima, en cada posición:
 
-**No comparten**: la forma de representar el contexto (dummies vs. embeddings aprendidos), la función que va de contexto a puntajes (lineal vs. Transformer con atención), y, sobre todo, la escala.
+$$
+\mathbb P(Y=j\mid X)
+=\frac{\exp(s_j)}{\sum_{k=1}^{J}\exp(s_k)},
+\qquad j=1,\dots,J.
+$$
 
-. . .
+La salida softmax es la generalización multinomial del logit. La diferencia crucial es que $X$ ya no es TF–IDF: un Transformer aprende una representación contextual donde “dock” significa algo distinto según las palabras que lo rodean.
 
-Por eso la advertencia del comienzo: esto **no es un LLM pequeño**. Es la misma pregunta estadística, resuelta con las herramientas más simples posibles, para que la pregunta —no la ingeniería— quede clara.
+## Cuándo preferir el baseline simple
 
-## Ejercicio
+Prefiera TF–IDF + logit regularizado cuando:
 
-1. Cambie las matrices `p_verbo_dado_sujeto` / `p_objeto_dado_verbo` para crear una estructura distinta y verifique que `multinom` la recupera.
-2. Ajuste un modelo `objeto ~ verbo + sujeto` (sin interacción) y compare su log-loss y número de parámetros contra `m1` y `m2`.
-3. Modifique `generar_oracion()` para que, en vez de muestrear, siempre elija la palabra más probable (`which.max`). Compare la diversidad de oraciones generadas.
-4. Implemente el reescalamiento por temperatura en `generar_oracion()` y observe qué pasa con $T=0.1$ y $T=5$.
+- el corpus es pequeño;
+- la tarea es estrecha y estable;
+- se necesita auditar términos;
+- latencia y costo importan;
+- un modelo de lenguaje no mejora test de forma clara.
+
+Use representaciones más complejas cuando el orden, el contexto y el lenguaje fuera del vocabulario sean fuentes dominantes de error.
+
+## El riesgo más importante no es técnico
+
+La etiqueta “1–2 estrellas” mezcla:
+
+- urgencia operacional;
+- enojo general;
+- precio;
+- problemas de soporte;
+- evaluación de una versión antigua.
+
+Antes de desplegar, una organización debería anotar una muestra con la variable que realmente necesita: por ejemplo, **“requiere intervención en menos de una hora”**. El modelo actual es un prototipo de priorización, no una definición automática de urgencia.
+
+## Un protocolo de despliegue mínimo
+
+1. Registrar texto, probabilidad, decisión y resultado humano.
+2. Auditar falsos negativos semanalmente.
+3. Medir costo y calibración por versión y mes.
+4. Actualizar vocabulario solo con una nueva ventana de entrenamiento.
+5. Revalidar $\lambda$ y umbral antes de reemplazar el modelo.
+6. Mantener una vía para que todo mensaje sea revisado.
+
+El modelo entra en producción con un plan de monitoreo, no solo con una métrica.
 
 ## En resumen
 
-- Predecir la siguiente palabra es un problema de clasificación multinomial — el mismo que vimos en la clase 9.
-- Softmax convierte puntajes en probabilidades sobre un vocabulario; con dos categorías, se reduce a la regresión logística binaria.
-- Más contexto mejora la predicción (menor log-loss) pero aumenta rápidamente el número de parámetros — el problema que los embeddings y los Transformers resuelven a escala.
-- Generar texto es muestrear, repetidamente, de la distribución que el modelo predice — el mismo ciclo, ya sea con un logit multinomial o con un LLM de miles de millones de parámetros.
+- Un corpus real obliga a definir procedencia, privacidad, etiqueta y deriva.
+- TF–IDF convierte documentos en una matriz dispersa sin mirar el futuro.
+- LASSO controla miles de posibles predictores y conserva auditabilidad.
+- $\lambda$ optimiza probabilidades; el umbral optimiza una decisión con costos.
+- El test temporal y el análisis de errores sostienen la afirmación predictiva.
+- Un LLM mejora la representación contextual; no elimina la necesidad de un protocolo de evaluación.
 
-## Mapa conceptual del curso
+## Cierre {.inverse .center .middle .closing}
 
-$$
-\text{probabilidad y GLM}
-\;\longrightarrow\;
-\text{logit, multinomial, Poisson}
-\;\longrightarrow\;
-\text{causalidad}
-\;\longrightarrow\;
-\text{predicción y regularización}
-\;\longrightarrow\;
-\text{árboles, redes, LLMs}.
-$$
+**Texto nuevo → probabilidad → decisión → revisión humana**
 
-En cada clase preguntamos lo mismo: ¿qué outcome predecimos o explicamos, qué distribución supone el modelo, cómo se estima, y qué podemos —y no podemos— concluir de él?
-
-## Gracias {.inverse .center .middle .closing}
-
-**Fin del curso**
+La técnica cambia; la disciplina predictiva no.
 
 Mauricio Bucca

@@ -1,0 +1,23 @@
+Capital Bikeshare app-review corpus
+
+Source:
+Apple App Store public customer-review RSS feed for app id 1233403073
+https://apps.apple.com/us/app/capital-bikeshare/id1233403073
+
+Snapshot:
+Downloaded 2026-07-29 from pages 1–10 of the US, most-recent feed.
+The resulting file contains 247 reviews dated 2017-08-13 through 2026-06-22.
+
+Privacy:
+The preparation script excludes reviewer names and profile URLs. The teaching
+snapshot retains only review id, date, star rating, app version, title, review
+text, and the derived indicator rating <= 2.
+
+Teaching use:
+The rating-derived indicator is a weak label for critical feedback. The class
+explicitly discusses the limitations of using stars as a proxy and does not
+interpret the resulting word coefficients causally.
+
+Reproduction:
+Run prepare_reviews.R against locally downloaded RSS JSON pages named
+cabi-review-page-1.json through cabi-review-page-10.json.
