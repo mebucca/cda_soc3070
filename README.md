@@ -3,7 +3,7 @@
 Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categóricos, dictado el segundo semestre 2026 a estudiantes de postgrado del Departamento de Sociología de la Universidad Católica de Chile. Para mayores detalles ver el [`[programa]`](files/syllabus_soc3070.pdf) y [`[calendario]`](#Calendario) del curso.
 
 
-![class](https://www.researchgate.net/publication/370651378/figure/fig2/AS:11431281157225126@1683732101560/sualization-of-logistic-regression-model-of-an-exemplary-subject-Both-variables.png))
+![class](https://www.researchgate.net/publication/370651378/figure/fig2/AS:11431281157225126@1683732101560/sualization-of-logistic-regression-model-of-an-exemplary-subject-Both-variables.png)
 
 
 ### Nivelación Matemática
