@@ -99,6 +99,30 @@ log_loss <- function(y, p) {
   p <- pmin(pmax(p, 1e-8), 1 - 1e-8)
   -mean(y * log(p) + (1 - y) * log(1 - p))
 }
+
+class_metrics <- function(y, p, threshold) {
+  predicted <- as.integer(p >= threshold)
+  tp <- sum(predicted == 1 & y == 1)
+  tn <- sum(predicted == 0 & y == 0)
+  fp <- sum(predicted == 1 & y == 0)
+  fn <- sum(predicted == 0 & y == 1)
+  tibble(
+    log_loss = log_loss(y, p),
+    sensitivity = tp / (tp + fn),
+    specificity = tn / (tn + fp),
+    precision = tp / (tp + fp),
+    cost_per_100 = 100 * (3 * fn + fp) / length(y)
+  )
+}
+
+choose_threshold <- function(y, p) {
+  map_dfr(seq(0.05, 0.90, by = 0.01), function(threshold) {
+    class_metrics(y, p, threshold) %>% mutate(threshold = threshold)
+  }) %>%
+    slice_min(cost_per_100, n = 1, with_ties = FALSE) %>%
+    pull(threshold)
+}
+
 rmse <- function(y, p) sqrt(mean((y - p)^2))
 mae <- function(y, p) mean(abs(y - p))
 
@@ -125,6 +149,14 @@ predict_nn_class <- function(model, x) {
 5. Comparar con baselines simples.
 
 Referencia principal: James et al. (2021), *An Introduction to Statistical Learning*, 2ª ed., capítulo 10 ([sitio oficial](https://www.statlearning.com/)).
+
+## La solicitud predictiva no cambia
+
+> **Al cierre de cada día, estimar qué horas del día siguiente tendrán demanda alta, para priorizar el rebalanceo de bicicletas.**
+
+Mantenemos la unidad horaria, el horizonte de hasta 24 horas, la partición temporal y el costo 3:1. La red recibe la misma información que los modelos anteriores; no puede ganar porque vea columnas o períodos adicionales.
+
+La pregunta de hoy es más estrecha: ¿una capa oculta aprende transformaciones suaves que mejoran las probabilidades fuera de muestra lo suficiente como para justificar mayor complejidad?
 
 ## El problema no es un juguete
 
@@ -169,7 +201,7 @@ No es una idea nueva: McCulloch y Pitts propusieron en 1943 la primera neurona a
 La red reutiliza exactamente el outcome, la partición cronológica y la matriz de diseño de la clase 16:
 
 ```{r config-data-21, eval=FALSE}
-# Preparación compartida por las clases 19-22 (ver _shared/bikeshare.R)
+# Preparación compartida por las clases 15-18 (ver _shared/bikeshare.R)
 setup       <- bikeshare_learning_setup(bikedata)
 high_demand <- setup$high_demand   # outcome: "alta demanda" = top 25% de las horas
 id_train <- setup$id_train; id_valid <- setup$id_valid; id_test <- setup$id_test
@@ -514,8 +546,12 @@ logit <- glm(
 )
 logit_valid <- predict(logit, bikedata[id_valid, ], type = "response")
 logit_test <- predict(logit, bikedata[id_test, ], type = "response")
+logit_threshold <- choose_threshold(y_valid, logit_valid)
 
-tibble(validation_log_loss = log_loss(y_valid, logit_valid))
+tibble(
+  validation_log_loss = log_loss(y_valid, logit_valid),
+  umbral_por_costo = logit_threshold
+)
 ```
 
 Una red debe superar un baseline útil, no solo el azar.
@@ -600,6 +636,8 @@ nn_grid %>%
 
 ```{r nn-stability, cache=TRUE}
 best <- nn_grid %>% slice_min(validation_loss, n = 1, with_ties = FALSE)
+nn_valid_selected <- best$probability[[1]]
+nn_threshold <- choose_threshold(y_valid, nn_valid_selected)
 stability <- map_dfr(1:3, function(run) {
   set.seed(3070 + run)
   fit <- fit_nn_class(best$size, best$decay)
@@ -648,13 +686,42 @@ tibble(size = best$size, decay = best$decay,
 classification_results <- tibble(
   modelo = c("Logit", "Red neuronal"),
   log_loss = c(log_loss(y_test, logit_test), log_loss(y_test, nn_test)),
-  accuracy = c(mean((logit_test >= 0.5) == y_test),
-               mean((nn_test >= 0.5) == y_test)),
-  sensitivity = c(mean((logit_test[y_test == 1] >= 0.5)),
-                  mean((nn_test[y_test == 1] >= 0.5)))
-)
+  umbral = c(logit_threshold, nn_threshold)
+) %>%
+  bind_cols(bind_rows(
+    class_metrics(y_test, logit_test, logit_threshold) %>%
+      select(-log_loss),
+    class_metrics(y_test, nn_test, nn_threshold) %>%
+      select(-log_loss)
+  ))
 classification_results
 ```
+
+Cada modelo conserva el umbral que minimizó costo en validación. La red se justifica solo si mejora probabilidades o decisiones en el test temporal, no por tener más parámetros.
+
+## Una predicción neuronal, de punta a punta
+
+```{r nn-case}
+case_id <- which.max(nn_test)
+tibble(
+  día = bikedata$day[id_test][case_id],
+  hora = bikedata$hour[id_test][case_id],
+  temperatura = bikedata$temp[id_test][case_id],
+  unidades_ocultas = best$size,
+  decay = best$decay,
+  probabilidad = nn_test[case_id],
+  umbral = nn_threshold,
+  acción = if_else(
+    nn_test[case_id] >= nn_threshold,
+    "priorizar",
+    "no priorizar"
+  ),
+  demanda_observada = bikedata$bikers[id_test][case_id],
+  clase_observada = if_else(y_test[case_id] == 1, "alta", "baja")
+)
+```
+
+La capa oculta cambia la representación interna; hacia afuera, la decisión sigue siendo auditable: fila → score → umbral → acción.
 
 ## Distribución de probabilidades
 
@@ -897,7 +964,8 @@ Cambiar estas condiciones confunde diferencias metodológicas con diferencias de
 2. Pruebe `size = 12` sin cambiar el test.
 3. Compare `decay = 0` y `decay = 0.1`.
 4. Grafique calibración por tipo de día.
-5. Decida si la ganancia justifica la menor interpretabilidad.
+5. Cambie el costo falso negativo:falso positivo de 3:1 a 5:1.
+6. Decida si la ganancia justifica la menor interpretabilidad.
 
 ## En resumen
 
@@ -907,15 +975,15 @@ Cambiar estas condiciones confunde diferencias metodológicas con diferencias de
 - Clasificación y regresión requieren salidas y pérdidas distintas.
 - Una red debe superar baselines simples bajo una comparación justa.
 
-## Mapa conceptual del módulo (clases 19–22)
+## Mapa conceptual del módulo (clases 16–18)
 
 Tres clases, una sola pregunta de fondo —¿cómo controlar la complejidad de un modelo sin decidirla arbitrariamente?— respondida cada vez de forma distinta:
 
 | Clase | Pregunta que resuelve | Pregunta que deja abierta |
 |---|---|---|
-| **19. Regularización** | ¿cuánta complejidad usar, dado un conjunto de predictores fijado por nosotros? | ¿y si no sabemos qué interacciones importan? |
-| **20. Árboles y ensambles** | ¿puede el modelo descubrir interacciones y no linealidades por sí solo? | ¿puede esa función ser suave, no escalonada? |
-| **21. Redes neuronales** | ¿puede aprender transformaciones suaves y no lineales, capa por capa? | (ver evaluación responsable: el costo es interpretabilidad y estabilidad) |
+| **16. Regularización** | ¿cuánta complejidad usar, dado un conjunto de predictores fijado por nosotros? | ¿y si no sabemos qué interacciones importan? |
+| **17. Árboles y ensambles** | ¿puede el modelo descubrir interacciones y no linealidades por sí solo? | ¿puede esa función ser suave, no escalonada? |
+| **18. Redes neuronales** | ¿puede aprender transformaciones suaves y no lineales, capa por capa? | (ver evaluación responsable: el costo es interpretabilidad y estabilidad) |
 
 $$
 \text{logit lineal}

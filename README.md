@@ -3,9 +3,7 @@
 Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categóricos, dictado el segundo semestre 2026 a estudiantes de postgrado del Departamento de Sociología de la Universidad Católica de Chile. Para mayores detalles ver el [`[programa]`](files/syllabus_soc3070.pdf) y [`[calendario]`](#Calendario) del curso.
 
 
-## Class of 2025
-
-![class](files/class_2025.png)
+![class](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*cWMmVESWHIfmMsOpfkONcw.png)
 
 
 ### Nivelación Matemática

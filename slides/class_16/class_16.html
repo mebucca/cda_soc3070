@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-28">
+  <meta name="dcterms.date" content="2026-07-29">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -34,7 +34,7 @@
     }
   </style>
   <link rel="stylesheet" href="class_16_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
-  <link rel="stylesheet" href="../_shared/course.css">
+  <link rel="stylesheet" href="_shared/course.css">
   <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
   <script>document.addEventListener("DOMContentLoaded", function () {
  var mathElements = document.getElementsByClassName("math");
@@ -159,7 +159,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-28</p>
+  <p class="date">2026-07-29</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -187,11 +187,48 @@ Mauricio Bucca · Sociología UC
 <h2>Un nuevo módulo, una nueva pregunta</h2>
 <p>Durante todo el curso, cada modelo (LPM, logit, Poisson) compartió un mismo supuesto: <strong>nosotros</strong> elegimos qué variables entran, qué interacciones importan, qué transformaciones usar. El modelo solo estima los coeficientes.</p>
 <div class="fragment">
-<p>Las próximas tres clases (19, 20 y 21) exploran una pregunta distinta: <strong>¿qué pasa cuando dejamos de confiar en que esa forma elegida a mano sea la correcta?</strong> ¿Puede el propio procedimiento de ajuste decidir cuánta complejidad usar — o incluso qué forma tomar?</p>
+<p>Las clases 16–18 exploran una pregunta distinta: <strong>¿qué pasa cuando dejamos de confiar en que esa forma elegida a mano sea la correcta?</strong> ¿Puede el propio procedimiento de ajuste decidir cuánta complejidad usar — o incluso qué forma tomar?</p>
 </div>
 <div class="fragment">
 <p>Referencia principal para las tres clases: James et al.&nbsp;(2021), <em>An Introduction to Statistical Learning</em>, 2ª ed., capítulos 5–6, 8 y 10 (<a href="https://www.statlearning.com/">sitio oficial</a>).</p>
 </div>
+</section>
+<section id="la-solicitud-predictiva-no-cambia" class="slide level2">
+<h2>La solicitud predictiva no cambia</h2>
+<blockquote>
+<p><strong>Al cierre de cada día, estimar qué horas del día siguiente tendrán demanda alta, para priorizar el rebalanceo de bicicletas.</strong></p>
+</blockquote>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Elemento</th>
+<th>Se mantiene desde la clase 15</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Unidad y horizonte</td>
+<td>una hora, hasta 24 horas</td>
+</tr>
+<tr class="even">
+<td>Target</td>
+<td>sobre el percentil 75 aprendido en train</td>
+</tr>
+<tr class="odd">
+<td>Información</td>
+<td>calendario, hora y pronóstico meteorológico</td>
+</tr>
+<tr class="even">
+<td>Costo</td>
+<td>falso negativo = 3; falso positivo = 1</td>
+</tr>
+<tr class="odd">
+<td>Evaluación</td>
+<td>partición temporal 60/20/20</td>
+</tr>
+</tbody>
+</table>
+<p>Hoy no cambiamos la pregunta para favorecer al método. Cambiamos solo cómo se controla una matriz de predictores amplia y correlacionada.</p>
 </section>
 <section id="el-problema-en-carne-propia" class="slide level2">
 <h2>El problema, en carne propia</h2>
@@ -291,7 +328,7 @@ Mauricio Bucca · Sociología UC
 </section>
 <section id="configuración-outcome-y-partición" class="slide level2">
 <h2>Configuración: outcome y partición</h2>
-<p>El módulo completo (clases 19–22) comparte la misma preparación de datos. Primero definimos el outcome y partimos los datos:</p>
+<p>El módulo completo (clases 15–18) comparte la misma preparación de datos. Primero definimos el outcome y partimos los datos:</p>
 </section>
 <section id="configuración-la-matriz-de-diseño" class="slide level2">
 <h2>Configuración: la matriz de diseño</h2>
@@ -736,20 +773,20 @@ P_{\alpha}(\boldsymbol\beta)=
 1     0  0.003               0.351</code></pre>
 </div>
 </div>
-<p>El umbral de clasificación se elige en validación maximizando accuracy balanceada — la misma lógica de la clase 15, ahora aplicada tras el tuning. El test no participó en ninguna de estas decisiones.</p>
+<p>El umbral se elige en validación minimizando el mismo costo de la clase 15: un falso negativo cuesta tres veces un falso positivo. El test no participó en ninguna de estas decisiones.</p>
 </section>
 <section id="interpretación-la-penalización-aporta" class="slide level2">
 <h2>Interpretación: ¿la penalización aporta?</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2 × 5
-  modelo              log_loss accuracy sensitivity specificity
-  &lt;chr&gt;                  &lt;dbl&gt;    &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;
-1 Logit sin penalizar    0.323    0.822       0.937       0.781
-2 Elastic Net            0.306    0.747       0.991       0.659</code></pre>
+<pre><code># A tibble: 2 × 7
+  modelo              log_loss accuracy sensitivity specificity precision cost_per_100
+  &lt;chr&gt;                  &lt;dbl&gt;    &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;     &lt;dbl&gt;        &lt;dbl&gt;
+1 Logit sin penalizar    0.323    0.822       0.937       0.781     0.605         21.100
+2 Ridge                  0.306    0.747       0.991       0.659     0.510         25.800</code></pre>
 </div>
 </div>
-<p>Regularizar se justifica por desempeño y estabilidad fuera de muestra — comparado explícitamente aquí contra el logit sin penalizar de las clases 9–11 — no porque el método sea más reciente.</p>
+<p>La penalización se juzga contra el logit sin penalizar bajo el mismo protocolo. Puede mejorar log-loss o estabilidad sin reducir el costo operacional; en ese caso, la solicitud predictiva —no la novedad del método— decide cuál preferir.</p>
 </section>
 <section id="interpretación-clasificación-y-calibración" class="slide level2">
 <h2>Interpretación: clasificación y calibración</h2>
@@ -763,6 +800,18 @@ observado baja alta
 </div>
 
 <img data-src="class_16_files/figure-revealjs/calibration-1.png" width="960" class="r-stretch"><p>Los falsos negativos son horas de demanda alta que el sistema no anticipó. Discriminación (matriz de confusión) y calibración (¿las probabilidades predichas se cumplen en la frecuencia correcta?) son propiedades distintas — un modelo puede discriminar bien y calibrar mal, o viceversa.</p>
+</section>
+<section id="una-predicción-regularizada-de-punta-a-punta" class="slide level2">
+<h2>Una predicción regularizada, de punta a punta</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 10
+    día  hora temperatura alpha lambda probabilidad umbral acción    demanda_observada clase_observada
+  &lt;dbl&gt; &lt;int&gt;       &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;        &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;                 &lt;dbl&gt; &lt;chr&gt;          
+1   354     8        0.420     0  0.003        0.997    0.100 priorizar               432 alta           </code></pre>
+</div>
+</div>
+<p>La regularización modifica cómo se estiman los coeficientes; la interfaz operacional sigue siendo la misma: fila futura → probabilidad → umbral → acción.</p>
 </section>
 <section id="interpretación-qué-variables-quedan" class="slide level2">
 <h2>Interpretación: ¿qué variables quedan?</h2>
@@ -850,8 +899,9 @@ observado baja alta
 <ol type="1">
 <li>Agregue una interacción entre <code>workingday</code> y <code>factor(hr)</code>.</li>
 <li>Repita el tuning sin observar el test.</li>
-<li>Compare log-loss y calibración contra el modelo de esta clase.</li>
+<li>Compare log-loss, costo y calibración contra el modelo de esta clase.</li>
 <li>Examine qué coeficientes sobreviven con LASSO.</li>
+<li>Cambie el costo falso negativo:falso positivo de 3:1 a 5:1.</li>
 <li>Explique por qué una mejora predictiva no basta para hablar de causalidad.</li>
 </ol>
 </section>

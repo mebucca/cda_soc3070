@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-28">
+  <meta name="dcterms.date" content="2026-07-29">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -32,75 +32,9 @@
       margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
       vertical-align: middle;
     }
-    /* CSS for syntax highlighting */
-    html { -webkit-text-size-adjust: 100%; }
-    pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-    pre > code.sourceCode > span:empty { height: 1.2em; }
-    .sourceCode { overflow: visible; }
-    code.sourceCode > span { color: inherit; text-decoration: inherit; }
-    div.sourceCode { margin: 1em 0; }
-    pre.sourceCode { margin: 0; }
-    @media screen {
-    div.sourceCode { overflow: auto; }
-    }
-    @media print {
-    pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-    }
-    pre.numberSource code
-      { counter-reset: source-line 0; }
-    pre.numberSource code > span
-      { position: relative; left: -4em; counter-increment: source-line; }
-    pre.numberSource code > span > a:first-child::before
-      { content: counter(source-line);
-        position: relative; left: -1em; text-align: right; vertical-align: baseline;
-        border: none; display: inline-block;
-        -webkit-touch-callout: none; -webkit-user-select: none;
-        -khtml-user-select: none; -moz-user-select: none;
-        -ms-user-select: none; user-select: none;
-        padding: 0 4px; width: 4em;
-      }
-    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-    div.sourceCode
-      { color: #24292e;  }
-    @media screen {
-    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-    }
-    code span { color: #24292e; } /* Normal */
-    code span.al { color: #ff5555; font-weight: bold; } /* Alert */
-    code span.an { color: #6a737d; } /* Annotation */
-    code span.at { color: #d73a49; } /* Attribute */
-    code span.bn { color: #005cc5; } /* BaseN */
-    code span.bu { color: #d73a49; } /* BuiltIn */
-    code span.cf { color: #d73a49; } /* ControlFlow */
-    code span.ch { color: #032f62; } /* Char */
-    code span.cn { color: #005cc5; } /* Constant */
-    code span.co { color: #6a737d; } /* Comment */
-    code span.cv { color: #6a737d; } /* CommentVar */
-    code span.do { color: #6a737d; } /* Documentation */
-    code span.dt { color: #d73a49; } /* DataType */
-    code span.dv { color: #005cc5; } /* DecVal */
-    code span.er { color: #ff5555; text-decoration: underline; } /* Error */
-    code span.ex { color: #d73a49; font-weight: bold; } /* Extension */
-    code span.fl { color: #005cc5; } /* Float */
-    code span.fu { color: #6f42c1; } /* Function */
-    code span.im { color: #032f62; } /* Import */
-    code span.in { color: #6a737d; } /* Information */
-    code span.kw { color: #d73a49; } /* Keyword */
-    code span.op { color: #24292e; } /* Operator */
-    code span.ot { color: #6f42c1; } /* Other */
-    code span.pp { color: #d73a49; } /* Preprocessor */
-    code span.re { color: #6a737d; } /* RegionMarker */
-    code span.sc { color: #005cc5; } /* SpecialChar */
-    code span.ss { color: #032f62; } /* SpecialString */
-    code span.st { color: #032f62; } /* String */
-    code span.va { color: #e36209; } /* Variable */
-    code span.vs { color: #032f62; } /* VerbatimString */
-    code span.wa { color: #ff5555; } /* Warning */
   </style>
   <link rel="stylesheet" href="class_19_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
-  <link rel="stylesheet" href="../_shared/course.css">
+  <link rel="stylesheet" href="_shared/course.css">
   <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
   <script>document.addEventListener("DOMContentLoaded", function () {
  var mathElements = document.getElementsByClassName("math");
@@ -215,7 +149,7 @@
 
 <section id="title-slide" data-background-color="#034694" class="quarto-title-block center">
   <h1 class="title">Análisis de Datos Categóricos (SOC3070)</h1>
-  <p class="subtitle">Un “Flavor” de LLMs (usando Regresión Logística)</p>
+  <p class="subtitle">Clasificación de Texto: de Bag-of-Words a los LLM</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -225,459 +159,523 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-28</p>
+  <p class="date">2026-07-29</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
 <div class="full-width">
 <div class="content-box">
 <p><strong>Antes</strong></p>
-<p>redes neuronales para clasificación y regresión.</p>
+<p>modelos flexibles para predecir demanda con datos tabulares.</p>
 </div>
 <div class="content-box-primary">
 <p><strong>Hoy</strong></p>
-<p>un “flavor” de LLMs, usando regresión logística.</p>
+<p>convertir texto real de usuarios en una predicción operativa auditable.</p>
 </div>
 <div class="content-box-secondary">
 <p><strong>Después</strong></p>
-<p>cierre del curso.</p>
+<p>cierre: qué técnica usar, qué evidencia reportar y qué límites reconocer.</p>
 </div>
 </div>
 </section>
 <section>
-<section id="un-flavor-de-llms" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
-<h1>Un “flavor” de LLMs</h1>
+<section id="texto-como-problema-predictivo" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
+<h1>Texto como problema predictivo</h1>
 
 </section>
-<section id="una-advertencia-antes-de-empezar" class="slide level2">
-<h2>Una advertencia antes de empezar</h2>
-<p>Lo que vamos a construir hoy <strong>no es un LLM pequeño</strong>. Es un modelo estadístico bien conocido —regresión logística multinomial, de la clase 9— aplicado a texto.</p>
-<div class="fragment">
-<p>Lo que sí es cierto, y es la razón de esta clase: <strong>un LLM moderno resuelve, en su capa final, exactamente el mismo problema de clasificación multinomial que ya sabemos resolver.</strong> La diferencia es la escala y cómo se construyen los predictores — no la formulación estadística del problema.</p>
-</div>
-</section>
-<section id="ruta-de-la-clase" class="slide level2">
-<h2>Ruta de la clase</h2>
-<ol type="1">
-<li>El lenguaje como variable categórica.</li>
-<li>Un caso simple: predicción binaria.</li>
-<li>El caso general: predicción multinomial.</li>
-<li>Cómo representar el contexto.</li>
-<li>Ajustar el modelo e interpretar sus probabilidades.</li>
-<li>Generación secuencial de texto.</li>
-<li>Qué le falta a esto para ser un LLM de verdad.</li>
-</ol>
-</section></section>
-<section>
-<section id="el-lenguaje-como-variable-categórica" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
-<h1>El lenguaje como variable categórica</h1>
-
-</section>
-<section id="qué-hace-en-el-fondo-un-llm" class="slide level2">
-<h2>Qué hace, en el fondo, un LLM</h2>
-<p>Cuando un modelo de lenguaje “escribe”, en cada paso hace exactamente una cosa: dado el texto visto hasta ahora, <strong>predice cuál es la siguiente palabra</strong>, entre todas las palabras posibles de su vocabulario.</p>
-<div class="fragment">
-<p>Eso es, formalmente, un problema que ya conocemos:</p>
-<p><span class="math display">
-\mathbb{P}(Y = j \mid X) = \text{softmax}(X\beta)_j, \qquad j = 1, \dots, J
-</span></p>
-<p>donde <span class="math inline">Y</span> es la próxima palabra (una categoría entre <span class="math inline">J</span> posibles) y <span class="math inline">X</span> es alguna representación de las palabras anteriores. <strong>Esta es exactamente la regresión logística multinomial de la clase 9.</strong></p>
-</div>
-</section>
-<section id="nuestro-corpus-de-juguete" class="slide level2">
-<h2>Nuestro corpus de juguete</h2>
-<p>Vamos a trabajar con oraciones de la forma “el SUJETO VERBO los OBJETO”, generadas a partir de un vocabulario pequeño:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href=""></a><span class="fu">set.seed</span>(<span class="dv">3070</span>)</span>
-<span id="cb1-2"><a href=""></a></span>
-<span id="cb1-3"><a href=""></a>sujetos <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"estudiante"</span>, <span class="st">"investigador"</span>, <span class="st">"modelo"</span>, <span class="st">"algoritmo"</span>)</span>
-<span id="cb1-4"><a href=""></a>verbos  <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"analiza"</span>, <span class="st">"estima"</span>, <span class="st">"predice"</span>, <span class="st">"explica"</span>)</span>
-<span id="cb1-5"><a href=""></a>objetos <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"datos"</span>, <span class="st">"resultados"</span>, <span class="st">"modelos"</span>, <span class="st">"problemas"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<ul>
-<li>Vocabulario total: <span class="math inline">4+4+4=12</span> palabras de contenido (más “el”/“los”).</li>
-<li>No es un corpus real: lo construimos con una estructura conocida, para poder verificar que el modelo efectivamente la aprende.</li>
-</ul>
-</section>
-<section id="construyendo-el-corpus" class="slide level2">
-<h2>Construyendo el corpus</h2>
-<p>Para que el ejercicio tenga sentido, el sujeto influye en qué verbo es más probable, y el verbo influye en qué objeto es más probable — igual que en el lenguaje real, donde el contexto restringe (sin determinar) la palabra que sigue.</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href=""></a>p_verbo_dado_sujeto <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(</span>
-<span id="cb2-2"><a href=""></a>  .<span class="dv">50</span>, .<span class="dv">20</span>, .<span class="dv">20</span>, .<span class="dv">10</span>,   <span class="co"># estudiante</span></span>
-<span id="cb2-3"><a href=""></a>  .<span class="dv">20</span>, .<span class="dv">50</span>, .<span class="dv">10</span>, .<span class="dv">20</span>,   <span class="co"># investigador</span></span>
-<span id="cb2-4"><a href=""></a>  .<span class="dv">10</span>, .<span class="dv">10</span>, .<span class="dv">60</span>, .<span class="dv">20</span>,   <span class="co"># modelo</span></span>
-<span id="cb2-5"><a href=""></a>  .<span class="dv">10</span>, .<span class="dv">10</span>, .<span class="dv">20</span>, .<span class="dv">60</span>    <span class="co"># algoritmo</span></span>
-<span id="cb2-6"><a href=""></a>), <span class="at">nrow =</span> <span class="dv">4</span>, <span class="at">byrow =</span> <span class="cn">TRUE</span>, <span class="at">dimnames =</span> <span class="fu">list</span>(sujetos, verbos))</span>
-<span id="cb2-7"><a href=""></a></span>
-<span id="cb2-8"><a href=""></a>p_objeto_dado_verbo <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(</span>
-<span id="cb2-9"><a href=""></a>  .<span class="dv">60</span>, .<span class="dv">20</span>, .<span class="dv">10</span>, .<span class="dv">10</span>,   <span class="co"># analiza</span></span>
-<span id="cb2-10"><a href=""></a>  .<span class="dv">20</span>, .<span class="dv">20</span>, .<span class="dv">50</span>, .<span class="dv">10</span>,   <span class="co"># estima</span></span>
-<span id="cb2-11"><a href=""></a>  .<span class="dv">10</span>, .<span class="dv">60</span>, .<span class="dv">10</span>, .<span class="dv">20</span>,   <span class="co"># predice</span></span>
-<span id="cb2-12"><a href=""></a>  .<span class="dv">10</span>, .<span class="dv">10</span>, .<span class="dv">20</span>, .<span class="dv">60</span>    <span class="co"># explica</span></span>
-<span id="cb2-13"><a href=""></a>), <span class="at">nrow =</span> <span class="dv">4</span>, <span class="at">byrow =</span> <span class="cn">TRUE</span>, <span class="at">dimnames =</span> <span class="fu">list</span>(verbos, objetos))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</section>
-<section id="generando-300-oraciones" class="slide level2">
-<h2>Generando 300 oraciones</h2>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href=""></a>n_oraciones <span class="ot">&lt;-</span> <span class="dv">300</span></span>
-<span id="cb3-2"><a href=""></a>corpus <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">id =</span> <span class="dv">1</span><span class="sc">:</span>n_oraciones) <span class="sc">%&gt;%</span></span>
-<span id="cb3-3"><a href=""></a>  <span class="fu">mutate</span>(</span>
-<span id="cb3-4"><a href=""></a>    <span class="at">sujeto  =</span> <span class="fu">sample</span>(sujetos, <span class="fu">n</span>(), <span class="at">replace =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb3-5"><a href=""></a>    <span class="at">verbo   =</span> <span class="fu">map_chr</span>(sujeto, <span class="sc">~</span> <span class="fu">sample</span>(verbos, <span class="dv">1</span>, <span class="at">prob =</span> p_verbo_dado_sujeto[.x, ])),</span>
-<span id="cb3-6"><a href=""></a>    <span class="at">objeto  =</span> <span class="fu">map_chr</span>(verbo,  <span class="sc">~</span> <span class="fu">sample</span>(objetos, <span class="dv">1</span>, <span class="at">prob =</span> p_objeto_dado_verbo[.x, ])),</span>
-<span id="cb3-7"><a href=""></a>    <span class="at">oracion =</span> <span class="fu">paste</span>(<span class="st">"el"</span>, sujeto, verbo, <span class="st">"los"</span>, objeto)</span>
-<span id="cb3-8"><a href=""></a>  )</span>
-<span id="cb3-9"><a href=""></a></span>
-<span id="cb3-10"><a href=""></a>corpus <span class="sc">%&gt;%</span> <span class="fu">select</span>(sujeto, verbo, objeto, oracion) <span class="sc">%&gt;%</span> <span class="fu">head</span>(<span class="dv">6</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 6 × 4
-  sujeto       verbo   objeto     oracion                              
-  &lt;chr&gt;        &lt;chr&gt;   &lt;chr&gt;      &lt;chr&gt;                                
-1 modelo       predice problemas  el modelo predice los problemas      
-2 investigador estima  modelos    el investigador estima los modelos   
-3 algoritmo    explica datos      el algoritmo explica los datos       
-4 investigador estima  modelos    el investigador estima los modelos   
-5 algoritmo    explica datos      el algoritmo explica los datos       
-6 investigador estima  resultados el investigador estima los resultados</code></pre>
-</div>
-</div>
-<p>Cada fila es una “oración”. <code>sujeto</code>, <code>verbo</code> y <code>objeto</code> son las palabras de contenido; <code>oracion</code> es el texto completo.</p>
-</section></section>
-<section>
-<section id="predicción-binaria" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
-<h1>Predicción binaria</h1>
-
-</section>
-<section id="el-caso-más-simple-la-próxima-palabra-es-datos" class="slide level2">
-<h2>El caso más simple: ¿la próxima palabra es “datos”?</h2>
-<p>Antes del caso general, empecemos con una pregunta binaria: dado el verbo, <strong>¿el objeto va a ser “datos” o no?</strong></p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href=""></a>corpus <span class="ot">&lt;-</span> corpus <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">es_datos =</span> <span class="fu">as.integer</span>(objeto <span class="sc">==</span> <span class="st">"datos"</span>))</span>
-<span id="cb5-2"><a href=""></a></span>
-<span id="cb5-3"><a href=""></a>m_bin <span class="ot">&lt;-</span> <span class="fu">glm</span>(es_datos <span class="sc">~</span> verbo, <span class="at">data =</span> corpus, <span class="at">family =</span> binomial)</span>
-<span id="cb5-4"><a href=""></a><span class="fu">summary</span>(m_bin)<span class="sc">$</span>coefficients</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>             Estimate Std. Error z value     Pr(&gt;|z|)
-(Intercept)    0.395     0.232   1.698 0.089
-verboestima   -1.781     0.379  -4.705 0.000
-verboexplica  -1.850     0.377  -4.908 0.000
-verbopredice  -2.216     0.400  -5.547 0.000</code></pre>
-</div>
-</div>
-<ul>
-<li>Esto es exactamente un <code>glm(family=binomial)</code>, como en la clase 6 — solo que el predictor es una palabra (categórica) y no una variable numérica como <code>temp</code>.</li>
-<li>El coeficiente de <code>verboanaliza</code> (ausente = categoría de referencia) es más alto que el resto, reflejando que <code>analiza</code> predice “datos” con más frecuencia — así lo construimos en <code>p_objeto_dado_verbo</code>.</li>
-</ul>
-</section>
-<section id="de-binario-a-multinomial" class="slide level2">
-<h2>De binario a multinomial</h2>
-<p>Reducir “cuál es la próxima palabra” a una sola pregunta binaria descarta información: en un vocabulario de <span class="math inline">J</span> palabras hay <span class="math inline">J</span> posibles respuestas, no 2.</p>
-<div class="fragment">
-<p>La generalización natural —y la que de verdad se usa— es la regresión logística <strong>multinomial</strong>, que ya vimos en la clase 9:</p>
-<p><span class="math display">
-\mathbb{P}(Y=j \mid X) = \frac{e^{X\beta_j}}{\sum_{k=1}^{J} e^{X\beta_k}}, \qquad j=1,\dots,J.
-</span></p>
-<p>Esta fórmula —<strong>softmax</strong>— es, literalmente, la capa final de un LLM: convierte <span class="math inline">J</span> puntajes reales en una distribución de probabilidad sobre el vocabulario.</p>
-</div>
-</section></section>
-<section>
-<section id="predicción-multinomial" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
-<h1>Predicción multinomial</h1>
-
-</section>
-<section id="el-softmax-término-a-término" class="slide level2">
-<h2>El softmax, término a término</h2>
+<section id="la-solicitud-predictiva" class="slide level2">
+<h2>La solicitud predictiva</h2>
+<blockquote>
+<p><strong>Priorizar, al momento de llegada, mensajes de usuarios que probablemente describen una experiencia crítica, usando solo el título y el texto.</strong></p>
+</blockquote>
 <table class="caption-top">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Símbolo</th>
-<th>Significado</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><span class="math inline">J</span></td>
-<td>tamaño del vocabulario (número de palabras posibles)</td>
-</tr>
-<tr class="even">
-<td><span class="math inline">X\beta_j</span></td>
-<td>puntaje (logit) de la palabra <span class="math inline">j</span>, dado el contexto <span class="math inline">X</span></td>
-</tr>
-<tr class="odd">
-<td><span class="math inline">e^{X\beta_j}</span></td>
-<td>ese puntaje, convertido a un número positivo</td>
-</tr>
-<tr class="even">
-<td><span class="math inline">\sum_k e^{X\beta_k}</span></td>
-<td>normalización: hace que las <span class="math inline">J</span> probabilidades sumen 1</td>
-</tr>
-</tbody>
-</table>
-<p>Con <span class="math inline">J=2</span>, el softmax se reduce exactamente a la sigmoide de la regresión logística binaria — el mismo resultado que vimos en la clase 9 para el caso multinomial en general.</p>
-</section>
-<section id="ajustemos-el-modelo-multinomial" class="slide level2">
-<h2>Ajustemos el modelo multinomial</h2>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href=""></a>m_objeto <span class="ot">&lt;-</span> <span class="fu">multinom</span>(objeto <span class="sc">~</span> verbo, <span class="at">data =</span> corpus, <span class="at">trace =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb7-2"><a href=""></a></span>
-<span id="cb7-3"><a href=""></a><span class="fu">predict</span>(m_objeto, <span class="at">newdata =</span> <span class="fu">tibble</span>(<span class="at">verbo =</span> <span class="st">"predice"</span>), <span class="at">type =</span> <span class="st">"probs"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>     datos    modelos  problemas resultados 
-    0.139     0.101     0.228     0.532 </code></pre>
-</div>
-</div>
-<p>Dado el verbo “predice”, el modelo asigna la mayor probabilidad a “resultados” — exactamente el patrón que construimos en <code>p_objeto_dado_verbo</code>. El modelo <strong>aprendió la estructura del corpus a partir de los datos</strong>, sin que se la diéramos explícitamente.</p>
-</section></section>
-<section>
-<section id="representación-del-contexto" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
-<h1>Representación del contexto</h1>
-
-</section>
-<section id="qué-es-el-contexto-en-términos-de-x" class="slide level2">
-<h2>¿Qué es “el contexto”, en términos de <span class="math inline">X</span>?</h2>
-<p>Para que el softmax funcione necesitamos convertir palabras en números. La forma más simple: variables <strong>dummy</strong>, una por cada palabra posible del contexto — exactamente como codificamos <code>factor(weathersit)</code> en clases anteriores.</p>
-<div class="fragment">
-<p>Un LLM real reemplaza estas dummies por <strong>embeddings</strong>: vectores densos aprendidos que representan cada palabra. La lógica de “convertir una palabra en un vector de números” es la misma; lo que cambia es qué tan compacta y aprendida es esa representación.</p>
-</div>
-</section>
-<section id="tres-formas-de-representar-el-contexto" class="slide level2">
-<h2>Tres formas de representar el contexto</h2>
-<p>Comparemos tres representaciones, todas prediciendo el <code>objeto</code>:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href=""></a>m0 <span class="ot">&lt;-</span> <span class="fu">multinom</span>(objeto <span class="sc">~</span> <span class="dv">1</span>, <span class="at">data =</span> corpus, <span class="at">trace =</span> <span class="cn">FALSE</span>)                <span class="co"># sin contexto</span></span>
-<span id="cb9-2"><a href=""></a>m1 <span class="ot">&lt;-</span> <span class="fu">multinom</span>(objeto <span class="sc">~</span> verbo, <span class="at">data =</span> corpus, <span class="at">trace =</span> <span class="cn">FALSE</span>)            <span class="co"># 1 palabra de contexto</span></span>
-<span id="cb9-3"><a href=""></a>m2 <span class="ot">&lt;-</span> <span class="fu">multinom</span>(objeto <span class="sc">~</span> verbo <span class="sc">*</span> sujeto, <span class="at">data =</span> corpus, <span class="at">trace =</span> <span class="cn">FALSE</span>)   <span class="co"># 2 palabras de contexto</span></span>
-<span id="cb9-4"><a href=""></a></span>
-<span id="cb9-5"><a href=""></a>log_loss_multinom <span class="ot">&lt;-</span> <span class="cf">function</span>(modelo, data, target) {</span>
-<span id="cb9-6"><a href=""></a>  probs <span class="ot">&lt;-</span> <span class="fu">predict</span>(modelo, <span class="at">newdata =</span> data, <span class="at">type =</span> <span class="st">"probs"</span>)</span>
-<span id="cb9-7"><a href=""></a>  y <span class="ot">&lt;-</span> data[[target]]</span>
-<span id="cb9-8"><a href=""></a>  idx <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="fu">seq_along</span>(y), <span class="fu">match</span>(y, <span class="fu">colnames</span>(probs)))</span>
-<span id="cb9-9"><a href=""></a>  <span class="sc">-</span><span class="fu">mean</span>(<span class="fu">log</span>(<span class="fu">pmax</span>(probs[idx], <span class="fl">1e-8</span>)))</span>
-<span id="cb9-10"><a href=""></a>}</span>
-<span id="cb9-11"><a href=""></a></span>
-<span id="cb9-12"><a href=""></a><span class="fu">tibble</span>(</span>
-<span id="cb9-13"><a href=""></a>  <span class="at">modelo =</span> <span class="fu">c</span>(<span class="st">"Sin contexto"</span>, <span class="st">"1 palabra (verbo)"</span>, <span class="st">"2 palabras (verbo + sujeto)"</span>),</span>
-<span id="cb9-14"><a href=""></a>  <span class="at">log_loss =</span> <span class="fu">c</span>(</span>
-<span id="cb9-15"><a href=""></a>    <span class="fu">log_loss_multinom</span>(m0, corpus, <span class="st">"objeto"</span>),</span>
-<span id="cb9-16"><a href=""></a>    <span class="fu">log_loss_multinom</span>(m1, corpus, <span class="st">"objeto"</span>),</span>
-<span id="cb9-17"><a href=""></a>    <span class="fu">log_loss_multinom</span>(m2, corpus, <span class="st">"objeto"</span>)</span>
-<span id="cb9-18"><a href=""></a>  ),</span>
-<span id="cb9-19"><a href=""></a>  parámetros <span class="ot">=</span> <span class="fu">c</span>(<span class="fu">length</span>(<span class="fu">coef</span>(m0)), <span class="fu">length</span>(<span class="fu">coef</span>(m1)), <span class="fu">length</span>(<span class="fu">coef</span>(m2)))</span>
-<span id="cb9-20"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 3 × 3
-  modelo                      log_loss parámetros
-  &lt;chr&gt;                          &lt;dbl&gt;      &lt;int&gt;
-1 Sin contexto                    1.380          3
-2 1 palabra (verbo)               1.120         12
-3 2 palabras (verbo + sujeto)     1.060         48</code></pre>
-</div>
-</div>
-</section>
-<section id="leer-esta-tabla" class="slide level2">
-<h2>Leer esta tabla</h2>
-<ul>
-<li>El log-loss —la misma métrica de la clase 3 y la clase 15— <strong>baja</strong> a medida que agregamos contexto: más contexto, mejor predicción.</li>
-<li>El número de parámetros <strong>sube</strong> rápido: de 3, a 12, a 48. Con dos palabras de contexto ya necesitamos una interacción completa <code>verbo × sujeto</code>.</li>
-<li>En un LLM real el contexto son cientos o miles de palabras anteriores. Modelar eso con dummies e interacciones completas —como acabamos de hacer— es completamente inviable: el número de parámetros explota. Los embeddings y la arquitectura Transformer existen, en gran medida, para resolver este mismo problema de forma escalable.</li>
-</ul>
-</section></section>
-<section>
-<section id="ajuste-e-interpretación" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
-<h1>Ajuste e interpretación</h1>
-
-</section>
-<section id="interpretando-el-modelo-elegido" class="slide level2">
-<h2>Interpretando el modelo elegido</h2>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href=""></a><span class="fu">predict</span>(m1, <span class="at">newdata =</span> <span class="fu">tibble</span>(<span class="at">verbo =</span> verbos), <span class="at">type =</span> <span class="st">"probs"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb11-2"><a href=""></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb11-3"><a href=""></a>  <span class="fu">mutate</span>(<span class="at">verbo =</span> verbos, <span class="at">.before =</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 4 × 5
-  verbo   datos modelos problemas resultados
-  &lt;chr&gt;   &lt;dbl&gt;   &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;
-1 analiza 0.597  0.091    0.078     0.234 
-2 estima  0.200  0.543     0.057     0.200 
-3 predice 0.139  0.101     0.228      0.532 
-4 explica 0.189  0.189     0.568      0.054</code></pre>
-</div>
-</div>
-<p>Cada fila es una distribución de probabilidad completa sobre el vocabulario de objetos, condicional en el verbo — exactamente lo que un LLM produce en cada paso, solo que aquí el “contexto” es una sola palabra categórica en vez de cientos de tokens representados con embeddings.</p>
-</section>
-<section id="esto-ya-es-entrenar-un-modelo-de-lenguaje" class="slide level2">
-<h2>Esto ya es “entrenar un modelo de lenguaje”</h2>
-<ul>
-<li><strong>Estimar</strong> <code>m1</code> (vía <code>multinom</code>, que maximiza verosimilitud) es, conceptualmente, lo mismo que “entrenar” una red que predice el siguiente token: ambos minimizan cross-entropy / log-loss (clase 3) sobre ejemplos de contexto → palabra siguiente.</li>
-<li>La diferencia no es el objetivo de entrenamiento — es <strong>la familia de funciones</strong> que se usa para pasar del contexto a los puntajes <span class="math inline">X\beta_j</span>: aquí, una combinación lineal de dummies; en un LLM, muchas capas de una red neuronal (clase 18) operando sobre embeddings.</li>
-</ul>
-</section></section>
-<section>
-<section id="generación-secuencial" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
-<h1>Generación secuencial</h1>
-
-</section>
-<section id="el-ciclo-de-generación" class="slide level2">
-<h2>El ciclo de generación</h2>
-<p>Generar texto, token a token, es un ciclo de cuatro pasos que se repite:</p>
-<ol type="1">
-<li>Tomar el contexto actual.</li>
-<li>Calcular la distribución de probabilidad sobre la siguiente palabra (softmax).</li>
-<li><strong>Muestrear</strong> una palabra de esa distribución (no necesariamente la más probable).</li>
-<li>Agregar la palabra elegida al contexto, y volver a 1.</li>
-</ol>
-</section>
-<section id="generando-oraciones-con-nuestro-modelo" class="slide level2">
-<h2>Generando oraciones con nuestro modelo</h2>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href=""></a>m_verbo <span class="ot">&lt;-</span> <span class="fu">multinom</span>(verbo <span class="sc">~</span> sujeto, <span class="at">data =</span> corpus, <span class="at">trace =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href=""></a>generar_oracion <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
-<span id="cb14-2"><a href=""></a>  sujeto <span class="ot">&lt;-</span> <span class="fu">sample</span>(sujetos, <span class="dv">1</span>)</span>
-<span id="cb14-3"><a href=""></a></span>
-<span id="cb14-4"><a href=""></a>  p_verbo <span class="ot">&lt;-</span> <span class="fu">predict</span>(m_verbo, <span class="at">newdata =</span> <span class="fu">tibble</span>(<span class="at">sujeto =</span> sujeto), <span class="at">type =</span> <span class="st">"probs"</span>)</span>
-<span id="cb14-5"><a href=""></a>  verbo <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">names</span>(p_verbo), <span class="dv">1</span>, <span class="at">prob =</span> p_verbo)</span>
-<span id="cb14-6"><a href=""></a></span>
-<span id="cb14-7"><a href=""></a>  p_objeto <span class="ot">&lt;-</span> <span class="fu">predict</span>(m1, <span class="at">newdata =</span> <span class="fu">tibble</span>(<span class="at">verbo =</span> verbo), <span class="at">type =</span> <span class="st">"probs"</span>)</span>
-<span id="cb14-8"><a href=""></a>  objeto <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">names</span>(p_objeto), <span class="dv">1</span>, <span class="at">prob =</span> p_objeto)</span>
-<span id="cb14-9"><a href=""></a></span>
-<span id="cb14-10"><a href=""></a>  <span class="fu">paste</span>(<span class="st">"el"</span>, sujeto, verbo, <span class="st">"los"</span>, objeto)</span>
-<span id="cb14-11"><a href=""></a>}</span>
-<span id="cb14-12"><a href=""></a></span>
-<span id="cb14-13"><a href=""></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
-<span id="cb14-14"><a href=""></a><span class="fu">map_chr</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="sc">~</span> <span class="fu">generar_oracion</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] "el estudiante analiza los datos"      "el estudiante analiza los modelos"    "el modelo explica los modelos"       
-[4] "el investigador estima los modelos"   "el estudiante analiza los resultados"</code></pre>
-</div>
-</div>
-<p>En cada llamada, el modelo: (1) elige un sujeto, (2) predice un verbo condicional en ese sujeto y <strong>muestrea</strong> uno, (3) predice un objeto condicional en ese verbo y muestrea uno. Es exactamente el ciclo de la lámina anterior, aplicado dos veces.</p>
-</section>
-<section id="temperatura-controlando-qué-tan-arriesgada-es-la-generación" class="slide level2">
-<h2>Temperatura: controlando qué tan “arriesgada” es la generación</h2>
-<p>Antes de muestrear, un LLM suele reescalar los puntajes con un parámetro de <strong>temperatura</strong> <span class="math inline">T</span>:</p>
-<p><span class="math display">
-\mathbb{P}(Y=j) = \frac{e^{X\beta_j / T}}{\sum_k e^{X\beta_k/T}}.
-</span></p>
-<ul>
-<li><span class="math inline">T \to 0</span>: la distribución se concentra en la palabra más probable (generación “conservadora”, casi determinística).</li>
-<li><span class="math inline">T = 1</span>: las probabilidades originales del softmax, sin modificar.</li>
-<li><span class="math inline">T</span> grande: la distribución se aplana — todas las palabras se vuelven casi igual de probables (generación “creativa”, más ruidosa).</li>
-</ul>
-<p>Muestrear en vez de tomar siempre el máximo —y ajustar <span class="math inline">T</span>— es lo que hace que la generación de texto no sea siempre la misma oración, exactamente como en nuestro generador de arriba.</p>
-</section></section>
-<section>
-<section id="conexión-con-los-llm" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
-<h1>Conexión con los LLM</h1>
-
-</section>
-<section id="tabla-comparativa-nuestro-modelo-vs.-un-llm" class="slide level2">
-<h2>Tabla comparativa: nuestro modelo vs.&nbsp;un LLM</h2>
-<table class="caption-top">
-<colgroup>
-<col style="width: 33%">
-<col style="width: 33%">
-<col style="width: 33%">
-</colgroup>
 <thead>
 <tr class="header">
 <th>Elemento</th>
-<th>Nuestro modelo de juguete</th>
-<th>Un LLM</th>
+<th>Decisión de diseño</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Vocabulario</td>
-<td>12 palabras</td>
-<td>decenas de miles de <em>tokens</em></td>
+<td>Unidad</td>
+<td>una reseña o mensaje</td>
 </tr>
 <tr class="even">
-<td>Representación de entrada</td>
-<td>variables dummy</td>
-<td><em>embeddings</em> (vectores densos aprendidos)</td>
+<td>Outcome histórico</td>
+<td>1 si la reseña recibió 1–2 estrellas</td>
 </tr>
 <tr class="odd">
-<td>Contexto usado</td>
-<td>1–2 palabras anteriores</td>
-<td>cientos o miles de tokens anteriores</td>
+<td>Predictores</td>
+<td>palabras del título y cuerpo</td>
 </tr>
 <tr class="even">
-<td>Función de contexto → puntajes</td>
-<td>combinación lineal (logit multinomial)</td>
-<td>red profunda tipo Transformer (atención)</td>
+<td>Horizonte</td>
+<td>clasificación inmediata</td>
 </tr>
 <tr class="odd">
-<td>Capa de salida</td>
-<td>softmax sobre <code>objeto</code></td>
-<td>softmax sobre todo el vocabulario</td>
+<td>Uso</td>
+<td>ordenar una cola de revisión humana</td>
 </tr>
 <tr class="even">
-<td>Función de pérdida al entrenar</td>
-<td>log-loss / cross-entropy</td>
-<td>log-loss / cross-entropy (la misma)</td>
-</tr>
-<tr class="odd">
-<td>Número de parámetros</td>
-<td>decenas</td>
-<td>miles de millones</td>
+<td>Costo</td>
+<td>omitir un mensaje crítico cuesta 3× revisar uno no crítico</td>
 </tr>
 </tbody>
 </table>
+<p>El modelo <strong>prioriza</strong>; no elimina la revisión humana ni responde automáticamente.</p>
 </section>
-<section id="qué-comparten-y-qué-no" class="slide level2">
-<h2>Qué comparten, y qué no</h2>
-<p><strong>Comparten</strong>: la formulación del problema (predecir el siguiente token es clasificación multinomial), la función de pérdida (cross-entropy), y el ciclo de generación (contexto → probabilidad → muestreo → repetir).</p>
+<section id="por-qué-este-problema-sí-es-real" class="slide level2">
+<h2>Por qué este problema sí es real</h2>
+<p>Capital Bikeshare recibe texto libre sobre cobros, desbloqueo, estaciones, bicicletas y soporte. La tarea no es “generar una oración bonita”: es transformar ese texto en una señal útil para una decisión concreta.</p>
 <div class="fragment">
-<p><strong>No comparten</strong>: la forma de representar el contexto (dummies vs.&nbsp;embeddings aprendidos), la función que va de contexto a puntajes (lineal vs.&nbsp;Transformer con atención), y, sobre todo, la escala.</p>
+<p>Las estrellas funcionan aquí como <strong>etiqueta débil</strong>: permiten aprender con historial ya disponible. El caso de uso relevante es aplicar el clasificador a canales sin rating estructurado —por ejemplo, formularios abiertos— y priorizar lectura.</p>
 </div>
 <div class="fragment">
-<p>Por eso la advertencia del comienzo: esto <strong>no es un LLM pequeño</strong>. Es la misma pregunta estadística, resuelta con las herramientas más simples posibles, para que la pregunta —no la ingeniería— quede clara.</p>
+<p>Una etiqueta débil reduce costo de anotación, pero no equivale a “urgencia verdadera”. Esa diferencia será parte de la evaluación.</p>
 </div>
 </section>
-<section id="ejercicio" class="slide level2">
-<h2>Ejercicio</h2>
+<section id="el-corpus-reseñas-reales-de-capital-bikeshare" class="slide level2">
+<h2>El corpus: reseñas reales de Capital Bikeshare</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 5
+  documentos desde      hasta      porcentaje_crítico mediana_palabras
+       &lt;int&gt; &lt;date&gt;     &lt;date&gt;     &lt;chr&gt;                         &lt;dbl&gt;
+1        246 2017-08-13 2026-06-22 54.500%                            37</code></pre>
+</div>
+</div>
+<p>El corpus es una instantánea desidentificada de reseñas públicas de la app: conserva fecha, estrellas, versión, título y texto; excluye nombres y perfiles.</p>
+<div class="footnote">
+<p>Fuente y descripción de la app: <a href="https://apps.apple.com/us/app/capital-bikeshare/id1233403073">Capital Bikeshare en Apple App Store</a>. Instantánea descargada el 29-07-2026; detalles en <code>data/SOURCE.txt</code>.</p>
+</div>
+</section>
+<section id="antes-de-modelar-leer-el-outcome" class="slide level2">
+<h2>Antes de modelar: leer el outcome</h2>
+
+<img data-src="class_19_files/figure-revealjs/rating-distribution-1.png" width="960" class="r-stretch"><p>Definimos “crítica” como 1–2 estrellas. No porque toda reseña de 2 estrellas sea urgente, sino porque necesitamos una regla histórica reproducible para construir el ejercicio predictivo.</p>
+</section>
+<section id="la-partición-respeta-el-tiempo" class="slide level2">
+<h2>La partición respeta el tiempo</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 5
+  conjunto      documentos desde      hasta      proporción_crítica
+  &lt;chr&gt;              &lt;int&gt; &lt;date&gt;     &lt;date&gt;     &lt;chr&gt;             
+1 Entrenamiento        147 2017-08-13 2021-09-27 36.100%             
+2 Validación            49 2021-10-02 2024-07-27 77.600%             
+3 Test                  50 2024-08-14 2026-06-22 86.000%             </code></pre>
+</div>
+</div>
+<ul>
+<li>Entrenamiento aprende palabras y coeficientes.</li>
+<li>Validación elige regularización y umbral.</li>
+<li>Test representa los mensajes más recientes y se abre <strong>una sola vez</strong>.</li>
+</ul>
+<p>Una partición aleatoria mezclaría versiones antiguas y nuevas de la app, ocultando deriva temporal.</p>
+</section></section>
+<section>
+<section id="de-palabras-a-números" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
+<h1>De palabras a números</h1>
+
+</section>
+<section id="un-modelo-no-recibe-texto-recibe-una-matriz" class="slide level2">
+<h2>Un modelo no recibe texto: recibe una matriz</h2>
+<p>El pipeline básico tiene cuatro transformaciones:</p>
+<p><span class="math display">
+\text{documento}
+\rightarrow
+\text{tokens}
+\rightarrow
+\text{matriz documento–término}
+\rightarrow
+\text{TF–IDF}
+\rightarrow
+\widehat p(\text{crítica}\mid\text{texto}).
+</span></p>
+<p>Cada fila de <span class="math inline">X</span> es un documento. Cada columna es una palabra del vocabulario aprendido <strong>solo en entrenamiento</strong>.</p>
+</section>
+<section id="tokenizar-es-tomar-decisiones" class="slide level2">
+<h2>Tokenizar es tomar decisiones</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 12 × 2
+   token          n
+   &lt;chr&gt;      &lt;int&gt;
+ 1 usage          3
+ 2 now            2
+ 3 perfect        2
+ 4 tourists       2
+ 5 actually       1
+ 6 again          1
+ 7 already        1
+ 8 appreciate     1
+ 9 beta           1
+10 collect        1
+11 featured       1
+12 fees           1</code></pre>
+</div>
+</div>
+<p>En esta versión:</p>
+<ul>
+<li>convertimos a minúsculas;</li>
+<li>quitamos puntuación y tokens muy cortos;</li>
+<li>excluimos palabras funcionales frecuentes;</li>
+<li>excluimos términos obvios del dominio (<code>bike</code>, <code>app</code>) que aparecen casi siempre.</li>
+</ul>
+<p>No existe tokenización neutral: cada regla determina qué señal puede aprender el modelo.</p>
+</section>
+<section id="el-vocabulario-se-aprende-sin-mirar-el-futuro" class="slide level2">
+<h2>El vocabulario se aprende sin mirar el futuro</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  términos documentos_train densidad
+     &lt;int&gt;            &lt;int&gt; &lt;chr&gt;   
+1      304              147 3.950%   </code></pre>
+</div>
+</div>
+<p>Conservamos palabras presentes en al menos 3 documentos de entrenamiento y en no más del 80%. La matriz es <strong>dispersa</strong>: casi todas sus celdas valen cero.</p>
+<p>Aprender el vocabulario con todo el corpus filtraría al pasado palabras que solo aparecen en el futuro.</p>
+</section>
+<section id="conteos-la-representación-más-simple" class="slide level2">
+<h2>Conteos: la representación más simple</h2>
+<p>Sea <span class="math inline">c_{ij}</span> el número de veces que la palabra <span class="math inline">j</span> aparece en el documento <span class="math inline">i</span>:</p>
+<p><span class="math display">X_{ij}=c_{ij}.</span></p>
+<p>Ventaja: es directo e interpretable.</p>
+<p>Problema: una palabra muy frecuente en todos los documentos puede dominar aunque discrimine poco. Además, documentos largos acumulan conteos mayores por construcción.</p>
+</section>
+<section id="tfidf-repondera-señal-y-ubicuidad" class="slide level2">
+<h2>TF–IDF repondera señal y ubicuidad</h2>
+<p><span class="math display">
+\operatorname{tfidf}_{ij}
+=
+\underbrace{c_{ij}}_{\text{frecuencia en el documento}}
+\times
+\underbrace{\left[
+\log\left(\frac{1+n}{1+\operatorname{df}_j}\right)+1
+\right]}_{\text{rareza en el corpus de entrenamiento}}.
+</span></p>
+<ul>
+<li><code>tf</code>: cuánto aparece el término dentro del documento;</li>
+<li><code>df</code>: en cuántos documentos aparece;</li>
+<li><code>idf</code>: resta peso a palabras ubicuas;</li>
+<li>normalización <span class="math inline">L_2</span>: evita que la longitud del documento decida por sí sola.</li>
+</ul>
+</section>
+<section id="qué-información-pierde-bag-of-words" class="slide level2">
+<h2>Qué información pierde bag-of-words</h2>
+<p>“The bike <strong>did not unlock</strong>” y “The bike <strong>did unlock</strong>” comparten casi las mismas palabras.</p>
+<div class="fragment">
+<p>Bag-of-words ignora:</p>
+<ul>
+<li>orden;</li>
+<li>negación de largo alcance;</li>
+<li>ironía;</li>
+<li>referencia entre frases;</li>
+<li>significado de palabras no vistas.</li>
+</ul>
+</div>
+<div class="fragment">
+<p>Su fortaleza es otra: con pocos datos ofrece un baseline rápido, transparente y difícil de superar por casualidad.</p>
+</div>
+</section></section>
+<section>
+<section id="regresión-logística-para-texto" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
+<h1>Regresión logística para texto</h1>
+
+</section>
+<section id="la-teoría-conocida-reaparece" class="slide level2">
+<h2>La teoría conocida reaparece</h2>
+<p>Para un documento con vector TF–IDF <span class="math inline">x_i</span>:</p>
+<p><span class="math display">
+\widehat p_i
+=\sigma\left(\beta_0+\sum_{j=1}^{p}x_{ij}\beta_j\right).
+</span></p>
+<ul>
+<li><span class="math inline">\beta_j&gt;0</span>: el término empuja hacia “crítica”;</li>
+<li><span class="math inline">\beta_j&lt;0</span>: empuja hacia “no crítica”;</li>
+<li><span class="math inline">\widehat p_i</span>: probabilidad usada para ordenar la cola.</li>
+</ul>
+<p>Es el mismo clasificador logístico de la clase 15; cambió la representación de <span class="math inline">X</span>.</p>
+</section>
+<section id="la-pérdida-evalúa-probabilidades-no-solo-etiquetas" class="slide level2">
+<h2>La pérdida evalúa probabilidades, no solo etiquetas</h2>
+<p><span class="math display">
+\operatorname{LogLoss}
+=-\frac1n\sum_{i=1}^{n}
+\left[y_i\log(\widehat p_i)+(1-y_i)\log(1-\widehat p_i)\right].
+</span></p>
+<p>Una predicción incorrecta y segura recibe una penalización fuerte. Esto importa en priorización: dos mensajes pueden terminar en la misma clase, pero el de <span class="math inline">\widehat p=0.92</span> debe aparecer antes que el de <span class="math inline">\widehat p=0.54</span>.</p>
+</section>
+<section id="texto-exige-regularización" class="slide level2">
+<h2>Texto exige regularización</h2>
+<p>Hay muchas columnas, alta correlación y pocos documentos. Ajustamos LASSO:</p>
+<p><span class="math display">
+\widehat{\boldsymbol\beta}
+=\arg\min_{\boldsymbol\beta}
+\left\{-\ell(\boldsymbol\beta)+\lambda\sum_j|\beta_j|\right\}.
+</span></p>
+<p>La penalización:</p>
+<ul>
+<li>reduce varianza;</li>
+<li>lleva palabras poco útiles exactamente a cero;</li>
+<li>produce una explicación global compacta;</li>
+<li>no convierte asociaciones lingüísticas en causas.</li>
+</ul>
+</section>
+<section id="dos-hiperparámetros-dos-trabajos" class="slide level2">
+<h2>Dos hiperparámetros, dos trabajos</h2>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Decisión</th>
+<th>Se elige con</th>
+<th>Objetivo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\lambda</span></td>
+<td>log-loss de validación</td>
+<td>buenas probabilidades</td>
+</tr>
+<tr class="even">
+<td>umbral <span class="math inline">t</span></td>
+<td>costo de validación</td>
+<td>buena decisión operativa</td>
+</tr>
+</tbody>
+</table>
+<p>Confundirlos es común. <span class="math inline">\lambda</span> controla el <strong>modelo</strong>; <span class="math inline">t</span> traduce una probabilidad ya estimada en una <strong>acción</strong>.</p>
+</section></section>
+<section>
+<section id="aplicación-completa" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
+<h1>Aplicación completa</h1>
+
+</section>
+<section id="ajustar-una-trayectoria-de-modelos" class="slide level2">
+<h2>1 · Ajustar una trayectoria de modelos</h2>
+<p>Una sola llamada estima 60 modelos: desde fuerte contracción hasta un vocabulario más activo.</p>
+</section>
+<section id="elegir-lambda-sin-abrir-el-test" class="slide level2">
+<h2>2 · Elegir <span class="math inline">\lambda</span> sin abrir el test</h2>
+
+<img data-src="class_19_files/figure-revealjs/validation-curve-1.png" width="960" class="r-stretch"><div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  lambda_elegido log_loss_validación términos_activos
+           &lt;dbl&gt;               &lt;dbl&gt;            &lt;int&gt;
+1        0.003               0.539               31</code></pre>
+</div>
+</div>
+</section>
+<section id="convertir-probabilidades-en-prioridad" class="slide level2">
+<h2>3 · Convertir probabilidades en prioridad</h2>
+<p>Fijamos antes del test:</p>
+<p><span class="math display">
+\operatorname{Costo}(t)=3\,FN(t)+1\,FP(t).
+</span></p>
+
+<img data-src="class_19_files/figure-revealjs/threshold-curve-1.png" width="960" class="r-stretch"><p>El umbral óptimo no tiene por qué ser 0.50: depende de la prevalencia y del costo relativo de los errores.</p>
+</section>
+<section id="reajustar-y-abrir-el-test-una-vez" class="slide level2">
+<h2>4 · Reajustar y abrir el test una vez</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 7
+  modelo                log_loss ROC_AUC sensitivity specificity precision cost_per_100
+  &lt;chr&gt;                    &lt;dbl&gt;   &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;     &lt;dbl&gt;        &lt;dbl&gt;
+1 Prevalencia histórica    0.940   0.500             1       0         0.860            14
+2 TF–IDF + LASSO           0.475   0.676           1       0.286     0.896           10</code></pre>
+</div>
+</div>
+<p>El baseline emite la misma probabilidad para toda reseña. El modelo de texto debe mejorar <strong>probabilidades</strong>, <strong>ranking</strong> y <strong>costo</strong>, no solo accuracy.</p>
+</section>
+<section id="leer-la-matriz-de-confusión" class="slide level2">
+<h2>5 · Leer la matriz de confusión</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>            priorizado
+observado    no sí
+  no crítica  2  5
+  crítica     0 43</code></pre>
+</div>
+</div>
+<ul>
+<li>Falso negativo: una reseña crítica queda abajo en la cola.</li>
+<li>Falso positivo: una reseña no crítica se revisa antes.</li>
+</ul>
+<p>El costo 3:1 expresa que el primer error es operacionalmente más grave.</p>
+</section>
+<section id="inspeccionar-qué-aprendió" class="slide level2">
+<h2>6 · Inspeccionar qué aprendió</h2>
+
+<img data-src="class_19_files/figure-revealjs/coefficient-plot-1.png" width="960" class="r-stretch"><p>Los términos positivos elevan la prioridad; los negativos la reducen. Son asociaciones condicionadas al vocabulario y al período de entrenamiento, no “causas” de una mala experiencia.</p>
+</section>
+<section id="seguir-una-predicción-de-punta-a-punta" class="slide level2">
+<h2>7 · Seguir una predicción de punta a punta</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 6
+  fecha      texto                                                 probabilidad_crítica umbral decisión rating_observado
+  &lt;date&gt;     &lt;chr&gt;                                                                &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;               &lt;dbl&gt;
+1 2025-07-25 Station map never loads I have been unable to load s…                0.972    0.100 prioriz…                1</code></pre>
+</div>
+</div>
+<p>Ésta es la unidad de uso real: texto nuevo → vector TF–IDF → probabilidad → regla de decisión → revisión humana.</p>
+</section>
+<section id="los-errores-enseñan-más-que-el-promedio" class="slide level2">
+<h2>8 · Los errores enseñan más que el promedio</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 4
+  error          rating probabilidad texto                                                                             
+  &lt;chr&gt;           &lt;dbl&gt;        &lt;dbl&gt; &lt;chr&gt;                                                                             
+1 falso positivo      3        0.804 Support is a headache No matter what you do just try avoid having a Lyft accoun...
+2 falso positivo      3        0.649 What happened to Bike Angels? I don’t see the Bike Angels tab anywhere anymore ...
+3 falso positivo      4        0.639 It works App is good, with a few minor nits. As noted by other reviewers, they ...
+4 falso positivo      5        0.594 Parking is extortion Charging people to park bikes when bike stations are full ...
+5 falso positivo      3        0.377 Where are the bikes. There are 8 stations near my home. On average there will b...</code></pre>
+</div>
+</div>
+<p>Preguntas para leerlos:</p>
+<ul>
+<li>¿hay negación o ironía?</li>
+<li>¿el rating contradice el texto?</li>
+<li>¿aparecen funciones nuevas de la app?</li>
+<li>¿el vocabulario de entrenamiento no conocía el término decisivo?</li>
+</ul>
+</section>
+<section id="medir-palabras-fuera-de-vocabulario" class="slide level2">
+<h2>9 · Medir palabras fuera de vocabulario</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 2
+  conjunto      tasa_tokens_fuera_vocabulario
+  &lt;chr&gt;         &lt;chr&gt;                        
+1 Entrenamiento 37.800%                        
+2 Validación    50.500%                        
+3 Test          51.200%                        </code></pre>
+</div>
+</div>
+<p>Una tasa creciente indica deriva lingüística: versiones nuevas, precios nuevos o problemas nuevos generan palabras que el modelo no puede usar.</p>
+</section></section>
+<section>
+<section id="qué-falta-para-llegar-a-un-llm" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
+<h1>Qué falta para llegar a un LLM</h1>
+
+</section>
+<section id="bag-of-words-y-un-llm-resuelven-tareas-distintas" class="slide level2">
+<h2>Bag-of-words y un LLM resuelven tareas distintas</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Dimensión</th>
+<th>Clasificador de hoy</th>
+<th>LLM moderno</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Entrada</td>
+<td>TF–IDF disperso</td>
+<td>tokens + embeddings</td>
+</tr>
+<tr class="even">
+<td>Orden</td>
+<td>se pierde</td>
+<td>se modela con posición y atención</td>
+</tr>
+<tr class="odd">
+<td>Objetivo</td>
+<td>crítica / no crítica</td>
+<td>próxima unidad de texto</td>
+</tr>
+<tr class="even">
+<td>Datos</td>
+<td>cientos de documentos</td>
+<td>corpus masivos</td>
+</tr>
+<tr class="odd">
+<td>Salida</td>
+<td>una probabilidad</td>
+<td>distribución sobre vocabulario</td>
+</tr>
+<tr class="even">
+<td>Interpretación</td>
+<td>coeficientes por palabra</td>
+<td>representaciones distribuidas</td>
+</tr>
+</tbody>
+</table>
+<p>Comparten pérdida probabilística y optimización; no comparten escala ni representación.</p>
+</section>
+<section id="la-próxima-palabra-también-es-categórica" class="slide level2">
+<h2>La próxima palabra también es categórica</h2>
+<p>Un LLM estima, en cada posición:</p>
+<p><span class="math display">
+\mathbb P(Y=j\mid X)
+=\frac{\exp(s_j)}{\sum_{k=1}^{J}\exp(s_k)},
+\qquad j=1,\dots,J.
+</span></p>
+<p>La salida softmax es la generalización multinomial del logit. La diferencia crucial es que <span class="math inline">X</span> ya no es TF–IDF: un Transformer aprende una representación contextual donde “dock” significa algo distinto según las palabras que lo rodean.</p>
+</section>
+<section id="cuándo-preferir-el-baseline-simple" class="slide level2">
+<h2>Cuándo preferir el baseline simple</h2>
+<p>Prefiera TF–IDF + logit regularizado cuando:</p>
+<ul>
+<li>el corpus es pequeño;</li>
+<li>la tarea es estrecha y estable;</li>
+<li>se necesita auditar términos;</li>
+<li>latencia y costo importan;</li>
+<li>un modelo de lenguaje no mejora test de forma clara.</li>
+</ul>
+<p>Use representaciones más complejas cuando el orden, el contexto y el lenguaje fuera del vocabulario sean fuentes dominantes de error.</p>
+</section>
+<section id="el-riesgo-más-importante-no-es-técnico" class="slide level2">
+<h2>El riesgo más importante no es técnico</h2>
+<p>La etiqueta “1–2 estrellas” mezcla:</p>
+<ul>
+<li>urgencia operacional;</li>
+<li>enojo general;</li>
+<li>precio;</li>
+<li>problemas de soporte;</li>
+<li>evaluación de una versión antigua.</li>
+</ul>
+<p>Antes de desplegar, una organización debería anotar una muestra con la variable que realmente necesita: por ejemplo, <strong>“requiere intervención en menos de una hora”</strong>. El modelo actual es un prototipo de priorización, no una definición automática de urgencia.</p>
+</section>
+<section id="un-protocolo-de-despliegue-mínimo" class="slide level2">
+<h2>Un protocolo de despliegue mínimo</h2>
 <ol type="1">
-<li>Cambie las matrices <code>p_verbo_dado_sujeto</code> / <code>p_objeto_dado_verbo</code> para crear una estructura distinta y verifique que <code>multinom</code> la recupera.</li>
-<li>Ajuste un modelo <code>objeto ~ verbo + sujeto</code> (sin interacción) y compare su log-loss y número de parámetros contra <code>m1</code> y <code>m2</code>.</li>
-<li>Modifique <code>generar_oracion()</code> para que, en vez de muestrear, siempre elija la palabra más probable (<code>which.max</code>). Compare la diversidad de oraciones generadas.</li>
-<li>Implemente el reescalamiento por temperatura en <code>generar_oracion()</code> y observe qué pasa con <span class="math inline">T=0.1</span> y <span class="math inline">T=5</span>.</li>
+<li>Registrar texto, probabilidad, decisión y resultado humano.</li>
+<li>Auditar falsos negativos semanalmente.</li>
+<li>Medir costo y calibración por versión y mes.</li>
+<li>Actualizar vocabulario solo con una nueva ventana de entrenamiento.</li>
+<li>Revalidar <span class="math inline">\lambda</span> y umbral antes de reemplazar el modelo.</li>
+<li>Mantener una vía para que todo mensaje sea revisado.</li>
 </ol>
+<p>El modelo entra en producción con un plan de monitoreo, no solo con una métrica.</p>
 </section>
 <section id="en-resumen" class="slide level2">
 <h2>En resumen</h2>
 <ul>
-<li>Predecir la siguiente palabra es un problema de clasificación multinomial — el mismo que vimos en la clase 9.</li>
-<li>Softmax convierte puntajes en probabilidades sobre un vocabulario; con dos categorías, se reduce a la regresión logística binaria.</li>
-<li>Más contexto mejora la predicción (menor log-loss) pero aumenta rápidamente el número de parámetros — el problema que los embeddings y los Transformers resuelven a escala.</li>
-<li>Generar texto es muestrear, repetidamente, de la distribución que el modelo predice — el mismo ciclo, ya sea con un logit multinomial o con un LLM de miles de millones de parámetros.</li>
+<li>Un corpus real obliga a definir procedencia, privacidad, etiqueta y deriva.</li>
+<li>TF–IDF convierte documentos en una matriz dispersa sin mirar el futuro.</li>
+<li>LASSO controla miles de posibles predictores y conserva auditabilidad.</li>
+<li><span class="math inline">\lambda</span> optimiza probabilidades; el umbral optimiza una decisión con costos.</li>
+<li>El test temporal y el análisis de errores sostienen la afirmación predictiva.</li>
+<li>Un LLM mejora la representación contextual; no elimina la necesidad de un protocolo de evaluación.</li>
 </ul>
 </section>
-<section id="mapa-conceptual-del-curso" class="slide level2">
-<h2>Mapa conceptual del curso</h2>
-<p><span class="math display">
-\text{probabilidad y GLM}
-\;\longrightarrow\;
-\text{logit, multinomial, Poisson}
-\;\longrightarrow\;
-\text{causalidad}
-\;\longrightarrow\;
-\text{predicción y regularización}
-\;\longrightarrow\;
-\text{árboles, redes, LLMs}.
-</span></p>
-<p>En cada clase preguntamos lo mismo: ¿qué outcome predecimos o explicamos, qué distribución supone el modelo, cómo se estima, y qué podemos —y no podemos— concluir de él?</p>
-</section>
-<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#034694">
-<h2>Gracias</h2>
-<p><strong>Fin del curso</strong></p>
+<section id="cierre" class="slide level2 inverse center middle closing" data-background-color="#034694">
+<h2>Cierre</h2>
+<p><strong>Texto nuevo → probabilidad → decisión → revisión humana</strong></p>
+<p>La técnica cambia; la disciplina predictiva no.</p>
 <p>Mauricio Bucca</p>
 
 </section></section>

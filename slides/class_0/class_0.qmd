@@ -83,68 +83,25 @@ variables aleatorias y distribuciones discretas.
 
 ## Ayudantía
 
+<br><br>
+
 ::: {.pull-left}
 
-[Roberto Cantillán]{.bold}
+[Elisa Tagle]{.bold}
 
-- Estudiante doctorado en Sociología PUC
-- Investigador Núcleo Milenio para el Estudio de Desajustes del Mercado Laboral (LM²C²)
-- Investigación: Desigualdades, sociología analítica, consolidación y homofilia, mercados laborales. 
-- Métodos: Análisis de redes sociales, modelos multinivel, inferencia causal. 
+- ⁠Estudiante de magíster en Sociología UC
+- ⁠⁠Practicante en Banco Central de Chile
+- ⁠Investigación: desigualdad, opinión pública, métodos cuantitativos
+- ⁠⁠Métodos: Modelos multinivel, estadística bayesiana
 
 :::
 
 ::: {.figure-right}
 
-![ayudante](roberto.jpeg)
+
+![ayudante](elisa.jpeg)
 
 :::
-
-# Logística del curso {.inverse .center .middle}
-
-## Contenidos
-
-::: {.pull-left}
-
-1. Fundamentos de teoría de la probabilidad
-2. Variables aleatorias y distribuciones discretas
-3. Estimación via Maximum Likelihood (MLE)
-4. Tablas de contingencia
-5. Modelo Lineal de Probabilidad (LPM)
-
-:::
-
-::: {.pull-right}
-
-6. Modelos Lineales Generalizados (GLM)
-7. Modelos de Regresión Logística
-8. Modelos de Regresión Logística Multinomial
-9. Modelos de Regresión Poisson y Quasi-Poisson
-10. Modelos Log-Lineales para tablas de contingencia
-
-:::
-
-## Evaluación
-
-::: {.content-box-primary}
-
-Tareas cortas (24%) · Trabajos (40%) · Trabajo Final (30%) · Participación (6%)
-
-:::
-
-. . .
-
-- [Tareas cortas:]{.bold} 4 tareas cortas, 6% cada una
-- [Trabajos:]{.bold} 2 trabajos de mediana extensión, 20% cada uno
-- [Trabajo final:]{.bold} 1 trabajo final (30%), aplicando contenidos del curso a un problema sustantivo
-- [Participación]{.bold} activa en clases y ayudantías
-
-## Políticas
-
-- [Asistencia:]{.bold} regular a clases es importante, esperada, pero no obligatoria
-- [Entregas:]{.bold} tareas y trabajos se entregan a más tardar el día indicado en el calendario del curso, a la hora señalada
-- [Uso de IA:]{.bold} permitido de forma ética y transparente, únicamente como herramienta de estudio o apoyo en la escritura de código. Debe declararse explícitamente qué herramientas fueron usadas y con qué propósito
-- [Honestidad académica:]{.bold} el desconocimiento de la política de honestidad académica de la universidad — incluyendo el uso de IA — no es una explicación razonable para su incumplimiento
 
 # Filosofía de enseñanza {.inverse .center .middle}
 
@@ -156,13 +113,17 @@ Tareas cortas (24%) · Trabajos (40%) · Trabajo Final (30%) · Participación (
 
 ::: {.center}
 
-![pvalue](pvalue.png)
+<br><br>
+
+![pvalue](pvalue.jpeg)
 
 :::
 
 ---
 
 ### 2. La sola intuición no es suficiente
+
+<br><br>
 
 . . .
 
@@ -184,6 +145,8 @@ Tareas cortas (24%) · Trabajos (40%) · Trabajo Final (30%) · Participación (
 
 . . .
 
+<br>
+
 - Vacíos de conocimiento, notación, poca exposición a las matemáticas.
 - Este curso nivela estos vacíos activamente. No hay carta bajo la manga.
 
@@ -191,12 +154,52 @@ Tareas cortas (24%) · Trabajos (40%) · Trabajo Final (30%) · Participación (
 
 ### 3. Menos es más
 
+<br>
+
 . . .
 
 ::: {.pull-left}
 
 [Muchos métodos]{.bold}
+
 ![methods](methods.png)
+
+:::
+
+<br>
+
+. . .
+
+::: {.pull-right}
+
+[Fundamentos sólidos]{.bold}
+
+![methods](foundations.jpg)
+
+:::
+
+# Logística del curso {.inverse .center .middle}
+
+## Contenidos
+
+<br><br>
+
+::: {.pull-left}
+
+**I. Probabilidad y fundamentos**
+
+1. Variables aleatorias y distribuciones discretas
+2. Momentos, estimación MLE y funciones de pérdida
+
+. . .
+
+<br>
+**II. Modelos categóricos — uso explicativo**
+
+3. Modelo Lineal (Estándar y de Probabilidad)
+4. Modelos Lineales Generalizados (GLM)
+5. Regresión Logística (binomial y multinomial)
+6. Regresión Poisson
 
 :::
 
@@ -204,10 +207,59 @@ Tareas cortas (24%) · Trabajos (40%) · Trabajo Final (30%) · Participación (
 
 ::: {.pull-right}
 
-[Fundamentos sólidos]{.bold}
-![methods](foundations.jpg)
+**III. Bridge: causalidad y predicción**
+
+7. Causalidad y asociación
+8. Predicción: sesgo-varianza, overfitting, cross-validation
+
+. . .
+
+<br>
+**IV. Modelos categóricos — uso predictivo**
+
+9. Clasificadores logísticos (binomial y multinomial)
+10. Regularización: Ridge & Lasso
+11. Árboles, Random Forests, Gradient Boosting
+12. Redes Neuronales y un "flavor" de LLMs
 
 :::
+
+## Evaluación
+
+<br><br>
+
+::: {.content-box-primary}
+
+
+- 6 Tareas en horario de ayudantía (ponderación 10.083% cada una)
+
+- Elaboración y presentación de poster científico (ponderación 35%, en grupos de 2 integrantes)
+
+:::
+
+
+## Calendario de evaluaciones
+
+<br><br>
+
+
+| Actividad | Tema | Fecha |
+|---|---|---|
+| Tarea 1 | Nivelación matemática — hasta Variables Aleatorias y Distribuciones Discretas | 27 agosto |
+| Tarea 2 | LPM y teoría regresión logística | 10 septiembre |
+| Tarea 3 | Aplicación regresión logística | 1 octubre |
+| Tarea 4 | Regresión multinomial | 8 octubre |
+| Tarea 5 | Regresión Poisson | 15 octubre |
+| Tarea 6 | Aplicación clasificación — hasta Clasificador Logístico Multinomial | 5 noviembre |
+| Sesión de pósters científicos | Presentación/trabajo final | 3 diciembre |
+
+## Políticas
+
+<br><br>
+
+- [Asistencia:]{.bold} regular a clases es importante, esperada, pero no obligatoria
+- [Uso de IA:]{.bold} permitido de forma ética y transparente, únicamente como herramienta de estudio o apoyo en la escritura de código. Debe declararse explícitamente qué herramientas fueron usadas y con qué propósito
+- [Honestidad académica:]{.bold} el desconocimiento de la política de honestidad académica de la universidad — incluyendo el uso de IA — no es una explicación razonable para su incumplimiento
 
 # Recursos {.inverse .center .middle}
 

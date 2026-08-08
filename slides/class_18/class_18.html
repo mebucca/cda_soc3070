@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-28">
+  <meta name="dcterms.date" content="2026-07-29">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -34,7 +34,7 @@
     }
   </style>
   <link rel="stylesheet" href="class_18_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
-  <link rel="stylesheet" href="../_shared/course.css">
+  <link rel="stylesheet" href="_shared/course.css">
   <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
   <script>document.addEventListener("DOMContentLoaded", function () {
  var mathElements = document.getElementsByClassName("math");
@@ -159,7 +159,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-28</p>
+  <p class="date">2026-07-29</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -193,6 +193,14 @@ Mauricio Bucca · Sociología UC
 <li>Comparar con baselines simples.</li>
 </ol>
 <p>Referencia principal: James et al.&nbsp;(2021), <em>An Introduction to Statistical Learning</em>, 2ª ed., capítulo 10 (<a href="https://www.statlearning.com/">sitio oficial</a>).</p>
+</section>
+<section id="la-solicitud-predictiva-no-cambia" class="slide level2">
+<h2>La solicitud predictiva no cambia</h2>
+<blockquote>
+<p><strong>Al cierre de cada día, estimar qué horas del día siguiente tendrán demanda alta, para priorizar el rebalanceo de bicicletas.</strong></p>
+</blockquote>
+<p>Mantenemos la unidad horaria, el horizonte de hasta 24 horas, la partición temporal y el costo 3:1. La red recibe la misma información que los modelos anteriores; no puede ganar porque vea columnas o períodos adicionales.</p>
+<p>La pregunta de hoy es más estrecha: ¿una capa oculta aprende transformaciones suaves que mejoran las probabilidades fuera de muestra lo suficiente como para justificar mayor complejidad?</p>
 </section>
 <section id="el-problema-no-es-un-juguete" class="slide level2">
 <h2>El problema no es un juguete</h2>
@@ -574,10 +582,10 @@ L=-\frac{1}{n}\sum_{i=1}^{n}
 <h2>Baseline logístico</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 1
-  validation_log_loss
-                &lt;dbl&gt;
-1               0.353</code></pre>
+<pre><code># A tibble: 1 × 2
+  validation_log_loss umbral_por_costo
+                &lt;dbl&gt;            &lt;dbl&gt;
+1               0.353             0.050</code></pre>
 </div>
 </div>
 <p>Una red debe superar un baseline útil, no solo el azar.</p>
@@ -687,13 +695,26 @@ L=-\frac{1}{n}\sum_{i=1}^{n}
 <h2>Comparación fuera de muestra</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2 × 4
-  modelo       log_loss accuracy sensitivity
-  &lt;chr&gt;           &lt;dbl&gt;    &lt;dbl&gt;       &lt;dbl&gt;
-1 Logit           0.323    0.878       0.803
-2 Red neuronal    0.423    0.864       0.846</code></pre>
+<pre><code># A tibble: 2 × 7
+  modelo       log_loss umbral sensitivity specificity precision cost_per_100
+  &lt;chr&gt;           &lt;dbl&gt;  &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;     &lt;dbl&gt;        &lt;dbl&gt;
+1 Logit           0.323   0.050       0.965       0.740     0.571         21.900
+2 Red neuronal    0.423   0.110       0.944       0.770     0.595         21.400</code></pre>
 </div>
 </div>
+<p>Cada modelo conserva el umbral que minimizó costo en validación. La red se justifica solo si mejora probabilidades o decisiones en el test temporal, no por tener más parámetros.</p>
+</section>
+<section id="una-predicción-neuronal-de-punta-a-punta" class="slide level2">
+<h2>Una predicción neuronal, de punta a punta</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 10
+    día  hora temperatura unidades_ocultas decay probabilidad umbral acción    demanda_observada clase_observada
+  &lt;dbl&gt; &lt;int&gt;       &lt;dbl&gt;            &lt;dbl&gt; &lt;dbl&gt;        &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;                 &lt;dbl&gt; &lt;chr&gt;          
+1   354     8        0.420                3  0.010        0.998   0.110 priorizar               432 alta           </code></pre>
+</div>
+</div>
+<p>La capa oculta cambia la representación interna; hacia afuera, la decisión sigue siendo auditable: fila → score → umbral → acción.</p>
 </section>
 <section id="distribución-de-probabilidades" class="slide level2">
 <h2>Distribución de probabilidades</h2>
@@ -972,6 +993,7 @@ L=-\frac{1}{n}\sum_{i=1}^{n}
 <li>Pruebe <code>size = 12</code> sin cambiar el test.</li>
 <li>Compare <code>decay = 0</code> y <code>decay = 0.1</code>.</li>
 <li>Grafique calibración por tipo de día.</li>
+<li>Cambie el costo falso negativo:falso positivo de 3:1 a 5:1.</li>
 <li>Decida si la ganancia justifica la menor interpretabilidad.</li>
 </ol>
 </section>
@@ -985,8 +1007,8 @@ L=-\frac{1}{n}\sum_{i=1}^{n}
 <li>Una red debe superar baselines simples bajo una comparación justa.</li>
 </ul>
 </section>
-<section id="mapa-conceptual-del-módulo-clases-1922" class="slide level2">
-<h2>Mapa conceptual del módulo (clases 19–22)</h2>
+<section id="mapa-conceptual-del-módulo-clases-1618" class="slide level2">
+<h2>Mapa conceptual del módulo (clases 16–18)</h2>
 <p>Tres clases, una sola pregunta de fondo —¿cómo controlar la complejidad de un modelo sin decidirla arbitrariamente?— respondida cada vez de forma distinta:</p>
 <table class="caption-top">
 <colgroup>
@@ -1003,17 +1025,17 @@ L=-\frac{1}{n}\sum_{i=1}^{n}
 </thead>
 <tbody>
 <tr class="odd">
-<td><strong>19. Regularización</strong></td>
+<td><strong>16. Regularización</strong></td>
 <td>¿cuánta complejidad usar, dado un conjunto de predictores fijado por nosotros?</td>
 <td>¿y si no sabemos qué interacciones importan?</td>
 </tr>
 <tr class="even">
-<td><strong>20. Árboles y ensambles</strong></td>
+<td><strong>17. Árboles y ensambles</strong></td>
 <td>¿puede el modelo descubrir interacciones y no linealidades por sí solo?</td>
 <td>¿puede esa función ser suave, no escalonada?</td>
 </tr>
 <tr class="odd">
-<td><strong>21. Redes neuronales</strong></td>
+<td><strong>18. Redes neuronales</strong></td>
 <td>¿puede aprender transformaciones suaves y no lineales, capa por capa?</td>
 <td>(ver evaluación responsable: el costo es interpretabilidad y estabilidad)</td>
 </tr>

@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-28">
+  <meta name="dcterms.date" content="2026-07-29">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -34,7 +34,7 @@
     }
   </style>
   <link rel="stylesheet" href="class_17_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
-  <link rel="stylesheet" href="../_shared/course.css">
+  <link rel="stylesheet" href="_shared/course.css">
   <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
   <script>document.addEventListener("DOMContentLoaded", function () {
  var mathElements = document.getElementsByClassName("math");
@@ -159,7 +159,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-28</p>
+  <p class="date">2026-07-29</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -193,6 +193,14 @@ Mauricio Bucca · Sociología UC
 <li>Comparar desempeño e interpretación.</li>
 </ol>
 <p>Referencia principal: James et al.&nbsp;(2021), <em>An Introduction to Statistical Learning</em>, 2ª ed., capítulo 8 (<a href="https://www.statlearning.com/">sitio oficial</a>).</p>
+</section>
+<section id="la-solicitud-predictiva-no-cambia" class="slide level2">
+<h2>La solicitud predictiva no cambia</h2>
+<blockquote>
+<p><strong>Al cierre de cada día, estimar qué horas del día siguiente tendrán demanda alta, para priorizar el rebalanceo de bicicletas.</strong></p>
+</blockquote>
+<p>Mantenemos unidad, horizonte, predictores disponibles, partición temporal y costo 3:1 de las clases 15–16. Así, cualquier diferencia en desempeño proviene del modelo y no de haber cambiado la pregunta.</p>
+<p>Hoy preguntamos si reglas aprendidas de los datos pueden capturar picos, umbrales e interacciones sin escribir <code>I(temp^2)</code> o <code>factor(hr) * workingday</code> a mano.</p>
 </section>
 <section id="retomando-la-pregunta-de-la-clase-pasada" class="slide level2">
 <h2>Retomando la pregunta de la clase pasada</h2>
@@ -544,8 +552,8 @@ node), split, n, deviance, yval
 <div class="cell-output cell-output-stdout">
 <pre><code>         predicho
 observado baja alta
-     baja 1245   42
-     alta  267  194</code></pre>
+     baja 1109  178
+     alta  197  264</code></pre>
 </div>
 </div>
 </section>
@@ -553,13 +561,13 @@ observado baja alta
 <h2>Métricas de clasificación</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 4
-  accuracy sensitivity specificity log_loss
-     &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;    &lt;dbl&gt;
-1    0.823       0.421       0.967    0.545</code></pre>
+<pre><code># A tibble: 1 × 6
+  umbral log_loss sensitivity specificity precision cost_per_100
+   &lt;dbl&gt;    &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;     &lt;dbl&gt;        &lt;dbl&gt;
+1   0.110    0.545       0.573       0.862     0.597         44.000</code></pre>
 </div>
 </div>
-<p>Las probabilidades de un árbol son constantes dentro de cada hoja.</p>
+<p>Las probabilidades de un árbol son constantes dentro de cada hoja. El umbral se eligió por costo en validación, no mirando test.</p>
 </section>
 <section id="una-familia-con-nombres-propios" class="slide level2">
 <h2>Una familia con nombres propios</h2>
@@ -722,11 +730,11 @@ observado baja alta
 <h2>Random Forest: ejemplo empírico</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2 × 3
-  modelo        accuracy log_loss
-  &lt;chr&gt;            &lt;dbl&gt;    &lt;dbl&gt;
-1 Árbol            0.823    0.545
-2 Random Forest    0.870    0.294</code></pre>
+<pre><code># A tibble: 2 × 6
+  modelo        log_loss sensitivity specificity precision cost_per_100
+  &lt;chr&gt;            &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;     &lt;dbl&gt;        &lt;dbl&gt;
+1 Árbol            0.545       0.573       0.862     0.597         44.000
+2 Random Forest    0.294       0.944       0.772     0.597         21.300</code></pre>
 </div>
 </div>
 </section>
@@ -860,18 +868,21 @@ h_m \approx -\left[\frac{\partial L}{\partial f}\right]_{f=\widehat f_{m-1}}.
 </span></p>
 <p>Es descenso de gradiente en el <strong>espacio de funciones</strong>: cada árbol es un paso que corrige el error actual.</p>
 </section>
-<section id="el-gradiente-es-el-residuo" class="slide level2">
-<h2>El gradiente es el residuo</h2>
+<section id="en-clasificación-el-gradiente-es-y-p" class="slide level2">
+<h2>En clasificación, el gradiente es <span class="math inline">y-p</span></h2>
 <div class="footnote">
 <p>Recordatorio: el gradiente de la pérdida indica cuánto y hacia dónde hay que mover la predicción para reducir el error; boosting da un paso en la dirección de su negativo.</p>
 </div>
-<p>Con pérdida cuadrática <span class="math inline">L=\tfrac12\sum_i (y_i-f(x_i))^2</span>:</p>
+<p>Con pérdida logística Bernoulli y score <span class="math inline">f(x_i)</span>:</p>
 <p><span class="math display">
--\frac{\partial L}{\partial f(x_i)}=y_i-f(x_i)=r_i.
+-\frac{\partial L}{\partial f(x_i)}
+=y_i-\sigma(f(x_i))
+=y_i-p_i.
 </span></p>
 <ul>
-<li>Cada árbol se ajusta a los <strong>residuos</strong> del ensamble actual.</li>
-<li>Con pérdida de Poisson (la que usamos para <code>bikers</code>) el gradiente es <span class="math inline">y_i-e^{f(x_i)}</span>: mismo principio, distinta pérdida.</li>
+<li>Cada árbol se ajusta a la diferencia entre la clase observada y la probabilidad actual.</li>
+<li>Un falso negativo seguro tiene <span class="math inline">y_i-p_i\approx1</span>: recibe una corrección grande.</li>
+<li>Con pérdida cuadrática el gradiente sería el residuo <span class="math inline">y_i-f(x_i)</span>: mismo principio, distinta pérdida.</li>
 <li>Por eso boosting reduce <strong>sesgo</strong>: corrige sistemáticamente lo que el modelo aún no captura.</li>
 </ul>
 </section>
@@ -974,14 +985,14 @@ h_m \approx -\left[\frac{\partial L}{\partial f}\right]_{f=\widehat f_{m-1}}.
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 6 × 3
-  depth shrinkage validation_rmse
-  &lt;dbl&gt;     &lt;dbl&gt;           &lt;dbl&gt;
-1     3      0.080            53.200
-2     2      0.080            66.900
-3     3      0.030            70.500
-4     2      0.030            83.500
-5     1      0.080            84.200
-6     1      0.030            96.500</code></pre>
+  depth shrinkage validation_log_loss
+  &lt;dbl&gt;     &lt;dbl&gt;               &lt;dbl&gt;
+1     3      0.080               0.235
+2     2      0.080               0.283
+3     3      0.030               0.305
+4     2      0.030               0.357
+5     1      0.080               0.364
+6     1      0.030               0.424</code></pre>
 </div>
 </div>
 </section>
@@ -989,23 +1000,37 @@ h_m \approx -\left[\frac{\partial L}{\partial f}\right]_{f=\widehat f_{m-1}}.
 <h2>Gradient Boosting: ejemplo empírico</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 3 × 3
-  modelo             RMSE   MAE
-  &lt;chr&gt;             &lt;dbl&gt; &lt;dbl&gt;
-1 Poisson           106.   81.200
-2 Árbol podado       82.400  55.300
-3 Gradient Boosting  60.500  41.000</code></pre>
+<pre><code># A tibble: 3 × 6
+  modelo            log_loss sensitivity specificity precision cost_per_100
+  &lt;chr&gt;                &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;     &lt;dbl&gt;        &lt;dbl&gt;
+1 Árbol                0.545       0.573       0.862     0.597         44.000
+2 Random Forest        0.294       0.944       0.772     0.597         21.300
+3 Gradient Boosting    0.279       0.896       0.850     0.682         19.300</code></pre>
 </div>
 </div>
+<p>Cada método conserva su umbral elegido en validación bajo el mismo costo 3:1. La comparación final usa las mismas filas y el mismo outcome.</p>
 </section>
-<section id="observado-versus-predicho" class="slide level2">
-<h2>Observado versus predicho</h2>
+<section id="probabilidades-por-resultado-observado" class="slide level2">
+<h2>Probabilidades por resultado observado</h2>
 
-<img data-src="class_17_files/figure-revealjs/boost-fit-plot-1.png" width="960" class="r-stretch"></section>
-<section id="diagnóstico-residual" class="slide level2">
-<h2>Diagnóstico residual</h2>
+<img data-src="class_17_files/figure-revealjs/boost-fit-plot-1.png" width="960" class="r-stretch"><p>Mayor separación indica mejor ranking, pero la decisión final también depende de calibración y costo.</p>
+</section>
+<section id="error-de-probabilidad-por-hora" class="slide level2">
+<h2>Error de probabilidad por hora</h2>
 
-<img data-src="class_17_files/figure-revealjs/boost-residuals-1.png" width="960" class="r-stretch"><p>Patrones persistentes indican estructura que el ensamble todavía no captura.</p>
+<img data-src="class_17_files/figure-revealjs/boost-residuals-1.png" width="960" class="r-stretch"><p>Patrones persistentes indican franjas donde el ensamble todavía no captura toda la estructura.</p>
+</section>
+<section id="una-predicción-del-ensamble-de-punta-a-punta" class="slide level2">
+<h2>Una predicción del ensamble, de punta a punta</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 10
+    día  hora temperatura profundidad tasa_aprendizaje probabilidad umbral acción    demanda_observada clase_observada
+  &lt;dbl&gt; &lt;int&gt;       &lt;dbl&gt;       &lt;dbl&gt;            &lt;dbl&gt;        &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;                 &lt;dbl&gt; &lt;fct&gt;          
+1   298    17        0.560           3             0.080        0.989   0.340 priorizar               585 alta           </code></pre>
+</div>
+</div>
+<p>El ensamble aprende la forma; el protocolo conserva trazabilidad sobre qué fila recibió qué score y qué acción.</p>
 </section>
 <section id="más-allá-de-gbm" class="slide level2">
 <h2>Más allá de <code>gbm</code></h2>
