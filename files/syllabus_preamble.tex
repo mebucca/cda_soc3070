@@ -1,0 +1,27 @@
+\usepackage{fancyhdr, lastpage, bbding, pmboxdraw}
+\usepackage[T1]{fontenc}
+\usepackage{tgbonum}
+\pagestyle{empty}
+
+\definecolor{gray}{rgb}{0,.6,0}
+\definecolor{olivettired}{RGB}{142,27,17}
+\definecolor{codegray}{gray}{0.9}
+\newcommand{\code}[1]{\colorbox{codegray}{\texttt{#1}}}
+
+\usepackage{listings}
+\usepackage{caption}
+\DeclareCaptionFont{white}{\color{white}}
+\DeclareCaptionFormat{listing}{\colorbox{gray}{\parbox{\textwidth}{#1#2#3}}}
+\captionsetup[lstlisting]{format=listing,labelfont=white,textfont=white}
+\usepackage{verbatim}
+\usepackage{fancyvrb}
+\usepackage{acronym}
+\usepackage{amsthm}
+\VerbatimFootnotes
+
+\definecolor{OliveGreen}{cmyk}{0.64,0,0.95,0.40}
+\definecolor{CadetBlue}{cmyk}{0.62,0.57,0.23,0}
+\definecolor{lightlightgray}{gray}{0.93}
+
+\AtBeginDocument{\fontfamily{lmtt}\selectfont}
+\renewcommand{\arraystretch}{1.4}

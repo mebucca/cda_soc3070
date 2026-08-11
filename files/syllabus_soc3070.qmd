@@ -1,0 +1,222 @@
+---
+title: ""
+format:
+  pdf:
+    documentclass: article
+    fontsize: 11pt
+    papersize: letter
+    geometry: margin=1.2in
+    include-in-header: syllabus_preamble.tex
+    colorlinks: true
+    linkcolor: olivettired
+    urlcolor: olivettired
+    citecolor: olivettired
+    toc: false
+    number-sections: false
+    pdf-engine: pdflatex
+---
+
+```{=latex}
+\begin{center}
+{\Large \textsc{SOC3070 Análisis de Datos Categóricos}}
+\end{center}
+\begin{center}
+Segundo Semestre 2026
+\end{center}
+
+\begin{center}
+\rule{6in}{0.4pt}
+\begin{minipage}[t]{1.2\textwidth}
+\begin{tabular}{llcccll}
+\textbf{Instructor:} & Mauricio Bucca & & &  & \textbf{Horario Clases:} & Lunes B1 12:20--13:30 \\
+\textbf{Email:} &  \href{mailto:mebucca@uc.cl}{mebucca@uc.cl} & & & & & Lunes B2 14:50--16:00 \\
+ & & & & & \textbf{Horario Consulta:} & Lunes 14:30--15:30
+\end{tabular}
+\end{minipage}
+\rule{6in}{0.4pt}
+\end{center}
+```
+
+\noindent\textbf{Ayudantía:} \begin{itemize}
+\item Ayudante: Elisa Tagle (\href{mailto:elisa.tagle@uc.cl}{elisa.tagle@uc.cl})
+\item Horario: Jueves 16:10 -- 17:20
+\end{itemize}
+
+\vskip.15in
+\noindent\textbf{Páginas del curso:} \begin{itemize}
+\item Canvas
+\item Repositorio Github: \url{https://github.com/mebucca/cda_soc3070}
+\end{itemize}
+
+\vskip.15in
+
+\flushleft
+\noindent\textbf{Descripción:} Este curso se centra en el estudio de métodos estadísticos para el análisis de datos categóricos, con especial énfasis en modelos de regresión para variables dependientes categóricas. Este tipo de modelos es particularmente importante dado que muchos fenómenos de interés para las ciencias sociales no se manifiestan de modo continuo sino binario (si/no), ordinal (alto/medio/bajo), nominal (candidatos A/B/C) o como recuento (números de contagios por covid-19). Cuando trabajamos con variables dependientes categóricas los modelos estándar de regresión lineal son, \textit{por lo general}, inapropiados. En consecuencia, el curso cubrirá una amplia gama de métodos disponibles para modelar este tipo de datos, muchos de los cuales son miembros de la familia de \textit{Modelos Lineales Generalizados} (GLM), tanto para uso explicativo como predictivo. La clase tiene como objetivo desarrollar los conocimientos y habilidades necesarias para que los estudiantes apliquen estas herramientas en su propia investigación empírica, tanto aplicada o académica.
+
+\vspace*{.15in}
+\noindent\textbf{Resultados esperados:} Al completar este curso \textit{satisfactoriamente} se espera que los estudiantes sean capaces de:
+\begin{itemize}
+    \item Entender los fundamentos estadísticos y matemáticos de los principales modelos para el análisis de datos categóricos.
+    \item Implementar estos métodos en el software estadístico \code{R}.
+    \item Interpretar sustantivamente los resultados de estos métodos, tanto en contextos explicativos como predictivos.
+    \item Manipular matemáticamente los resultados de estos métodos para producir ``cantidades de interés''.
+\end{itemize}
+
+\newpage
+\noindent\textbf{Prerequisitos sugeridos:}
+\begin{itemize}
+\item Un curso de introducción a la estadística de nivel pregrado.
+\item Un curso de introducción al análisis de regresión de nivel pregrado.
+\item Familiaridad con el software estadístico \code{R}
+\end{itemize}
+
+\vskip.15in
+\noindent\textbf{Software:}
+Las clases y evaluaciones del curso involucrarán el uso del software estadístico \code{R}. El contenido expositivo del curso, ayudantías y tareas se desarrollará exclusivamente en \code{R}. El código que acompaña cada clase será puesto a disposición de los estudiantes en el repositorio del curso, junto con material de nivelación matemática (pre-cálculo, cálculo y fundamentos de probabilidad) y una plantilla de \code{Quarto} para la escritura de tareas y trabajos.
+
+\vspace*{.15in}
+\noindent \textbf{Contenidos:}
+
+\textbf{I. Probabilidad y fundamentos}
+\begin{enumerate}
+    \item Variables aleatorias y distribuciones discretas
+    \item Momentos, estimación MLE y funciones de pérdida
+\end{enumerate}
+
+\textbf{II. Modelos para datos categóricos --- uso explicativo}
+\begin{enumerate}
+    \setcounter{enumi}{2}
+    \item Modelo Lineal (Estándar y de Probabilidad)
+    \item Modelos Lineales Generalizados (GLM)
+    \item Regresión Logística (binomial y multinomial)
+    \item Regresión Poisson
+\end{enumerate}
+
+\textbf{III. Bridge: causalidad y predicción}
+\begin{enumerate}
+    \setcounter{enumi}{6}
+    \item Causalidad y asociación
+    \item Predicción: sesgo-varianza, overfitting, cross-validation
+\end{enumerate}
+
+\textbf{IV. Modelos para datos categóricos --- uso predictivo}
+\begin{enumerate}
+    \setcounter{enumi}{8}
+    \item Clasificadores logísticos (binomial y multinomial)
+    \item Regularización: Ridge \& Lasso
+    \item Árboles de Regresión, Random Forests, Gradient Boosting
+    \item Redes Neuronales y un ``flavor'' de LLMs
+\end{enumerate}
+
+\vspace*{.15in}
+\noindent\textbf{Evaluaciones:} 6 Tareas en horario de ayudantía (10.083\% cada una) y elaboración/presentación de un póster científico en grupos de 2 integrantes (35\%).
+
+\begin{center}
+\begin{tabular}{lll}
+\textbf{Actividad} & \textbf{Tema} & \textbf{Fecha} \\
+\hline
+Tarea 1 & Nivelación matemática --- hasta Variables Aleatorias y Dist. Discretas & 27 agosto \\
+Tarea 2 & LPM y teoría regresión logística & 10 septiembre \\
+Tarea 3 & Aplicación regresión logística & 1 octubre \\
+Tarea 4 & Regresión multinomial & 8 octubre \\
+Tarea 5 & Regresión Poisson & 15 octubre \\
+Tarea 6 & Aplicación clasificación --- hasta Clasificador Log. Multinomial & 5 noviembre \\
+Sesión de pósters & Presentación/trabajo final & 3 diciembre \\
+\end{tabular}
+\end{center}
+
+\vspace*{.2in}
+\noindent\textbf{Bibliografía:} El curso es auto-contenido y no considera un texto obligatorio. No obstante, se recomiendan los siguientes libros como textos de consulta.
+
+\vspace*{.15in}
+\begin{itemize}
+\item Agresti, Alan. (1996). Introduction to Categorical data Analysis. Second Edition. Wiley Series.
+
+\item Gelman, A. y Hill, J. (2007). Data Analysis Using Regression and Multilevel/ Hierarchical Models. Cambridge University Press.
+
+\item Bilder, Christopher R., and Thomas M. Loughin (2014). Analysis of categorical data with R. CRC Press [Disponible online por medio de Biblioteca UC].
+
+\end{itemize}
+
+\vskip.15in
+\noindent\textbf{Políticas del curso:}
+\begin{itemize}
+    \item \textbf{Asistencia:} La asistencia regular a clases es importante, esperada, pero no obligatoria.
+    \item \textbf{Entregas:} Las tareas y el póster final deben ser entregados a más tardar el día indicado en el calendario del curso, a la hora señalada.
+    \item \textbf{Email:} Escribir primariamente para coordinar reunión en el horario de consulta. Incluir SOC3070 en el asunto del correo. Respondo correos una vez al día (en la mañana), de lunes a viernes.
+    \item \textbf{Honestidad Académica:} El desconocimiento de la política de honestidad académica de la universidad -- incluyendo el uso de IA -- no es una explicación razonable para su incumplimiento.
+    \item \textbf{Uso de IA:} Este curso permite el uso ético y transparente de herramientas de inteligencia artificial generativa, únicamente como herramienta de estudio o apoyo en la escritura de código. El estudiantado deberá declarar explícitamente en los anexos de cada tarea qué herramientas fueron utilizadas, con qué propósito y, si se solicita, compartir los comandos o prompts empleados. El uso de IA no exime a los y las estudiantes de dominar plenamente el contenido de sus trabajos. Para verificar esto, en la clase posterior a la entrega de cualquier tarea, un estudiante será seleccionado al azar para explicar oralmente frente a la clase el procedimiento seguido en alguna de sus respuestas. En base a esta exposición, su nota podrá ser reconsiderada. El uso no autorizado o no declarado será considerado una falta a la integridad académica.
+\end{itemize}
+
+\newpage
+\noindent\textbf{Calendario del curso:} Clases los días Lunes, bloques 12:20--13:30 (B1) y 14:50--16:00 (B2). Calendario ajustado al Calendario de Actividades Académicas y Estudiantiles UC 2026: inicio de clases 2do semestre miércoles 5 de agosto (primer lunes lectivo: 10 de agosto), receso de docencia semana del 14 de septiembre, feriado Encuentro de Dos Mundos el 12 de octubre, y finalización de clases el 27 de noviembre (último lunes lectivo: 23 de noviembre).
+
+\vspace*{.15in}
+\noindent\textit{I. Teoría de la Probabilidad y Fundamentos del Curso}
+\begin{center}
+\begin{tabular}{llll}
+\textbf{Día} & \textbf{Mes} & \textbf{Bloque} & \textbf{Contenido} \\
+\hline
+10 & Agosto & B1 & Presentación del curso \\
+10 & Agosto & B2 & Variables Aleatorias y Distribuciones Discretas \\
+17 & Agosto & B1 & Momentos \\
+17 & Agosto & B2 & Estimación, MLE y Funciones de Pérdida \\
+\end{tabular}
+\end{center}
+
+\vspace*{.1in}
+\noindent\textit{II. Modelos para datos categóricos --- uso explicativo}
+\begin{center}
+\begin{tabular}{llll}
+\textbf{Día} & \textbf{Mes} & \textbf{Bloque} & \textbf{Contenido} \\
+\hline
+24 & Agosto & B1 & Modelo Lineal Estándar \\
+24 & Agosto & B2 & Modelo Lineal de Probabilidad \\
+31 & Agosto & B1 & Modelos Lineales Generalizados \\
+31 & Agosto & B2 & Regresión Logística --- estructura teórica y estimación \\
+7 & Septiembre & B1 \& B2 & Regresión Logística --- interpretación de parámetros \\
+14 & Septiembre & --- & \textbf{NO HAY CLASES} (Receso de docencia UC) \\
+21 & Septiembre & B1 \& B2 & Regresión Logística --- inferencia estadística \\
+28 & Septiembre & B1 & Regresión Log. Multinomial --- estructura teórica y estimación \\
+28 & Septiembre & B2 & Regresión Log. Multinomial --- interpretación de parámetros \\
+5 & Octubre & B1 & Regresión Poisson --- estructura teórica y estimación \\
+5 & Octubre & B2 & Regresión Poisson --- interpretación de parámetros y extensiones \\
+12 & Octubre & --- & \textbf{NO HAY CLASES} (Feriado: Encuentro de Dos Mundos) \\
+\end{tabular}
+\end{center}
+
+\vspace*{.1in}
+\noindent\textit{III. Bridge: causalidad, asociación y predicción}
+\begin{center}
+\begin{tabular}{llll}
+\textbf{Día} & \textbf{Mes} & \textbf{Bloque} & \textbf{Contenido} \\
+\hline
+19 & Octubre & B1 & Causalidad y Asociación \\
+19 & Octubre & B2 & Predicción (sesgo-varianza, overfitting, cross-validation) \\
+\end{tabular}
+\end{center}
+
+\vspace*{.1in}
+\noindent\textit{IV. Modelos para datos categóricos --- uso predictivo}
+\begin{center}
+\begin{tabular}{llll}
+\textbf{Día} & \textbf{Mes} & \textbf{Bloque} & \textbf{Contenido} \\
+\hline
+26 & Octubre & B1 & Clasificador Logístico Binomial \\
+26 & Octubre & B2 & Clasificador Logístico Multinomial \\
+2 & Noviembre & B1 \& B2 & Regularización: Ridge \& Lasso \\
+9 & Noviembre & B1 & Árboles de Regresión y Random Forests \\
+9 & Noviembre & B2 & Gradient Boosting \\
+16 & Noviembre & B1 & Introducción a Redes Neuronales \\
+16 & Noviembre & B2 & Un ``Flavor'' de LLMs (usando Regresión Logística) \\
+23 & Noviembre & --- & Sesión de Posters (trabajo final) \\
+\end{tabular}
+\end{center}
+
+\vspace*{.15in}
+\noindent\textbf{Recursos computacionales:}
+\begin{itemize}
+    \item En el repositorio del curso de \textit{procesamiento avanzado de datos en R} se encuentra material para aprender \code{R} desde cero: \url{https://mebucca.github.io/dar_soc4001/}.
+    \item Material de nivelación matemática (pre-cálculo, cálculo, fundamentos de probabilidad) disponible en el repositorio del curso.
+    \item Plantilla de \code{Quarto} para la escritura de tareas y trabajos disponible en el repositorio del curso.
+\end{itemize}
