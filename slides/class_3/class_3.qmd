@@ -271,10 +271,6 @@ data.frame(p = valores_p[region], loglik = round(resultados[region], 3))
 
 Recorriendo los valores, el más alto se obtiene en $p = 0.82$ — exactamente $\hat p = k/n$, tal como predijo el álgebra.
 
-## Estimación via Maximum Likelihood (MLE) {background-image="valdorcia.jpeg" .fullscreen .left .top .text-white}
-
-
-
 
 # Funciones de pérdida {.inverse .center .middle}
 
