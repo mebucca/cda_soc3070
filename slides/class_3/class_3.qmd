@@ -161,6 +161,7 @@ plot +
   xlim(0,1) +
   labs(title="Likelihood of p", x="p", y=expression(paste(p^{82}, (1-p)^{18}))) +
   guides(fill=FALSE, color=FALSE) +
+  scale_y_continuous(labels = scales::label_scientific()) +
   theme_julia() +
   theme(
     axis.text.y = element_text(size = 22),
@@ -239,6 +240,42 @@ $\hat{\boldsymbol{\beta}}$ es el MLE de $\boldsymbol{\beta}$ si es el(los) valor
 
 ## Estimación via Maximum Likelihood (MLE) {background-image="valdorcia.jpeg" .fullscreen .left .top .text-white}
 
+## Maximización numérica: un ejemplo
+
+En la práctica, buscamos el máximo evaluando la función en distintos valores de $p$, e iterando hacia donde crece:
+
+```{r, echo=TRUE}
+loglik <- function(p, k = 82, n = 100) k * log(p) + (n - k) * log(1 - p)
+
+valores_p    <- seq(0.01, 0.99, by = 0.01)   # toda la grilla de p
+resultados   <- rep(NA, length(valores_p))   # aquí guardamos cada loglik
+
+for (i in seq_along(valores_p)) {
+  resultados[i] <- loglik(valores_p[i])      # evaluamos y almacenamos
+}
+```
+
+. . .
+
+<br>
+
+Ya evaluamos toda la grilla. Ahora miramos solo la región cerca del óptimo:
+
+```{r, echo=TRUE}
+region <- valores_p >= 0.78 & valores_p <= 0.86   # ¿qué posiciones nos interesan?
+
+data.frame(p = valores_p[region], loglik = round(resultados[region], 3))
+```
+
+. . .
+
+Recorriendo los valores, el más alto se obtiene en $p = 0.82$ — exactamente $\hat p = k/n$, tal como predijo el álgebra.
+
+## Estimación via Maximum Likelihood (MLE) {background-image="valdorcia.jpeg" .fullscreen .left .top .text-white}
+
+
+
+
 # Funciones de pérdida {.inverse .center .middle}
 
 ## De maximizar a minimizar
@@ -288,6 +325,39 @@ log_loss
 ```
 
 Es exactamente $-\ell\ell(\hat p)/n$: la misma cantidad que maximizamos arriba, reescalada y con el signo invertido.
+
+## Minimización numérica: un ejemplo
+
+Mismo proceso que antes, pero ahora buscamos el $p$ que **minimiza** la log-loss:
+
+```{r, echo=TRUE}
+y <- c(rep(1, 82), rep(0, 18))
+log_loss <- function(p) -mean(y * log(p) + (1 - y) * log(1 - p))
+
+valores_p  <- seq(0.01, 0.99, by = 0.01)   # toda la grilla de p
+resultados <- rep(NA, length(valores_p))   # aquí guardamos cada log-loss
+
+for (i in seq_along(valores_p)) {
+  resultados[i] <- log_loss(valores_p[i])  # evaluamos y almacenamos
+}
+```
+
+. . .
+
+
+<br>
+
+Ya evaluamos toda la grilla. Ahora miramos solo la región cerca del óptimo:
+
+```{r, echo=TRUE}
+region <- valores_p >= 0.78 & valores_p <= 0.86   # ¿qué posiciones nos interesan?
+
+data.frame(p = valores_p[region], log_loss = round(resultados[region], 3))
+```
+
+. . .
+
+Recorriendo los valores, el más bajo se obtiene en $p = 0.82$: el mismo valor que maximiza la likelihood, ahora encontrado minimizando la pérdida.
 
 ## Otras funciones de pérdida
 
