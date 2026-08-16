@@ -80,8 +80,9 @@ estimación, MLE y funciones de pérdida.
 :::
 
 
+# Momentos {.inverse .center .middle}
 
-# Valor Esperado de variables discretas {.inverse .center .middle}
+
 
 ## Valor Esperado
 El valor esperado de una variable es el análogo teórico de un promedio. Los posibles valores de la variable se ponderan por su probabilidad de ocurrencia. En el caso de variables discretas:
