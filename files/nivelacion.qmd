@@ -900,23 +900,3 @@ Dos eventos $A$ y $B$ son **independientes** si la ocurrencia de uno no afecta l
 $$\mathbb{P}(A \mid B) = \mathbb{P}(A) \quad\iff\quad \mathbb{P}(A\cap B) = \mathbb{P}(A)\,\mathbb{P}(B)$$
 
 > Ejemplo: dos monedas justas, $A$ = “cara en la primera” y $B$ = “sello en la segunda”. Entonces $\mathbb{P}(A)=\mathbb{P}(B)=1/2$ y $\mathbb{P}(A\cap B)=1/4=\mathbb{P}(A)\mathbb{P}(B)$; por lo tanto, son independientes.
-
-### Simulación Monte Carlo
-
-Tiramos dos monedas simultáneamente: una justa y una cargada (90% probabilidad de cara). Si los lanzamientos son independientes, $\mathbb{P}(\text{Cara}_1\cap\text{Cara}_2) = 0.5 \times 0.9 = 0.45$. Lo verificamos simulando:
-
-En el código, `rbinom(n, 1, prob = p)` genera $n$ resultados codificados como $1$ (cara) o $0$ (sello), con probabilidad $p$ de obtener $1$. `set.seed(1)` permite reproducir exactamente la misma simulación.
-
-```{r montecarlo}
-set.seed(1)
-n <- 10000
-coin1 <- rbinom(n, 1, prob = 0.5)
-coin2 <- rbinom(n, 1, prob = 0.9)
-
-datos_monedas <- tibble(coin1 = coin1, coin2 = coin2) %>%
-  mutate(cc = if_else(coin1 == 1 & coin2 == 1, "Cara-Cara", "Otro"))
-
-prop.table(table(datos_monedas$cc))
-```
-
-La proporción simulada de "Cara-Cara" se acerca a 0.45, confirmando el cálculo teórico.
