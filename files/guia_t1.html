@@ -2312,26 +2312,13 @@ window.Quarto = {
     <h2 id="toc-title">Tabla de contenidos</h2>
    
   <ul>
-  <li><a href="#pre-cálculo" id="toc-pre-cálculo" class="nav-link active" data-scroll-target="#pre-cálculo">1. Pre-cálculo</a>
-  <ul class="collapse">
-  <li><a href="#funciones" id="toc-funciones" class="nav-link" data-scroll-target="#funciones">Funciones</a></li>
-  <li><a href="#exponenciales-y-logaritmos" id="toc-exponenciales-y-logaritmos" class="nav-link" data-scroll-target="#exponenciales-y-logaritmos">Exponenciales y logaritmos</a></li>
-  <li><a href="#sumatorias" id="toc-sumatorias" class="nav-link" data-scroll-target="#sumatorias">Sumatorias</a></li>
-  </ul></li>
-  <li><a href="#cálculo-sin-gradiente-ni-integrales" id="toc-cálculo-sin-gradiente-ni-integrales" class="nav-link" data-scroll-target="#cálculo-sin-gradiente-ni-integrales">2. Cálculo (sin gradiente ni integrales)</a>
-  <ul class="collapse">
-  <li><a href="#límites" id="toc-límites" class="nav-link" data-scroll-target="#límites">Límites</a></li>
-  <li><a href="#derivadas-de-una-variable" id="toc-derivadas-de-una-variable" class="nav-link" data-scroll-target="#derivadas-de-una-variable">Derivadas de una variable</a></li>
-  <li><a href="#derivadas-parciales" id="toc-derivadas-parciales" class="nav-link" data-scroll-target="#derivadas-parciales">Derivadas parciales</a></li>
-  <li><a href="#una-pregunta-conceptual-sobre-integrales" id="toc-una-pregunta-conceptual-sobre-integrales" class="nav-link" data-scroll-target="#una-pregunta-conceptual-sobre-integrales">Una pregunta conceptual sobre integrales</a></li>
-  </ul></li>
-  <li><a href="#probabilidad" id="toc-probabilidad" class="nav-link" data-scroll-target="#probabilidad">3. Probabilidad</a>
-  <ul class="collapse">
-  <li><a href="#espacio-muestral-eventos-y-operaciones" id="toc-espacio-muestral-eventos-y-operaciones" class="nav-link" data-scroll-target="#espacio-muestral-eventos-y-operaciones">Espacio muestral, eventos y operaciones</a></li>
-  <li><a href="#reglas-de-probabilidad" id="toc-reglas-de-probabilidad" class="nav-link" data-scroll-target="#reglas-de-probabilidad">Reglas de probabilidad</a></li>
-  <li><a href="#probabilidad-condicional-y-bayes" id="toc-probabilidad-condicional-y-bayes" class="nav-link" data-scroll-target="#probabilidad-condicional-y-bayes">Probabilidad condicional y Bayes</a></li>
+  <li><a href="#exponenciales" id="toc-exponenciales" class="nav-link active" data-scroll-target="#exponenciales">Exponenciales</a></li>
+  <li><a href="#logaritmos" id="toc-logaritmos" class="nav-link" data-scroll-target="#logaritmos">Logaritmos</a></li>
+  <li><a href="#sumatoria" id="toc-sumatoria" class="nav-link" data-scroll-target="#sumatoria">Sumatoria</a></li>
+  <li><a href="#derivada-simple" id="toc-derivada-simple" class="nav-link" data-scroll-target="#derivada-simple">Derivada simple</a></li>
+  <li><a href="#derivada-parcial-super-simple" id="toc-derivada-parcial-super-simple" class="nav-link" data-scroll-target="#derivada-parcial-super-simple">Derivada parcial (super simple)</a></li>
   <li><a href="#independencia" id="toc-independencia" class="nav-link" data-scroll-target="#independencia">Independencia</a></li>
-  </ul></li>
+  <li><a href="#penfermedad-test" id="toc-penfermedad-test" class="nav-link" data-scroll-target="#penfermedad-test">P(enfermedad | test)</a></li>
   <li><a href="#respuestas" id="toc-respuestas" class="nav-link" data-scroll-target="#respuestas">Respuestas</a></li>
   </ul>
 </nav>
@@ -2364,171 +2351,74 @@ window.Quarto = {
 </header>
 
 
-<p>Esta guía repasa los conceptos centrales de la <a href="nivelacion.qmd">Nivelación Matemática</a>, en el mismo orden. No repite el material completo — es un resumen para autoevaluar si los conceptos quedaron claros, con preguntas y ejercicios cortos al final de cada sección. Las respuestas están al final del documento.</p>
-<p>No se incluyen gradiente ni integrales como contenido a dominar (se retoman más adelante en el curso); solo aparece <strong>una</strong> pregunta conceptual sobre integrales, para introducir la idea.</p>
-<section id="pre-cálculo" class="level2">
-<h2 class="anchored" data-anchor-id="pre-cálculo">1. Pre-cálculo</h2>
-<section id="funciones" class="level3">
-<h3 class="anchored" data-anchor-id="funciones">Funciones</h3>
-<ul>
-<li>Una función asigna a cada <span class="math inline">\(x\)</span> del <strong>dominio</strong> un único valor <span class="math inline">\(f(x)\)</span>.</li>
-<li>El <strong>dominio natural</strong> se encuentra preguntando qué valores de <span class="math inline">\(x\)</span> “rompen” la fórmula: división por cero o raíz par de un número negativo.</li>
-<li>Familias comunes: lineal (<span class="math inline">\(mx+b\)</span>), potencia (<span class="math inline">\(x^n\)</span>), polinomios, racionales.</li>
-</ul>
-<p><strong>Preguntas</strong></p>
+<p>Preguntas de repaso sobre la <a href="nivelacion.qmd">Nivelación Matemática</a>. Dos preguntas por tema (muy fácil / fácil). Respuestas al final.</p>
+<section id="exponenciales" class="level2">
+<h2 class="anchored" data-anchor-id="exponenciales">Exponenciales</h2>
 <ol type="1">
-<li>¿Cuál es el dominio de <span class="math inline">\(f(x) = \dfrac{1}{x-2}\)</span>?</li>
-<li>¿Cuál es el dominio de <span class="math inline">\(g(x) = \sqrt{2x+6}\)</span>?</li>
-<li>Si <span class="math inline">\(f(x) = 3x - 4\)</span>, ¿cuánto vale <span class="math inline">\(f(5)\)</span>?</li>
+<li>Calcule <span class="math inline">\(2^3 \cdot 2^2\)</span>.</li>
+<li>Resuelva para <span class="math inline">\(x\)</span>: <span class="math inline">\(3^x = 81\)</span>.</li>
 </ol>
 </section>
-<section id="exponenciales-y-logaritmos" class="level3">
-<h3 class="anchored" data-anchor-id="exponenciales-y-logaritmos">Exponenciales y logaritmos</h3>
-<ul>
-<li><span class="math inline">\(f(x) = a^x\)</span> tiene dominio <span class="math inline">\((-\infty,\infty)\)</span> y recorrido <span class="math inline">\((0,\infty)\)</span>.</li>
-<li>El logaritmo es la función inversa de la exponencial: <span class="math inline">\(\log_a x = y \iff a^y = x\)</span>.</li>
-<li>Regla clave para “bajar” un exponente: <span class="math inline">\(\ln(x^r) = r \ln x\)</span>.</li>
-</ul>
-<p><strong>Preguntas</strong></p>
-<ol start="4" type="1">
-<li>Simplifique <span class="math inline">\(\ln(e^3)\)</span>.</li>
-<li>Resuelva para <span class="math inline">\(x\)</span>: <span class="math inline">\(2^x = 32\)</span>.</li>
-<li>¿Para qué sirve aplicar <span class="math inline">\(\ln\)</span> a ambos lados de una ecuación como <span class="math inline">\((1.05)^x = 3\)</span>?</li>
+<section id="logaritmos" class="level2">
+<h2 class="anchored" data-anchor-id="logaritmos">Logaritmos</h2>
+<ol start="3" type="1">
+<li>Calcule <span class="math inline">\(\log_2 8\)</span>.</li>
+<li>Simplifique <span class="math inline">\(\ln(e^5)\)</span>.</li>
 </ol>
 </section>
-<section id="sumatorias" class="level3">
-<h3 class="anchored" data-anchor-id="sumatorias">Sumatorias</h3>
-<ul>
-<li><span class="math inline">\(\sum_{i=1}^n a_i = a_1 + a_2 + \dots + a_n\)</span>.</li>
-<li><span class="math inline">\(\sum_{i=1}^n c = cn\)</span> y <span class="math inline">\(\sum_{i=1}^n i = \dfrac{n(n+1)}{2}\)</span>.</li>
-</ul>
-<p><strong>Preguntas</strong></p>
+<section id="sumatoria" class="level2">
+<h2 class="anchored" data-anchor-id="sumatoria">Sumatoria</h2>
+<ol start="5" type="1">
+<li>Calcule <span class="math inline">\(\sum_{i=1}^{3} i\)</span>.</li>
+<li>Si <span class="math inline">\(a_i = 2i\)</span>, calcule <span class="math inline">\(\sum_{i=1}^{4} a_i\)</span>.</li>
+</ol>
+</section>
+<section id="derivada-simple" class="level2">
+<h2 class="anchored" data-anchor-id="derivada-simple">Derivada simple</h2>
 <ol start="7" type="1">
-<li>Calcule <span class="math inline">\(\sum_{i=1}^{4} i\)</span> usando la fórmula, y verifique expandiendo la suma término a término.</li>
-<li>Si <span class="math inline">\(a_i = 2i\)</span>, calcule <span class="math inline">\(\sum_{i=1}^{3} a_i\)</span>.</li>
+<li>Derive <span class="math inline">\(f(x) = x^2\)</span>.</li>
+<li>Derive <span class="math inline">\(f(x) = 3x^2 + 5x\)</span>.</li>
 </ol>
 </section>
-</section>
-<section id="cálculo-sin-gradiente-ni-integrales" class="level2">
-<h2 class="anchored" data-anchor-id="cálculo-sin-gradiente-ni-integrales">2. Cálculo (sin gradiente ni integrales)</h2>
-<section id="límites" class="level3">
-<h3 class="anchored" data-anchor-id="límites">Límites</h3>
-<ul>
-<li><span class="math inline">\(\lim_{x\to a} f(x) = L\)</span>: <span class="math inline">\(f(x)\)</span> se acerca a <span class="math inline">\(L\)</span> cuando <span class="math inline">\(x\)</span> se acerca a <span class="math inline">\(a\)</span>, aunque <span class="math inline">\(f\)</span> no esté definida exactamente en <span class="math inline">\(a\)</span>.</li>
-<li>Truco típico: factorizar y simplificar antes de evaluar el límite.</li>
-</ul>
-<p><strong>Preguntas</strong></p>
+<section id="derivada-parcial-super-simple" class="level2">
+<h2 class="anchored" data-anchor-id="derivada-parcial-super-simple">Derivada parcial (super simple)</h2>
 <ol start="9" type="1">
-<li>Calcule <span class="math inline">\(\lim_{x\to 2} (3x+1)\)</span>.</li>
-<li>Para <span class="math inline">\(g(x) = \dfrac{x^2-9}{x-3}\)</span>, calcule <span class="math inline">\(\lim_{x\to 3} g(x)\)</span> (aunque <span class="math inline">\(g(3)\)</span> no exista).</li>
+<li>Para <span class="math inline">\(f(x,y) = x^2 + y\)</span>, calcule <span class="math inline">\(\dfrac{\partial f}{\partial x}\)</span>.</li>
+<li>Para <span class="math inline">\(f(x,y) = x + 3y^2\)</span>, calcule <span class="math inline">\(\dfrac{\partial f}{\partial y}\)</span>.</li>
 </ol>
 </section>
-<section id="derivadas-de-una-variable" class="level3">
-<h3 class="anchored" data-anchor-id="derivadas-de-una-variable">Derivadas de una variable</h3>
-<ul>
-<li><span class="math inline">\(f&#39;(x_0)\)</span> mide la pendiente de la tangente en <span class="math inline">\(x_0\)</span>: <span class="math inline">\(f&#39;(x_0) = \lim_{h\to 0} \dfrac{f(x_0+h)-f(x_0)}{h}\)</span>.</li>
-<li>Reglas básicas: constante, potencia (<span class="math inline">\(x^n \to nx^{n-1}\)</span>), exponencial, logaritmo, suma, producto, cociente, cadena.</li>
-<li>En un máximo o mínimo interior, <span class="math inline">\(f&#39;(x^*) = 0\)</span> (condición necesaria, no suficiente).</li>
-</ul>
-<p><strong>Preguntas</strong></p>
+<section id="independencia" class="level2">
+<h2 class="anchored" data-anchor-id="independencia">Independencia</h2>
 <ol start="11" type="1">
-<li>Derive <span class="math inline">\(f(x) = 5x^3 - 2x + 7\)</span>.</li>
-<li>Use la regla de la cadena para derivar <span class="math inline">\(h(x) = (2x+5)^2\)</span>.</li>
-<li>Encuentre el punto crítico de <span class="math inline">\(f(x) = -(x-3)^2 + 10\)</span>.</li>
+<li>Si <span class="math inline">\(A\)</span> y <span class="math inline">\(B\)</span> son independientes con <span class="math inline">\(\mathbb{P}(A)=0.4\)</span> y <span class="math inline">\(\mathbb{P}(B)=0.5\)</span>, calcule <span class="math inline">\(\mathbb{P}(A\cap B)\)</span>.</li>
+<li>Dos monedas justas, lanzamientos independientes. ¿Cuál es la probabilidad de obtener cara en ambas?</li>
 </ol>
 </section>
-<section id="derivadas-parciales" class="level3">
-<h3 class="anchored" data-anchor-id="derivadas-parciales">Derivadas parciales</h3>
-<ul>
-<li>Para <span class="math inline">\(f(x,y)\)</span>, la derivada parcial respecto a <span class="math inline">\(x\)</span> trata a <span class="math inline">\(y\)</span> como constante (y viceversa).</li>
-</ul>
-<p><strong>Preguntas</strong></p>
-<ol start="14" type="1">
-<li>Para <span class="math inline">\(f(x,y) = 3x^2 + y^3\)</span>, calcule <span class="math inline">\(\dfrac{\partial f}{\partial x}\)</span> y <span class="math inline">\(\dfrac{\partial f}{\partial y}\)</span>.</li>
-<li>Evalúe ambas derivadas parciales de la pregunta anterior en el punto <span class="math inline">\((1,2)\)</span>.</li>
-</ol>
-</section>
-<section id="una-pregunta-conceptual-sobre-integrales" class="level3">
-<h3 class="anchored" data-anchor-id="una-pregunta-conceptual-sobre-integrales">Una pregunta conceptual sobre integrales</h3>
-<ol start="16" type="1">
-<li>En términos generales (sin calcular nada): ¿qué representa geométricamente <span class="math inline">\(\int_a^b f(x)\,dx\)</span>, y en qué sentido es una integral la operación “inversa” de una derivada?</li>
-</ol>
-</section>
-</section>
-<section id="probabilidad" class="level2">
-<h2 class="anchored" data-anchor-id="probabilidad">3. Probabilidad</h2>
-<section id="espacio-muestral-eventos-y-operaciones" class="level3">
-<h3 class="anchored" data-anchor-id="espacio-muestral-eventos-y-operaciones">Espacio muestral, eventos y operaciones</h3>
-<ul>
-<li><span class="math inline">\(\Omega\)</span>: conjunto de todos los resultados posibles. Evento: subconjunto de <span class="math inline">\(\Omega\)</span>.</li>
-<li><span class="math inline">\(A \cap B\)</span> (y), <span class="math inline">\(A \cup B\)</span> (o inclusivo), <span class="math inline">\(A^c\)</span> (complemento).</li>
-<li>Mutuamente excluyentes: <span class="math inline">\(A \cap B = \varnothing\)</span>.</li>
-</ul>
-<p><strong>Preguntas</strong></p>
-<ol start="17" type="1">
-<li>Con un dado y <span class="math inline">\(A = \{2,4,6\}\)</span>, <span class="math inline">\(B = \{1,2,3\}\)</span>: calcule <span class="math inline">\(A \cap B\)</span>, <span class="math inline">\(A \cup B\)</span> y <span class="math inline">\(A^c\)</span>.</li>
-</ol>
-</section>
-<section id="reglas-de-probabilidad" class="level3">
-<h3 class="anchored" data-anchor-id="reglas-de-probabilidad">Reglas de probabilidad</h3>
-<ul>
-<li><span class="math inline">\(0 \le \mathbb{P}(A) \le 1\)</span>; <span class="math inline">\(\mathbb{P}(A^c) = 1 - \mathbb{P}(A)\)</span>.</li>
-<li><span class="math inline">\(\mathbb{P}(A\cup B) = \mathbb{P}(A) + \mathbb{P}(B) - \mathbb{P}(A\cap B)\)</span>.</li>
-</ul>
-<p><strong>Preguntas</strong></p>
-<ol start="18" type="1">
-<li>Con un dado justo, <span class="math inline">\(A=\{1,2\}\)</span> y <span class="math inline">\(B=\{2,3\}\)</span>: calcule <span class="math inline">\(\mathbb{P}(A\cup B)\)</span>.</li>
-</ol>
-</section>
-<section id="probabilidad-condicional-y-bayes" class="level3">
-<h3 class="anchored" data-anchor-id="probabilidad-condicional-y-bayes">Probabilidad condicional y Bayes</h3>
-<ul>
-<li><span class="math inline">\(\mathbb{P}(A\mid B) = \dfrac{\mathbb{P}(A\cap B)}{\mathbb{P}(B)}\)</span>.</li>
-<li>Regla del producto: <span class="math inline">\(\mathbb{P}(A\cap B) = \mathbb{P}(A\mid B)\mathbb{P}(B)\)</span>.</li>
-<li>Bayes: <span class="math inline">\(\mathbb{P}(A\mid B) = \dfrac{\mathbb{P}(B\mid A)\mathbb{P}(A)}{\mathbb{P}(B)}\)</span>.</li>
-</ul>
-<p><strong>Preguntas</strong></p>
-<ol start="19" type="1">
-<li>En una población, 10% tiene una enfermedad (<span class="math inline">\(E\)</span>). Un test da positivo (<span class="math inline">\(T^+\)</span>) en 90% de los enfermos y en 5% de los sanos. Calcule <span class="math inline">\(\mathbb{P}(T^+ \cap E)\)</span>.</li>
-<li>Usando el resultado anterior y que <span class="math inline">\(\mathbb{P}(T^+) = \mathbb{P}(T^+\mid E)\mathbb{P}(E) + \mathbb{P}(T^+\mid E^c)\mathbb{P}(E^c)\)</span>, calcule <span class="math inline">\(\mathbb{P}(E \mid T^+)\)</span> con Bayes.</li>
-</ol>
-</section>
-<section id="independencia" class="level3">
-<h3 class="anchored" data-anchor-id="independencia">Independencia</h3>
-<ul>
-<li><span class="math inline">\(A\)</span> y <span class="math inline">\(B\)</span> son independientes si <span class="math inline">\(\mathbb{P}(A\cap B) = \mathbb{P}(A)\mathbb{P}(B)\)</span>.</li>
-</ul>
-<p><strong>Preguntas</strong></p>
-<ol start="21" type="1">
-<li>Dos monedas justas: <span class="math inline">\(A\)</span> = “cara en la primera”, <span class="math inline">\(B\)</span> = “cara en la segunda”. ¿Son independientes? Verifique con la definición.</li>
+<section id="penfermedad-test" class="level2">
+<h2 class="anchored" data-anchor-id="penfermedad-test">P(enfermedad | test)</h2>
+<ol start="13" type="1">
+<li>10% de una población tiene una enfermedad (<span class="math inline">\(E\)</span>). Un test da positivo en 90% de los enfermos. Calcule <span class="math inline">\(\mathbb{P}(T^+ \cap E)\)</span>.</li>
+<li>Con <span class="math inline">\(\mathbb{P}(T^+\cap E)=0.09\)</span> y <span class="math inline">\(\mathbb{P}(T^+)=0.135\)</span>, calcule <span class="math inline">\(\mathbb{P}(E\mid T^+)\)</span>.</li>
 </ol>
 <hr>
-</section>
 </section>
 <section id="respuestas" class="level2">
 <h2 class="anchored" data-anchor-id="respuestas">Respuestas</h2>
 <ol type="1">
-<li><span class="math inline">\((-\infty,2)\cup(2,\infty)\)</span>.</li>
-<li><span class="math inline">\(2x+6\ge 0 \Rightarrow x\ge -3\)</span>: dominio <span class="math inline">\([-3,\infty)\)</span>.</li>
-<li><span class="math inline">\(f(5) = 3(5)-4 = 11\)</span>.</li>
-<li><span class="math inline">\(\ln(e^3) = 3\)</span>.</li>
-<li><span class="math inline">\(2^x=32=2^5 \Rightarrow x=5\)</span>.</li>
-<li>Permite “bajar” el exponente usando <span class="math inline">\(\ln(x^r)=r\ln x\)</span> y despejar <span class="math inline">\(x\)</span> algebraicamente.</li>
-<li><span class="math inline">\(\frac{4(5)}{2}=10\)</span>; expandido: <span class="math inline">\(1+2+3+4=10\)</span>.</li>
-<li><span class="math inline">\(2(1)+2(2)+2(3) = 2+4+6=12\)</span>.</li>
-<li><span class="math inline">\(3(2)+1=7\)</span>.</li>
-<li>Factorizando, <span class="math inline">\(g(x)=x+3\)</span> para <span class="math inline">\(x\neq 3\)</span>, entonces el límite es <span class="math inline">\(6\)</span>.</li>
-<li><span class="math inline">\(f&#39;(x) = 15x^2 - 2\)</span>.</li>
-<li>Capa externa <span class="math inline">\(u^2\)</span>, interna <span class="math inline">\(2x+5\)</span>: <span class="math inline">\(h&#39;(x) = 2(2x+5)\cdot 2 = 8x+20\)</span>.</li>
-<li><span class="math inline">\(f&#39;(x) = -2(x-3) = 0 \Rightarrow x^*=3\)</span>.</li>
-<li><span class="math inline">\(\partial f/\partial x = 6x\)</span>, <span class="math inline">\(\partial f/\partial y = 3y^2\)</span>.</li>
-<li>En <span class="math inline">\((1,2)\)</span>: <span class="math inline">\(\partial f/\partial x = 6\)</span>, <span class="math inline">\(\partial f/\partial y = 12\)</span>.</li>
-<li>Representa el área acumulada bajo la curva de <span class="math inline">\(f\)</span> entre <span class="math inline">\(a\)</span> y <span class="math inline">\(b\)</span>. Es la operación inversa de la derivada en el sentido de que si <span class="math inline">\(F&#39; = f\)</span>, entonces <span class="math inline">\(\int_a^b f(x)\,dx = F(b)-F(a)\)</span> (Teorema Fundamental del Cálculo): derivar e integrar deshacen el efecto del otro.</li>
-<li><span class="math inline">\(A\cap B=\{2\}\)</span>, <span class="math inline">\(A\cup B=\{1,2,3,4,6\}\)</span>, <span class="math inline">\(A^c=\{1,3,5\}\)</span>.</li>
-<li><span class="math inline">\(\mathbb{P}(A)=2/6\)</span>, <span class="math inline">\(\mathbb{P}(B)=2/6\)</span>, <span class="math inline">\(\mathbb{P}(A\cap B)=1/6\)</span>; <span class="math inline">\(\mathbb{P}(A\cup B)=2/6+2/6-1/6=3/6=1/2\)</span>.</li>
-<li><span class="math inline">\(\mathbb{P}(T^+\cap E) = 0.9 \times 0.1 = 0.09\)</span>.</li>
-<li><span class="math inline">\(\mathbb{P}(T^+) = 0.9(0.1)+0.05(0.9) = 0.09+0.045=0.135\)</span>. <span class="math inline">\(\mathbb{P}(E\mid T^+) = 0.09/0.135 \approx 0.67\)</span>.</li>
-<li><span class="math inline">\(\mathbb{P}(A)=\mathbb{P}(B)=1/2\)</span>, <span class="math inline">\(\mathbb{P}(A\cap B)=1/4=\mathbb{P}(A)\mathbb{P}(B)\)</span>: sí, independientes.</li>
+<li><span class="math inline">\(2^3\cdot2^2 = 2^5 = 32\)</span>.</li>
+<li><span class="math inline">\(3^x=81=3^4 \Rightarrow x=4\)</span>.</li>
+<li><span class="math inline">\(\log_2 8 = 3\)</span>.</li>
+<li><span class="math inline">\(\ln(e^5)=5\)</span>.</li>
+<li><span class="math inline">\(1+2+3=6\)</span>.</li>
+<li><span class="math inline">\(2(1)+2(2)+2(3)+2(4)=2+4+6+8=20\)</span>.</li>
+<li><span class="math inline">\(f&#39;(x)=2x\)</span>.</li>
+<li><span class="math inline">\(f&#39;(x)=6x+5\)</span>.</li>
+<li><span class="math inline">\(\partial f/\partial x = 2x\)</span>.</li>
+<li><span class="math inline">\(\partial f/\partial y = 6y\)</span>.</li>
+<li><span class="math inline">\(\mathbb{P}(A\cap B)=\mathbb{P}(A)\mathbb{P}(B)=0.4\times0.5=0.2\)</span>.</li>
+<li><span class="math inline">\(0.5\times0.5=0.25\)</span>.</li>
+<li><span class="math inline">\(0.9\times0.1=0.09\)</span>.</li>
+<li><span class="math inline">\(0.09/0.135 \approx 0.67\)</span>.</li>
 </ol>
 </section>
 

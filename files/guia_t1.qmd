@@ -12,145 +12,58 @@ format:
     embed-resources: true
 ---
 
-Esta guía repasa los conceptos centrales de la [Nivelación Matemática](nivelacion.qmd), en el mismo orden. No repite el material completo — es un resumen para autoevaluar si los conceptos quedaron claros, con preguntas y ejercicios cortos al final de cada sección. Las respuestas están al final del documento.
+Preguntas de repaso sobre la [Nivelación Matemática](nivelacion.qmd). Dos preguntas por tema (muy fácil / fácil). Respuestas al final.
 
-No se incluyen gradiente ni integrales como contenido a dominar (se retoman más adelante en el curso); solo aparece **una** pregunta conceptual sobre integrales, para introducir la idea.
+## Exponenciales
 
-## 1. Pre-cálculo
+1. Calcule $2^3 \cdot 2^2$.
+2. Resuelva para $x$: $3^x = 81$.
 
-### Funciones
+## Logaritmos
 
-- Una función asigna a cada $x$ del **dominio** un único valor $f(x)$.
-- El **dominio natural** se encuentra preguntando qué valores de $x$ "rompen" la fórmula: división por cero o raíz par de un número negativo.
-- Familias comunes: lineal ($mx+b$), potencia ($x^n$), polinomios, racionales.
+3. Calcule $\log_2 8$.
+4. Simplifique $\ln(e^5)$.
 
-**Preguntas**
+## Sumatoria
 
-1. ¿Cuál es el dominio de $f(x) = \dfrac{1}{x-2}$?
-2. ¿Cuál es el dominio de $g(x) = \sqrt{2x+6}$?
-3. Si $f(x) = 3x - 4$, ¿cuánto vale $f(5)$?
+5. Calcule $\sum_{i=1}^{3} i$.
+6. Si $a_i = 2i$, calcule $\sum_{i=1}^{4} a_i$.
 
-### Exponenciales y logaritmos
+## Derivada simple
 
-- $f(x) = a^x$ tiene dominio $(-\infty,\infty)$ y recorrido $(0,\infty)$.
-- El logaritmo es la función inversa de la exponencial: $\log_a x = y \iff a^y = x$.
-- Regla clave para "bajar" un exponente: $\ln(x^r) = r \ln x$.
+7. Derive $f(x) = x^2$.
+8. Derive $f(x) = 3x^2 + 5x$.
 
-**Preguntas**
+## Derivada parcial (super simple)
 
-4. Simplifique $\ln(e^3)$.
-5. Resuelva para $x$: $2^x = 32$.
-6. ¿Para qué sirve aplicar $\ln$ a ambos lados de una ecuación como $(1.05)^x = 3$?
+9. Para $f(x,y) = x^2 + y$, calcule $\dfrac{\partial f}{\partial x}$.
+10. Para $f(x,y) = x + 3y^2$, calcule $\dfrac{\partial f}{\partial y}$.
 
-### Sumatorias
+## Independencia
 
-- $\sum_{i=1}^n a_i = a_1 + a_2 + \dots + a_n$.
-- $\sum_{i=1}^n c = cn$ y $\sum_{i=1}^n i = \dfrac{n(n+1)}{2}$.
+11. Si $A$ y $B$ son independientes con $\mathbb{P}(A)=0.4$ y $\mathbb{P}(B)=0.5$, calcule $\mathbb{P}(A\cap B)$.
+12. Dos monedas justas, lanzamientos independientes. ¿Cuál es la probabilidad de obtener cara en ambas?
 
-**Preguntas**
+## P(enfermedad | test)
 
-7. Calcule $\sum_{i=1}^{4} i$ usando la fórmula, y verifique expandiendo la suma término a término.
-8. Si $a_i = 2i$, calcule $\sum_{i=1}^{3} a_i$.
-
-## 2. Cálculo (sin gradiente ni integrales)
-
-### Límites
-
-- $\lim_{x\to a} f(x) = L$: $f(x)$ se acerca a $L$ cuando $x$ se acerca a $a$, aunque $f$ no esté definida exactamente en $a$.
-- Truco típico: factorizar y simplificar antes de evaluar el límite.
-
-**Preguntas**
-
-9. Calcule $\lim_{x\to 2} (3x+1)$.
-10. Para $g(x) = \dfrac{x^2-9}{x-3}$, calcule $\lim_{x\to 3} g(x)$ (aunque $g(3)$ no exista).
-
-### Derivadas de una variable
-
-- $f'(x_0)$ mide la pendiente de la tangente en $x_0$: $f'(x_0) = \lim_{h\to 0} \dfrac{f(x_0+h)-f(x_0)}{h}$.
-- Reglas básicas: constante, potencia ($x^n \to nx^{n-1}$), exponencial, logaritmo, suma, producto, cociente, cadena.
-- En un máximo o mínimo interior, $f'(x^*) = 0$ (condición necesaria, no suficiente).
-
-**Preguntas**
-
-11. Derive $f(x) = 5x^3 - 2x + 7$.
-12. Use la regla de la cadena para derivar $h(x) = (2x+5)^2$.
-13. Encuentre el punto crítico de $f(x) = -(x-3)^2 + 10$.
-
-### Derivadas parciales
-
-- Para $f(x,y)$, la derivada parcial respecto a $x$ trata a $y$ como constante (y viceversa).
-
-**Preguntas**
-
-14. Para $f(x,y) = 3x^2 + y^3$, calcule $\dfrac{\partial f}{\partial x}$ y $\dfrac{\partial f}{\partial y}$.
-15. Evalúe ambas derivadas parciales de la pregunta anterior en el punto $(1,2)$.
-
-### Una pregunta conceptual sobre integrales
-
-16. En términos generales (sin calcular nada): ¿qué representa geométricamente $\int_a^b f(x)\,dx$, y en qué sentido es una integral la operación "inversa" de una derivada?
-
-## 3. Probabilidad
-
-### Espacio muestral, eventos y operaciones
-
-- $\Omega$: conjunto de todos los resultados posibles. Evento: subconjunto de $\Omega$.
-- $A \cap B$ (y), $A \cup B$ (o inclusivo), $A^c$ (complemento).
-- Mutuamente excluyentes: $A \cap B = \varnothing$.
-
-**Preguntas**
-
-17. Con un dado y $A = \{2,4,6\}$, $B = \{1,2,3\}$: calcule $A \cap B$, $A \cup B$ y $A^c$.
-
-### Reglas de probabilidad
-
-- $0 \le \mathbb{P}(A) \le 1$; $\mathbb{P}(A^c) = 1 - \mathbb{P}(A)$.
-- $\mathbb{P}(A\cup B) = \mathbb{P}(A) + \mathbb{P}(B) - \mathbb{P}(A\cap B)$.
-
-**Preguntas**
-
-18. Con un dado justo, $A=\{1,2\}$ y $B=\{2,3\}$: calcule $\mathbb{P}(A\cup B)$.
-
-### Probabilidad condicional y Bayes
-
-- $\mathbb{P}(A\mid B) = \dfrac{\mathbb{P}(A\cap B)}{\mathbb{P}(B)}$.
-- Regla del producto: $\mathbb{P}(A\cap B) = \mathbb{P}(A\mid B)\mathbb{P}(B)$.
-- Bayes: $\mathbb{P}(A\mid B) = \dfrac{\mathbb{P}(B\mid A)\mathbb{P}(A)}{\mathbb{P}(B)}$.
-
-**Preguntas**
-
-19. En una población, 10% tiene una enfermedad ($E$). Un test da positivo ($T^+$) en 90% de los enfermos y en 5% de los sanos. Calcule $\mathbb{P}(T^+ \cap E)$.
-20. Usando el resultado anterior y que $\mathbb{P}(T^+) = \mathbb{P}(T^+\mid E)\mathbb{P}(E) + \mathbb{P}(T^+\mid E^c)\mathbb{P}(E^c)$, calcule $\mathbb{P}(E \mid T^+)$ con Bayes.
-
-### Independencia
-
-- $A$ y $B$ son independientes si $\mathbb{P}(A\cap B) = \mathbb{P}(A)\mathbb{P}(B)$.
-
-**Preguntas**
-
-21. Dos monedas justas: $A$ = "cara en la primera", $B$ = "cara en la segunda". ¿Son independientes? Verifique con la definición.
+13. 10% de una población tiene una enfermedad ($E$). Un test da positivo en 90% de los enfermos. Calcule $\mathbb{P}(T^+ \cap E)$.
+14. Con $\mathbb{P}(T^+\cap E)=0.09$ y $\mathbb{P}(T^+)=0.135$, calcule $\mathbb{P}(E\mid T^+)$.
 
 ---
 
 ## Respuestas
 
-1. $(-\infty,2)\cup(2,\infty)$.
-2. $2x+6\ge 0 \Rightarrow x\ge -3$: dominio $[-3,\infty)$.
-3. $f(5) = 3(5)-4 = 11$.
-4. $\ln(e^3) = 3$.
-5. $2^x=32=2^5 \Rightarrow x=5$.
-6. Permite "bajar" el exponente usando $\ln(x^r)=r\ln x$ y despejar $x$ algebraicamente.
-7. $\frac{4(5)}{2}=10$; expandido: $1+2+3+4=10$.
-8. $2(1)+2(2)+2(3) = 2+4+6=12$.
-9. $3(2)+1=7$.
-10. Factorizando, $g(x)=x+3$ para $x\neq 3$, entonces el límite es $6$.
-11. $f'(x) = 15x^2 - 2$.
-12. Capa externa $u^2$, interna $2x+5$: $h'(x) = 2(2x+5)\cdot 2 = 8x+20$.
-13. $f'(x) = -2(x-3) = 0 \Rightarrow x^*=3$.
-14. $\partial f/\partial x = 6x$, $\partial f/\partial y = 3y^2$.
-15. En $(1,2)$: $\partial f/\partial x = 6$, $\partial f/\partial y = 12$.
-16. Representa el área acumulada bajo la curva de $f$ entre $a$ y $b$. Es la operación inversa de la derivada en el sentido de que si $F' = f$, entonces $\int_a^b f(x)\,dx = F(b)-F(a)$ (Teorema Fundamental del Cálculo): derivar e integrar deshacen el efecto del otro.
-17. $A\cap B=\{2\}$, $A\cup B=\{1,2,3,4,6\}$, $A^c=\{1,3,5\}$.
-18. $\mathbb{P}(A)=2/6$, $\mathbb{P}(B)=2/6$, $\mathbb{P}(A\cap B)=1/6$; $\mathbb{P}(A\cup B)=2/6+2/6-1/6=3/6=1/2$.
-19. $\mathbb{P}(T^+\cap E) = 0.9 \times 0.1 = 0.09$.
-20. $\mathbb{P}(T^+) = 0.9(0.1)+0.05(0.9) = 0.09+0.045=0.135$. $\mathbb{P}(E\mid T^+) = 0.09/0.135 \approx 0.67$.
-21. $\mathbb{P}(A)=\mathbb{P}(B)=1/2$, $\mathbb{P}(A\cap B)=1/4=\mathbb{P}(A)\mathbb{P}(B)$: sí, independientes.
+1. $2^3\cdot2^2 = 2^5 = 32$.
+2. $3^x=81=3^4 \Rightarrow x=4$.
+3. $\log_2 8 = 3$.
+4. $\ln(e^5)=5$.
+5. $1+2+3=6$.
+6. $2(1)+2(2)+2(3)+2(4)=2+4+6+8=20$.
+7. $f'(x)=2x$.
+8. $f'(x)=6x+5$.
+9. $\partial f/\partial x = 2x$.
+10. $\partial f/\partial y = 6y$.
+11. $\mathbb{P}(A\cap B)=\mathbb{P}(A)\mathbb{P}(B)=0.4\times0.5=0.2$.
+12. $0.5\times0.5=0.25$.
+13. $0.9\times0.1=0.09$.
+14. $0.09/0.135 \approx 0.67$.
