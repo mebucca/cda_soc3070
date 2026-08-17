@@ -16,49 +16,49 @@ Preguntas de repaso sobre la [Nivelación Matemática](nivelacion.qmd). Dos preg
 
 ## Exponenciales
 
-1. Calcule $2^3 \cdot 2^2$.
-2. Resuelva para $x$: $3^x = 81$.
+1. Calcula $e^2 \cdot e^3$.
+2.  Calcula $e^3 / e^2$.
 
 ## Logaritmos
 
-3. Calcule $\log_2 8$.
-4. Simplifique $\ln(e^5)$.
+3. Calcula $\ln(e^3)$.
+4. Simplifica $\ln([xy]/z)$.
 
 ## Sumatoria
 
-5. Calcule $\sum_{i=1}^{3} i$.
-6. Si $a_i = 2i$, calcule $\sum_{i=1}^{4} a_i$.
+5. Calcula $\sum_{i=1}^{3} i$.
+6. Calcula $\sum_{i=1}^{4} (2i + 1)$.
 
-## Derivada simple
+## Derivada 
 
-7. Derive $f(x) = x^2$.
-8. Derive $f(x) = 3x^2 + 5x$.
+7. Deriva $f(x) = x^2$.
+8. Deriva $f(x) = 3x^2 + 5x$.
 
-## Derivada parcial (super simple)
+## Derivada parcial
 
-9. Para $f(x,y) = x^2 + y$, calcule $\dfrac{\partial f}{\partial x}$.
-10. Para $f(x,y) = x + 3y^2$, calcule $\dfrac{\partial f}{\partial y}$.
+9. Para $f(x,y) = x^2 + y$, calcula $\dfrac{\partial f}{\partial x}$.
+10. Para $f(x,y) = x + 3y^2$, calcula $\dfrac{\partial f}{\partial y}$.
 
 ## Independencia
 
-11. Si $A$ y $B$ son independientes con $\mathbb{P}(A)=0.4$ y $\mathbb{P}(B)=0.5$, calcule $\mathbb{P}(A\cap B)$.
+11. Si $A$ y $B$ son independientes con $\mathbb{P}(A)=0.4$ y $\mathbb{P}(B)=0.5$, calcula $\mathbb{P}(A\cap B)$.
 12. Dos monedas justas, lanzamientos independientes. ¿Cuál es la probabilidad de obtener cara en ambas?
 
 ## P(enfermedad | test)
 
-13. 10% de una población tiene una enfermedad ($E$). Un test da positivo en 90% de los enfermos. Calcule $\mathbb{P}(T^+ \cap E)$.
-14. Con $\mathbb{P}(T^+\cap E)=0.09$ y $\mathbb{P}(T^+)=0.135$, calcule $\mathbb{P}(E\mid T^+)$.
+13. 10% de una población tiene una enfermedad ($E$). Un test da positivo en 90% de los enfermos. Calcula $\mathbb{P}(T^+ \cap E)$.
+14. Con $\mathbb{P}(T^+\cap E)=0.09$ y $\mathbb{P}(T^+)=0.135$, calcula $\mathbb{P}(E\mid T^+)$.
 
 ---
 
 ## Respuestas
 
-1. $2^3\cdot2^2 = 2^5 = 32$.
-2. $3^x=81=3^4 \Rightarrow x=4$.
-3. $\log_2 8 = 3$.
-4. $\ln(e^5)=5$.
+1. $e^2\cdot e^3 = e^5$.
+2. $e^3/e^2 = e^{3-2} = e$.
+3. $\ln(e^3) = 3$.
+4. $\ln(xy/z)=\ln x+\ln y-\ln z$.
 5. $1+2+3=6$.
-6. $2(1)+2(2)+2(3)+2(4)=2+4+6+8=20$.
+6. $(2\cdot1+1)+(2\cdot2+1)+(2\cdot3+1)+(2\cdot4+1)=3+5+7+9=24$.
 7. $f'(x)=2x$.
 8. $f'(x)=6x+5$.
 9. $\partial f/\partial x = 2x$.
