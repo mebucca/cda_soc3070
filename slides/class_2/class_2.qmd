@@ -82,7 +82,11 @@ estimación, MLE y funciones de pérdida.
 
 # Momentos {.inverse .center .middle}
 
+## {.center .middle}
 
+![](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSUbcbfH2e3_ysRFN_MQm468Nn4MtgYNGLOEBkqUMkpWTRyuwN59skJkk&s=10)
+
+# Valor Esperado {.inverse .center .middle}
 
 ## Valor Esperado
 El valor esperado de una variable es el análogo teórico de un promedio. Los posibles valores de la variable se ponderan por su probabilidad de ocurrencia. En el caso de variables discretas:
@@ -226,7 +230,8 @@ Si X es una variable Binomial, su valor esperado viene dado por:
 
 [Respuesta]{.bold}: $np = 200 \times 0.5 = 100$
 
-# Varianza de variables discretas {.inverse .center .middle}
+
+# Varianza {.inverse .center .middle}
 
 ## Varianza
 La varianza de una variable aleatoria es el análogo teórico de la varianza de los datos.
