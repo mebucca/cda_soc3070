@@ -8,6 +8,7 @@ Este repositorio contiene el material del curso SOC3070 Análisis de Datos Categ
 ### Nivelación Matemática
 
 - Pre-calculo, cálculo y fundamento de probabilidad: [`[Notebook]`](https://mebucca.github.io/cda_soc3070/files/nivelacion#0) [`[Code]`](files/nivelacion.qmd)
+- Guía de estudio 1 (repaso nivelación): [`[Notebook]`](https://mebucca.github.io/cda_soc3070/files/guia_t1#0) [`[Code]`](files/guia_t1.qmd)
 
 
 ---
