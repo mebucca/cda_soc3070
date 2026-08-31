@@ -156,15 +156,9 @@ Por tanto, es conveniente expresar $\eta$ en función de $p$ ...
 
 . . .
 
- Paso a paso:
 
-::: {.img-right}
+::: {.pull-left}
 
-![mostaza](mostaza-merlo.jpg){width="50%"}
-
-:::
-
-. . .
 
 <br>
 
@@ -186,13 +180,23 @@ $e^{\eta_{i}} = \frac{p_{i}}{1 - p_{i}}$
 
 $\eta_{i} = \ln \frac{p_{i}}{1 - p_{i}} \quad \quad$
 
+:::
+
+
+::: {.pull-right}
+
+Paso a paso:
+
+![mostaza](mostaza-merlo.jpg){width="50%"}
+
+:::
+
 . . .
 
 <br>
 
 es decir, el log de las odds o log-odds
 
-. . .
 
 ::: {.content-box-yellow}
 
