@@ -62,6 +62,9 @@ regresión logística: estructura teórica y estimación.
 # Modelos Lineales Generalizados (GLM) {.inverse .center .middle}
 
 ## Más allá del modelo de regresión lineal (LM)
+
+<br>
+
 LM es un marco muy útil y productivo, pero hay situaciones en las que no proporciona una descripción adecuada de los datos. En particular:
 
 . . .
@@ -81,6 +84,9 @@ LM es un marco muy útil y productivo, pero hay situaciones en las que no propor
 [GLM]{.bold} ofrece un marco mucho más general y flexible que incorpora y amplía el LM para abordar estas cuestiones.
 
 ## Estructura de los modelos lineales generalizados
+
+<br>
+
 Un modelo lineal generalizado tiene cuatro componentes:
 
 ::: {.pull-left}
@@ -101,7 +107,12 @@ Un modelo lineal generalizado tiene cuatro componentes:
 # Componente Aleatorio {.inverse .center .middle}
 
 ## Componente Aleatorio
+
+<br>
+
 El componente aleatorio de un GLM identifica la distribución de probabilidad de la variable dependiente
+
+. . .
 
 - Al igual que con LM, los datos que queremos modelar son una colección de observaciones $y_{1}, \dots, y_{n}$, donde cada observación es la manifestación de una variable aleatoria.
 
@@ -112,6 +123,9 @@ El componente aleatorio de un GLM identifica la distribución de probabilidad de
   - Muestreo aleatorio garantiza que supuesto de independencia se cumpla
 
 ## Componente Aleatorio
+
+<br>
+
 Mientras que la LM asume que la variable dependiente sigue una distribución normal, GLM abarca un conjunto más amplio de distribuciones, [tanto continuas como discretas]{.bold}, siempre y cuando pertenezcan a la clase más general de la [_familia exponencial de distribuciones_](https://en.wikipedia.org/wiki/Exponential_family).  
 <br><br>
 
@@ -126,6 +140,10 @@ Mientras que la LM asume que la variable dependiente sigue una distribución nor
 # Componente Sistemático {.inverse .center .middle}
 
 ## Componente Sistemático
+
+<br>
+
+
 El componente sistemático de un GLM especifica las variables explicativas, es decir, las $x$'s en el lado derecho de la ecuación
 
 ::: {.content-box-primary}
@@ -155,6 +173,10 @@ $$\color{white}{\eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{i
 # Función de Enlace {.inverse .center .middle}
 
 ## Función de enlace (link)
+
+<br>
+
+
 En el [LM estándar]{.bold}, la media condicional del resultado $\mu_{i}$ está linealmente relacionada con los predictores del modelo.
 $$\underbrace{\mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k} )}_{\mu_{i}} = \underbrace{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}_{\eta_{i}}$$
 
@@ -177,7 +199,9 @@ $$\color{white}{g\Big(\mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k})\Big) =  g(\mu_{
 Ejemplo, si $g(\cdot) = \ln(\cdot)$, entonces
 $$\ln \mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k}) =  \ln \mu_{i} = \eta_{i}$$
 
-## Función de Enlace (link)
+## Función Media (inverso de función enlace)
+
+<br>
 
 - El inverso de esta expresión es la llamada [función media]{.bold}, que expresa la media condicional de $y_{i}$ como una función potencialmente no lineal de los predictores:
 
@@ -188,6 +212,8 @@ $$\color{white}{\mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k}) = \mu_{i} = g^{-1}(\e
 :::
 
 . . .
+
+<br>
 
 Ejemplo, si $g(\cdot) = \ln(\cdot)$, entonces
 $$\ln \mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k}) =  \ln \mu_{i} = \eta_{i}$$
@@ -204,6 +230,9 @@ $$\mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k}) = \mu_{i} = e^{\eta_{i}}$$
 
 ## Función de Enlace (link)
 
+<br>
+
+
 Más allá de este ejemplo, hay una variedad de posibles funciones de enlace:
 
 ::: {.center}
@@ -216,7 +245,12 @@ Más allá de este ejemplo, hay una variedad de posibles funciones de enlace:
 
 ## El enlace "natural" de cada distribución
 
+<br>
+
+
 La elección de $g(\cdot)$ no es arbitraria: cada distribución de la familia exponencial tiene un **enlace canónico**, aquel para el cual el parámetro natural de la distribución coincide exactamente con $\eta_{i}$.
+
+<br>
 
 | Distribución | Enlace canónico | $g(\mu)$ |
 |---|---|---|
@@ -224,28 +258,11 @@ La elección de $g(\cdot)$ no es arbitraria: cada distribución de la familia ex
 | Poisson | log | $\ln(\mu)$ |
 | Binomial | logit | $\ln\!\left(\frac{\mu}{1-\mu}\right)$ |
 
+<br>
+
+
 Usar el enlace canónico simplifica la estimación (MLE), pero **no es obligatorio**: cualquier $g(\cdot)$ monotónica y "smooth" define un GLM válido.
 
-# Función de Varianza {.inverse .center .middle}
-
-## Función de varianza
-La función de varianza describe cómo la varianza $\operatorname{Var}(y_{i})$ depende de la media $\mu_{i}$. Formalmente:
-
-::: {.content-box-primary}
-
-$$\color{white}{\operatorname{Var}(y_{i}) = \phi V(\mu_{i})}$$
-
-:::
-
-donde
-
-- $\phi$ es una constante llamada "parámetro de dispersión"
-- $V(\cdot)$ es la  función de varianza, definida como: $V(\mu) = \frac{d\mu}{d \eta}$
-
-. . .
-
-Por ejemplo, si $\mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k}) =  \mu_{i} = e^{\eta_{i}}$, entonces,
-$$V(\mu_i) = \frac{d\mu_i}{d \eta_i} = e^{\eta_{i}} \quad \to \quad \operatorname{Var}(y_{i}) = \phi e^{\eta_{i}}$$
 
 # .......... Definiendo un GLM ..... {.inverse .middle}
 
@@ -256,7 +273,12 @@ $$V(\mu_i) = \frac{d\mu_i}{d \eta_i} = e^{\eta_{i}} \quad \to \quad \operatornam
 :::
 
 ## Definiendo un GLM
+
+<br>
+
 La estructura básica de un GLM se especifica mediante la elección de dos componentes: (1) [componente sistemático]{.bold} (la distribución de la variable dependiente ) y (2) la [función de enlace]{.bold}. 
+
+<br>
 
 \begin{align}
   GLM:
@@ -268,6 +290,8 @@ La estructura básica de un GLM se especifica mediante la elección de dos compo
 
 . . .
 
+<br>
+
 Cualquier combinación de estos componentes definirá un GLM diferente. Algunas de estas combinaciones son especialmente relevantes:
 
 | Distribution         | Canonical Link: $\eta = g(\mu)$ | Link name             | Model name           |
@@ -278,6 +302,9 @@ Cualquier combinación de estos componentes definirá un GLM diferente. Algunas 
 | Gamma                | $\eta = (1/\mu)$                | reciprocal            | Gamma regression     |
 
 ## LM es un caso particular de GLM
+
+<br>
+
 El tipo más simple de GLM es el que tiene un componente aleatorio normal y una función de enlace de identidad, en cuyo caso obtenemos el modelo estándar de regresión lineal. Formalmente:
 
 . . .
@@ -316,6 +343,10 @@ $$y_{i} \sim \text{Normal}(\mu_{i} = \eta_{i}, \sigma_{i} = \sqrt{\phi})$$
 ## GLM log-lineal
 
 ## GLM log-lineal: ejemplo de modelo "híbrido"
+
+<br>
+
+
 Ejemplo:
 
 . . .
@@ -346,6 +377,10 @@ Obtenemos un [modelo log-lineal]{.bold}, que es apropiado cuando las prediccione
 $$y_{i} \sim \text{Normal}(\mu_{i} = e^{\eta_{i}}, \sigma_{i} = \sqrt{\phi \mu_{i}})$$
 
 ## Enlace vs. transformaciones
+
+<br>
+
+
 Usar una función de enlance [es distinto]{.bold} de transformar la variable dependiente!
 
 . . .
@@ -355,9 +390,14 @@ Usar una función de enlance [es distinto]{.bold} de transformar la variable dep
 - $y_{1}, \dots y_{n}$ son $n$ variables que no distribuyen normal  pero $\ln(y_{1}), \dots \ln(y_{n})$ si.
 - Estimar LM con variable dependiente transformada:
 
+<br>
+
+
 $$\ln y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}}^{\mathbb{E}(\ln y_{i} \mid x_{1}, \dots, x_{k} )  } + \underbrace{e_{i}}_{\text{Normal}(0,\sigma)}$$
 
 . . .
+
+<br>
 
 Notar diferencia:
 
@@ -420,6 +460,9 @@ summary(our_glm)
 ```
 
 ## Gaussian GLM con log-link
+
+<br>
+
 $$\ln \mu_{i} = \ln \mathbb{E}(\text{bikers}_{i} \mid \text{workingday}_{i})
 = \beta_{0} + \beta_{1}\text{workingday}_{i}$$
 
@@ -432,6 +475,8 @@ Por tanto,
 
 . . .
 
+<br>
+
 Interpretación coeficientes
 $\beta_{1} = \ln \frac{\mathbb{E}(\text{bikers}_{i} \mid \text{workingday}=1)}{\mathbb{E}(\text{bikers}_{i} \mid \text{workingday}=0)}$
 
@@ -441,16 +486,15 @@ $\beta_{1} = \ln \frac{\mathbb{E}(\text{bikers}_{i} \mid \text{workingday}=1)}{\
 
 . . .
 
+<br>
+
 [Razón de demanda]{.bold}: $e^{\beta_1}$ compara la demanda horaria esperada entre días hábiles y no hábiles.
 
 ## Gaussian GLM con log-link
 
 ::: {.pull-left}
 
-Dispersión estimada: $\hat\phi=$ `r round(summary(our_glm)$dispersion, 3)`
-$\operatorname{Var}(y_{i}) = \phi V(\mu) = \phi \frac{d\mu_{i}}{d\eta_{i}} = \phi e^{\eta_{i}} = \phi \mu_{i}$
-$\operatorname{Var}(y_{i})  = \phi\mu_{i} = \phi e^{\beta_0 + \beta_1\text{workingday}_{i}}$
-<br><br>
+<br>
 Por tanto, 
 $$y_{i} \sim \text{Normal}(\mu_{i},\sigma_{i}) \quad \text{ donde}$$
 
@@ -471,24 +515,52 @@ phi <- summary(our_glm)$dispersion
 eta <- function(x) exp(beta[[1]] + beta[[2]] * x)
 sdy <- function(x) sqrt(phi * eta(x))
 
-preds <- data_frame(x = c(0,1)) %>% mutate(mu = eta(x), sd=sdy(x)) %>% as.matrix()
+preds <- tibble(x = c(0, 1)) %>% mutate(mu = eta(x), sd = sdy(x))
+mu0 <- preds$mu[1]; sd0 <- preds$sd[1]
+mu1 <- preds$mu[2]; sd1 <- preds$sd[2]
+ratio <- mu1 / mu0
 
-plot <- ggplot(data.frame(x = seq(0, 500, by = 0.5)), aes(x = x)) +
-  stat_function(fun = dnorm, args = list(preds[1,2], preds[1,3]),
-                aes(colour = "no hábil"), size = 1.5) +
-  stat_function(fun = dnorm, args = list(preds[2,2], preds[2,3]),
-                aes(colour = "hábil"), size = 1.5) +
+# Rango de x adaptado al ancho real de ambas normales, no fijo.
+x_lo <- max(0, min(mu0 - 4 * sd0, mu1 - 4 * sd1))
+x_hi <- max(mu0 + 4 * sd0, mu1 + 4 * sd1)
+y_top <- max(dnorm(mu0, mu0, sd0), dnorm(mu1, mu1, sd1))
+
+dens <- tibble(x = seq(x_lo, x_hi, length.out = 500)) %>%
+  mutate(`no hábil` = dnorm(x, mu0, sd0), `hábil` = dnorm(x, mu1, sd1)) %>%
+  pivot_longer(-x, names_to = "day_type", values_to = "density") %>%
+  mutate(day_type = factor(day_type, levels = c("no hábil", "hábil")))
+
+plot <- ggplot(dens, aes(x = x, y = density, fill = day_type, colour = day_type)) +
+  geom_area(position = "identity", alpha = 0.05, linewidth = 1.2) +
+  geom_vline(xintercept = mu0, colour = course_palette[["primary"]],
+             linetype = "dashed", linewidth = 0.9) +
+  geom_vline(xintercept = mu1, colour = course_palette[["secondary"]],
+             linetype = "dashed", linewidth = 0.9) +
+  annotate("text", x = mu0, y = y_top * 1.08, label = paste0("μ = ", round(mu0)),
+           colour = course_palette[["primary"]], size = 6.5, fontface = "bold") +
+  annotate("text", x = mu1, y = y_top * 1.18, label = paste0("μ = ", round(mu1)),
+           colour = course_palette[["secondary"]], size = 6.5, fontface = "bold") +
+  annotate("text", x = (mu0 + mu1) / 2, y = y_top * 1.32,
+           label = paste0(round(ratio, 2), "x más arriendos en días hábiles"),
+           colour = "black", size = 5.5, fontface = "italic") +
   scale_x_continuous(name = "Arriendos por hora") +
-  scale_color_manual(values = c("no hábil" = course_palette[["primary"]],
+  scale_y_continuous(name = "densidad", expand = expansion(mult = c(0, 0.05))) +
+  coord_cartesian(ylim = c(0, y_top * 1.4), clip = "off") +
+  scale_fill_manual(values = c("no hábil" = course_palette[["primary"]],
                                 "hábil" = course_palette[["secondary"]])) +
-  labs(y="densidad", color=NULL)+
+  scale_colour_manual(values = c("no hábil" = course_palette[["primary"]],
+                                 "hábil" = course_palette[["secondary"]])) +
+  labs(fill = NULL, colour = NULL) +
   theme_julia() +
   theme(
     axis.text.y = element_text(size = 22, color = "black"),
     axis.text.x = element_text(size = 22, color = "black"),
     axis.title.y = element_text(size = 24, color = "black"),
     axis.title.x = element_text(size = 24, color = "black"),
-    panel.border = element_blank()
+    panel.border = element_blank(),
+    legend.position = "bottom",
+    legend.text = element_text(size = 20),
+    plot.margin = margin(30, 10, 10, 10)
   )
 
 print(plot)
@@ -497,6 +569,8 @@ print(plot)
 :::
 
 ## En resumen
+
+<br>
 
 - Un GLM se define por cuatro piezas: componente aleatorio (familia exponencial), componente sistemático $\eta_{i}$, función de enlace $g(\mu_{i})=\eta_{i}$ y función de varianza $\operatorname{Var}(y_{i})=\phi V(\mu_{i})$.
 - La función de enlace mantiene $\mu_{i}$ dentro de su rango natural; cada distribución tiene un enlace "canónico" (Normal: identidad, Poisson: log, Binomial: logit).

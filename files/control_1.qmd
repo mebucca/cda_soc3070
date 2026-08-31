@@ -1,0 +1,30 @@
+---
+title: "Control 1"
+subtitle: "Repaso de la nivelación matemática"
+author: "Mauricio Bucca"
+lang: es
+format: pdf
+---
+
+
+1. Calcula $e^4 \cdot e^{-1}$.
+
+
+2. Calcula $\ln(e^2) - \ln(e^5)$.
+
+
+3. Calcula $\sum_{i=1}^{5} (3i + 1)$.
+
+
+4. Para $f(x) = 4x^3 - 2x$, calcula $\dfrac{df}{dx}$.
+
+5. Para $f(x,y) = 3x^2 + y^3$, calcula $\dfrac{\partial f}{\partial x}$.
+
+
+6. $A$ y $B$ son independientes con $\mathbb{P}(A)=0.3$ y $\mathbb{P}(B)=0.6$. Calcula $\mathbb{P}(A\cap B)$.
+
+
+7. $X_1$ y $X_2$ son dos variables Bernoulli independientes entre sí, ambas con $p=0.3$. Escribe formalmente la función de probabilidad conjunta de $(X_1,X_2)$ y calcula $\mathbb{P}(X_1=1, X_2=0)$.
+
+
+8. $X$ es Binomial con $n=3$ y $p=0.5$ (3 lanzamientos de moneda justa). Escribe la función de probabilidad de una Binomial y calcula $\mathbb{P}(X=2)$.

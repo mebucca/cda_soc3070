@@ -6,11 +6,11 @@
 <script src="class_6_files/libs/quarto-html/tippy.umd.min.js"></script>
 <link href="class_6_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="class_6_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="class_6_files/libs/quarto-html/quarto-syntax-highlighting-de63f62b328812d8e578a4d74e282472.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.9.38">
+<link href="class_6_files/libs/quarto-html/quarto-syntax-highlighting-59898bd1c6b9d2bb783127feaa000c76.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.7.33">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-28">
+  <meta name="dcterms.date" content="2026-08-31">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,9 +18,6 @@
   <link rel="stylesheet" href="class_6_files/libs/revealjs/dist/reset.css">
   <link rel="stylesheet" href="class_6_files/libs/revealjs/dist/reveal.css">
   <style>
-    /* Default styles provided by pandoc.
-    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
-    */
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -99,8 +96,8 @@
     code span.vs { color: #032f62; } /* VerbatimString */
     code span.wa { color: #ff5555; } /* Warning */
   </style>
-  <link rel="stylesheet" href="class_6_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
-  <link rel="stylesheet" href="../_shared/course.css">
+  <link rel="stylesheet" href="class_6_files/libs/revealjs/dist/theme/quarto-f563837468303362081e247dddd440d0.css">
+  <link rel="stylesheet" href="_shared/course.css">
   <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
   <script>document.addEventListener("DOMContentLoaded", function () {
  var mathElements = document.getElementsByClassName("math");
@@ -225,7 +222,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-28</p>
+  <p class="date">2026-08-31</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -245,48 +242,16 @@ Mauricio Bucca · Sociología UC
 </div>
 </section>
 <section>
-<section id="modelos-lineales-generalizados-glm" class="title-slide slide level1 inverse center middle" data-background-color="#C8102E">
-<h1>Modelos Lineales Generalizados (GLM)</h1>
-
-</section>
-<section id="recordando-qué-es-un-glm" class="slide level2">
-<h2>Recordando: ¿qué es un GLM?</h2>
-<p>La clase anterior definimos un GLM por tres piezas — repasemos antes de usarlas hoy con un caso concreto:</p>
-<div class="pull-left">
-<ul>
-<li><strong>Componente aleatorio</strong>: distribución de <span class="math inline">y_i</span> (familia exponencial).</li>
-<li><strong>Componente sistemático</strong>: <span class="math inline">\eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span>.</li>
-<li><strong>Función de enlace</strong>: <span class="math inline">g(\mu_{i}) = \eta_{i}</span>.</li>
-</ul>
-</div>
-<div class="pull-right">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="nelder.png"></p>
-<figcaption>nelder</figcaption>
-</figure>
-</div>
-</div>
-<div class="fragment">
-<p><span class="math display">
-GLM:
-\begin{cases}
-&amp;y_{i} \sim f(\mu_{i},\sigma_{i}) \\ \\
-&amp; g(\mu_{i}) = \eta_{i}
-\end{cases}
-</span></p>
-<p>Hoy fijamos <span class="math inline">y_{i} \sim \text{Bernoulli}(p_{i})</span> y <span class="math inline">g(\cdot) = \text{logit}(\cdot)</span>: la regresión logística es exactamente un GLM con esa combinación particular.</p>
-</div>
-</section></section>
-<section>
 <section id="regresión-logística" class="title-slide slide level1 inverse center middle" data-background-color="#C8102E">
 <h1>Regresión Logística</h1>
 
 </section>
 <section id="estructura-de-un-modelo-de-regresión-logística" class="slide level2">
 <h2>Estructura de un modelo de regresión logística</h2>
+<p><br></p>
 <p>Podemos pensar en un modelo de regresión logística de la siguiente forma:</p>
 <div class="fragment">
+<p><br></p>
 <p><span class="bold">Configuración</span></p>
 <ul>
 <li>Tenemos <span class="math inline">n</span> observaciones (individuos) independientes: <span class="math inline">i = 1, \dots, n</span></li>
@@ -316,6 +281,7 @@ GLM:
 </section>
 <section id="estructura-de-un-modelo-de-regresión-logística-1" class="slide level2">
 <h2>Estructura de un modelo de regresión logística</h2>
+<p><br></p>
 <p>Formalmente, <span class="math display">Y_{i} \sim \text{Bernoulli}(p_{i})</span> es decir <span class="math display">\quad \mathbb{P}(Y_{i}= y) = p_{i}^{y}(1-p_{i})^{1-y} \quad \text{ donde } \quad y \in \{0,1\}</span></p>
 <div class="fragment">
 <p>La pregunta es: ¿como estimamos <span class="math inline">p_{i}</span> de tal manera que … ?</p>
@@ -333,11 +299,13 @@ GLM:
 </section>
 <section id="estructura-de-un-modelo-de-regresión-logística-2" class="slide level2">
 <h2>Estructura de un modelo de regresión logística</h2>
+<p><br></p>
 <p>El modelo de regresión logística aborda este problema de la siguiente manera:</p>
 <div class="content-box-blue">
 <p><span class="math display">p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}} \quad \quad  \text{donde} \quad \quad \eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}</span></p>
 </div>
 <div class="fragment">
+<p><br></p>
 <p><span class="bold">Importante</span> notar que:</p>
 </div>
 <div class="fragment">
@@ -366,6 +334,7 @@ GLM:
 </section>
 <section id="estructura-de-un-modelo-de-regresión-logística-3" class="slide level2">
 <h2>Estructura de un modelo de regresión logística</h2>
+<p><br></p>
 <p>Sin embargo, <span class="math inline">\eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}</span> si es una función lineal de los predictores.</p>
 <div class="fragment">
 <p>Por tanto, es conveniente expresar <span class="math inline">\eta</span> en función de <span class="math inline">p</span> …</p>
@@ -375,13 +344,14 @@ GLM:
 <div class="img-right">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="mostaza-merlo.jpg"></p>
+<p><img data-src="mostaza-merlo.jpg" style="width:50.0%"></p>
 <figcaption>mostaza</figcaption>
 </figure>
 </div>
 </div>
 </div>
 <div class="fragment">
+<p><br></p>
 <p><span class="math inline">p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}} = \frac{1}{e^{- \eta_{i}} + 1}</span></p>
 </div>
 <div class="fragment">
@@ -397,6 +367,7 @@ GLM:
 <p><span class="math inline">\eta_{i} = \ln \frac{p_{i}}{1 - p_{i}} \quad \quad</span></p>
 </div>
 <div class="fragment">
+<p><br></p>
 <p>es decir, el log de las odds o log-odds</p>
 </div>
 <div class="fragment">
@@ -407,10 +378,12 @@ GLM:
 </section>
 <section id="estructura-de-un-modelo-de-regresión-logística-4" class="slide level2">
 <h2>Estructura de un modelo de regresión logística</h2>
+<p><br> <br></p>
 
 <img data-src="class_6_files/figure-revealjs/unnamed-chunk-1-1.png" width="1152" class="r-stretch"></section>
 <section id="regresión-logística-es-un-tipo-de-glm" class="slide level2">
 <h2>Regresión Logística es un tipo de GLM</h2>
+<p><br></p>
 <p>Regresión Logística es un GLM con componente aleatorio <span class="bold">Bernoulli/Binomial</span> y función de enlace <span class="bold">logit</span>.</p>
 <div class="fragment">
 <ul>
@@ -436,39 +409,9 @@ GLM:
 </ul>
 </div>
 </section>
-<section id="regresión-logística-es-un-tipo-de-glm-1" class="slide level2">
-<h2>Regresión Logística es un tipo de GLM</h2>
-<ul>
-<li>Varianza <span class="math inline">\operatorname{Var}(y_{i}) = \phi V(p_{i}), \quad</span></li>
-</ul>
-<div class="fragment">
-<p><span class="math inline">\text{donde} \quad V(p_{i})= \frac{dp_{i}}{d\eta_{i}}</span>.</p>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="math inline">\eta_{i} = \ln \frac{p_{i}}{1 - p_{i}}  =  \ln(p_{i}) - \ln(1 - p_{i})</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="math inline">\frac{d \eta_{i}}{d p_{i}} = \frac{1}{p_{i}} + \frac{1}{1 - p_{i}} = \frac{1}{p_{i}(1 - p_{i})}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li><span class="math inline">\frac{d p_{i}}{d \eta_{i}} = p_{i}(1 - p_{i})</span></li>
-</ul>
-</div>
-<div class="fragment">
-<p>Por tanto, <span class="math inline">\operatorname{Var}(y_{i}) = \phi V(p_{i}) = \phi p_{i}(1 - p_{i})</span>, con <span class="math inline">\phi=1</span></p>
-<p>En resumen, en un modelo de regresión logística</p>
-<div class="content-box-blue">
-<p><span class="math display">y_{i} \sim \text{Bernoulli}\Bigg(p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}}\Bigg)</span></p>
-</div>
-</div>
-</section>
 <section id="regresión-logística-en-la-práctica" class="slide level2">
 <h2>Regresión Logística en la práctica</h2>
+<p><br> <br></p>
 <p>Para ejemplificar el uso de regresión logística trabajaremos con los datos de demanda de bicicletas de <em>Capital Bikeshare</em>.</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
@@ -495,6 +438,7 @@ GLM:
 </section>
 <section id="regresión-logística-en-la-práctica-1" class="slide level2">
 <h2>Regresión Logística en la práctica</h2>
+<p><br> <br></p>
 <p>Ajustaremos el siguiente modelo: <span class="math inline">\text{logit(alta demanda}_{i}) = \beta_{0} + \beta_{1}*\text{temp}_{i}</span>, que modela el log de la odd de que una hora sea de alta demanda como función de la temperatura (normalizada).</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
@@ -504,9 +448,9 @@ glm(formula = high_demand ~ temp, family = binomial(link = "logit"),
     data = bikedata)
 
 Coefficients:
-            Estimate Std. Error z value            Pr(&gt;|z|)    
-(Intercept)  -3.676     0.092   -39.800 &lt;0.000 ***
-temp          4.827     0.154    31.300 &lt;0.000 ***
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept) -3.676    0.092  -39.820   &lt;2e-16 ***
+temp         4.827    0.154   31.260   &lt;2e-16 ***
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
 
@@ -514,7 +458,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
 
     Null deviance: 9711.200  on 8644  degrees of freedom
 Residual deviance: 8513.400  on 8643  degrees of freedom
-AIC: 8517
+AIC: 8517.400
 
 Number of Fisher Scoring iterations: 4</code></pre>
 </div>
@@ -552,6 +496,7 @@ Number of Fisher Scoring iterations: 4</code></pre>
 </section>
 <section id="estimación-mle-1" class="slide level2">
 <h2>Estimación (MLE)</h2>
+<p><br></p>
 <p>Retomando nuestro ejemplo anterior,</p>
 <div class="pull-left">
 <div class="cell">
@@ -562,9 +507,9 @@ glm(formula = high_demand ~ temp, family = binomial(link = "logit"),
     data = bikedata)
 
 Coefficients:
-            Estimate Std. Error z value            Pr(&gt;|z|)    
-(Intercept)  -3.676     0.092   -39.800 &lt;0.000 ***
-temp          4.827     0.154    31.300 &lt;0.000 ***
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept) -3.676    0.092  -39.820   &lt;2e-16 ***
+temp         4.827    0.154   31.260   &lt;2e-16 ***
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
 
@@ -572,7 +517,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
 
     Null deviance: 9711.200  on 8644  degrees of freedom
 Residual deviance: 8513.400  on 8643  degrees of freedom
-AIC: 8517
+AIC: 8517.400
 
 Number of Fisher Scoring iterations: 4</code></pre>
 </div>
@@ -586,6 +531,7 @@ Number of Fisher Scoring iterations: 4</code></pre>
 </section>
 <section id="estimación-mle-2" class="slide level2">
 <h2>Estimación (MLE)</h2>
+<p><br></p>
 <p>Recordar que cada observación es una manifestación de una variable Bernoulli:</p>
 <div class="fragment">
 <p><span class="math inline">Y_{i} \sim \text{Bernoulli}(p_{i}) \quad \text{ es decir } \quad \mathbb{P}(Y_{i}= y) = p_{i}^{y}(1-p_{i})^{1-y} \quad \text{ donde } \quad y \in \{0,1\}</span></p>
@@ -604,17 +550,20 @@ Number of Fisher Scoring iterations: 4</code></pre>
 <h2>Estimación (MLE)</h2>
 <p>La <span class="bold">log likelihood function</span> de <span class="math inline">p</span> es: <span class="math display">\ell(\boldsymbol{p} \mid y_{1}, \dots, y_{n}) = \sum_{i=1}^{n} \bigg( y_{i} \ln p_{i} + (1-y_{i}) \ln(1-p_{i}) \bigg)</span></p>
 <div class="fragment">
+<p><br></p>
 <p>Pero no estamos estimando <span class="math inline">p_{i}</span> directamente, sino que lo modelamos como un función de otros predictores.</p>
 </div>
 <div class="fragment">
 <p>específicamente: <span class="math inline">p_{i} =\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}</span></p>
 </div>
 <div class="fragment">
+<p><br></p>
 <p>por tanto, <span class="math display">\ell(\beta_{0},\beta_{1} \mid y_{1}, \dots, y_{n}) = \sum_{i=1}^{n} \bigg( y_{i} \ln \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}} + (1-y_{i}) \ln(1-\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}) \bigg)</span> En definitiva, nuestros MLE son: <span class="math display">\hat{\beta_{0}},\hat{\beta_{1}} = \underset{\beta_{0},\beta_{1}}{\arg\max\ } \sum_{i=1}^{n} \bigg( y_{i} \ln \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}} + (1-y_{i}) \ln(1-\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}) \bigg)</span></p>
 </div>
 </section>
 <section id="estimación-mle-4" class="slide level2">
 <h2>Estimación (MLE)</h2>
+<p><br></p>
 <ul>
 <li>No hay solución analítica (en general) para esta maximización. Típicamente se usa Fisher’s Scoring Method (un algoritmo de búsqueda) para obtener los MLE.</li>
 <li>Para ejemplificar podemos implementar una optimización numérica simple e ineficiente para buscar los MLE.</li>
@@ -622,21 +571,21 @@ Number of Fisher Scoring iterations: 4</code></pre>
 <div class="fragment">
 <p>Para acelerar la búsqueda usaremos valores en la proximidad de las estimaciones reportadas arriba (que normalmente no conoceríamos): <span class="bold">Implementación en</span> <code>R</code>:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a>ll <span class="ot">&lt;-</span> <span class="cf">function</span>(b0,b1) {</span>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a>ll <span class="ot">&lt;-</span> <span class="cf">function</span>(b0,b1) {</span>
 <span id="cb4-2"><a href=""></a>  y <span class="ot">=</span> bikedata<span class="sc">$</span>high_demand</span>
 <span id="cb4-3"><a href=""></a>  eta <span class="ot">=</span> b0 <span class="sc">+</span> b1<span class="sc">*</span>bikedata<span class="sc">$</span>temp</span>
 <span id="cb4-4"><a href=""></a>  ell <span class="ot">=</span> <span class="fu">sum</span>( y<span class="sc">*</span><span class="fu">log</span>(<span class="dv">1</span><span class="sc">/</span>(<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(<span class="sc">-</span>eta))) <span class="sc">+</span>  (<span class="dv">1</span><span class="sc">-</span>y)<span class="sc">*</span><span class="fu">log</span>(<span class="dv">1</span> <span class="sc">-</span> (<span class="dv">1</span><span class="sc">/</span>(<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(<span class="sc">-</span>eta)))))</span>
 <span id="cb4-5"><a href=""></a>  <span class="fu">return</span>(<span class="at">ll =</span> ell)</span>
-<span id="cb4-6"><a href=""></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-6"><a href=""></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 <div class="fragment">
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] -5992</code></pre>
+<pre><code>[1] -5992.257</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] -5580</code></pre>
+<pre><code>[1] -5579.664</code></pre>
 </div>
 </div>
 </div>
@@ -645,7 +594,7 @@ Number of Fisher Scoring iterations: 4</code></pre>
 <h2>Estimación (MLE)</h2>
 <p><span class="bold">Implementación en</span> <code>R</code>:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href=""></a><span class="co"># Evaluar la log-likelihood function  para muchas combinaciones de posibles valores de  b0 y b1</span></span>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href=""></a><span class="co"># Evaluar la log-likelihood function  para muchas combinaciones de posibles valores de  b0 y b1</span></span>
 <span id="cb7-2"><a href=""></a><span class="co"># centramos la grilla en torno a las estimaciones del modelo</span></span>
 <span id="cb7-3"><a href=""></a>b0_hat <span class="ot">&lt;-</span> <span class="fu">coef</span>(logit_demand_temp)[<span class="dv">1</span>]</span>
 <span id="cb7-4"><a href=""></a>b1_hat <span class="ot">&lt;-</span> <span class="fu">coef</span>(logit_demand_temp)[<span class="dv">2</span>]</span>
@@ -655,21 +604,51 @@ Number of Fisher Scoring iterations: 4</code></pre>
 <span id="cb7-8"><a href=""></a><span class="co"># Encuentra el par de valores b0,b1 que dan el mayor valor para la log-likelihood function</span></span>
 <span id="cb7-9"><a href=""></a></span>
 <span id="cb7-10"><a href=""></a>m <span class="ot">&lt;-</span> parameter_space <span class="sc">%&gt;%</span> <span class="fu">as.matrix</span>()</span>
-<span id="cb7-11"><a href=""></a>m[<span class="fu">which.max</span>(m[,<span class="dv">3</span>]),]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb7-11"><a href=""></a>m[<span class="fu">which.max</span>(m[,<span class="dv">3</span>]),]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>    beta0     beta1    loglik 
+<pre><code>       beta0        beta1       loglik 
    -3.678     4.829 -4256.678 </code></pre>
 </div>
 </div>
 </section>
 <section id="estimación-mle-6" class="slide level2">
 <h2>Estimación (MLE)</h2>
+<p><br></p>
+<p>La grilla evalúa la log-likelihood en 500×500 combinaciones de <span class="math inline">(\beta_0,\beta_1)</span>. Estas son las 10 combinaciones de la grilla con mayor log-likelihood (la ganadora es la primera fila):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href=""></a>top10 <span class="ot">&lt;-</span> parameter_space <span class="sc">%&gt;%</span></span>
+<span id="cb9-2"><a href=""></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb9-3"><a href=""></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(loglik)) <span class="sc">%&gt;%</span></span>
+<span id="cb9-4"><a href=""></a>  <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-5"><a href=""></a>  <span class="fu">mutate</span>(<span class="at">rank =</span> <span class="fu">row_number</span>(), <span class="at">.before =</span> beta0)</span>
+<span id="cb9-6"><a href=""></a></span>
+<span id="cb9-7"><a href=""></a>top10</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   rank     beta0    beta1    loglik
+1     1 -3.678 4.829 -4256.678
+2     2 -3.674 4.825 -4256.678
+3     3 -3.682 4.837 -4256.680
+4     4 -3.670 4.817 -4256.680
+5     5 -3.674 4.821 -4256.680
+6     6 -3.678 4.833 -4256.680
+7     7 -3.682 4.833 -4256.683
+8     8 -3.670 4.821 -4256.683
+9     9 -3.686 4.845 -4256.685
+10   10 -3.666 4.809 -4256.685</code></pre>
+</div>
+</div>
+<div class="fragment">
+<p>Nótese lo <span class="bold">plana</span> que es la log-likelihood cerca del máximo: muchos puntos vecinos de la grilla entregan un valor casi idéntico al óptimo.</p>
+</div>
+</section>
+<section id="estimación-mle-7" class="slide level2">
+<h2>Estimación (MLE)</h2>
 <div class="pull-left">
 <div class="cell">
 <div class="cell-output-display">
 <div>
 <figure>
-<p><img data-src="class_6_files/figure-revealjs/unnamed-chunk-10-1.png" width="960"></p>
+<p><img data-src="class_6_files/figure-revealjs/unnamed-chunk-11-1.png" width="960"></p>
 </figure>
 </div>
 </div>
@@ -685,9 +664,9 @@ glm(formula = high_demand ~ temp, family = binomial(link = "logit"),
     data = bikedata)
 
 Coefficients:
-            Estimate Std. Error z value            Pr(&gt;|z|)    
-(Intercept)  -3.676     0.092   -39.800 &lt;0.000 ***
-temp          4.827     0.154    31.300 &lt;0.000 ***
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept) -3.676    0.092  -39.820   &lt;2e-16 ***
+temp         4.827    0.154   31.260   &lt;2e-16 ***
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
 
@@ -695,7 +674,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
 
     Null deviance: 9711.200  on 8644  degrees of freedom
 Residual deviance: 8513.400  on 8643  degrees of freedom
-AIC: 8517
+AIC: 8517.400
 
 Number of Fisher Scoring iterations: 4</code></pre>
 </div>
@@ -1001,14 +980,13 @@ Number of Fisher Scoring iterations: 4</code></pre>
           e.clearSelection();
         }
         const getTextToCopy = function(trigger) {
-          const outerScaffold = trigger.parentElement.cloneNode(true);
-          const codeEl = outerScaffold.querySelector('code');
-          for (const childEl of codeEl.children) {
-            if (isCodeAnnotation(childEl)) {
-              childEl.remove();
+            const codeEl = trigger.previousElementSibling.cloneNode(true);
+            for (const childEl of codeEl.children) {
+              if (isCodeAnnotation(childEl)) {
+                childEl.remove();
+              }
             }
-          }
-          return codeEl.innerText;
+            return codeEl.innerText;
         }
         const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
           text: getTextToCopy

@@ -58,45 +58,17 @@ regresión logística: interpretación de parámetros.
 :::
 
 
-
-# Modelos Lineales Generalizados (GLM) {.inverse .center .middle}
-
-## Recordando: ¿qué es un GLM?
-
-La clase anterior definimos un GLM por tres piezas — repasemos antes de usarlas hoy con un caso concreto:
-
-::: {.pull-left}
-
-- **Componente aleatorio**: distribución de $y_i$ (familia exponencial).
-- **Componente sistemático**: $\eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$.
-- **Función de enlace**: $g(\mu_{i}) = \eta_{i}$.
-
-:::
-
-::: {.pull-right}
-
-![nelder](nelder.png)
-
-:::
-
-. . .
-
-$$
-GLM:
-\begin{cases}
-&y_{i} \sim f(\mu_{i},\sigma_{i}) \\ \\
-& g(\mu_{i}) = \eta_{i}
-\end{cases}
-$$
-
-Hoy fijamos $y_{i} \sim \text{Bernoulli}(p_{i})$ y $g(\cdot) = \text{logit}(\cdot)$: la regresión logística es exactamente un GLM con esa combinación particular.
-
 # Regresión Logística {.inverse .center .middle}
 
 ## Estructura de un modelo de regresión logística
+
+<br>
+
 Podemos pensar en un modelo de regresión logística de la siguiente forma:
 
 . . .
+
+<br>
 
 [Configuración]{.bold}
 
@@ -117,6 +89,9 @@ Podemos pensar en un modelo de regresión logística de la siguiente forma:
   - Un modelo con un $p_{i}$ para cada observación $i$ es un modelo "just-identified" (o saturado). Posible, pero no es un "modelo".
 
 ## Estructura de un modelo de regresión logística
+
+<br>
+
 Formalmente,
 $$Y_{i} \sim \text{Bernoulli}(p_{i})$$
 es decir
@@ -135,6 +110,9 @@ La pregunta es: ¿como estimamos $p_{i}$ de tal manera que ... ?
 - $\hat{p}_{i} \in [0,1]$
 
 ## Estructura de un modelo de regresión logística
+
+<br>
+
 El modelo de regresión logística aborda este problema de la siguiente manera:
 
 ::: {.content-box-blue}
@@ -144,6 +122,8 @@ $$p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}} \quad \quad  \text{donde} \quad 
 :::
 
 . . .
+
+<br>
 
 [Importante]{.bold} notar que:
 
@@ -165,6 +145,9 @@ $$p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}} \quad \quad  \text{donde} \quad 
 - $p_{i}$ [no está relacionado linealmente]{.bold} con sus predictores 
 
 ## Estructura de un modelo de regresión logística
+
+<br>
+
 Sin embargo, $\eta_{i} = \beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}$ si es una función lineal de los predictores.
 
 . . .
@@ -177,11 +160,13 @@ Por tanto, es conveniente expresar $\eta$ en función de $p$ ...
 
 ::: {.img-right}
 
-![mostaza](mostaza-merlo.jpg)
+![mostaza](mostaza-merlo.jpg){width="50%"}
 
 :::
 
 . . .
+
+<br>
 
 $p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}} = \frac{1}{e^{- \eta_{i}} + 1}$
 
@@ -203,6 +188,8 @@ $\eta_{i} = \ln \frac{p_{i}}{1 - p_{i}} \quad \quad$
 
 . . .
 
+<br>
+
 es decir, el log de las odds o log-odds
 
 . . .
@@ -214,6 +201,10 @@ $$\text{Por tanto} \quad \quad  \ln \frac{p_{i}}{1 - p_{i}} = \eta_{i} = \beta_{
 :::
 
 ## Estructura de un modelo de regresión logística
+
+<br>
+<br>
+
 ```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=8, fig.width=12}
 library(pacman)
 p_load("tidyverse")
@@ -260,6 +251,10 @@ print(logodd_p)
 ```
 
 ## Regresión Logística es un tipo de GLM
+
+<br>
+
+
 Regresión Logística es un GLM con componente aleatorio [Bernoulli/Binomial]{.bold} y función de enlace [logit]{.bold}. 
 
 . . .
@@ -279,39 +274,11 @@ Regresión Logística es un GLM con componente aleatorio [Bernoulli/Binomial]{.b
 
 - Función media: $p_{i} = \text{logit}^{-1}(\eta_{i}) = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}}$
 
-## Regresión Logística es un tipo de GLM
-
-- Varianza $\operatorname{Var}(y_{i}) = \phi V(p_{i}), \quad$
-
-. . .
-
-  $\text{donde} \quad V(p_{i})= \frac{dp_{i}}{d\eta_{i}}$.
-
-. . .
-
-- $\eta_{i} = \ln \frac{p_{i}}{1 - p_{i}}  =  \ln(p_{i}) - \ln(1 - p_{i})$
-
-. . .
-
-- $\frac{d \eta_{i}}{d p_{i}} = \frac{1}{p_{i}} + \frac{1}{1 - p_{i}} = \frac{1}{p_{i}(1 - p_{i})}$
-
-. . .
-
-- $\frac{d p_{i}}{d \eta_{i}} = p_{i}(1 - p_{i})$
-
-. . .
-
-Por tanto, $\operatorname{Var}(y_{i}) = \phi V(p_{i}) = \phi p_{i}(1 - p_{i})$, con $\phi=1$
-
-En resumen, en un modelo de regresión logística
-
-::: {.content-box-blue}
-
-$$y_{i} \sim \text{Bernoulli}\Bigg(p_{i} = \frac{e^{\eta_{i}}}{1 + e^{\eta_{i}}}\Bigg)$$
-
-:::
 
 ## Regresión Logística en la práctica
+
+<br> <br>
+
 Para ejemplificar el uso de regresión logística trabajaremos con los datos de demanda de bicicletas de _Capital Bikeshare_.
 ```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
 
@@ -334,6 +301,9 @@ bikedata %>% select(bikers, high_demand, demand, temp, hum, weathersit) %>% tail
 ```
 
 ## Regresión Logística en la práctica
+
+<br> <br>
+
 Ajustaremos el siguiente modelo: $\text{logit(alta demanda}_{i}) = \beta_{0} + \beta_{1}*\text{temp}_{i}$, que modela el log de la odd de que una hora sea de alta demanda como función de la temperatura (normalizada).
 ```{r}
 logit_demand_temp <- glm(high_demand ~ temp, family=binomial(link="logit"), data=bikedata); summary(logit_demand_temp)
@@ -394,6 +364,9 @@ bikedata %>% ggplot(aes(x=temp, y=high_demand, group=1)) +
 ## Estimación (MLE) {.inverse .center .middle}
 
 ## Estimación (MLE)
+
+<br>
+
 Retomando  nuestro ejemplo anterior,
 
 ::: {.pull-left}
@@ -413,6 +386,9 @@ logit_demand_temp <- glm(high_demand ~ temp, family=binomial(link="logit"), data
 :::
 
 ## Estimación (MLE)
+
+<br>
+
 Recordar que cada observación es una manifestación de una variable Bernoulli:
 
 . . .
@@ -440,6 +416,8 @@ $$\ell(\boldsymbol{p} \mid y_{1}, \dots, y_{n}) = \sum_{i=1}^{n} \bigg( y_{i} \l
 
 . . .
 
+<br>
+
 Pero no estamos estimando $p_{i}$ directamente, sino que lo modelamos como un función de otros predictores.
 
 . . .
@@ -448,12 +426,17 @@ específicamente: $p_{i} =\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i}
 
 . . .
 
+<br>
+
+
 por tanto, 
 $$\ell(\beta_{0},\beta_{1} \mid y_{1}, \dots, y_{n}) = \sum_{i=1}^{n} \bigg( y_{i} \ln \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}} + (1-y_{i}) \ln(1-\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}) \bigg)$$
 En definitiva, nuestros MLE son:
 $$\hat{\beta_{0}},\hat{\beta_{1}} = \underset{\beta_{0},\beta_{1}}{\arg\max\ } \sum_{i=1}^{n} \bigg( y_{i} \ln \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}} + (1-y_{i}) \ln(1-\frac{1}{1 + e^{-(\beta_{0} + \beta_{1}\text{temp}_{i})}}) \bigg)$$
 
 ## Estimación (MLE)
+
+<br>
 
 - No hay solución analítica (en general) para esta maximización. Típicamente se usa Fisher’s Scoring Method  (un algoritmo de búsqueda) para obtener los MLE. 
 -  Para ejemplificar  podemos implementar una optimización numérica simple e ineficiente para buscar los MLE.
@@ -497,18 +480,53 @@ m[which.max(m[,3]),]
 
 ## Estimación (MLE)
 
+<br>
+
+La grilla evalúa la log-likelihood en 500×500 combinaciones de $(\beta_0,\beta_1)$. Estas son las 10 combinaciones de la grilla con mayor log-likelihood (la ganadora es la primera fila):
+
+```{r, include=TRUE, echo=TRUE, warning=FALSE, message=FALSE}
+
+top10 <- parameter_space %>%
+  as.data.frame() %>%
+  arrange(desc(loglik)) %>%
+  slice(1:10) %>%
+  mutate(rank = row_number(), .before = beta0)
+
+top10
+```
+
+. . .
+
+Nótese lo [plana]{.bold} que es la log-likelihood cerca del máximo: muchos puntos vecinos de la grilla entregan un valor casi idéntico al óptimo.
+
+## Estimación (MLE)
+
 ::: {.pull-left}
 
 ```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
 
-# Plot all LL values
-parameter_space %>% as.data.frame() %>% ggplot(aes(x=beta0, y=beta1,  z = loglik)) + geom_contour(bins = 700) + geom_contour_filled(bins = 500, alpha=0.75) +
-geom_point(aes(x=m[which.max(m[,3]),1], m[which.max(m[,3]),2]), size=1.5) +
-guides(fill=FALSE, color=FALSE) + labs(x=quote(beta[0]), y=quote(beta[1])) +
-annotate(geom="text", x=b0_hat, y=b1_hat-0.4, label=paste0('bold("(', course_number(b0_hat), ',', course_number(b1_hat), ')")'), color="black", parse=TRUE, size=6)  +
-theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
-legend.text = element_text(size = 18), legend.position="none")
+# Plot all LL values, coloreado con la paleta del curso
+grid_df <- parameter_space %>% as.data.frame()
+best <- m[which.max(m[,3]), ]
+
+plot <- ggplot(grid_df, aes(x = beta0, y = beta1)) +
+  geom_raster(aes(fill = loglik), interpolate = TRUE) +
+  geom_contour(aes(z = loglik), colour = "white", linewidth = 0.25, alpha = 0.6, bins = 10) +
+  scale_fill_gradientn(colours = c("white", course_palette[["primary"]], course_palette[["secondary"]])) +
+  # 10 combinaciones de la grilla más cercanas al máximo
+  geom_point(data = top10, aes(x = beta0, y = beta1),
+             shape = 21, fill = course_palette[["accent"]], colour = "black",
+             size = 2.8, stroke = 0.4) +
+  # el máximo (argmax)
+  geom_point(aes(x = best[1], y = best[2]), shape = 4, size = 5.5, stroke = 2.2, colour = "white") +
+  geom_point(aes(x = best[1], y = best[2]), shape = 4, size = 4.5, stroke = 1.4, colour = "black") +
+  guides(fill = "none") + labs(x=quote(beta[0]), y=quote(beta[1])) +
+  annotate(geom="text", x=b0_hat, y=b1_hat-0.4, label=paste0('bold("(', course_number(b0_hat), ',', course_number(b1_hat), ')")'), color="black", parse=TRUE, size=6)  +
+  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
+        axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
+        legend.text = element_text(size = 18), legend.position="none")
+
+print(plot)
 ```
 
 :::
