@@ -6,11 +6,11 @@
 <script src="class_5_files/libs/quarto-html/tippy.umd.min.js"></script>
 <link href="class_5_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="class_5_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="class_5_files/libs/quarto-html/quarto-syntax-highlighting-de63f62b328812d8e578a4d74e282472.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.9.38">
+<link href="class_5_files/libs/quarto-html/quarto-syntax-highlighting-59898bd1c6b9d2bb783127feaa000c76.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.7.33">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-28">
+  <meta name="dcterms.date" content="2026-08-31">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,9 +18,6 @@
   <link rel="stylesheet" href="class_5_files/libs/revealjs/dist/reset.css">
   <link rel="stylesheet" href="class_5_files/libs/revealjs/dist/reveal.css">
   <style>
-    /* Default styles provided by pandoc.
-    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
-    */
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -33,8 +30,8 @@
       vertical-align: middle;
     }
   </style>
-  <link rel="stylesheet" href="class_5_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
-  <link rel="stylesheet" href="../_shared/course.css">
+  <link rel="stylesheet" href="class_5_files/libs/revealjs/dist/theme/quarto-f563837468303362081e247dddd440d0.css">
+  <link rel="stylesheet" href="_shared/course.css">
   <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
   <script>document.addEventListener("DOMContentLoaded", function () {
  var mathElements = document.getElementsByClassName("math");
@@ -159,7 +156,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-28</p>
+  <p class="date">2026-08-31</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -185,6 +182,7 @@ Mauricio Bucca · Sociología UC
 </section>
 <section id="más-allá-del-modelo-de-regresión-lineal-lm" class="slide level2">
 <h2>Más allá del modelo de regresión lineal (LM)</h2>
+<p><br></p>
 <p>LM es un marco muy útil y productivo, pero hay situaciones en las que no proporciona una descripción adecuada de los datos. En particular:</p>
 <div class="fragment">
 <ul>
@@ -207,6 +205,7 @@ Mauricio Bucca · Sociología UC
 </section>
 <section id="estructura-de-los-modelos-lineales-generalizados" class="slide level2">
 <h2>Estructura de los modelos lineales generalizados</h2>
+<p><br></p>
 <p>Un modelo lineal generalizado tiene cuatro componentes:</p>
 <div class="pull-left">
 <ul>
@@ -232,10 +231,13 @@ Mauricio Bucca · Sociología UC
 </section>
 <section id="componente-aleatorio-1" class="slide level2">
 <h2>Componente Aleatorio</h2>
+<p><br></p>
 <p>El componente aleatorio de un GLM identifica la distribución de probabilidad de la variable dependiente</p>
+<div class="fragment">
 <ul>
 <li>Al igual que con LM, los datos que queremos modelar son una colección de observaciones <span class="math inline">y_{1}, \dots, y_{n}</span>, donde cada observación es la manifestación de una variable aleatoria.</li>
 </ul>
+</div>
 <div class="fragment">
 <ul>
 <li>Estas variables aleatorias <span class="math inline">y_{1}, \dots, y_{n}</span> son independientes entre si y provienen de la misma <em>familia</em> de distribución: <span class="bold">iid</span></li>
@@ -246,6 +248,7 @@ Mauricio Bucca · Sociología UC
 </section>
 <section id="componente-aleatorio-2" class="slide level2">
 <h2>Componente Aleatorio</h2>
+<p><br></p>
 <p>Mientras que la LM asume que la variable dependiente sigue una distribución normal, GLM abarca un conjunto más amplio de distribuciones, <span class="bold">tanto continuas como discretas</span>, siempre y cuando pertenezcan a la clase más general de la <a href="https://en.wikipedia.org/wiki/Exponential_family"><em>familia exponencial de distribuciones</em></a>.<br>
 <br><br></p>
 <div class="fragment">
@@ -266,6 +269,7 @@ Mauricio Bucca · Sociología UC
 </section>
 <section id="componente-sistemático-1" class="slide level2">
 <h2>Componente Sistemático</h2>
+<p><br></p>
 <p>El componente sistemático de un GLM especifica las variables explicativas, es decir, las <span class="math inline">x</span>’s en el lado derecho de la ecuación</p>
 <div class="content-box-primary">
 <p><span class="math display">\color{white}{\eta_{i} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}</span></p>
@@ -299,6 +303,7 @@ Mauricio Bucca · Sociología UC
 </section>
 <section id="función-de-enlace-link" class="slide level2">
 <h2>Función de enlace (link)</h2>
+<p><br></p>
 <p>En el <span class="bold">LM estándar</span>, la media condicional del resultado <span class="math inline">\mu_{i}</span> está linealmente relacionada con los predictores del modelo. <span class="math display">\underbrace{\mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k} )}_{\mu_{i}} = \underbrace{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}_{\eta_{i}}</span></p>
 <div class="fragment">
 <ul>
@@ -317,8 +322,9 @@ Mauricio Bucca · Sociología UC
 <p>Ejemplo, si <span class="math inline">g(\cdot) = \ln(\cdot)</span>, entonces <span class="math display">\ln \mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k}) =  \ln \mu_{i} = \eta_{i}</span></p>
 </div>
 </section>
-<section id="función-de-enlace-link-1" class="slide level2">
-<h2>Función de Enlace (link)</h2>
+<section id="función-media-inverso-de-función-enlace" class="slide level2">
+<h2>Función Media (inverso de función enlace)</h2>
+<p><br></p>
 <ul>
 <li>El inverso de esta expresión es la llamada <span class="bold">función media</span>, que expresa la media condicional de <span class="math inline">y_{i}</span> como una función potencialmente no lineal de los predictores:</li>
 </ul>
@@ -326,6 +332,7 @@ Mauricio Bucca · Sociología UC
 <p><span class="math display">\color{white}{\mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k}) = \mu_{i} = g^{-1}(\eta_{i})}</span></p>
 </div>
 <div class="fragment">
+<p><br></p>
 <p>Ejemplo, si <span class="math inline">g(\cdot) = \ln(\cdot)</span>, entonces <span class="math display">\ln \mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k}) =  \ln \mu_{i} = \eta_{i}</span></p>
 </div>
 <div class="fragment">
@@ -340,8 +347,9 @@ Mauricio Bucca · Sociología UC
 </ul>
 </div>
 </section>
-<section id="función-de-enlace-link-2" class="slide level2">
+<section id="función-de-enlace-link-1" class="slide level2">
 <h2>Función de Enlace (link)</h2>
+<p><br></p>
 <p>Más allá de este ejemplo, hay una variedad de posibles funciones de enlace:</p>
 <div class="center">
 <div class="quarto-figure quarto-figure-center">
@@ -357,7 +365,9 @@ Mauricio Bucca · Sociología UC
 </section>
 <section id="el-enlace-natural-de-cada-distribución" class="slide level2">
 <h2>El enlace “natural” de cada distribución</h2>
+<p><br></p>
 <p>La elección de <span class="math inline">g(\cdot)</span> no es arbitraria: cada distribución de la familia exponencial tiene un <strong>enlace canónico</strong>, aquel para el cual el parámetro natural de la distribución coincide exactamente con <span class="math inline">\eta_{i}</span>.</p>
+<p><br></p>
 <table class="caption-top">
 <thead>
 <tr class="header">
@@ -384,27 +394,8 @@ Mauricio Bucca · Sociología UC
 </tr>
 </tbody>
 </table>
+<p><br></p>
 <p>Usar el enlace canónico simplifica la estimación (MLE), pero <strong>no es obligatorio</strong>: cualquier <span class="math inline">g(\cdot)</span> monotónica y “smooth” define un GLM válido.</p>
-</section></section>
-<section>
-<section id="función-de-varianza" class="title-slide slide level1 inverse center middle" data-background-color="#1D3461">
-<h1>Función de Varianza</h1>
-
-</section>
-<section id="función-de-varianza-1" class="slide level2">
-<h2>Función de varianza</h2>
-<p>La función de varianza describe cómo la varianza <span class="math inline">\operatorname{Var}(y_{i})</span> depende de la media <span class="math inline">\mu_{i}</span>. Formalmente:</p>
-<div class="content-box-primary">
-<p><span class="math display">\color{white}{\operatorname{Var}(y_{i}) = \phi V(\mu_{i})}</span></p>
-</div>
-<p>donde</p>
-<ul>
-<li><span class="math inline">\phi</span> es una constante llamada “parámetro de dispersión”</li>
-<li><span class="math inline">V(\cdot)</span> es la función de varianza, definida como: <span class="math inline">V(\mu) = \frac{d\mu}{d \eta}</span></li>
-</ul>
-<div class="fragment">
-<p>Por ejemplo, si <span class="math inline">\mathbb{E}(y_{i} \mid  x_{1}, \dots x_{k}) =  \mu_{i} = e^{\eta_{i}}</span>, entonces, <span class="math display">V(\mu_i) = \frac{d\mu_i}{d \eta_i} = e^{\eta_{i}} \quad \to \quad \operatorname{Var}(y_{i}) = \phi e^{\eta_{i}}</span></p>
-</div>
 </section></section>
 <section>
 <section id="definiendo-un-glm-.." class="title-slide slide level1 inverse middle center" data-background-color="#1D3461">
@@ -420,7 +411,9 @@ Mauricio Bucca · Sociología UC
 </section>
 <section id="definiendo-un-glm" class="slide level2">
 <h2>Definiendo un GLM</h2>
+<p><br></p>
 <p>La estructura básica de un GLM se especifica mediante la elección de dos componentes: (1) <span class="bold">componente sistemático</span> (la distribución de la variable dependiente ) y (2) la <span class="bold">función de enlace</span>.</p>
+<p><br></p>
 <p><span class="math display">\begin{align}
   GLM:
     \begin{cases}
@@ -429,6 +422,7 @@ Mauricio Bucca · Sociología UC
     \end{cases}
 \end{align}</span></p>
 <div class="fragment">
+<p><br></p>
 <p>Cualquier combinación de estos componentes definirá un GLM diferente. Algunas de estas combinaciones son especialmente relevantes:</p>
 <table class="caption-top">
 <colgroup>
@@ -476,6 +470,7 @@ Mauricio Bucca · Sociología UC
 </section>
 <section id="lm-es-un-caso-particular-de-glm" class="slide level2">
 <h2>LM es un caso particular de GLM</h2>
+<p><br></p>
 <p>El tipo más simple de GLM es el que tiene un componente aleatorio normal y una función de enlace de identidad, en cuyo caso obtenemos el modelo estándar de regresión lineal. Formalmente:</p>
 <div class="fragment">
 <ul>
@@ -522,6 +517,7 @@ Mauricio Bucca · Sociología UC
 </section>
 <section id="glm-log-lineal-ejemplo-de-modelo-híbrido" class="slide level2">
 <h2>GLM log-lineal: ejemplo de modelo “híbrido”</h2>
+<p><br></p>
 <p>Ejemplo:</p>
 <div class="fragment">
 <ul>
@@ -555,6 +551,7 @@ Mauricio Bucca · Sociología UC
 </section>
 <section id="enlace-vs.-transformaciones" class="slide level2">
 <h2>Enlace vs.&nbsp;transformaciones</h2>
+<p><br></p>
 <p>Usar una función de enlance <span class="bold">es distinto</span> de transformar la variable dependiente!</p>
 <div class="fragment">
 <p><span class="bold">Ejemplo:</span> es un práctica común trabajar con la variable dependiente transforma a logs (ej. ingresos).</p>
@@ -562,9 +559,11 @@ Mauricio Bucca · Sociología UC
 <li><span class="math inline">y_{1}, \dots y_{n}</span> son <span class="math inline">n</span> variables que no distribuyen normal pero <span class="math inline">\ln(y_{1}), \dots \ln(y_{n})</span> si.</li>
 <li>Estimar LM con variable dependiente transformada:</li>
 </ul>
+<p><br></p>
 <p><span class="math display">\ln y_{i} = \overbrace{\beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}}^{\mathbb{E}(\ln y_{i} \mid x_{1}, \dots, x_{k} )  } + \underbrace{e_{i}}_{\text{Normal}(0,\sigma)}</span></p>
 </div>
 <div class="fragment">
+<p><br></p>
 <p>Notar diferencia:</p>
 <div class="pull-left">
 <p><span class="bold">GLM con log-link</span> <span class="math display">\ln \mathbb{E} (y_{i} \mid x_{1}, \dots, x_{k}  ) = \beta_{0} + \beta_{1}x_{1i} + \dots \beta_{k}x_{ki}</span></p>
@@ -598,13 +597,13 @@ Call:
 lm(formula = log(bikers) ~ factor(workingday), data = bikedata)
 
 Residuals:
-   Min     1Q Median     3Q    Max 
--4.289 -0.854  0.403  1.064  2.190 
+    Min      1Q  Median      3Q     Max 
+-4.289 -0.854  0.403  1.063  2.190 
 
 Coefficients:
-                     Estimate Std. Error t value            Pr(&gt;|t|)    
-(Intercept)          4.289   0.028  154.600 &lt;0.000 ***
-factor(workingday)1 -0.000   0.034   -0.010                0.990    
+                      Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)          4.289  0.028 154.604   &lt;2e-16 ***
+factor(workingday)1 -0.000  0.034  -0.012     0.990    
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
 
@@ -624,13 +623,13 @@ glm(formula = bikers ~ factor(workingday), family = gaussian(link = "log"),
     data = bikedata)
 
 Coefficients:
-                    Estimate Std. Error t value            Pr(&gt;|t|)    
-(Intercept)           4.952     0.018  273.830 &lt;0.000 ***
-factor(workingday)1   0.024     0.022    1.080                0.280    
+                    Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)          4.952    0.018 273.835   &lt;2e-16 ***
+factor(workingday)1  0.024    0.022   1.083    0.279    
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1
 
-(Dispersion parameter for gaussian family taken to be 17901)
+(Dispersion parameter for gaussian family taken to be 17901.490)
 
     Null deviance: 154743728  on 8644  degrees of freedom
 Residual deviance: 154722529  on 8643  degrees of freedom
@@ -642,6 +641,7 @@ Number of Fisher Scoring iterations: 6</code></pre>
 </section>
 <section id="gaussian-glm-con-log-link-1" class="slide level2">
 <h2>Gaussian GLM con log-link</h2>
+<p><br></p>
 <p><span class="math display">\ln \mu_{i} = \ln \mathbb{E}(\text{bikers}_{i} \mid \text{workingday}_{i})
 = \beta_{0} + \beta_{1}\text{workingday}_{i}</span></p>
 <div class="fragment">
@@ -652,19 +652,21 @@ Number of Fisher Scoring iterations: 6</code></pre>
 </ul>
 </div>
 <div class="fragment">
+<p><br></p>
 <p>Interpretación coeficientes <span class="math inline">\beta_{1} = \ln \frac{\mathbb{E}(\text{bikers}_{i} \mid \text{workingday}=1)}{\mathbb{E}(\text{bikers}_{i} \mid \text{workingday}=0)}</span></p>
 </div>
 <div class="fragment">
 <p><span class="math inline">\quad \implies  \quad e^{\beta_{1}} =  \frac{\mathbb{E}(\text{bikers}_{i} \mid \text{workingday}=1)}{\mathbb{E}(\text{bikers}_{i} \mid \text{workingday}=0)}</span></p>
 </div>
 <div class="fragment">
+<p><br></p>
 <p><span class="bold">Razón de demanda</span>: <span class="math inline">e^{\beta_1}</span> compara la demanda horaria esperada entre días hábiles y no hábiles.</p>
 </div>
 </section>
 <section id="gaussian-glm-con-log-link-2" class="slide level2">
 <h2>Gaussian GLM con log-link</h2>
 <div class="pull-left">
-<p>Dispersión estimada: <span class="math inline">\hat\phi=</span> 17901.487 <span class="math inline">\operatorname{Var}(y_{i}) = \phi V(\mu) = \phi \frac{d\mu_{i}}{d\eta_{i}} = \phi e^{\eta_{i}} = \phi \mu_{i}</span> <span class="math inline">\operatorname{Var}(y_{i})  = \phi\mu_{i} = \phi e^{\beta_0 + \beta_1\text{workingday}_{i}}</span> <br><br> Por tanto, <span class="math display">y_{i} \sim \text{Normal}(\mu_{i},\sigma_{i}) \quad \text{ donde}</span></p>
+<p><br> Por tanto, <span class="math display">y_{i} \sim \text{Normal}(\mu_{i},\sigma_{i}) \quad \text{ donde}</span></p>
 <ul>
 <li><span class="math inline">\mu_{i}=e^{\beta_{0} +  \beta_{1}\text{workingday}_{i}}</span></li>
 <li><span class="math inline">\sigma_{i} = \sqrt{\phi\mu_{i}}</span></li>
@@ -686,6 +688,7 @@ Number of Fisher Scoring iterations: 6</code></pre>
 </section>
 <section id="en-resumen" class="slide level2">
 <h2>En resumen</h2>
+<p><br></p>
 <ul>
 <li>Un GLM se define por cuatro piezas: componente aleatorio (familia exponencial), componente sistemático <span class="math inline">\eta_{i}</span>, función de enlace <span class="math inline">g(\mu_{i})=\eta_{i}</span> y función de varianza <span class="math inline">\operatorname{Var}(y_{i})=\phi V(\mu_{i})</span>.</li>
 <li>La función de enlace mantiene <span class="math inline">\mu_{i}</span> dentro de su rango natural; cada distribución tiene un enlace “canónico” (Normal: identidad, Poisson: log, Binomial: logit).</li>
@@ -982,14 +985,13 @@ Number of Fisher Scoring iterations: 6</code></pre>
           e.clearSelection();
         }
         const getTextToCopy = function(trigger) {
-          const outerScaffold = trigger.parentElement.cloneNode(true);
-          const codeEl = outerScaffold.querySelector('code');
-          for (const childEl of codeEl.children) {
-            if (isCodeAnnotation(childEl)) {
-              childEl.remove();
+            const codeEl = trigger.previousElementSibling.cloneNode(true);
+            for (const childEl of codeEl.children) {
+              if (isCodeAnnotation(childEl)) {
+                childEl.remove();
+              }
             }
-          }
-          return codeEl.innerText;
+            return codeEl.innerText;
         }
         const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
           text: getTextToCopy
