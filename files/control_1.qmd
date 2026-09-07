@@ -9,22 +9,42 @@ format: pdf
 
 1. Calcula $e^4 \cdot e^{-1}$.
 
+**Respuesta:** $e^4 \cdot e^{-1} = e^{3}$.
+
 
 2. Calcula $\ln(e^2) - \ln(e^5)$.
+
+**Respuesta:** $2 - 5 = -3$.
 
 
 3. Calcula $\sum_{i=1}^{5} (3i + 1)$.
 
+**Respuesta:** $3(1+2+3+4+5) + 5(1) = 45 + 5 = 50$.
+
 
 4. Para $f(x) = 4x^3 - 2x$, calcula $\dfrac{df}{dx}$.
 
+**Respuesta:** $\dfrac{df}{dx} = 12x^2 - 2$.
+
 5. Para $f(x,y) = 3x^2 + y^3$, calcula $\dfrac{\partial f}{\partial x}$.
+
+**Respuesta:** $\dfrac{\partial f}{\partial x} = 6x$.
 
 
 6. $A$ y $B$ son independientes con $\mathbb{P}(A)=0.3$ y $\mathbb{P}(B)=0.6$. Calcula $\mathbb{P}(A\cap B)$.
 
+**Respuesta:** $\mathbb{P}(A\cap B) = 0.3 \times 0.6 = 0.18$.
+
 
 7. $X_1$ y $X_2$ son dos variables Bernoulli independientes entre sí, ambas con $p=0.3$. Escribe formalmente la función de probabilidad conjunta de $(X_1,X_2)$ y calcula $\mathbb{P}(X_1=1, X_2=0)$.
 
+**Respuesta:** $\mathbb{P}(X_1=x_1,X_2=x_2) = p^{x_1+x_2}(1-p)^{2-x_1-x_2}$. $\mathbb{P}(X_1=1,X_2=0) = 0.3 \times 0.7 = 0.21$.
+
 
 8. $X$ es Binomial con $n=3$ y $p=0.5$ (3 lanzamientos de moneda justa). Escribe la función de probabilidad de una Binomial y calcula $\mathbb{P}(X=2)$.
+
+**Respuesta:** $\mathbb{P}(X=k) = \binom{n}{k}p^k(1-p)^{n-k}$. $\mathbb{P}(X=2) = \binom{3}{2}(0.5)^2(0.5)^1 = 3 \times 0.125 = 0.375$.
+
+## Rúbrica
+
+Cada pregunta se evalúa de 1 a 7. Nota final: promedio de las 8 preguntas.

@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-28">
+  <meta name="dcterms.date" content="2026-09-07">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -34,7 +34,7 @@
     }
   </style>
   <link rel="stylesheet" href="class_7_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
-  <link rel="stylesheet" href="../_shared/course.css">
+  <link rel="stylesheet" href="_shared/course.css">
   <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
   <script>document.addEventListener("DOMContentLoaded", function () {
  var mathElements = document.getElementsByClassName("math");
@@ -159,7 +159,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-28</p>
+  <p class="date">2026-09-07</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -212,6 +212,7 @@ Mauricio Bucca · Sociología UC
 </section>
 <section id="configuración-2" class="slide level2">
 <h2>Configuración</h2>
+<p><br></p>
 <ul>
 <li>Tenemos <span class="math inline">y_{1}, \dots y_{n}</span> son <span class="math inline">n</span> variables independientes con distribución <span class="math inline">\text{Bernoulli}(p_{i})</span></li>
 <li><span class="math inline">\mathbb{E}(y_{i} \mid x_{i1}, \dots,x_{ik}) = \mathbb{P}(y_{i}=1 \mid x_{i1}, \dots,x_{ik}) = p_{i}</span></li>
@@ -225,6 +226,7 @@ Mauricio Bucca · Sociología UC
 </section>
 <section id="un-ejemplo-empírico" class="slide level2">
 <h2>Un ejemplo empírico</h2>
+<p><br></p>
 <div class="pull-left">
 <p>Continuando con los datos de demanda de bicicletas, ajustaremos el siguiente modelo:</p>
 <p><span class="math display">\underbrace{\ln \frac{p_{i}}{ 1 - p_{i}}}_{\text{logit}(p_{i})}    = \beta_{0} + \beta_{1}\text{hábil}_{i} + \beta_{2}\text{temp}_{i}</span></p>
@@ -269,6 +271,7 @@ Number of Fisher Scoring iterations: 4</code></pre>
 </section>
 <section id="efectos-marginales-sobre-el-logit-1" class="slide level2">
 <h2>Efectos marginales sobre el logit</h2>
+<p><br></p>
 <div class="center">
 <div class="cell">
 <div class="cell-output-display">
@@ -283,8 +286,10 @@ Number of Fisher Scoring iterations: 4</code></pre>
 </section>
 <section id="efectos-marginales-sobre-el-logit-2" class="slide level2">
 <h2>Efectos marginales sobre el logit</h2>
+<p><br></p>
 <p>Dado el siguiente modelo de regresión logística: <span class="math display">\text{logit}(p_{i}) = \ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></p>
 <div class="fragment">
+<p><br></p>
 <ul>
 <li>El intercepto <span class="math inline">\beta_{0}</span> corresponde al logit de la probabilidad de éxito cuando <span class="math inline">x_{1} = \dots = x_{k} = 0</span></li>
 </ul>
@@ -293,6 +298,7 @@ Number of Fisher Scoring iterations: 4</code></pre>
 <ul>
 <li>El efecto marginal de <span class="math inline">x_{k}</span> sobre el logit de la probabilidad de éxito está dado por:</li>
 </ul>
+<p><br></p>
 <div class="pull-left">
 <div class="content-box-blue">
 <p><span class="math display">\frac{\partial\text{logit}(p_{i})}{\partial x_{k}} = \beta_{k}</span></p>
@@ -319,6 +325,7 @@ Number of Fisher Scoring iterations: 4</code></pre>
 </section>
 <section id="efectos-marginales-sobre-el-logit-3" class="slide level2">
 <h2>Efectos marginales sobre el logit</h2>
+<p><br></p>
 <p>En nuestro ejemplo: <span class="math inline">\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i}</span></p>
 <div class="pull-left">
 <div class="cell">
@@ -347,11 +354,14 @@ temp                  4.894    0.155</code></pre>
 </section>
 <section id="efectos-multiplicativos-sobre-las-odds" class="slide level2">
 <h2>Efectos multiplicativos sobre las odds</h2>
+<p><br></p>
 <p>Dado el siguiente modelo de regresión logística: <span class="math display">\text{logit}(p_{i}) = \ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></p>
 <div class="fragment">
+<p><br></p>
 <p>exponenciando a ambos lados obtenemos las <span class="bold">odds de éxito</span>: <span class="math display">\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}</span></p>
 </div>
 <div class="fragment">
+<p><br></p>
 <p>equivalentemente</p>
 <div class="content-box-blue">
 <p><span class="math display">\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots e^{\beta_{k} x_{ik}}</span></p>
@@ -360,39 +370,48 @@ temp                  4.894    0.155</code></pre>
 </section>
 <section id="efectos-multiplicativos-sobre-las-odds-1" class="slide level2">
 <h2>Efectos multiplicativos sobre las odds</h2>
+<p><br></p>
 <p><span class="math display">\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots e^{\beta_{k} x_{ik}}</span></p>
 <div class="fragment">
+<p><br></p>
 <p>Examinando esta ecuación observamos que cuando <span class="math inline">x_1 = \dots = x_k = 0</span>,</p>
 <p><span class="math display">\frac{p_{i}}{1 - p_{i}}=  e^{\beta_{0}}</span> Es decir, cuando <span class="math inline">x_1 = \dots = x_k = 0</span> las odds de éxito están dadas por <span class="math inline">e^{\beta_{0}}</span>.</p>
 </div>
 <div class="fragment">
+<p><br></p>
 <p>Generalizando, observamos que cuando <span class="math inline">x_1 = c_1  \dots = x_k = c_k</span>, las odds de éxito están dadas por</p>
 <p><span class="math display">\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0}} \cdot e^{\beta_{1} c_{1}}  \dots e^{\beta_{k} c_{k}}</span></p>
 </div>
 </section>
 <section id="efectos-multiplicativos-sobre-las-odds-odds-ratios" class="slide level2">
 <h2>Efectos multiplicativos sobre las odds: odds ratios</h2>
+<p><br></p>
 <p>Considera la situación en que <span class="math inline">i</span> y <span class="math inline">j</span> son dos observaciones con <span class="math inline">x_{k}=c</span> y <span class="math inline">x_{k}=c+1</span>, respectivamente. El resto de las covariables toman valores idénticos.</p>
 <div class="fragment">
-<p>Las odds de éxito para cada caso son:</p>
+<p><br> Las odds de éxito para cada caso son:</p>
 <ul>
 <li><span class="math inline">p_{i}/(1 - p_{i}) = e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c}</span></li>
 <li><span class="math inline">p_{j}/(1 - p_{j}) = e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c+1}</span></li>
 </ul>
 </div>
 <div class="fragment">
+<p><br></p>
 <p>El ratio de las odd de éxito entre <span class="math inline">j</span> e <span class="math inline">i</span> está dado por:</p>
 <p><span class="math display">\begin{align}
 \frac{p_{j}/(1 - p_{j})}{p_{i}/(1 - p_{i})} &amp;= \frac{e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c+1}}{e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c}} \\ \\
 &amp;= e^{\beta_{k}}
-\end{align}</span> En otras palabras, manteniendo otros factores constantes, <span class="math inline">e^{\beta_{k}}</span> representa la odds ratio entre el caso con <span class="math inline">x_{k}</span> aumentado en una unidad, y el caso con <span class="math inline">x_{k}</span> en un nivel basal dado.</p>
+\end{align}</span></p>
+<p><br></p>
+<p>En otras palabras, manteniendo otros factores constantes, <span class="math inline">e^{\beta_{k}}</span> representa la odds ratio entre el caso con <span class="math inline">x_{k}</span> aumentado en una unidad, y el caso con <span class="math inline">x_{k}</span> en un nivel basal dado.</p>
 </div>
 </section>
 <section id="efectos-multiplicativos-sobre-las-odds-2" class="slide level2">
 <h2>Efectos multiplicativos sobre las odds</h2>
+<p><br></p>
 <div class="content-box-yellow">
 <p>“Un cambio en <span class="math inline">\Delta</span> unidades de <span class="math inline">x_{k}</span> multiplica las las odds de éxito por <span class="math inline">e^{\Delta \beta_{k}}</span>”</p>
 </div>
+<p><br></p>
 <p><span class="bold">Propiedades</span>:</p>
 <div class="fragment">
 <ul>
@@ -417,6 +436,7 @@ temp                  4.894    0.155</code></pre>
 </section>
 <section id="efectos-multiplicativos-sobre-las-odds-3" class="slide level2">
 <h2>Efectos multiplicativos sobre las odds</h2>
+<p><br></p>
 <p>En nuestro ejemplo: <span class="math inline">\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i}</span>, por tanto:</p>
 <div class="pull-left">
 <p><span class="math inline">\frac{p_{i}}{1 -p_{i}} = e^{\beta_{0}} \cdot  e^{\beta_{1}*\text{hábil}_{i}} \cdot e^{\beta_{2}\text{temp}_{i}}</span></p>
@@ -452,6 +472,7 @@ temp                  4.894    0.155</code></pre>
 </section>
 <section id="efectos-marginales-sobre-la-probabilidad-de-éxito-1" class="slide level2">
 <h2>Efectos marginales sobre la probabilidad de éxito</h2>
+<p><br></p>
 <div class="center">
 <div class="cell">
 <div class="cell-output-display">
@@ -466,6 +487,7 @@ temp                  4.894    0.155</code></pre>
 </section>
 <section id="efectos-marginales-sobre-la-probabilidad-de-éxito-2" class="slide level2">
 <h2>Efectos marginales sobre la probabilidad de éxito</h2>
+<p><br></p>
 <p>Dado el siguiente modelo de regresión logística: <span class="math display">\ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}</span></p>
 <div class="fragment">
 <p>Queremos saber el <span class="bold">efecto marginal</span> de los predictores sobre la <span class="bold">probabilidad</span> de éxito. Formalmente</p>
@@ -549,7 +571,7 @@ temp                  4.894    0.155</code></pre>
 <h2>Efectos marginales sobre la probabilidad de éxito</h2>
 <p><span class="math display">\frac{\partial p_{i}}{\partial x_{k}}= \beta_{k} \cdot \Bigg(\frac{1}{1 + e^{-(\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}})}\Bigg) \Bigg(1 - \frac{1}{1 + e^{-(\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik})}}\Bigg)</span></p>
 <div class="fragment">
-<p>Corolario,</p>
+<p><br> Corolario,</p>
 </div>
 <div class="fragment">
 <ul>
@@ -561,7 +583,10 @@ temp                  4.894    0.155</code></pre>
 </section>
 <section id="efectos-marginales-sobre-la-probabilidad-de-éxito-7" class="slide level2">
 <h2>Efectos marginales sobre la probabilidad de éxito</h2>
-<p>En nuestro ejemplo: <span class="math inline">\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i}</span>, por tanto: <span class="math display">p_{i} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i})} }</span></p>
+<p><br></p>
+<p>En nuestro ejemplo: <span class="math inline">\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i}</span>, por tanto:</p>
+<p><br></p>
+<p><span class="math display">p_{i} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i})} }</span></p>
 <div class="pull-left">
 <div class="cell">
 <div class="cell-output cell-output-stdout">
@@ -586,7 +611,9 @@ temp                  4.894    0.155</code></pre>
 </section>
 <section id="efectos-marginales-sobre-la-probabilidad-de-éxito-8" class="slide level2">
 <h2>Efectos marginales sobre la probabilidad de éxito</h2>
+<p><br></p>
 <div class="pull-left">
+<p><br></p>
 <p><span class="math display">p_{i} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i})}}</span></p>
 <div class="cell">
 <div class="cell-output-display">
@@ -615,6 +642,7 @@ temp                  4.894    0.155</code></pre>
 </section>
 <section id="efectos-marginales-sobre-la-probabilidad-de-éxito-9" class="slide level2">
 <h2>Efectos marginales sobre la probabilidad de éxito</h2>
+<p><br></p>
 <ul>
 <li>Efectos marginales son <em>esencialmente</em> heterogeneos. No hay un efecto sino muchos.</li>
 </ul>
@@ -634,6 +662,7 @@ temp                  4.894    0.155</code></pre>
 </div>
 </div>
 <div class="fragment">
+<p><br></p>
 <p>Cantidades de interes:</p>
 <div class="pull-right">
 <ul>
@@ -646,6 +675,7 @@ temp                  4.894    0.155</code></pre>
 </section>
 <section id="efectos-marginales-sobre-la-probabilidad-de-éxito-ame" class="slide level2">
 <h2>Efectos marginales sobre la probabilidad de éxito: AME</h2>
+<p><br></p>
 <p><span class="bold">AME</span>: Efecto marginal promedio (en muestra)</p>
 <div class="fragment">
 <p>En <code>R</code> pueden usar el nuevo paquete <code>marginaleffects</code> (o comando <code>margins</code> en <code>Stata</code> )</p>
@@ -668,6 +698,7 @@ Type: response</code></pre>
 </section>
 <section id="efectos-marginales-sobre-la-probabilidad-de-éxito-ame-1" class="slide level2">
 <h2>Efectos marginales sobre la probabilidad de éxito: AME</h2>
+<p><br></p>
 <p><span class="bold">(a) Solución análítica</span>, usando <span class="math display">\frac{\partial p_{i}}{\partial \text{temp} }= \beta_{\text{temp}} \cdot p_{i}(1 - p_{i})</span></p>
 <div class="fragment">
 <p>En <code>R</code>:</p>
@@ -704,6 +735,7 @@ Type: response</code></pre>
 </section>
 <section id="efectos-marginales-sobre-la-probabilidad-de-éxito-ame-2" class="slide level2">
 <h2>Efectos marginales sobre la probabilidad de éxito: AME</h2>
+<p><br></p>
 <p><span class="bold">(b) Aproximación numérica</span>, usando la definición la derivada:</p>
 <div class="fragment">
 <p><span class="math display">\frac{\partial p_{i}}{\partial \text{temp}} \approx  \frac{p_{i}(x_{1}, \dots ,\text{temp} = c + \delta) - p_{i}(x_{1}, \dots ,\text{temp} = c )}{\delta}</span></p>
@@ -718,6 +750,7 @@ Type: response</code></pre>
 </section>
 <section id="efectos-marginales-sobre-la-probabilidad-de-éxito-mem" class="slide level2">
 <h2>Efectos marginales sobre la probabilidad de éxito: MEM</h2>
+<p><br></p>
 <p><span class="bold">MEM</span>: Efecto marginal al valor promedio (en muestra)</p>
 <div class="fragment">
 <div class="pull-left">
@@ -732,6 +765,7 @@ Type: response</code></pre>
 </div>
 </div>
 <div class="fragment">
+<p><br></p>
 <div class="pull-right">
 <p><strong>La elección depende de la pregunta sustantiva y de qué población queremos resumir.</strong></p>
 </div>
@@ -742,6 +776,7 @@ Type: response</code></pre>
 </section>
 <section id="efectos-marginales-sobre-la-probabilidad-de-éxito-mem-1" class="slide level2">
 <h2>Efectos marginales sobre la probabilidad de éxito: MEM</h2>
+<p><br></p>
 <p>Implementamos la tercera opción usando <code>marginaleffects</code> en <code>R</code>: efecto marginal para temperatura y tipo de día fijos a su promedio global.</p>
 <div class="fragment">
 <div class="cell">
@@ -766,6 +801,7 @@ Type: response</code></pre>
 </section>
 <section id="efectos-marginales-sobre-la-probabilidad-de-éxito-mer" class="slide level2">
 <h2>Efectos marginales sobre la probabilidad de éxito: MER</h2>
+<p><br></p>
 <p>Una versión más general de MEM es calcular los efectos marginales para “valores representativos”.</p>
 <div class="fragment">
 <p>En <code>R</code></p>
@@ -789,6 +825,7 @@ Comparison: dY/dX</code></pre>
 </section>
 <section id="efectos-marginales-sobre-la-probabilidad-de-éxito-mer-1" class="slide level2">
 <h2>Efectos marginales sobre la probabilidad de éxito: MER</h2>
+<p><br></p>
 <table class="caption-top">
 <colgroup>
 <col style="width: 19%">
