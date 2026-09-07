@@ -1,0 +1,62 @@
+---
+title: "Control 2"
+subtitle: "Modelo Lineal de Probabilidad y Regresión Logística"
+author: "SOC3070"
+lang: es
+format: pdf
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## Datos
+
+Usaremos los datos de demanda de bicicletas de _Capital Bikeshare_ (paquete `ISLR2`), los mismos que hemos usado en clases. La variable dependiente es "alta demanda": un indicador de si el número de arriendos de una hora está en el 25% superior (percentil 75) de la distribución.
+
+```{r}
+library(ISLR2)
+
+bikedata <- as.data.frame(Bikeshare)
+
+# umbral de "alta demanda": top 25% de las horas (percentil 75 de bikers)
+p75 <- quantile(bikedata$bikers, 0.75)
+bikedata$high_demand <- as.integer(bikedata$bikers > p75)
+```
+
+Usaremos dos predictores: `temp` (temperatura normalizada, entre 0 y 1) y `hum` (humedad normalizada, entre 0 y 1).
+
+## Parte 1: Modelo Lineal de Probabilidad (LPM)
+
+Ajusta el siguiente LPM: $\text{alta demanda}_{i} = \beta_{0} + \beta_{1}\text{temp}_{i} + \beta_{2}\text{hum}_{i} + e_{i}$.
+
+**1a) Interpreta el coeficiente del primer predictor (`temp`).**
+
+**1b) Calcula la probabilidad predicha para la siguiente combinación de predictores: `temp = 0.1`, `hum = 0.9`. Brevemente, ¿qué representan estos valores?**
+
+
+## Parte 2: Regresión logística (logit)
+
+Ajusta ahora el mismo modelo, pero vía regresión logística: $\text{logit}(\mathbb{P}(\text{alta demanda}_i = 1)) = \beta_{0} + \beta_{1}\text{temp}_{i} + \beta_{2}\text{hum}_{i}$.
+
+**2a) Calcula la probabilidad predicha para la misma combinación arbitraria de predictores.**
+
+
+**2b) Explica por qué difieren tanto las predicciones del LPM y el logit.**
+
+## Rúbrica
+
+Cada pregunta (1a, 1b, 2a, 2b) se evalúa de 1 a 7. Nota final: promedio de las 4 preguntas.
+
+## R como calculadora
+
+```{r}
+#| eval: false
+beta1 <- 2
+exp(1 + beta1 * 10)
+
+1 + 2 * 3
+exp(1)
+log(10)
+1 / (1 + exp(-1))
+```

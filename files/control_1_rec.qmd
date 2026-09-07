@@ -9,22 +9,42 @@ format: pdf
 
 1. Calcula $e^2 \cdot e^{-3}$.
 
+**Respuesta:** $e^2 \cdot e^{-3} = e^{-1}$.
+
 
 2. Calcula $\ln(e^4) - \ln(e^1)$.
+
+**Respuesta:** $4 - 1 = 3$.
 
 
 3. Calcula $\sum_{i=1}^{4} (2i + 3)$.
 
+**Respuesta:** $2(1+2+3+4) + 4(3) = 20 + 12 = 32$.
+
 
 4. Para $f(x) = 2x^3 - 5x$, calcula $\dfrac{df}{dx}$.
 
+**Respuesta:** $\dfrac{df}{dx} = 6x^2 - 5$.
+
 5. Para $f(x,y) = 2x^3 + y^2$, calcula $\dfrac{\partial f}{\partial x}$.
+
+**Respuesta:** $\dfrac{\partial f}{\partial x} = 6x^2$.
 
 
 6. $A$ y $B$ son independientes con $\mathbb{P}(A)=0.4$ y $\mathbb{P}(B)=0.5$. Calcula $\mathbb{P}(A\cap B)$.
 
+**Respuesta:** $\mathbb{P}(A\cap B) = 0.4 \times 0.5 = 0.20$.
+
 
 7. $X_1$ y $X_2$ son dos variables Bernoulli independientes entre sí, ambas con $p=0.4$. Escribe formalmente la función de probabilidad conjunta de $(X_1,X_2)$ y calcula $\mathbb{P}(X_1=0, X_2=1)$.
 
+**Respuesta:** $\mathbb{P}(X_1=x_1,X_2=x_2) = p^{x_1+x_2}(1-p)^{2-x_1-x_2}$. $\mathbb{P}(X_1=0,X_2=1) = 0.6 \times 0.4 = 0.24$.
+
 
 8. $X$ es Binomial con $n=3$ y $p=0.4$ (3 lanzamientos de una moneda cargada). Escribe la función de probabilidad de una Binomial y calcula $\mathbb{P}(X=1)$.
+
+**Respuesta:** $\mathbb{P}(X=k) = \binom{n}{k}p^k(1-p)^{n-k}$. $\mathbb{P}(X=1) = \binom{3}{1}(0.4)^1(0.6)^2 = 3 \times 0.4 \times 0.36 = 0.432$.
+
+## Rúbrica
+
+Cada pregunta se evalúa de 1 a 7. Nota final: promedio de las 8 preguntas.

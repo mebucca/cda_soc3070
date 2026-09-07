@@ -87,6 +87,8 @@ $$\underbrace{\ln \frac{p_{i}}{1 - p_{i}}}_{\text{Link logit}(p_{i})} = \beta_{0
 
 ## Configuración
 
+<br>
+
 - Tenemos $y_{1}, \dots y_{n}$ son $n$ variables independientes con distribución $\text{Bernoulli}(p_{i})$
 - $\mathbb{E}(y_{i} \mid x_{i1}, \dots,x_{ik}) = \mathbb{P}(y_{i}=1 \mid x_{i1}, \dots,x_{ik}) = p_{i}$ 
 
@@ -98,6 +100,9 @@ $$\ln \frac{p_{i}}{1 - p_{i}} = \underbrace{\beta_{0} + \beta_{1} x_{i1} + \dots
 - Interpretación: ¿cuál es el significado de $\beta_{0},\beta_{1}, \dots, \beta_{k}$?
 
 ## Un ejemplo empírico
+
+<br>
+
 ```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
 
 # datos de Capital Bikeshare del paquete "ISLR2"
@@ -151,6 +156,8 @@ summary(logit_demand_wday_temp)
 
 ## Efectos marginales sobre el logit
 
+<br>
+
 ::: {.center}
 
 ```{r, echo=FALSE, fig.width=6, fig.height=5, warning=FALSE, message=FALSE}
@@ -169,16 +176,23 @@ fakedata %>%  ggplot(aes(x=x, y=logit)) +
 :::
 
 ## Efectos marginales sobre el logit
+
+<br>
+
 Dado el siguiente modelo de regresión logística: 
 $$\text{logit}(p_{i}) = \ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$$
 
 . . .
+
+<br>
 
 - El intercepto $\beta_{0}$ corresponde al logit de la probabilidad de éxito cuando $x_{1} = \dots = x_{k} = 0$
 
 . . .
 
 - El efecto marginal de $x_{k}$ sobre el logit de la probabilidad de éxito está dado por:
+
+<br>
 
 ::: {.pull-left}
 
@@ -216,6 +230,10 @@ $$\frac{\partial\text{logit}(p_{i})}{\partial x_{k}} = \beta_{k}$$
 \end{align}
 
 ## Efectos marginales sobre el logit
+
+<br>
+
+
 En nuestro ejemplo: $\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i}$
 
 ::: {.pull-left}
@@ -252,15 +270,22 @@ predictions %>% ggplot(aes(x=temp, y=logit_hat, group=factor(workingday), colour
 ## Efectos multiplicativos sobre las odds de éxito {.inverse .center .middle}
 
 ## Efectos multiplicativos sobre las odds
+
+<br>
+
 Dado el siguiente modelo de regresión logística: 
 $$\text{logit}(p_{i}) = \ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$$
 
 . . .
 
+<br>
+
 exponenciando a ambos lados obtenemos las [odds de éxito]{.bold}:
 $$\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}$$
 
 . . .
+
+<br>
 
 equivalentemente
 
@@ -271,9 +296,14 @@ $$\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots e^{
 :::
 
 ## Efectos multiplicativos sobre las odds
+
+<br>
+
 $$\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots e^{\beta_{k} x_{ik}}$$
 
 . . .
+
+<br>
 
 Examinando esta ecuación observamos que cuando $x_1 = \dots = x_k = 0$, 
 
@@ -282,15 +312,21 @@ Es decir, cuando $x_1 = \dots = x_k = 0$ las odds de éxito están dadas por $e^
 
 . . .
 
+<br>
+
 Generalizando,  observamos que cuando $x_1 = c_1  \dots = x_k = c_k$,  las odds de éxito están dadas por
 
 $$\frac{p_{i}}{1 - p_{i}} =  e^{\beta_{0}} \cdot e^{\beta_{1} c_{1}}  \dots e^{\beta_{k} c_{k}}$$
 
 ## Efectos multiplicativos sobre las odds: odds ratios
+
+<br>
+
 Considera la situación en que $i$ y $j$ son dos observaciones con $x_{k}=c$ y $x_{k}=c+1$, respectivamente. El resto de las covariables toman valores idénticos.
 
 . . .
 
+<br>
  Las odds de éxito para cada caso son:
 
 - $p_{i}/(1 - p_{i}) = e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c}$
@@ -298,21 +334,30 @@ Considera la situación en que $i$ y $j$ son dos observaciones con $x_{k}=c$ y $
 
 . . .
 
+<br>
+
 El ratio de las odd de éxito entre $j$ e $i$ está dado por:
 
 \begin{align}
 \frac{p_{j}/(1 - p_{j})}{p_{i}/(1 - p_{i})} &= \frac{e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c+1}}{e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c}} \\ \\
 &= e^{\beta_{k}}
 \end{align}
+
+<br>
+
 En otras palabras, manteniendo otros factores constantes, $e^{\beta_{k}}$ representa la odds ratio entre el caso con $x_{k}$ aumentado en una unidad, y el caso con $x_{k}$ en un nivel basal dado. 
 
 ## Efectos multiplicativos sobre las odds
+
+<br>
 
 ::: {.content-box-yellow}
 
 "Un cambio en $\Delta$ unidades de $x_{k}$ multiplica las las odds de éxito por $e^{\Delta \beta_{k}}$"
 
 :::
+
+<br>
 
 [Propiedades]{.bold}:
 
@@ -333,6 +378,9 @@ En otras palabras, manteniendo otros factores constantes, $e^{\beta_{k}}$ repres
 - Si $\beta_{k} > 0  \to  (e^{\beta_{k}} > 1)$. Es decir, un aumento en $x_{k}$ está asociado a aumento (multiplicativo) en de las odds de éxito.
 
 ## Efectos multiplicativos sobre las odds
+
+<br>
+
 En nuestro ejemplo: $\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i}$, por tanto:
 
 ::: {.pull-left}
@@ -381,6 +429,8 @@ predictions %>% ggplot(aes(x=temp, y=odds, group=factor(workingday), colour=fact
 
 ## Efectos marginales sobre la probabilidad de éxito
 
+<br>
+
 ::: {.center}
 
 ```{r, echo=FALSE, fig.width=6, fig.height=5, warning=FALSE, message=FALSE}
@@ -399,6 +449,9 @@ fakedata %>%  ggplot(aes(x=x, y=probabilities)) +
 :::
 
 ## Efectos marginales sobre la probabilidad de éxito
+
+<br>
+
 Dado el siguiente modelo de regresión logística: 
 $$\ln \frac{p_{i}}{1 - p_{i}} = \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}$$
 
@@ -485,6 +538,7 @@ $$\frac{\partial p_{i}}{\partial x_{k}}= \beta_{k} \cdot \Bigg(\frac{1}{1 + e^{-
 
 . . .
 
+<br>
 Corolario,
 
 . . .
@@ -494,7 +548,14 @@ Corolario,
 - A medida que la $p_{i}$ se acerca a 0.5, $\frac{\partial p_{i}}{\partial x_{k}}$ tiende a $\beta_{k}/4$.
 
 ## Efectos marginales sobre la probabilidad de éxito
+
+<br>
+
 En nuestro ejemplo: $\ln \frac{p_{i}}{1 -p_{i}} = \beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i}$, por tanto:
+
+<br>
+
+
 $$p_{i} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i})} }$$
 
 ::: {.pull-left}
@@ -531,7 +592,11 @@ predictions %>% ggplot(aes(x=temp, y=p_hat, group=factor(workingday), colour=fac
 
 ## Efectos marginales sobre la probabilidad de éxito
 
+<br>
+
 ::: {.pull-left}
+
+<br>
 
 $$p_{i} = \frac{1}{1 + e^{-(\beta_{0} + \beta_{1}*\text{hábil}_{i} + \beta_{2}\text{temp}_{i})}}$$
 ```{r, echo=FALSE, fig.width=6, fig.height=5}
@@ -580,6 +645,8 @@ predictions %>% ggplot(aes(x=temp, y=me, group=factor(workingday), colour=factor
 
 ## Efectos marginales sobre la probabilidad de éxito
 
+<br>
+
 - Efectos marginales son _esencialmente_ heterogeneos. No hay un efecto sino muchos.
 
 . . .
@@ -600,6 +667,8 @@ predictions %>% ggplot(aes(x=temp, y=me, group=factor(workingday), colour=factor
 
 . . .
 
+<br>
+
 Cantidades de interes:
 
 ::: {.pull-right}
@@ -611,6 +680,9 @@ Cantidades de interes:
 :::
 
 ## Efectos marginales sobre la probabilidad de éxito: AME
+
+<br>
+
 [AME]{.bold}: Efecto marginal promedio (en muestra)
 
 . . .
@@ -629,6 +701,10 @@ avg_slopes(logit_demand_wday_temp)
 :::
 
 ## Efectos marginales sobre la probabilidad de éxito: AME
+
+<br>
+
+
  [(a) Solución análítica]{.bold}, usando
 $$\frac{\partial p_{i}}{\partial \text{temp} }= \beta_{\text{temp}} \cdot p_{i}(1 - p_{i})$$
 
@@ -664,6 +740,9 @@ print(paste0("AME Temperatura: ", ame))
 :::
 
 ## Efectos marginales sobre la probabilidad de éxito: AME
+
+<br>
+
  [(b) Aproximación numérica]{.bold}, usando la definición la derivada:
 
 . . .
@@ -688,6 +767,9 @@ round(mean(me_temp_approx), 3)
 ```
 
 ## Efectos marginales sobre la probabilidad de éxito: MEM
+
+<br>
+
 [MEM]{.bold}: Efecto marginal al valor promedio (en muestra)
 
 . . .
@@ -703,6 +785,8 @@ round(mean(me_temp_approx), 3)
 
 . . .
 
+<br>
+
 ::: {.pull-right}
 
 **La elección depende de la pregunta sustantiva y de qué población queremos resumir.**
@@ -714,6 +798,9 @@ round(mean(me_temp_approx), 3)
 Depende de que lo que queremos ...
 
 ## Efectos marginales sobre la probabilidad de éxito: MEM
+
+<br>
+
 Implementamos la tercera opción usando `marginaleffects` en `R`: efecto marginal para temperatura y tipo de día fijos a su promedio global.
 
 . . .
@@ -733,6 +820,9 @@ slopes(logit_demand_wday_temp2, newdata =   expand.grid(workingday=mean_wday, te
 ```
 
 ## Efectos marginales sobre la probabilidad de éxito: MER
+
+<br>
+
 Una versión más general de MEM es calcular los efectos marginales para "valores representativos".
 
 . . .
@@ -746,6 +836,9 @@ slopes(logit_demand_wday_temp,
 ```
 
 ## Efectos marginales sobre la probabilidad de éxito: MER
+
+<br>
+
 
 | Método | Definición | Ventaja | Limitación |
 |--------|------------|---------|------------|

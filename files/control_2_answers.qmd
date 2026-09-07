@@ -1,0 +1,109 @@
+---
+title: "Control 2"
+subtitle: "Modelo Lineal de Probabilidad y Regresión Logística"
+author: "SOC3070"
+lang: es
+format: pdf
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## Datos
+
+Usaremos los datos de demanda de bicicletas de _Capital Bikeshare_ (paquete `ISLR2`), los mismos que hemos usado en clases. La variable dependiente es "alta demanda": un indicador de si el número de arriendos de una hora está en el 25% superior (percentil 75) de la distribución.
+
+```{r}
+library(ISLR2)
+
+bikedata <- as.data.frame(Bikeshare)
+
+# umbral de "alta demanda": top 25% de las horas (percentil 75 de bikers)
+p75 <- quantile(bikedata$bikers, 0.75)
+bikedata$high_demand <- as.integer(bikedata$bikers > p75)
+```
+
+Usaremos dos predictores: `temp` (temperatura normalizada, entre 0 y 1) y `hum` (humedad normalizada, entre 0 y 1).
+
+## Parte 1: Modelo Lineal de Probabilidad (LPM)
+
+Ajustamos el siguiente LPM: $\text{alta demanda}_{i} = \beta_{0} + \beta_{1}\text{temp}_{i} + \beta_{2}\text{hum}_{i} + e_{i}$.
+
+```{r}
+lpm <- lm(high_demand ~ temp + hum, data = bikedata)
+summary(lpm)
+```
+
+**Pregunta 1a) Interpreta el coeficiente del primer predictor (`temp`).**
+
+**Respuesta:** $\hat{\beta}_{1} \approx 0.770$. En un LPM el coeficiente es directamente el efecto marginal sobre la probabilidad predicha, ya que $\mathbb{E}(y_i \mid x) = \mathbb{P}(y_i=1 \mid x)$ es una función lineal de los predictores. Por tanto, manteniendo `hum` constante, un aumento de una unidad en la temperatura normalizada (es decir, pasar de la hora más fría a la más calurosa observada) se asocia a un aumento de 0.770 (77 puntos porcentuales) en la probabilidad predicha de alta demanda. Al ser un modelo lineal, este efecto se asume constante a lo largo de todo el rango de `temp`, sin importar el nivel de humedad ni el propio nivel de `temp`.
+
+**Pregunta 1b) Calcula la probabilidad predicha para la siguiente combinación de predictores: `temp = 0.1`, `hum = 0.9`. Brevemente, ¿qué representan estos valores?**
+
+**Respuesta:** Usando los coeficientes de la regresión ($\hat\beta_0 = 0.143$, $\hat\beta_1 = 0.770$, $\hat\beta_2 = -0.420$), calculamos la predicción "a mano", con R como calculadora:
+
+```{r}
+0.1429 + 0.7703 * 0.1 - 0.4199 * 0.9
+```
+
+Alternativamente, podemos usar el comando `predict()`:
+
+```{r}
+nueva_obs <- data.frame(temp = 0.1, hum = 0.9)
+predict(lpm, newdata = nueva_obs)
+```
+
+`temp = 0.1` y `hum = 0.9` representan una hora fría (cercana al mínimo de temperatura observado) y muy húmeda (cercana al máximo de humedad observado); es decir, una hora poco propicia para que la gente arriende bicicletas. Para esta combinación, el LPM predice $\hat{p} = -0.158$, es decir, -15.8%. Esta es una probabilidad fuera del rango $[0,1]$ y por tanto no tiene sentido, a pesar de que ni `temp = 0.1` ni `hum = 0.9` están fuera del rango observado de cada variable por separado (`temp` va de 0.02 a 0.96 y `hum` de 0 a 1). El problema no es extrapolar fuera de los datos, sino que el LPM en sí mismo no está acotado a $[0,1]$: es simplemente una recta (plano), y nada impide que combinaciones de predictores —incluso dentro de rango— produzcan valores ajustados negativos o mayores que 1.
+
+## Parte 2: Regresión logística (logit)
+
+Ajustamos ahora el mismo modelo, pero vía regresión logística: $\text{logit}(\mathbb{P}(\text{alta demanda}_i = 1)) = \beta_{0} + \beta_{1}\text{temp}_{i} + \beta_{2}\text{hum}_{i}$.
+
+```{r}
+logit <- glm(high_demand ~ temp + hum, data = bikedata, family = binomial(link = "logit"))
+summary(logit)
+```
+
+**Pregunta 2a) Calcula la probabilidad predicha para la misma combinación arbitraria de predictores.**
+
+**Respuesta:** Para `temp = 0.1` y `hum = 0.9`, el predictor lineal es
+$$\hat{\eta} = \hat\beta_0 + \hat\beta_1 \times \text{temp} + \hat\beta_2 \times \text{hum} = -2.059 + 4.635 \times 0.1 - 2.404 \times 0.9 = -3.759,$$
+y al pasar esto por la función logística inversa,
+$$\hat{p} = \frac{e^{\hat{\eta}}}{1+e^{\hat{\eta}}} = \frac{e^{-3.759}}{1+e^{-3.759}} = 0.023.$$
+
+Con R como calculadora:
+
+```{r}
+eta_hat <- -2.059 + 4.635 * 0.1 - 2.404 * 0.9
+eta_hat
+
+p_hat <- exp(eta_hat) / (1 + exp(eta_hat))
+p_hat
+```
+
+Alternativamente, usando `predict()`:
+
+```{r}
+eta_hat <- predict(logit, newdata = nueva_obs, type = "link")  # eta = b0 + b1*temp + b2*hum
+eta_hat
+
+p_hat <- exp(eta_hat) / (1 + exp(eta_hat))  # p_hat = e^eta / (1 + e^eta)
+p_hat
+```
+
+Es decir, 2.3%. A diferencia del LPM, esta probabilidad cae dentro del rango $[0,1]$.
+
+**Pregunta 2b) Explica por qué difieren tanto las predicciones del LPM y el logit.**
+
+**Respuesta:** Ambos modelos usan los mismos datos y los mismos dos predictores, pero difieren en la forma funcional que relacionan los predictores con $p_i$.
+
+- El LPM modela $p_i$ como una función lineal *sin restricciones* de los predictores: $p_i = \beta_0 + \beta_1\text{temp}_i + \beta_2\text{hum}_i$. Nada en esta ecuación impide que $\hat{p}_i$ caiga fuera de $[0,1]$; para una combinación de predictores "extrema" (fría y húmeda, es decir, poco propicia para alta demanda) la recta simplemente sigue extrapolando linealmente hacia valores negativos.
+
+- El logit, en cambio, modela el *log-odds* ($\eta_i$) como función lineal de los predictores, y luego transforma $\eta_i$ a probabilidad mediante la función logística (sigmoide), que es asintótica a 0 y a 1. Por muy negativo que sea $\hat{\eta}$ (en este caso, -3.759), $\hat{p} = e^{\hat\eta}/(1+e^{\hat\eta})$ nunca puede ser menor que 0 ni mayor que 1: la sigmoide "comprime" predicciones extremas hacia los bordes del intervalo $[0,1]$ en vez de dejarlas escapar de él.
+
+En otras palabras, para una combinación de predictores asociada a una probabilidad muy baja (o muy alta), el LPM sigue extrapolando linealmente y puede cruzar los límites lógicos de una probabilidad, mientras que el logit está garantizado, por su forma funcional, a entregar siempre una predicción entre 0 y 1. Esta es precisamente la motivación para preferir el logit por sobre el LPM al modelar variables dependientes binarias, especialmente cuando $\mathbb{P}(y=1)$ está cerca de 0 o de 1.
+
+## Rúbrica
+
+Cada pregunta (1a, 1b, 2a, 2b) se evalúa de 1 a 7. Nota final: promedio de las 4 preguntas.
