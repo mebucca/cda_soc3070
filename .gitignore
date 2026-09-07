@@ -3,3 +3,7 @@
 .RData
 .Ruserdata
 .DS_Store
+
+# Ignore files folder contents but keep folder structure for code references
+files/
+!files/.gitkeep
