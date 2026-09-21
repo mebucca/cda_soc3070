@@ -220,6 +220,7 @@ summary(logit_demand_wday_temp)$coefficients
 beta2 <- summary(logit_demand_wday_temp)$coefficients["temp","Estimate"]
 se_beta2 <- summary(logit_demand_wday_temp)$coefficients["temp","Std. Error"]
 ci_beta2 <- beta2 + c(-2,2)*se_beta2; ci_beta2
+expbeta2 <- exp(beta2)
 ```
 
 . . .
@@ -318,24 +319,6 @@ tibble(x = x_vals, y = dens_vals) %>%
     )
 ```
 
-## Inferencia acerca de parámetros del modelo: ejemplo empírico
-
-. . .
-
-::: {.content-box-blue}
-
-[Calculemos ahora un IC al 95% para el efecto multiplicativo de la "temperatura" sobre las odds de alta demanda:]{.bold} $e^{\beta_{2}}$= `r expbeta2=exp(beta2); expbeta2`
-
-:::
-
-. . .
-
-![michael](michael.gif)
-
-. . .
-
-¿Cuál es la sampling distribution de una función de nuestro estimate?
-
 ## El test que acabamos de construir tiene nombre
 
 El procedimiento anterior —dividir el coeficiente por su error estándar y comparar con una Normal— es el **test de Wald**: usa la estimación y el error estándar de **un solo modelo ajustado**.
@@ -359,6 +342,24 @@ anova(logit_sin_temp, logit_demand_wday_temp, test = "LRT")
 ```
 
 En regresión logística, el LR test suele ser más confiable que Wald —especialmente con muestras chicas o coeficientes grandes— porque no depende de la aproximación Normal para un único parámetro.
+
+## Inferencia acerca de parámetros del modelo: ejemplo empírico
+
+. . .
+
+::: {.content-box-blue}
+
+[Calculemos ahora un IC al 95% para el efecto multiplicativo de la "temperatura" sobre las odds de alta demanda:]{.bold} $e^{\beta_{2}}$= `r expbeta2`
+
+:::
+
+. . .
+
+![michael](michael.gif)
+
+. . .
+
+¿Cuál es la sampling distribution de una función de nuestro estimate?
 
 ## Bootstrap Method {.inverse .center .middle}
 

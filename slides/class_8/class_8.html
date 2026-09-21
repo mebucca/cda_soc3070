@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-28">
+  <meta name="dcterms.date" content="2026-09-21">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -34,7 +34,7 @@
     }
   </style>
   <link rel="stylesheet" href="class_8_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
-  <link rel="stylesheet" href="../_shared/course.css">
+  <link rel="stylesheet" href="_shared/course.css">
   <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
   <script>document.addEventListener("DOMContentLoaded", function () {
  var mathElements = document.getElementsByClassName("math");
@@ -159,7 +159,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-28</p>
+  <p class="date">2026-09-21</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -440,25 +440,6 @@ temp                0.000</code></pre>
 </div>
 
 <img data-src="class_8_files/figure-revealjs/unnamed-chunk-11-1.png" width="672" class="r-stretch"></section>
-<section id="inferencia-acerca-de-parámetros-del-modelo-ejemplo-empírico" class="slide level2">
-<h2>Inferencia acerca de parámetros del modelo: ejemplo empírico</h2>
-<div class="fragment">
-<div class="content-box-blue">
-<p><span class="bold">Calculemos ahora un IC al 95% para el efecto multiplicativo de la “temperatura” sobre las odds de alta demanda:</span> <span class="math inline">e^{\beta_{2}}</span>= 133.533</p>
-</div>
-</div>
-<div class="fragment">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="michael.gif"></p>
-<figcaption>michael</figcaption>
-</figure>
-</div>
-</div>
-<div class="fragment">
-<p>¿Cuál es la sampling distribution de una función de nuestro estimate?</p>
-</div>
-</section>
 <section id="el-test-que-acabamos-de-construir-tiene-nombre" class="slide level2">
 <h2>El test que acabamos de construir tiene nombre</h2>
 <p>El procedimiento anterior —dividir el coeficiente por su error estándar y comparar con una Normal— es el <strong>test de Wald</strong>: usa la estimación y el error estándar de <strong>un solo modelo ajustado</strong>.</p>
@@ -483,6 +464,25 @@ Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1</code></pre>
 </div>
 </div>
 <p>En regresión logística, el LR test suele ser más confiable que Wald —especialmente con muestras chicas o coeficientes grandes— porque no depende de la aproximación Normal para un único parámetro.</p>
+</div>
+</section>
+<section id="inferencia-acerca-de-parámetros-del-modelo-ejemplo-empírico" class="slide level2">
+<h2>Inferencia acerca de parámetros del modelo: ejemplo empírico</h2>
+<div class="fragment">
+<div class="content-box-blue">
+<p><span class="bold">Calculemos ahora un IC al 95% para el efecto multiplicativo de la “temperatura” sobre las odds de alta demanda:</span> <span class="math inline">e^{\beta_{2}}</span>= 133.533</p>
+</div>
+</div>
+<div class="fragment">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="michael.gif"></p>
+<figcaption>michael</figcaption>
+</figure>
+</div>
+</div>
+<div class="fragment">
+<p>¿Cuál es la sampling distribution de una función de nuestro estimate?</p>
 </div>
 </section>
 <section id="bootstrap-method" class="slide level2 inverse center middle" data-background-color="#5B2C6B">
@@ -625,7 +625,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1</code></pre>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code> temp  temp  temp  temp  temp  temp 
-5.129 5.147 5.105 4.602 4.686 4.933 </code></pre>
+4.910 4.658 4.941 4.926 4.994 4.739 </code></pre>
 </div>
 </div>
 </div>
@@ -635,11 +635,11 @@ Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1</code></pre>
 <div class="pull-left">
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.153</code></pre>
+<pre><code>[1] 0.146</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code> 2.500% 97.500% 
-4.602 5.205 </code></pre>
+4.619 5.190 </code></pre>
 </div>
 </div>
 </div>
@@ -683,7 +683,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1</code></pre>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code> temp  temp  temp  temp  temp  temp 
-131.200 162.700 115.400 162.300 119.800 130.900 </code></pre>
+154.300 134.600 131.700 153.700 128.800 123.000 </code></pre>
 </div>
 </div>
 </section>
@@ -692,11 +692,11 @@ Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1</code></pre>
 <div class="pull-left">
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 20.320</code></pre>
+<pre><code>[1] 20.450</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code> 2.500% 97.500% 
-101.400 179.300 </code></pre>
+100.500 179.800 </code></pre>
 </div>
 </div>
 </div>
@@ -739,7 +739,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1</code></pre>
 <p>Bootstrapeando …</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.806 0.755 0.765 0.786 0.770 0.768</code></pre>
+<pre><code>[1] 0.761 0.804 0.774 0.775 0.766 0.808</code></pre>
 </div>
 </div>
 </section>
@@ -755,7 +755,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.010 '*' 0.050 '.' 0.100 ' ' 1</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  2.500%  97.500% 
-0.748 0.824 </code></pre>
+0.747 0.824 </code></pre>
 </div>
 </div>
 </div>
