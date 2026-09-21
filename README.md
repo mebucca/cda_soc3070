@@ -36,7 +36,7 @@ Clases los días Lunes, bloques 12:20-13:30 (B1) y 14:50-16:00 (B2). Calendario 
 | 31  | Agosto     | B2     | Regresión Logística — estructura teórica y estimación              | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_6/class_6#0) [`[Code]`](slides/class_6/class_6.qmd) |
 | 7   | Septiembre | B1 & B2| Regresión Logística — interpretación de parámetros                 | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_7/class_7#0) [`[Code]`](slides/class_7/class_7.qmd) |
 | 14  | Septiembre | —      | **NO HAY CLASES** (Receso de docencia UC)                          | |
-| 21  | Septiembre | B1 & B2| Regresión Logística — inferencia estadística                       | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_8/class_8#0) [`[Code]`](slides/class_8/class_8.qmd) |
+| 21  | Septiembre | B1 & B2| Regresión Logística — inferencia estadística                       | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_8/class_8#0) [`[Code]`](slides/class_8/class_8.qmd) [`[Notebook]`](slides/class_8/nb_8.qmd)|
 | 28  | Septiembre | B1     | Regresión Logística Multinomial — estructura teórica y estimación | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_9/class_9#0) [`[Code]`](slides/class_9/class_9.qmd) |
 | 28  | Septiembre | B2     | Regresión Logística Multinomial — interpretación de parámetros    | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_10/class_10#0) [`[Code]`](slides/class_10/class_10.qmd) |
 | 5   | Octubre    | B1     | Regresión Poisson — estructura teórica y estimación                | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_11/class_11#0) [`[Code]`](slides/class_11/class_11.qmd) |
