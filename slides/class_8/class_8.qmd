@@ -486,7 +486,7 @@ Siguiendo con $\ln \frac{p_{i}}{ 1 - p_{i}}    = \beta_{0} + \beta_{1}\text{háb
 
 . . .
 
-```{r}
+```{r, echo=TRUE}
 
 # Escribir una función que ejecute re-sampling y la estimación
 bs_beta2  <- function(x) {
@@ -568,7 +568,7 @@ Bootstrapeando ...
 :::
 
 Bootstrapeando ...
-```{r}
+```{r,echo=T}
 
 # Escribir una función que ejecute re-sampling y la estimación
 bs_expbeta2  <- function(x) {
@@ -650,7 +650,7 @@ Bootstrapeando ...
 :::
 
 Bootstrapeando ...
-```{r}
+```{r, echo=T}
 
 # Escribir una función que ejecute re-sampling y la estimación
 bs_ame_temp  <- function(x) {
