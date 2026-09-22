@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="SOC3070 · Mauricio Bucca">
-<meta name="dcterms.date" content="2026-09-21">
+<meta name="dcterms.date" content="2026-09-22">
 
 <title>Práctica: Inferencia con Bootstrap en la Regresión Logística</title>
 <style>
@@ -148,7 +148,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">September 21, 2026</p>
+      <p class="date">September 22, 2026</p>
     </div>
   </div>
   
@@ -199,7 +199,7 @@ window.Quarto = {
 <details open="" class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">20260921</span>)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>B <span class="ot">&lt;-</span> <span class="dv">500</span>   <span class="co"># número de réplicas bootstrap</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>B <span class="ot">&lt;-</span> <span class="dv">1000</span>   <span class="co"># número de réplicas bootstrap</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="fu">nrow</span>(bikedata)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
@@ -216,14 +216,16 @@ window.Quarto = {
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>beta1_bs <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, B)   <span class="co"># acá guardamos el resultado de cada réplica</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>B) {</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  filas   <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="at">size =</span> n, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  muestra <span class="ot">&lt;-</span> bikedata[filas, ]</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  ajuste  <span class="ot">&lt;-</span> <span class="fu">glm</span>(high_demand <span class="sc">~</span> temp <span class="sc">+</span> hum, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>), <span class="at">data =</span> muestra)</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  beta1_bs[i] <span class="ot">&lt;-</span> <span class="fu">coef</span>(ajuste)[<span class="st">"temp"</span>]</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(beta1_bs)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  muestra <span class="ot">&lt;-</span> <span class="fu">sample_n</span>(bikedata, <span class="at">size =</span> n, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  ajuste  <span class="ot">&lt;-</span> <span class="fu">glm</span>(high_demand <span class="sc">~</span> temp <span class="sc">+</span> hum,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>                 <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>),</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> muestra)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  beta1_bs[i] <span class="ot">&lt;-</span> <span class="fu">coef</span>(ajuste)[<span class="st">"temp"</span>]</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(beta1_bs)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>#&gt; [1] 4.619 4.500 4.470 4.491 4.628 4.521</code></pre>
@@ -239,7 +241,7 @@ window.Quarto = {
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>#&gt; estimacion.temp           se_bs            2.500%           97.500% 
-#&gt;           4.635           0.147           4.349           4.911</code></pre>
+#&gt;          4.635          0.147          4.350          4.931</code></pre>
 </div>
 </div>
 <div class="cell" data-layout-align="center">
@@ -295,8 +297,8 @@ window.Quarto = {
 <tr class="even">
 <td style="text-align: left;">Bootstrap</td>
 <td style="text-align: right;">0.147</td>
-<td style="text-align: right;">4.349</td>
-<td style="text-align: right;">4.911</td>
+<td style="text-align: right;">4.350</td>
+<td style="text-align: right;">4.930</td>
 </tr>
 </tbody>
 </table>
@@ -316,21 +318,23 @@ window.Quarto = {
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>or_bs <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, B)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>B) {</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  filas   <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="at">size =</span> n, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  muestra <span class="ot">&lt;-</span> bikedata[filas, ]</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  ajuste  <span class="ot">&lt;-</span> <span class="fu">glm</span>(high_demand <span class="sc">~</span> temp <span class="sc">+</span> hum, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>), <span class="at">data =</span> muestra)</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  or_bs[i] <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fu">coef</span>(ajuste)[<span class="st">"temp"</span>])</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>or_hat <span class="ot">&lt;-</span> <span class="fu">exp</span>(beta1_hat)</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>ci_or  <span class="ot">&lt;-</span> <span class="fu">quantile</span>(or_bs, <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.975</span>))</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">estimacion =</span> or_hat, <span class="at">se_bs =</span> <span class="fu">sd</span>(or_bs), ci_or)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  muestra <span class="ot">&lt;-</span> <span class="fu">sample_n</span>(bikedata, <span class="at">size =</span> n, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  ajuste  <span class="ot">&lt;-</span> <span class="fu">glm</span>(high_demand <span class="sc">~</span> temp <span class="sc">+</span> hum,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>                 <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>),</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> muestra)</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  or_bs[i] <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fu">coef</span>(ajuste)[<span class="st">"temp"</span>])</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>or_hat <span class="ot">&lt;-</span> <span class="fu">exp</span>(beta1_hat)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>ci_or  <span class="ot">&lt;-</span> <span class="fu">quantile</span>(or_bs, <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.975</span>))</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">estimacion =</span> or_hat, <span class="at">se_bs =</span> <span class="fu">sd</span>(or_bs), ci_or)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>#&gt; estimacion.temp           se_bs            2.500%           97.500% 
-#&gt;          102.990           15.690           77.700          140.710</code></pre>
+#&gt;          102.990           16.510           76.820          141.240</code></pre>
 </div>
 </div>
 <div class="cell" data-layout-align="center">
@@ -368,23 +372,24 @@ window.Quarto = {
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>ame_bs <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, B)</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>B) {</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  filas   <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="at">size =</span> n, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  muestra <span class="ot">&lt;-</span> bikedata[filas, ]</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  ajuste  <span class="ot">&lt;-</span> <span class="fu">glm</span>(high_demand <span class="sc">~</span> temp <span class="sc">+</span> hum, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>), <span class="at">data =</span> muestra)</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">predict</span>(ajuste, <span class="at">type =</span> <span class="st">"response"</span>)</span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  ame_bs[i] <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">coef</span>(ajuste)[<span class="st">"temp"</span>] <span class="sc">*</span> p <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> p))</span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>p_hat   <span class="ot">&lt;-</span> <span class="fu">predict</span>(modelo, <span class="at">type =</span> <span class="st">"response"</span>)</span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>ame_hat <span class="ot">&lt;-</span> <span class="fu">mean</span>(beta1_hat <span class="sc">*</span> p_hat <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> p_hat))</span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>ci_ame  <span class="ot">&lt;-</span> <span class="fu">quantile</span>(ame_bs, <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.975</span>))</span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">estimacion =</span> ame_hat, <span class="at">se_bs =</span> <span class="fu">sd</span>(ame_bs), ci_ame)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  muestra <span class="ot">&lt;-</span> <span class="fu">sample_n</span>(bikedata, <span class="at">size =</span> n, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  ajuste  <span class="ot">&lt;-</span> <span class="fu">glm</span>(high_demand <span class="sc">~</span> temp <span class="sc">+</span> hum,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>                 <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>),</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> muestra)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  ame_bs[i] <span class="ot">&lt;-</span> <span class="fu">avg_slopes</span>(ajuste, <span class="at">variables =</span> <span class="st">"temp"</span>, <span class="at">vcov =</span> <span class="cn">FALSE</span>)<span class="sc">$</span>estimate</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="co"># La estimación puntual sale del modelo original, con la misma función.</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>ame_hat <span class="ot">&lt;-</span> <span class="fu">avg_slopes</span>(modelo, <span class="at">variables =</span> <span class="st">"temp"</span>, <span class="at">vcov =</span> <span class="cn">FALSE</span>)<span class="sc">$</span>estimate</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>ci_ame  <span class="ot">&lt;-</span> <span class="fu">quantile</span>(ame_bs, <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.975</span>))</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">estimacion =</span> ame_hat, <span class="at">se_bs =</span> <span class="fu">sd</span>(ame_bs), ci_ame)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>#&gt; estimacion      se_bs       2.500%      97.500% 
-#&gt;    0.716    0.019    0.676    0.752</code></pre>
+#&gt;    0.716    0.020    0.679    0.755</code></pre>
 </div>
 </div>
 <div class="cell" data-layout-align="center">
@@ -406,53 +411,67 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<p>Lectura: la pendiente promedio es 0.716 por unidad de <code>temp</code>, con IC 95% [0.676, 0.752]. Como <code>temp</code> está normalizada entre 0 y 1, una unidad es el rango térmico completo; un aumento de 0.1 en <code>temp</code> corresponde, en promedio, a unos 0.072 en probabilidad.</p>
+<p>Lectura: la pendiente promedio es 0.716 por unidad de <code>temp</code>, con IC 95% [0.679, 0.755]. Como <code>temp</code> está normalizada entre 0 y 1, una unidad es el rango térmico completo; un aumento de 0.1 en <code>temp</code> corresponde, en promedio, a unos 0.072 en probabilidad.</p>
 <hr>
 </section>
 <section id="bootstrap-para-una-curva-de-predicciones" class="level1">
 <h1>6. Bootstrap para una curva de predicciones</h1>
 <p>Hasta acá cada cantidad era un número. También puede ser un vector. Fijamos <code>hum</code> en su media y calculamos la probabilidad predicha a lo largo de una grilla de temperaturas:</p>
 <p><span class="math display">\[\hat{p}(\text{temp}) \;=\; \frac{1}{1 + e^{-\left(\hat{\beta}_0 + \hat{\beta}_1 \text{temp} + \hat{\beta}_2 \overline{\text{hum}}\right)}}\]</span></p>
-<p>Cada réplica bootstrap devuelve una curva completa. Guardamos las <span class="math inline">\(B\)</span> curvas en una matriz: una fila por réplica, una columna por valor de la grilla.</p>
+<p>Cada réplica bootstrap devuelve una curva completa. Guardamos las curvas de las <span class="math inline">\(B\)</span> réplicas apiladas en formato largo: una fila por réplica y valor de la grilla.</p>
 <div class="cell" data-layout-align="center">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>grilla <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">temp =</span> <span class="fu">seq</span>(<span class="fu">min</span>(bikedata<span class="sc">$</span>temp), <span class="fu">max</span>(bikedata<span class="sc">$</span>temp), <span class="at">length.out =</span> <span class="dv">40</span>),</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">hum  =</span> <span class="fu">mean</span>(bikedata<span class="sc">$</span>hum))</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>curvas_bs <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="cn">NA</span>, <span class="at">nrow =</span> B, <span class="at">ncol =</span> <span class="fu">nrow</span>(grilla))</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>B) {</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  filas   <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="at">size =</span> n, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  muestra <span class="ot">&lt;-</span> bikedata[filas, ]</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  ajuste  <span class="ot">&lt;-</span> <span class="fu">glm</span>(high_demand <span class="sc">~</span> temp <span class="sc">+</span> hum, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>), <span class="at">data =</span> muestra)</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  curvas_bs[i, ] <span class="ot">&lt;-</span> <span class="fu">predict</span>(ajuste, <span class="at">newdata =</span> grilla, <span class="at">type =</span> <span class="st">"response"</span>)</span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>grilla <span class="ot">&lt;-</span> <span class="fu">data_grid</span>(bikedata,</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>                    <span class="at">temp =</span> <span class="fu">seq_range</span>(temp, <span class="at">n =</span> <span class="dv">40</span>),</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>                    <span class="at">hum  =</span> <span class="fu">mean</span>(hum))</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>pred_bs <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>B) {</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  muestra <span class="ot">&lt;-</span> <span class="fu">sample_n</span>(bikedata, <span class="at">size =</span> n, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  ajuste  <span class="ot">&lt;-</span> <span class="fu">glm</span>(high_demand <span class="sc">~</span> temp <span class="sc">+</span> hum,</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>                 <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>),</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> muestra)</span>
 <span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(curvas_bs)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>  curva_i <span class="ot">&lt;-</span> grilla <span class="sc">%&gt;%</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">b     =</span> i,</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>           <span class="at">p_hat =</span> <span class="fu">predict</span>(ajuste, <span class="at">newdata =</span> grilla, <span class="at">type =</span> <span class="st">"response"</span>))</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>  pred_bs <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(pred_bs, curva_i)</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(pred_bs)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>#&gt; [1] 500  40</code></pre>
+<pre><code>#&gt; Rows: 40,000
+#&gt; Columns: 4
+#&gt; $ temp  &lt;dbl&gt; 0.020, 0.044, 0.068, 0.092, 0.116, 0.141, 0.165, 0.189, 0.213, 0.237, 0.261, 0.285…
+#&gt; $ hum   &lt;dbl&gt; 0.643, 0.643, 0.643, 0.643, 0.643, 0.643, 0.643, 0.643, 0.643, 0.643, 0.643, 0.643, 0.643, …
+#&gt; $ b     &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,…
+#&gt; $ p_hat &lt;dbl&gt; 0.027, 0.030, 0.034, 0.038, 0.042, 0.047, 0.052, 0.058, 0.064, 0.072, 0.080, 0.088…</code></pre>
 </div>
 </div>
 <div class="cell" data-layout-align="center">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Percentiles columna por columna, es decir, punto a punto sobre la grilla</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>curva_hat <span class="ot">&lt;-</span> grilla <span class="sc">%&gt;%</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">p    =</span> <span class="fu">predict</span>(modelo, <span class="at">newdata =</span> grilla, <span class="at">type =</span> <span class="st">"response"</span>),</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">low  =</span> <span class="fu">apply</span>(curvas_bs, <span class="dv">2</span>, quantile, <span class="fl">0.025</span>),</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">high =</span> <span class="fu">apply</span>(curvas_bs, <span class="dv">2</span>, quantile, <span class="fl">0.975</span>))</span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(curva_hat, <span class="fu">aes</span>(<span class="at">x =</span> temp, <span class="at">y =</span> p)) <span class="sc">+</span></span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_ribbon</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> low, <span class="at">ymax =</span> high), <span class="at">fill =</span> col_dist, <span class="at">alpha =</span> <span class="fl">0.35</span>) <span class="sc">+</span></span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">colour =</span> col_punto, <span class="at">linewidth =</span> <span class="fl">1.2</span>) <span class="sc">+</span></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Probabilidad predicha de alta demanda según temperatura"</span>,</span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="fu">paste0</span>(<span class="st">"Curva ajustada y banda bootstrap al 95% ("</span>, B,</span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>                         <span class="st">" réplicas); humedad fija en su media"</span>),</span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Temperatura normalizada (temp)"</span>,</span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Probabilidad de alta demanda"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Percentiles punto a punto: agrupamos por valor de la grilla, no por réplica</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>curva_hat <span class="ot">&lt;-</span> pred_bs <span class="sc">%&gt;%</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(temp, hum) <span class="sc">%&gt;%</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">low  =</span> <span class="fu">quantile</span>(p_hat, <span class="fl">0.025</span>),</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">high =</span> <span class="fu">quantile</span>(p_hat, <span class="fl">0.975</span>),</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">p =</span> <span class="fu">predict</span>(modelo, <span class="at">newdata =</span> ., <span class="at">type =</span> <span class="st">"response"</span>))</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(curva_hat, <span class="fu">aes</span>(<span class="at">x =</span> temp, <span class="at">y =</span> p)) <span class="sc">+</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_ribbon</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> low, <span class="at">ymax =</span> high), <span class="at">fill =</span> col_dist, <span class="at">alpha =</span> <span class="fl">0.35</span>) <span class="sc">+</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">colour =</span> col_punto, <span class="at">linewidth =</span> <span class="fl">1.2</span>) <span class="sc">+</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Probabilidad predicha de alta demanda según temperatura"</span>,</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="fu">paste0</span>(<span class="st">"Curva ajustada y banda bootstrap al 95% ("</span>, B,</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>                         <span class="st">" réplicas); humedad fija en su media"</span>),</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Temperatura normalizada (temp)"</span>,</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Probabilidad de alta demanda"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -467,20 +486,16 @@ window.Quarto = {
 <div class="cell" data-layout-align="center">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Pasamos 40 filas de la matriz a formato largo para graficarlas</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>muestra_curvas <span class="ot">&lt;-</span> curvas_bs[<span class="dv">1</span><span class="sc">:</span><span class="dv">40</span>, ] <span class="sc">%&gt;%</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">t</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>(<span class="at">.name_repair =</span> <span class="st">"unique"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">temp =</span> grilla<span class="sc">$</span>temp) <span class="sc">%&gt;%</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="sc">-</span>temp, <span class="at">names_to =</span> <span class="st">"rep"</span>, <span class="at">values_to =</span> <span class="st">"p"</span>)</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(muestra_curvas, <span class="fu">aes</span>(<span class="at">x =</span> temp, <span class="at">y =</span> p)) <span class="sc">+</span></span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">group =</span> rep), <span class="at">colour =</span> col_dist, <span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">linewidth =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> curva_hat, <span class="at">colour =</span> col_punto, <span class="at">linewidth =</span> <span class="fl">1.2</span>) <span class="sc">+</span></span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Curvas de predicción bootstrap"</span>,</span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"40 réplicas individuales y, destacada, la del modelo original"</span>,</span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Temperatura normalizada (temp)"</span>,</span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Probabilidad de alta demanda"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 40 réplicas individuales, directo del formato largo</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>muestra_curvas <span class="ot">&lt;-</span> pred_bs <span class="sc">%&gt;%</span> <span class="fu">filter</span>(b <span class="sc">&lt;=</span> <span class="dv">40</span>)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(muestra_curvas, <span class="fu">aes</span>(<span class="at">x =</span> temp, <span class="at">y =</span> p_hat)) <span class="sc">+</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">group =</span> b), <span class="at">colour =</span> col_dist, <span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">linewidth =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> curva_hat, <span class="fu">aes</span>(<span class="at">y =</span> p), <span class="at">colour =</span> col_punto, <span class="at">linewidth =</span> <span class="fl">1.2</span>) <span class="sc">+</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Curvas de predicción bootstrap"</span>,</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"40 réplicas individuales y, destacada, la del modelo original"</span>,</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Temperatura normalizada (temp)"</span>,</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Probabilidad de alta demanda"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -522,22 +537,22 @@ window.Quarto = {
 <td style="text-align: left;">beta1</td>
 <td style="text-align: right;">4.635</td>
 <td style="text-align: right;">0.147</td>
-<td style="text-align: right;">4.349</td>
-<td style="text-align: right;">4.911</td>
+<td style="text-align: right;">4.350</td>
+<td style="text-align: right;">4.930</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">exp(beta1)</td>
 <td style="text-align: right;">102.993</td>
-<td style="text-align: right;">15.687</td>
-<td style="text-align: right;">77.703</td>
-<td style="text-align: right;">140.708</td>
+<td style="text-align: right;">16.511</td>
+<td style="text-align: right;">76.817</td>
+<td style="text-align: right;">141.241</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">AME(temp)</td>
 <td style="text-align: right;">0.716</td>
-<td style="text-align: right;">0.019</td>
-<td style="text-align: right;">0.676</td>
-<td style="text-align: right;">0.752</td>
+<td style="text-align: right;">0.020</td>
+<td style="text-align: right;">0.679</td>
+<td style="text-align: right;">0.755</td>
 </tr>
 </tbody>
 </table>
@@ -575,7 +590,7 @@ window.Quarto = {
 <tr class="odd">
 <td>5</td>
 <td>AME</td>
-<td><code>mean(b1 * p * (1 - p))</code></td>
+<td><code>avg_slopes(ajuste, variables = "temp")</code></td>
 <td>No, incómoda</td>
 </tr>
 <tr class="even">
@@ -607,7 +622,7 @@ Warning
 <ol type="1">
 <li>Repita la sección 3 para <span class="math inline">\(\beta_2\)</span> (el coeficiente de <code>hum</code>). ¿Coincide el IC bootstrap con el de <code>confint(modelo)</code>?</li>
 <li>Calcule por bootstrap el AME de <code>hum</code> y compárelo con <code>marginaleffects::avg_slopes(modelo)</code>.</li>
-<li>Baje <code>B</code> de 500 a 50 y rehaga la banda de la sección 6. ¿Qué se desestabiliza primero: el centro de la banda o sus bordes?</li>
+<li>Baje <code>B</code> de 1000 a 50 y rehaga la banda de la sección 6. ¿Qué se desestabiliza primero: el centro de la banda o sus bordes?</li>
 <li>Estime por bootstrap la diferencia de probabilidad predicha entre <code>temp</code> en su percentil 90 y en su percentil 10. ¿Qué línea del loop de la sección 6 cambiaría?</li>
 </ol>
 </section>
