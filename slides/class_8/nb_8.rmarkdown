@@ -381,3 +381,4 @@ algo optimistas.
 2. Calcule por bootstrap el AME de `hum` y compárelo con `marginaleffects::avg_slopes(modelo)`.
 3. Baje `B` de 1000 a 50 y rehaga la banda de la sección 6. ¿Qué se desestabiliza primero: el centro de la banda o sus bordes?
 4. Estime por bootstrap la diferencia de probabilidad predicha entre `temp` en su percentil 90 y en su percentil 10. ¿Qué línea del loop de la sección 6 cambiaría?
+
