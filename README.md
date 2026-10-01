@@ -68,6 +68,11 @@ Clases los días Lunes, bloques 12:20-13:30 (B1) y 14:50-16:00 (B2). Calendario 
 
   - En el repositorio de mi curso de *procesamiento avanzado de datos en `R`* puedes encontrar todo el material necesario para aprender `R` desde cero [`[aquí]`](https://mebucca.github.io/dar_soc4001/).
   - Acá pueden encontrar un template para escribir en `Quarto` ([`[Template]`](https://mebucca.github.io/cda_soc3070/files/template_quarto#0) y [`[.Rmd]`](files/template_quarto.qmd) ). 
+
+
+[`[Link]`](https://mebucca.github.io/cda_soc3070/files/control_3#0) 
+
+  
  
  
 
