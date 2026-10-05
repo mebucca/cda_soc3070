@@ -16,6 +16,18 @@ format:
     width: 1600
     height: 900
     html-math-method: katex
+    include-in-header:
+      text: |
+        <style>
+        /* Más aire en esta clase: títulos, bullets y cajas. */
+        .reveal .slides section h2 { margin-bottom: 0.7em; }
+        .reveal .slides section li + li { margin-top: 0.5em; }
+        .reveal .slides section .content-box-yellow { margin: 0.8em 0; }
+        .reveal .slides section .katex-display { margin: 0.85em auto; }
+        .reveal .slides section .cell-output pre code { max-height: 560px; }
+        .reveal .vspace { display: block; height: 0.8em; }
+        .reveal .clear { clear: both; }
+        </style>
 ---
 
 ```{r course-style, include=FALSE}
@@ -33,6 +45,25 @@ source(local({
 course_palette <- use_course_style("ajax")
 ```
 
+```{r setup, include=FALSE}
+library(pacman)
+p_load("carData", "viridis", "tidyverse", "modelr", "cowplot", "arm",
+       "DescTools", "caret", "nnet", "marginaleffects")
+
+theme_set(theme_julia())
+data(Chile)
+plebs_1988 <- Chile %>% as_tibble()
+
+# Tamaños de texto para gráficos proyectados.
+theme_slides <- theme(
+  axis.text = element_text(size = 22),
+  axis.title = element_text(size = 24),
+  legend.text = element_text(size = 18),
+  legend.title = element_text(size = 18),
+  legend.position = "top"
+)
+```
+
 ## Antes · Hoy · Después {.class-rhythm}
 
 ::: {.full-width}
@@ -46,7 +77,7 @@ estructura teórica de la regresión multinomial.
 ::: {.content-box-primary}
 **Hoy**
 
-interpretación de efectos multinomiales.
+interpretación de efectos multinomiales: logits, odds ratios y efectos marginales.
 :::
 
 ::: {.content-box-secondary}
@@ -57,604 +88,483 @@ regresión de Poisson para recuentos.
 
 :::
 
+## Objetivos de hoy
 
+- Interpretar los coeficientes de la regresión multinomial como **logits** y como **odds ratios**.
+
+. . .
+
+- Entender por qué el **efecto marginal sobre la probabilidad** no es igual al coeficiente.
+
+. . .
+
+- Resumir la heterogeneidad de los efectos marginales (AME, MEM, MER).
+
+. . .
+
+- Discutir el supuesto de **IIA** (Independencia de Alternativas Irrelevantes).
 
 ## Regresión Logística Multinomial: interpretación de efectos {.inverse .center .middle}
 
-## Efectos marginales sobre el logit {.center .middle}
-
-## Un ejemplo empírico
-```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
-# datos del plebiscito chileno de 1988, del paquete "carData"
-library(pacman)
-p_load("carData")
-p_load("viridis")
-p_load("tidyverse")
-p_load("modelr")
-p_load("cowplot")
-p_load("rsample")
-p_load("arm")
-p_load("DescTools")
-p_load("caret")
-p_load("nnet")
-p_load("marginaleffects")
-
-theme_set(theme_julia())
-
-data(Chile)
-plebs_1988 <- Chile %>% as_tibble()
-
-# display the data as a tibble
-plebs_1988 %>% arrange(statusquo)
-```
+## Un ejemplo empírico: plebiscito chileno de 1988
 
 ::: {.pull-left}
 
-Continuando con los datos del plebiscito de 1988, ajustaremos el siguiente modelo:
-$$\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}$$
-donde:
+Datos de una encuesta nacional (FLACSO/Chile, abril-mayo 1988), disponibles en el paquete `carData`.
 
-- $p_{iJ} =\mathbb{P}(\text{vote}_{i}=\text{A})$
-- $p_{ij} =\mathbb{P}(\text{vote}_{i}=j), \quad j \in \{\text{N},\text{U},\text{Y}\}$
-- $\text{logit}(p_{ij})$ es el [log odds]{.bold} de votar N/U/Y vs A.
-- $p_{ij}$'s son una función de apoyo al status-quo (`statusquo`) y género (`sex`)
+- **Variable dependiente** `vote`:
+  - `A`: se abstendrá
+  - `N`: votará no (contra Pinochet)
+  - `U`: indeciso
+  - `Y`: votará sí (a favor de Pinochet)
+- **Categoría de referencia:** `A`
+- **Predictores:** `statusquo` (apoyo al status quo, escala continua) y `sex`
 
 :::
 
-. . .
-
 ::: {.pull-right}
 
-```{r}
-mlogit_vote_sq_sex <- multinom(vote ~ statusquo + sex, trace=F, data=plebs_1988);
-summary(mlogit_vote_sq_sex)
+Ajustamos el modelo con `nnet::multinom()`:
+
+```{r ajuste, echo=TRUE}
+mlogit_vote_sq_sex <- multinom(vote ~ statusquo + sex,
+                               trace = FALSE, data = plebs_1988)
+round(coef(mlogit_vote_sq_sex), 3)
 ```
 
 :::
 
-## Efectos marginales sobre el logit
+```{r helpers-ejemplo, include=FALSE}
+mlogit <- mlogit_vote_sq_sex
+b <- coef(mlogit)  # filas: N, U, Y; columnas: (Intercept), statusquo, sexM
+
+# Malla de statusquo por sexo; probabilidades predichas y transformaciones
+grid <- plebs_1988 %>% data_grid(statusquo = seq_range(statusquo, 30), sex, .model = mlogit)
+pred <- bind_cols(grid, as_tibble(predict(mlogit, newdata = grid, type = "probs"))) %>%
+  rename(p_A = A, p_N = N, p_U = U, p_Y = Y) %>%
+  mutate(
+    across(c(p_N, p_U, p_Y), ~ log(.x / p_A), .names = "logit_{.col}"),
+    across(c(p_N, p_U, p_Y), ~ .x / p_A, .names = "or_{.col}")
+  )
+
+# Efecto marginal de statusquo sobre p_j: p_j * (beta_j - sum_l p_l beta_l), con beta_A = 0
+bsq <- c(0, b[, "statusquo"])  # orden A, N, U, Y
+P <- as.matrix(pred[, c("p_A", "p_N", "p_U", "p_Y")])
+avg_bsq <- drop(P %*% bsq)
+ME <- P * (matrix(bsq, nrow(P), 4, byrow = TRUE) - avg_bsq)
+pred_me <- bind_cols(
+  pred %>% dplyr::select(statusquo, sex),
+  as_tibble(ME) %>% set_names(c("me_p_A", "me_p_N", "me_p_U", "me_p_Y"))
+)
+
+# Gráfico de curvas: prefijo indica qué columnas graficar
+plot_curvas <- function(df, prefijo, ylab, hline = FALSE) {
+  p <- df %>%
+    dplyr::select(statusquo, sex, starts_with(prefijo)) %>%
+    pivot_longer(starts_with(prefijo), names_to = "vote",
+                 names_prefix = prefijo, values_to = "valor") %>%
+    ggplot(aes(x = statusquo, y = valor, colour = vote, group = interaction(vote, sex))) +
+    geom_path(aes(linetype = sex), alpha = 0.5, linewidth = 1.5) +
+    scale_color_course() + scale_fill_course() +
+    theme_slides +
+    labs(x = "Apoyo al status quo", y = ylab, colour = "Voto", linetype = "Sexo")
+  if (hline) p <- p + geom_hline(yintercept = 0, linewidth = 1.5)
+  p
+}
+```
+
+## El modelo estimado
+
+$$\ln \frac{p_{ij}}{p_{iA}} = \beta_{j0} + \beta_{j1}\,\text{statusquo}_{i} + \beta_{j2}\,\text{male}_{i}, \qquad j \in \{N, U, Y\}$$
+
+donde $\text{male}_i$ corresponde a `sexM` y $p_{ij} = \mathbb{P}(\text{vote}_i = j)$.
+
+::: {.pull-left}
+
+```{r coefs, echo=FALSE}
+round(summary(mlogit)$coefficients, 3)
+```
+
+:::
+
+::: {.pull-right}
+
+- $\beta_{j0}$: log-odds de $j$ vs $A$ cuando `statusquo` $=0$ y la persona es mujer.
+- $\beta_{j1}$: cambio en el logit de $j$ vs $A$ por cada punto de `statusquo`.
+- $\beta_{j2}$: diferencia en el logit de $j$ vs $A$ entre hombres y mujeres.
+
+:::
+
+## Efectos sobre el logit
+
 Un modelo de regresión logística multinomial consiste de $J-1$ ecuaciones:
+
 $$\text{logit}(p_{ij}) = \ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}$$
 
 . . .
 
-- El intercepto $\beta_{j0}$ corresponde al log del ratio entre la probabilidad de obtener $j$ en vez de $J$ -- $\text{logit}(p_{j})$ --, cuando $x_{1} = \dots = x_{k} = 0$
+- El intercepto $\beta_{j0}$ es el log-odds de $j$ frente a la categoría de referencia cuando $x_{1} = \dots = x_{k} = 0$.
 
 . . .
 
-- El efecto marginal de $x_{k}$ sobre el $\text{logit}(p_{j})$ por:
+- El efecto marginal de $x_{k}$ sobre el logit es constante:
 
-::: {.pull-left}
+$$\frac{\partial\, \text{logit}(p_{ij})}{\partial x_{k}} = \beta_{jk}$$
 
-::: {.content-box-blue}
-
-$$\frac{\partial\text{logit}(p_{ij})}{\partial x_{k}} = \beta_{jk}$$
-
-:::
-
-:::
-
-::: {.pull-right}
+. . .
 
 ::: {.content-box-yellow}
 
-"Un cambio infinitesimal en $x_{k}$  ( $\partial x_{k}$ ) se traduce en un cambio en $\partial x_{k} \beta_{jk}$ unidades en el $\text{logit}(p_{j})$"
-
-:::
+"Un aumento de una unidad en $x_{k}$ suma $\beta_{jk}$ unidades al logit de $j$ frente a $J$."
 
 :::
 
 . . .
 
-[Importante:]{.bold} los coeficientes y sus transformaciones entregan información sobre las probabilidades [relativas]{.bold} de los diferentes $j$'s (con respecto a categoría de referencia).
+[Importante:]{.bold} los coeficientes entregan información sobre probabilidades [relativas]{.bold} de cada $j$ con respecto a la categoría de referencia, no sobre probabilidades absolutas.
 
-## Efectos marginales sobre el logit
-En nuestro ejemplo: $\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}$
+## Efectos sobre el logit en el ejemplo
 
 ::: {.pull-left}
 
-```{r, echo=FALSE}
-summary(mlogit_vote_sq_sex)$coefficients
-```
+Como el logit es lineal en `statusquo`, cada categoría tiene una **pendiente constante**:
+
+- $\beta_{N1}$ = `r round(b["N","statusquo"], 2)`: a más apoyo al status quo, menor logit de votar no vs abstenerse.
+- $\beta_{U1}$ = `r round(b["U","statusquo"], 2)`.
+- $\beta_{Y1}$ = `r round(b["Y","statusquo"], 2)`: a más apoyo al status quo, mayor logit de votar sí vs abstenerse.
 
 :::
 
 ::: {.pull-right}
 
-```{r, echo=FALSE, fig.width=6, fig.height=5, warning=FALSE, message=FALSE}
-
-# plot the result
-grid <- plebs_1988  %>% data_grid(statusquo=seq_range(statusquo,30),sex,.model=mlogit_vote_sq_sex)
-
-predictions <- cbind(grid,predict(mlogit_vote_sq_sex, newdata=grid, type="prob")) %>%
-              pivot_longer(-c(statusquo,sex), names_to="outcome",values_to="p" ) %>%
-              mutate(p_outcome = paste0("p_",outcome)) %>% dplyr::select(-outcome) %>%
-              pivot_wider(names_from = p_outcome, values_from=p) %>%
-              mutate(across(p_N:p_Y, ~  log(.x/p_A), .names = "logit_{.col}" )) %>%
-              pivot_longer(-c(statusquo,sex), names_to="quant", values_to="est")
-
-predictions %>% filter(str_detect(quant, "^l")) %>% separate(quant,sep=8, into=c("quant","vote")) %>%
-  ggplot(aes(x=statusquo, y=est, colour=vote, group=interaction(vote,sex))) +
-  geom_path(aes(linetype=sex), alpha=0.5, size=1.5) +
-  scale_color_course() +  scale_fill_course() +
-  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-  legend.text = element_text(size = 18), legend.position="top") +
-  labs(x="Support status-quo", y="Logit(Vote=j)")
-
+```{r logit-plot, echo=FALSE, fig.width=6.5, fig.height=5.5, warning=FALSE, message=FALSE}
+plot_curvas(pred, "logit_p_", "Logit(voto = j vs A)")
 ```
 
 :::
 
-## Efectos marginales sobre el logit
+## Cálculo del logit para un perfil
 
-::: {.pull-left}
+¿Cuál es el logit de votar N y Y para un **hombre** según su apoyo al status quo?
 
-```{r, echo=FALSE}
-summary(mlogit_vote_sq_sex)$coefficients
+```{r logit-calc, echo=TRUE}
+logit_j <- function(j, sq, male) {
+  b[j, "(Intercept)"] + b[j, "statusquo"] * sq + b[j, "sexM"] * male
+}
+
+logit_j("N", sq = c(0, 1), male = 1)
+logit_j("Y", sq = c(0, 1), male = 1)
+
+# Cambio en el logit al pasar de statusquo = 0 a 1 (= beta_N1 y beta_Y1)
+diff(logit_j("N", sq = c(0, 1), male = 1))
+diff(logit_j("Y", sq = c(0, 1), male = 1))
 ```
 
-Por tanto, $\beta_{N1}$ y $\beta_{Y1}$ son=
-```{r}
-c(
-betaN1 = (0.11 -1.76*1 + 0.7*1)-(0.11 -1.76*0 + 0.7*1),
-betaY1 = (0.78 + 1.9*1 -0.11*1)-(0.78 + 1.9*0 -0.11*1)
-)
-```
+. . .
 
-:::
-
-::: {.pull-right}
-
-Si `male=1` y `statusquo=0`, entonces `logit(p_N)` y `logit(p_Y)` son=
-```{r}
-c(N=0.11 -1.76*0 + 0.7*1,
-  Y=0.78  + 1.9*0 + -0.11*1)
-```
-Si `male=1` y `statusquo=1`, entonces `logit(p_N)` y `logit(p_Y)` son=
-```{r}
-c(N=0.11 -1.76*1 + 0.7*1,
-  Y=0.78  + 1.9*1 + -0.11*1)
-```
-
-:::
+El cambio en el logit no depende del sexo: $\beta_{j1}$ es el mismo para hombres y mujeres, porque el modelo no incluye interacciones.
 
 ## Efectos multiplicativos sobre las odds {.center .middle}
 
-## Efectos multiplicativos sobre las odds
-Dado el siguiente modelo de regresión logística multinomial:
+## De logits a odds
+
+Dado el modelo:
+
 $$\text{logit}(p_{ij}) = \ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}$$
 
 . . .
 
-exponenciando a ambos lados obtenemos
+exponenciando ambos lados:
+
 $$\frac{p_{ij}}{p_{iJ}} = e^{\beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}}$$
 
 . . .
 
-equivalentemente
+es decir, las odds son **multiplicativas** en los predictores:
 
 ::: {.content-box-blue}
 
-$$\frac{p_{ij}}{p_{iJ}} =  e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i1}}  \dots e^{\beta_{jk} x_{ik}}$$
+$$\frac{p_{ij}}{p_{iJ}} = e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i1}} \cdots e^{\beta_{jk} x_{ik}}$$
 
 :::
 
-## Efectos multiplicativos sobre las odds: odds ratios
-Considera la situación en que $i$ y $i^{´}$ son dos observaciones con $x_{k}=c$ y $x_{k}=c+1$, respectivamente. El resto de las covariables toman valores idénticos.
+## Odds ratios: derivación
+
+Considera dos observaciones $i$ e $i'$ con $x_{k} = c$ y $x_{k} = c+1$, respectivamente. El resto de las covariables toman valores idénticos.
 
 . . .
 
- Las odds de observar $j$ en vez de $J$ son:
+Las odds de $j$ frente a $J$ son:
 
-- $p_{ij}/(p_{iJ}) = e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i1}}  \dots (e^{\beta_{jk}})^{c}$
-- $p_{i^{´}j}/(p_{i^{´}J}) = e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i^{´}1}}  \dots (e^{\beta_{jk}})^{c+1}$
+- $\dfrac{p_{ij}}{p_{iJ}} = e^{\beta_{j0}} \cdots \left(e^{\beta_{jk}}\right)^{c}$
+- $\dfrac{p_{i'j}}{p_{i'J}} = e^{\beta_{j0}} \cdots \left(e^{\beta_{jk}}\right)^{c+1}$
 
 . . .
 
-El ratio de las odd de éxito entre $i^{´}$ e $i$ está dado por:
+El cociente entre ambas odds es:
 
-\begin{align}
-\frac{p_{i^{´}j}/p_{i^{´}J}}{p_{ij}/p_{iJ}} &= \frac{e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i^{´}1}}  \dots (e^{\beta_{jk}})^{c+1}}{e^{\beta_{j0}} \cdot e^{\beta_{j1} x_{i1}}  \dots (e^{\beta_{jk}})^{c}} = e^{\beta_{jk}}
-\end{align}
+$$\frac{p_{i'j}/p_{i'J}}{p_{ij}/p_{iJ}} = \frac{\left(e^{\beta_{jk}}\right)^{c+1}}{\left(e^{\beta_{jk}}\right)^{c}} = e^{\beta_{jk}}$$
 
-En otras palabras, manteniendo otros factores constantes, $e^{\beta_{jk}}$ representa la odds ratio de $j$ vs $J$ entre el caso con $x_{k}$ aumentado en una unidad, y el caso con $x_{k}$ en un nivel basal dado.
-
-## Efectos multiplicativos sobre las odds
+## Odds ratios: interpretación
 
 ::: {.content-box-yellow}
 
-"Un cambio en $\Delta$ unidades de $x_{k}$ multiplica el ratio entre las probabilidad de obtener $j$ vs $J$ por $e^{\Delta \beta_{jk}}$"
+"Un cambio de $\Delta$ unidades en $x_{k}$ multiplica el cociente entre las probabilidades de $j$ y $J$ por $e^{\Delta \beta_{jk}}$"
 
 :::
 
-[Propiedades]{.bold}:
+. . .
+
+[Propiedades de $e^{\beta_{jk}}$:]{.bold}
+
+- $e^{\beta_{jk}} \in (0, \infty)$: actúa como un factor multiplicativo, no aditivo.
 
 . . .
 
-- $e^{\beta_{jk}}$ está restringido al rango $[0,\infty+)$. Es una constante que "comprime" o amplifica el ratio entre las probabilidades de $j$ vs $J$
+- $\beta_{jk} < 0 \Rightarrow 0 < e^{\beta_{jk}} < 1$: un aumento en $x_{k}$ reduce el cociente de odds de $j$ vs $J$.
 
 . . .
 
-- Si $\beta_{jk} < 0  \to  (0 < e^{\beta_{jk}} < 1)$. Es decir, un aumento en $x_{k}$ está asociado con una reducción (multiplicativa) del ratio entre las probabilidades de  $j$ vs $J$
+- $\beta_{jk} = 0 \Rightarrow e^{\beta_{jk}} = 1$: un cambio en $x_{k}$ no altera el cociente de odds.
 
 . . .
 
-- Si $\beta_{jk} = 0  \to  (e^{\beta_{jk}} =1)$. Es decir, un cambio en $x_{k}$ está asociado a un cambio nulo en el ratio entre las probabilidades de  $j$ vs $J$
+- $\beta_{jk} > 0 \Rightarrow e^{\beta_{jk}} > 1$: un aumento en $x_{k}$ amplifica el cociente de odds.
 
-. . .
-
-- Si $\beta_{jk} > 0  \to  (e^{\beta_{jk}} > 1)$. Es decir, un aumento en $x_{k}$ está asociado a aumento (multiplicativo) en el ratio entre las probabilidades de  $j$ vs $J$
-
-## Efectos multiplicativos sobre las odds
-En nuestro ejemplo: $\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}$, por tanto:
+## Odds ratios en el ejemplo
 
 ::: {.pull-left}
 
-  $\frac{p_{ij}}{p_{iJ}} = e^{\beta_{j0}} \cdot  e^{\beta_{j1}\text{statusquo}_{i}} \cdot e^{ \beta_{j2}\text{male}_{i} }$
-```{r}
-
-# coeffs
-summary(mlogit_vote_sq_sex)$coefficients
-
-
-# exp(coeffs)
-exp(summary(mlogit_vote_sq_sex)$coefficients)
-```
-
-:::
-
-. . .
-
-::: {.pull-right}
-
-```{r, echo=FALSE, fig.height=6}
-
-grid <- plebs_1988  %>% data_grid(statusquo=seq_range(statusquo,30),sex,.model=mlogit_vote_sq_sex)
-
-predictions <- cbind(grid,predict(mlogit_vote_sq_sex, newdata=grid, type="prob")) %>%
-            pivot_longer(-c(statusquo,sex), names_to="outcome",values_to="p" ) %>%
-            mutate(p_outcome = paste0("p_",outcome)) %>% dplyr::select(-outcome) %>%
-            pivot_wider(names_from = p_outcome, values_from=p) %>%
-            mutate(across(p_N:p_Y, ~  log(.x/p_A), .names = "logit_{.col}" )) %>%
-            mutate(across(logit_p_N:logit_p_Y, ~  exp(.x), .names = "or_{.col}" )) %>%
-            pivot_longer(-c(statusquo,sex), names_to="quant", values_to="est")
-
-predictions %>% filter(str_detect(quant, "^or")) %>% separate(quant,sep=11, into=c("quant","vote")) %>%
-ggplot(aes(x=statusquo, y=est, colour=vote, group=interaction(vote,sex))) +
-geom_path(aes(linetype=sex), alpha=0.5, size=1.5) +
-scale_color_course() +  scale_fill_course() +
-theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-legend.text = element_text(size = 18), legend.position="top") +
-labs(x="Support status-quo", y="Odds vote=j vs vote=A")
-
-```
-
-:::
-
-## Efectos multiplicativos sobre las odds
-
-::: {.pull-left}
-
-```{r, echo=FALSE}
-cbind(beta1=summary(mlogit_vote_sq_sex)$coefficients[,"statusquo"],exp.beta1=exp(summary(mlogit_vote_sq_sex)$coefficients[,"statusquo"]))
+```{r or-tabla, echo=TRUE}
+round(exp(coef(mlogit)), 3)
 ```
 
 :::
 
 ::: {.pull-right}
 
-Si `male=1` y `statusquo=0`, entonces las odds de N e Y son=
-```{r}
-c(N=exp(0.11 -1.76*0 + 0.7*1),
-  Y=exp(0.78  + 1.9*0 + -0.11*1) )
-```
-Si `male=1` y `statusquo=1`,  entonces las odds de N e Y son=
-```{r}
-c(N=exp(0.11 -1.76*1 + 0.7*1),
-  Y=exp(0.78  + 1.9*1 + -0.11*1))
-```
+- Un punto más de `statusquo` multiplica las odds de **N vs A** por `r round(exp(b["N","statusquo"]), 3)` (reducción de `r round((1 - exp(b["N","statusquo"])) * 100)`%).
+- Las odds de **Y vs A** se multiplican por `r round(exp(b["Y","statusquo"]), 2)`.
+- Los hombres tienen odds de **N vs A** `r round(exp(b["N","sexM"]), 2)` veces las de las mujeres.
 
 :::
 
-## Efectos multiplicativos sobre las odds
+## Odds ratios en el ejemplo: curvas
 
 ::: {.pull-left}
 
-```{r, echo=FALSE}
-cbind(beta1=summary(mlogit_vote_sq_sex)$coefficients[,"statusquo"],exp.beta1=exp(summary(mlogit_vote_sq_sex)$coefficients[,"statusquo"]))
-```
+Las curvas de odds son **exponenciales** en `statusquo`, porque el logit es lineal:
 
-Por tanto, $e^{\beta_{N1}}$ y $e^{\beta_{Y1}}$ son=
-```{r}
-c(
-betaN1 = exp(0.11 -1.76*1 + 0.7*1)/exp(0.11 -1.76*0 + 0.7*1),
-betaY1 = exp(0.78 + 1.9*1 -0.11*1)/exp(0.78 + 1.9*0 -0.11*1)
-)
-```
+$$\frac{p_{ij}}{p_{iA}} = e^{\beta_{j0} + \beta_{j1}\,\text{statusquo}_{i} + \beta_{j2}\,\text{male}_{i}}$$
 
 :::
 
 ::: {.pull-right}
 
-Si `male=1` y `statusquo=0`, entonces las odds de N e Y son=
-```{r}
-c(N=exp(0.11 -1.76*0 + 0.7*1),
-  Y=exp(0.78  + 1.9*0 + -0.11*1) )
-```
-Si `male=1` y `statusquo=1`,  entonces las odds de N e Y son=
-```{r}
-c(N=exp(0.11 -1.76*1 + 0.7*1),
-  Y=exp(0.78  + 1.9*1 + -0.11*1))
+```{r or-plot, echo=FALSE, fig.width=6.5, fig.height=5.5, warning=FALSE, message=FALSE}
+plot_curvas(pred, "or_p_", "Odds(voto = j vs A)")
 ```
 
 :::
 
-## Efectos marginales sobre la probabilidad de la categoría $j$ {.center .middle}
+## Efectos marginales sobre la probabilidad {.center .middle}
 
-## Efectos marginales sobre la probabilidad de la categoría $j$
+## El problema con las probabilidades
 
-. . .
-
-Dado el siguiente modelo de regresión logística multinomial:
-$$\text{logit}(p_{ij}) = \ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1} x_{i1} + \dots + \beta_{jk} x_{ik}$$
-
-. . .
-
-Queremos saber el [efecto marginal]{.bold} de los predictores sobre la [probabilidad]{.bold} de observar cada categoría $j: \{1, \dots, J\}$. Formalmente
-
-. . .
+Queremos el efecto de $x_k$ sobre la **probabilidad** de cada categoría:
 
 $$\frac{\partial p_{ij}}{\partial x_{k}}$$
 
 . . .
 
-$$\vdots$$
+Con el modelo multinomial, la probabilidad es:
 
-## Efectos marginales sobre la probabilidad de la categoría $j$
-Después de varios pasos, obtenemos:
+$$p_{ij} = \frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1} e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}$$
+
+. . .
+
+Como $p_{ij}$ es no lineal en $x$, su efecto marginal depende de **todas** las probabilidades y coeficientes.
+
+## Efecto marginal sobre $p_{ij}$
+
+Después de derivar:
 
 ::: {.content-box-yellow}
 
-$$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)$$
+$$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1} p_{il} \cdot \beta_{lk}\bigg)$$
 
 :::
-
-donde
-$$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1}  e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}$$
-
-## Efectos marginales sobre la probabilidad de la categoría $j$
 
 ::: {.pull-left}
 
-Analizando $$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)$$
+Llamemos $\overline{\beta}_{k} = \sum^{J-1}_{l=1} p_{il}\,\beta_{lk}$, el "efecto promedio" de $x_k$ para la observación $i$. No depende de $j$.
+
+Entonces:
+
+$$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij}\,(\beta_{jk} - \overline{\beta}_{k})$$
 
 :::
-
-. . .
 
 ::: {.pull-right}
 
-podemos notar que  $\sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk} \equiv \overline{\beta_{k}}, \quad$ el "efecto promedio de" $x_k$ (no depende de $j$). Se desprende que:
+- Si $\beta_{jk} > \overline{\beta}_{k}$: el efecto es **positivo**.
+- Si $\beta_{jk} < \overline{\beta}_{k}$: el efecto es **negativo**.
+- El signo **no necesariamente** coincide con el signo de $\beta_{jk}$.
 
 :::
 
 . . .
 
-- El signo del efecto marginal de los predictores [no necesariamente]{.bold} corresponde al signo del parámetro estimado en la regresión.
+[Nota:]{.bold} el efecto varía con $x_k$, con $\beta_{jk}$ y con todas las demás covariables. Testear si un efecto marginal es cero en un punto particular aporta poco; lo relevante es su magnitud y cómo cambia.
 
-. . .
-
-  - $\frac{\partial p_{ij}}{\partial x_{k}} > 0 \quad$  si  $\quad \beta_{jk} > \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}$
-  - $\frac{\partial p_{ij}}{\partial x_{k}} = 0 \quad$  si  $\quad \beta_{jk} = \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}$
-  - $\frac{\partial p_{ij}}{\partial x_{k}} < 0 \quad$  si  $\quad \beta_{jk} < \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}$
-
-. . .
-
-[Nota]{.bold}: No tiene mucho sentido testear si efectos marginales son distintos de cero.
-
-## Efectos marginales sobre la probabilidad de la categoría $j$
+## Efectos sobre la probabilidad en el ejemplo
 
 ::: {.pull-left}
 
-si $$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)$$
+Probabilidades predichas por categoría:
 
-:::
-
-. . .
-
-::: {.pull-right}
-
-y $$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}x_{1i} + \dots + \beta_{jk}x_{ki}}}{1 + \sum^{J-1}_{l=1}  e^{\beta_{l0} + \beta_{l1}x_{1i} + \dots + \beta_{lk}x_{ki}}}$$
-
-:::
-
-. . .
-
-- Es claro que el efecto marginal de $x_{k}$ varía dependiendo del valor de $x_{k}$, de su coeficiente $\beta_{jk}$, y de todas las otras covariables con sus respectivos coeficientes.
-
-## Efectos marginales sobre la probabilidad de la categoría $j$
-En nuestro ejemplo: $\ln \frac{p_{ij}}{p_{iJ}} = \beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}$, por tanto:
-
-::: {.pull-left}
-
-  $$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{l=1} e^{\beta_{l0} + \beta_{l1}\text{statusquo}_{i} + \beta_{l2}\text{male}_{i}}}$$
-
-```{r}
-summary(mlogit_vote_sq_sex)$coefficients
-```
-
-:::
-
-. . .
-
-::: {.pull-right}
-
-```{r, echo=FALSE, fig.height=6}
-grid <- plebs_1988  %>% data_grid(statusquo=seq_range(statusquo,30),sex,.model=mlogit_vote_sq_sex)
-
-predictions <- cbind(grid,predict(mlogit_vote_sq_sex, newdata=grid, type="prob")) %>%
-              pivot_longer(-c(statusquo,sex), names_to="outcome",values_to="p" ) %>%
-              mutate(p_outcome = paste0("p_",outcome)) %>% dplyr::select(-outcome) %>%
-              pivot_wider(names_from = p_outcome, values_from=p) %>%
-              mutate(across(p_N:p_Y, ~  log(.x/p_A), .names = "logit_{.col}" )) %>%
-              mutate(across(logit_p_N:logit_p_Y, ~  exp(.x), .names = "or_{.col}" )) %>%
-              pivot_longer(-c(statusquo,sex), names_to="quant", values_to="est")
-
-predictions %>% filter(str_detect(quant, "^p")) %>% separate(quant,sep="_", into=c("quant","vote")) %>%
-  ggplot(aes(x=statusquo, y=est, colour=vote, group=interaction(vote,sex))) +
-  geom_path(aes(linetype=sex), alpha=0.5, size=1.5) +
-  scale_color_course() +  scale_fill_course() +
-  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-  legend.text = element_text(size = 18), legend.position="top") +
-  labs(x="Support status-quo", y="P(vote=j)")
-```
-
-:::
-
-## Efectos marginales sobre la probabilidad de la categoría $j$
-
-::: {.pull-left}
-
-$$p_{ij} =\frac{e^{\beta_{j0} + \beta_{j1}\text{statusquo}_{i} + \beta_{j2}\text{male}_{i}}}{1 + \sum^{J-1}_{l=1} e^{\beta_{l0} + \beta_{l1}\text{statusquo}_{i} + \beta_{l2}\text{male}_{i}}}$$
-```{r, echo=FALSE, fig.width=6, fig.height=5}
-predictions %>% filter(str_detect(quant, "^p")) %>% separate(quant,sep="_", into=c("quant","vote")) %>%
-  ggplot(aes(x=statusquo, y=est, colour=vote, group=interaction(vote,sex))) +
-  geom_path(aes(linetype=sex), alpha=0.5, size=1.5) +
-  scale_color_course() +  scale_fill_course() +
-  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-  legend.text = element_text(size = 18), legend.position="top") +
-  labs(x="Support status-quo", y="P(vote=j)")
+```{r prob-plot, echo=FALSE, fig.width=6.5, fig.height=5.5, warning=FALSE, message=FALSE}
+plot_curvas(pred, "p_", "P(voto = j)")
 ```
 
 :::
 
 ::: {.pull-right}
 
-$$\frac{\partial p_{ij}}{\partial x_{k}} = p_{ij} \cdot \bigg(\beta_{jk} - \sum^{J-1}_{l=1}p_{il} \cdot \beta_{lk}\bigg)$$
-```{r, echo=FALSE, fig.width=6, fig.height=5, warning=F}
+Efecto marginal de `statusquo` sobre cada probabilidad:
 
-predictions <- predictions %>% filter(str_detect(quant, "^p")) %>% separate(quant,sep="_", into=c("quant","vote"))
-
-coefs <- summary(mlogit_vote_sq_sex)$coefficients %>% as_tibble() %>% mutate(vote = c("N","U","Y")) %>%
-  rename(beta_0 = `(Intercept)`, beta_sq = statusquo, beta_sex = sexM)
-
- predictions %>% left_join(coefs, by="vote") %>%
-  replace_na(list(beta_0 = 0, beta_sq = 0, beta_sex = 0)) %>%
-  mutate(beta_sq_prob = beta_sq*est) %>% group_by(statusquo,sex) %>%
-  mutate(average_beta_sq = sum(beta_sq_prob, na.rm = T)) %>%
-  ungroup() %>% mutate(me_sq = est*(beta_sq -average_beta_sq)) %>%
-  ggplot(aes(x=statusquo, y=me_sq, colour=vote, group=interaction(vote,sex))) +
-  geom_path(aes(linetype=sex), alpha=0.5, size=1.5) +
-  scale_color_course() +  scale_fill_course() +
-  theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
-  legend.text = element_text(size = 18), legend.position="top") +
-  labs(x="Support status-quo", y="Efecto marginal de status quo") +
-  geom_hline(yintercept = 0, size=1.5)
+```{r me-plot, echo=FALSE, fig.width=6.5, fig.height=5.5, warning=FALSE, message=FALSE}
+plot_curvas(pred_me, "me_p_", "Efecto marginal de status quo", hline = TRUE)
 ```
 
 :::
 
-## Efectos marginales sobre la probabilidad de la categoría $j$
+## Efectos marginales: heterogeneidad
 
-- Efectos marginales son _esencialmente_ heterogéneos. No hay un efecto sino muchos.
-
-. . .
-
-- Heterogeneidad crece con la complejidad del modelo: número de predictores, interacciones, etc.
+- Los efectos marginales son **esencialmente heterogéneos**: no hay un efecto, sino muchos.
 
 . . .
 
-- Más aún, en el caso de modelos de regresión logística multinomial, los efectos marginales no son necesariamente monotónicos (pueden cambiar de signo).
+- La heterogeneidad crece con la complejidad del modelo: número de predictores, interacciones, no linealidades.
 
 . . .
 
-- En la práctica, muchas veces queremos UN número que resuma el efecto marginal.
+- En modelos multinomiales, los efectos marginales **no son necesariamente monotónicos**: pueden cambiar de signo a lo largo de $x$.
 
 . . .
+
+- En la práctica queremos **un número** que resuma el efecto. Objetivo: resumir sin confundir un promedio con un efecto universal.
+
+## Resúmenes del efecto marginal
 
 ::: {.pull-left}
 
-**Objetivo:** resumir la heterogeneidad sin confundir un promedio con un efecto universal.
+- **AME** (Average Marginal Effects): promedio de los efectos individuales en la muestra.
+- **MEM** (Marginal Effects at the Mean): efecto evaluado en los valores medios de las covariables.
+- **MER** (Marginal Effects at Representative values): efecto evaluado en perfiles representativos (p. ej., hombre con `statusquo` $=0.5$).
 
 :::
-
-. . .
-
-Cantidades de interes:
 
 ::: {.pull-right}
 
-* Average Marginal Effects (AME)
-* Marginal Effects at the Mean (MEM)
-* Marginal Effects at Representative Values (MER)
+Los tres pueden dar números muy distintos cuando el efecto es heterogéneo. Reporta cuál usas y por qué.
 
 :::
 
-## Efectos marginales sobre la probabilidad de la categoría $j$: MEM
+## AME y MEM con `marginaleffects`
 
-. . .
+```{r me-resumenes, echo=TRUE, warning=FALSE, message=FALSE}
+# AME: promedio sobre las observaciones de la muestra
+avg_slopes(mlogit, variables = "statusquo") %>%
+  as_tibble() %>% dplyr::select(group, estimate, std.error)
 
-Usando el paquete `marginaleffects`:
-```{r}
-grid <- plebs_1988 %>% data_grid(sex, .model=mlogit_vote_sq_sex)
-avg_slopes(mlogit_vote_sq_sex, variables="statusquo", newdata=grid)
-
+# MEM: efecto en valores medios de las covariables
+slopes(mlogit, variables = "statusquo", newdata = datagrid(model = mlogit)) %>%
+  as_tibble() %>% dplyr::select(group, estimate, std.error)
 ```
 
 ## Independence of Irrelevant Alternatives (IIA) {.inverse .center .middle}
 
-## Independence of Irrelevant Alternatives (IIA)
+## IIA: definición
 
-. . .
+Cuando la regresión logística multinomial se usa para modelar **decisiones** (choice), descansa en el supuesto implícito de IIA:
 
-- Cuando regresión logística Multinomial es utilizada para modelar decisiones (choice), el modelo descansa en el supuesto implícito de IIA
+::: {.content-box-blue}
 
-. . .
-
-- IIA: las odds (probabilidades relativas) de seleccionar cualquiera de las $J$ alternativas no son afectadas por la existencia de alternativas irrelavantes.
-
-. . .
-
-[Ejemplo]{.bold} (McFadden's 1974):
-
--  Una persona puede viajar al trabajo en: $\{\text{auto}, \text{ bus rojo}\}$
--  $\mathbb{P}(\text{auto}) =  \mathbb{P}(\text{ bus rojo}) = 1/2$. Odds=1.
-
-. . .
-
-- Supongamos se amplía el conjunto de alternativas: $\{\text{auto}, \text{ bus rojo},  \text{ bus azul}\}$
-
-. . .
-
-- Dado que los buses sólo difieren en color, esperaríamos que $\mathbb{P}(\text{ bus rojo}) = \mathbb{P}(\text{bus azul})$
-- Único modo de retener Odds entre auto y bus rojo es si: $\mathbb{P}(\text{auto}) =  \mathbb{P}(\text{ bus rojo}) = \mathbb{P}(\text{bus azul}) = 1/3$
-
-. . .
-
-- Sería más realista esperar que $\mathbb{P}(\text{auto}) = 1/2)$ y $\quad \mathbb{P}(\text{ bus rojo}) = \mathbb{P}(\text{bus azul}) = 1/4$
- - Sin embargo, violaría IIA porque las odds entre auto y bus rojo serían (1/2)/(1/4)=2.
-
-## Independence of Irrelevant Alternatives (IIA)
-Existe una variedad de tests para el supuesto de IIA, pero ninguno ha mostrado ser concluyente:
-
-::: {.center}
-
-![iia](iia.png)
+Las odds (probabilidades relativas) de elegir entre dos alternativas no se ven afectadas por la existencia de otras alternativas.
 
 :::
 
+. . .
+
+En términos de nuestro modelo: $\dfrac{p_{ij}}{p_{ik}}$ no depende de qué otras categorías existen.
+
+## IIA: ejemplo de McFadden (1974)
+
+- Una persona puede viajar al trabajo en: $\{\text{auto}, \text{bus rojo}\}$.
+- $\mathbb{P}(\text{auto}) = \mathbb{P}(\text{bus rojo}) = 1/2$. Odds $= 1$.
+
+. . .
+
+- Se amplía el conjunto: $\{\text{auto}, \text{bus rojo}, \text{bus azul}\}$.
+
+. . .
+
+- Como los buses sólo difieren en color, esperaríamos $\mathbb{P}(\text{bus rojo}) = \mathbb{P}(\text{bus azul})$.
+- Para conservar odds $=1$ entre auto y bus rojo, debe ser $\mathbb{P}(\text{auto}) = \mathbb{P}(\text{bus rojo}) = \mathbb{P}(\text{bus azul}) = 1/3$.
+
+. . .
+
+- Lo más realista: $\mathbb{P}(\text{auto}) = 1/2$ y $\mathbb{P}(\text{bus rojo}) = \mathbb{P}(\text{bus azul}) = 1/4$.
+- Pero eso **viola IIA**: las odds entre auto y bus rojo pasan a ser $(1/2)/(1/4) = 2$.
+
+## IIA: ¿es razonable en nuestro ejemplo?
+
+::: {.content-box-blue}
+
+**Pregunta para discusión**
+
+Si la opción `U` (indeciso) no existiera, ¿los indecisos se repartirían entre `N` e `Y` en la misma proporción que los demás votantes? ¿Y los abstencionistas?
+
+:::
+
+. . .
+
+Probablemente no: los indecisos y los abstencionistas tienen perfiles distintos de apoyo al status quo. Eso sugiere que IIA es un supuesto fuerte aquí.
+
+## IIA: tests y alternativas
+
+Existe una variedad de tests para IIA (p. ej., Hausman-McFadden, Small-Hsiao), pero ninguno ha mostrado ser concluyente:
+
+::: {.center}
+
+![iia](iia.png){width=60%}
+
+:::
+
+. . .
+
+Si IIA no es plausible, alternativas: el probit multinomial o el logit anidado (*nested logit*).
+
 ## En resumen
 
-- El efecto marginal de $x_{k}$ sobre $\text{logit}(p_{ij})$ es constante e igual a $\beta_{jk}$; exponenciando, $e^{\beta_{jk}}$ es la odds ratio de $j$ vs $J$ asociada a un aumento de una unidad en $x_{k}$.
-- El efecto marginal sobre la **probabilidad** $p_{ij}$ no es $\beta_{jk}$: $\partial p_{ij}/\partial x_{k} = p_{ij}(\beta_{jk} - \overline{\beta_{k}})$, por lo que su signo y magnitud dependen de $p_{ij}$ y pueden variar entre observaciones (e incluso cambiar de signo).
-- En la práctica se resume esta heterogeneidad con AME, MEM o MER (ej., `avg_slopes()` del paquete `marginaleffects`).
-- El modelo logit multinomial supone Independencia de Alternativas Irrelevantes (IIA); no existe un test concluyente para verificarlo.
-- La próxima clase aborda la regresión de Poisson, usada para modelar variables de conteo.
+- El coeficiente $\beta_{jk}$ es el efecto marginal de $x_k$ sobre $\text{logit}(p_{ij})$, constante. $e^{\beta_{jk}}$ es la odds ratio de $j$ vs $J$ por cada unidad de $x_k$.
+
+. . .
+
+- El efecto marginal sobre la **probabilidad** no es $\beta_{jk}$: $\partial p_{ij}/\partial x_{k} = p_{ij}(\beta_{jk} - \overline{\beta}_{k})$. Puede variar entre observaciones y cambiar de signo.
+
+. . .
+
+- Para resumir la heterogeneidad usamos AME, MEM o MER (p. ej., `avg_slopes()` de `marginaleffects`).
+
+. . .
+
+- El modelo logit multinomial supone IIA; no existe un test concluyente para verificarlo.
+
+. . .
+
+- La próxima clase aborda la regresión de Poisson, para variables de conteo.
 
 ## Gracias {.inverse .center .middle .closing}
 

@@ -70,7 +70,7 @@ Clases los días Lunes, bloques 12:20-13:30 (B1) y 14:50-16:00 (B2). Calendario 
   - Acá pueden encontrar un template para escribir en `Quarto` ([`[Template]`](https://mebucca.github.io/cda_soc3070/files/template_quarto#0) y [`[.Rmd]`](files/template_quarto.qmd) ). 
 
 
-[`[Control 3]`](https://mebucca.github.io/cda_soc3070/files/control_3#0) 
+[`[Control 3]`](files/control_3.pdf) 
 
   
  
