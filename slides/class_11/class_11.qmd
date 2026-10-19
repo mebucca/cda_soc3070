@@ -16,6 +16,7 @@ format:
     width: 1600
     height: 900
     html-math-method: katex
+    scrollable: true
 ---
 
 ```{r course-style, include=FALSE}
@@ -113,7 +114,7 @@ p_load("tidyverse")
 p_load("viridis")
 p_load("modelr")
 p_load("cowplot")
-p_load("margins")
+p_load("marginaleffects")
 
 theme_set(theme_julia())
 
@@ -396,7 +397,6 @@ $$\mathbb{E}(y_{i} \mid x_{1i}, \dots, x_{ki}) = \mu_{i} = e^{\beta_{0} + \beta_
 $$\mathbb{E}(y_{i} \mid x_{1i}, \dots, x_{ki}) = \mu_{i} = n_{i} \cdot  e^{\beta_{0} + \beta_{1}x_{1i} + \dots + \beta_{k}x_{ki}} \quad \quad  \text{donde} \quad y_{i} \sim \text{Poisson}(\mu_{i})$$
 
 ## Regresión Poisson es un tipo de GLM
-
 Regresión Poisson es un GLM con componente aleatorio [Poisson]{.bold} y función de enlace [log]{.bold}. 
 
 . . .
@@ -781,32 +781,6 @@ predictions %>%
 
 :::
 
-## Efectos marginales sobre $\ln(\mu)$: ilustración
-```{r, echo=FALSE}
-summary(poisson_death_agecont_rate)$coefficients[,c(1,2)]
-```
-
-::: {.pull-left}
-
-Si `continent="South America"` y `median_age=20`, entonces `ln(mu)` es:
-```{r}
-ln_mu_sa20= -9.98 +  3.16 - 0.0129*20; ln_mu_sa20
-```
-Si `continent="South America"` y `median_age=21`, entonces `ln(mu)` es:
-```{r}
-ln_mu_sa21= -9.98 +  3.16 - 0.0129*21; ln_mu_sa21
-```
-
-:::
-
-::: {.pull-right}
-
-Por tanto, el efecto de `median_age` es:
-```{r}
-ln_mu_sa21-ln_mu_sa20
-```
-
-:::
 
 ## Efectos multiplicativos sobre $\mu$ {.center .middle}
 
@@ -859,30 +833,6 @@ En otras palabras,
 A $e^{\beta_{k}}$ se le llama **razón de tasas de incidencia** (*Incidence Rate Ratio*, IRR): el análogo, en regresión Poisson, de la odds ratio en regresión logística. Un $\text{IRR}=1.65$ se lee "65% más recuento esperado por unidad adicional de $x_k$".
 
 ## Efectos multiplicativos sobre $\mu$, tasas
-
-. . .
-
-Dado el siguiente modelo de regresión Poisson para tasas: 
-$$\ln(\mu_{i})= \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik} + \ln(n_{i})$$
-
-. . .
-
-exponenciando a ambos lados obtenemos 
-$$\mu_{i} = e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \cdots e^{\beta_{k} x_{ik}} \cdot n_{i}$$
-
-. . .
-
-Examinando esta ecuación observamos que cuando $x_1 = \dots = x_k = 0$, 
-$$\mu_{i} = e^{\beta_{0}} \cdot n_{i}$$
-
-. . .
-
-Es decir:
-
-- $e^{\beta_{0}}$ corresponde a la "tasa" de ocurrencia del evento cuando $x_1 = \dots = x_k = 0$
-- $e^{\beta_{0}} \cdot n_{i}$ es el recuento esperado cuando $x_1 = \dots = x_k = 0$.
-
-## Efectos multiplicativos sobre $\mu$, tasas
 Asimismo, si $i$ y $j$ son dos observaciones con $x_{k}=c$ y $x_{k}=c+1$ respectivamente, el ratio entre el recuento esperado de $i'$ e $i$ (otros factores constantes) está dado por:
 
 \begin{align}
@@ -892,7 +842,7 @@ Asimismo, si $i$ y $j$ son dos observaciones con $x_{k}=c$ y $x_{k}=c+1$ respect
 
 . . .
 
-En otras palabras, 
+En otras palabras,
 
 ::: {.content-box-yellow}
 
@@ -900,32 +850,6 @@ En otras palabras,
 
 :::
 
-## Efectos multiplicativos sobre $\mu$: ilustración
-```{r, echo=FALSE}
-cbind(betas=summary(poisson_death_agecont_rate)$coefficients[,1],expbetas=exp(summary(poisson_death_agecont_rate)$coefficients[,1]))
-```
-
-::: {.pull-left}
-
-Si `continent="South America"` y `median_age=20`, entonces `ln(mu)` es:
-```{r}
-mu_sa20= exp(-9.98 +  3.16 - 0.0129*20); mu_sa20
-```
-Si `continent="South America"` y `median_age=21`, entonces `ln(mu)` es:
-```{r}
-mu_sa21= exp(-9.98 +  3.16 - 0.0129*21); mu_sa21
-```
-
-:::
-
-::: {.pull-right}
-
-Por tanto, el efecto multiplicativo de `median_age` es:
-```{r}
-mu_sa21/mu_sa20
-```
-
-:::
 
 ## Efectos marginales sobre $\mu$ {.center .middle}
 
@@ -933,7 +857,7 @@ mu_sa21/mu_sa20
 
 . . .
 
-Dado el siguiente modelo de regresión Poisson para recuentos: 
+Dado el siguiente modelo de regresión Poisson para recuentos:
 
 $$\mu_{i}= e^{\beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik}}$$
 
@@ -1149,7 +1073,7 @@ predictions %>%
   theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
   axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
   legend.text = element_text(size = 18), legend.position = "bottom") +
-  labs(x="median age", y=expression( mu ), title =expression(paste(mu, ": tasa de muertes por hab. (n=1)")))
+  labs(x="median age", y="efecto marginal de median age", title =expression(paste(mu, ": tasa de muertes por hab. (n=1)")))
 ```
 
 :::
@@ -1203,14 +1127,14 @@ beta_age_rate  = poisson_death_agecont_rate$coefficients["median_age"]
 predictions <- grid %>% mutate(mu = predict(poisson_death_agecont_rate, newdata=grid, type="response"),
                                me = beta_age_rate*mu)
 
-predictions %>% 
+predictions %>%
   ggplot(aes(x=median_age, y=me, colour=continent)) +
   geom_path(alpha=0.5, size=1.5) +
   scale_color_course() +  scale_fill_course() +
   theme(axis.text.y = element_text(size = 22), axis.text.x = element_text(size = 22),
-  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24), 
+  axis.title.y = element_text(size = 24), axis.title.x = element_text(size = 24),
   legend.text = element_text(size = 18), legend.position = "bottom") +
-  labs(x="median age", y=expression( mu ), title =expression(paste(mu, ": tasa de muertes por millón de habs. (n=10^6)")))
+  labs(x="median age", y="efecto marginal de median age", title =expression(paste(mu, ": tasa de muertes por millón de habs. (n=10^6)")))
 ```
 
 :::
@@ -1244,166 +1168,77 @@ predictions %>%
 
 . . .
 
-Cantidades de interés:
-
 ::: {.pull-right}
 
-* Average Marginal Effects (AME)
-* Marginal Effects at the Mean (MEM)
-* Marginal Effects at Representative Values (MER)
+Cantidades de interés:
+
+* **AME** (Average Marginal Effects): promedio de los efectos individuales en la muestra.
+* **MEM** (Marginal Effects at the Mean): efecto evaluado en los valores medios de las covariables.
+* **MER** (Marginal Effects at Representative Values): efecto evaluado en perfiles representativos (p. ej., un continente específico).
 
 :::
 
-## Ejemplo: MER para tasa
-Ejemplo MER de "median age" (fijo al promedio global) sobre "tasa de muertes por millón de habitantes" por continente:
+. . .
+
+Los tres pueden dar números muy distintos cuando el efecto es heterogéneo. Reporta cuál usas y por qué.
+
+## AME y MEM con `marginaleffects`
+Para el modelo de conteo: $\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \sum_{j} \mathbb{1}\{\text{continent}=j\}\beta_{j}$
 
 . . .
 
-```{r,message=FALSE,warning=FALSE}
-grid <- covid_subdata %>% data_grid(median_age = mean(median_age,na.rm=T),continent,population=10^6)
+```{r me-ame-mem, echo=TRUE, warning=FALSE, message=FALSE}
+# AME: promedio del efecto marginal de median_age sobre mu, en toda la muestra
+avg_slopes(poisson_death_agecont_mean, variables = "median_age") %>%
+  as_tibble() %>% dplyr::select(estimate, std.error, conf.low, conf.high)
 
-marginaleffects::slopes(poisson_death_agecont_rate, newdata = grid, variables = "median_age")
-```
-
-## Datos de recuento {.inverse .center .middle}
-
-###  Regresión Poisson y Quasi-Poisson
-
-## Regresión Poisson
-```{r,  include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
-p_load("ISLR2")
-p_load("tidyverse")
-p_load("viridis")
-p_load("modelr")
-p_load("MASS")
-p_load("cowplot")
-p_load("margins")
-p_load("sjPlot")
-p_load("stargazer")
-p_load("sjmisc")
-p_load("sjlabelled")
-p_load("nnet")
-p_load("lmtest")
-
-theme_set(theme_julia())
-
-# datos de demanda horaria de bicicletas (Capital Bikeshare, DC 2011-2012)
-# el conteo de interés es `bikers`: número de arriendos por hora
-bikedata <- Bikeshare %>% as_tibble()
-```
-```{r, warning=F, message=F}
-poisson_1 <- glm(bikers ~ temp, family=poisson(link="log"), data=bikedata)
-poisson_2 <- glm(bikers ~ temp + hum, family=poisson(link="log"), data=bikedata)
-```
-
-```{r, echo=F, warning=F, message=F}
-stargazer(poisson_1, poisson_2, type = "text", single.row = TRUE)
-```
-
-## Over-dispersion en regresión Poisson
-
-. . .
-
-- En un modelo de regresión Poisson cada $i$ sigue una distribución $y_{i} \sim \text{Poisson}(\mu_{i} = e^{X_{i}\beta})$
-
-. . .
-
-- No hay un parámetro adicional para la varianza. Por definición: $\operatorname{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}=e^{X_{i}\beta}$
-
-. . .
-
-- Esto puede resultar en una sub-estimación o sobre-estimación de la varianza de los datos. 
-  - Por lo general resulta en una subestimación de la varianza de los datos.
-
-. . .
-
-- Este caso se conoce como "over-dispersion". Los datos son más dispersos de lo esperado de acuerdo al modelo.
-  - Over-dispersion no afecta la estimación de los coeficientes pero vuelve la inferencia demasiado "liberal": errores estándar subestimados
-
-## Over-dispersion en regresión Poisson
-
-. . .
-
-- Es posible detectar over-dispersion inspeccionando los residuos "estandarizados" de un modelo Poisson. Formalmente:
-$$z_{i} = \frac{y_{i} - \mu_{i}}{\sigma_{i}} = \frac{y_{i} - \mu_{i}}{\sqrt{\mu_{i}}} = \frac{y_{i} - e^{X_{i}\beta}}{\sqrt{e^{X_{i}\beta}}}$$
-
-. . .
-
-- Si los $y_{i}$'s distribuyen Poisson entonces $z_{i} \sim \mathcal{N}(0,1)$. Luego, la presencia de residuos grandes indican over-dispersion. La "suma de residuos al cuadrado" resume esta información:
-$$\text{ssr} = \sum^{n}_{i=1} z^{2}_{i}$$
-
-. . .
-
-- Si el modelo Poisson es correcto $\text{ssr} \sim \chi^2_{\text{df}=n-k}$, con valor esperado $\mathbb{E}(\text{ssr})=n-k$
-
-. . .
-
-- El ratio entre ambos, $\frac{\text{ssr}}{n-k}$, es un estimado del "factor de dispersión".
-
-. . .
-
-- Obtenemos la inferencia correcta multiplicando los SE's por $\sqrt{\frac{\text{ssr}}{n-k}}$.
-
-## Over-dispersion en regresión Poisson
-
-. . .
-
-En nuestro modelo Poisson más complejo:
-```{r, warning=F, message=F}
-n = length(poisson_2$fitted.values); k = poisson_2$rank
-yhat <- predict(poisson_2, type="response")
-z <- (bikedata$bikers - yhat)/sqrt(yhat)
-rss = sum(z^2)
-```
-```{r, echo=F,warning=F, message=F}
-cat("rss = ", rss, " , rss esperado = ", n-k)
+# MEM: efecto marginal evaluado en los valores medios de las covariables
+slopes(poisson_death_agecont_mean, variables = "median_age",
+       newdata = datagrid(model = poisson_death_agecont_mean)) %>%
+  as_tibble() %>% dplyr::select(estimate, std.error, conf.low, conf.high)
 ```
 
 . . .
 
-En este caso el factor de over-dispersion es:
-```{r}
-cat("factor de dispersión = ", rss/(n-k))
-```
+- `avg_slopes()` promedia el efecto marginal (`me` en láminas anteriores) sobre cada observación de la muestra.
+- `slopes()` con `newdata = datagrid(...)` lo evalúa en un único perfil (aquí, las covariables en su valor medio).
 
-## Regresión Quasi-Poisson
-La regresión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferencia del modelo.
+## MER con `marginaleffects`
+Para el modelo de tasa: $\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \sum_{j} \mathbb{1}\{\text{continent}=j\}\beta_{j} + \ln(\text{population}_{i})$
 
-. . .
-
-$$y_{i} \sim \text{quasi-Poisson}(\mu_{i} = e^{X_{i}\beta}, \sigma= \sqrt{\omega \cdot  e^{X_{i}\beta}})$$
-
-donde $\omega$ es el factor de dispersion.
+MER de `median_age` (fijo en su promedio global) sobre la tasa de muertes por millón de habitantes, [uno por cada continente]{.bold}:
 
 . . .
 
-  - Regresión Poisson es un caso especial de quasi-Poisson ( $\omega=1$ ).
+```{r me-mer, echo=TRUE, warning=FALSE, message=FALSE}
+grid <- covid_subdata %>%
+  data_grid(median_age = mean(median_age, na.rm = TRUE), continent, population = 10^6)
+
+slopes(poisson_death_agecont_rate, newdata = grid, variables = "median_age") %>%
+  as_tibble() %>% dplyr::select(continent, estimate, std.error, conf.low, conf.high)
+```
 
 . . .
 
-Implementación en `R`:
-```{r, warning=F, message=F}
-qpoisson_2 <- glm(bikers ~ temp + hum, family=quasipoisson(link="log"), data=bikedata)
-```
-```{r,echo=F}
-summary(qpoisson_2)$coefficients
-cat("dispersion = ", summary(qpoisson_2)$dispersion)
-```
+A diferencia del AME, cada fila es el efecto marginal en [un perfil representativo distinto]{.bold} (un continente), no un promedio sobre toda la muestra.
 
-## Quasi-Poisson
-Comparando ambos modelos (mismos coeficientes, errores estándar corregidos por sobre-dispersión):
-```{r, echo=F}
-stargazer(poisson_2, qpoisson_2, type = "text", single.row = TRUE)
-```
+## Efectos marginales: en resumen
 
-## En resumen
+. . .
 
-- Regresión Poisson modela conteos: $\mathbb{E}(y_{i}\mid x_{i}) = \mu_{i} = e^{\eta_{i}}$, con $\ln(\mu_{i})=\eta_{i}$ como componente sistemático (función de enlace log).
-- Para modelar tasas se agrega un "offset" $\ln(n_{i})$, con $n_{i}$ la exposición.
-- $\beta_{k}$ es el efecto marginal de $x_{k}$ sobre $\ln(\mu)$; $e^{\beta_{k}}$ es la razón de tasas de incidencia (IRR), el efecto multiplicativo sobre $\mu$.
-- El modelo Poisson impone $\operatorname{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}$; cuando esto no se cumple hay over-dispersion.
-- Quasi-Poisson corrige los errores estándar con un factor de dispersión $\omega$, sin cambiar los coeficientes estimados.
-- La próxima clase pasa de la asociación a la causalidad: qué supuestos adicionales se necesitan para interpretar un coeficiente como un efecto causal.
+- El efecto marginal de un predictor sobre $\mu$ depende de los valores de todas las covariables: no es constante.
+
+. . .
+
+- **AME**, **MEM** y **MER** son tres formas razonables de resumir esa heterogeneidad en un número (o unos pocos números).
+
+. . .
+
+- Ninguno es "el" efecto marginal correcto: la elección depende de la pregunta (¿efecto promedio en la población? ¿efecto en un perfil típico o de interés?).
+
+. . .
+
+- En R, el paquete `marginaleffects` (`avg_slopes()`, `slopes()`) implementa los tres de forma consistente para GLMs, incluyendo regresión Poisson.
 
 ## Gracias {.inverse .center .middle .closing}
 
