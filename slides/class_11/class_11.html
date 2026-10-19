@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-28">
+  <meta name="dcterms.date" content="2026-10-19">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -32,9 +32,75 @@
       margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
       vertical-align: middle;
     }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      { color: #24292e;  }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #24292e; } /* Normal */
+    code span.al { color: #ff5555; font-weight: bold; } /* Alert */
+    code span.an { color: #6a737d; } /* Annotation */
+    code span.at { color: #d73a49; } /* Attribute */
+    code span.bn { color: #005cc5; } /* BaseN */
+    code span.bu { color: #d73a49; } /* BuiltIn */
+    code span.cf { color: #d73a49; } /* ControlFlow */
+    code span.ch { color: #032f62; } /* Char */
+    code span.cn { color: #005cc5; } /* Constant */
+    code span.co { color: #6a737d; } /* Comment */
+    code span.cv { color: #6a737d; } /* CommentVar */
+    code span.do { color: #6a737d; } /* Documentation */
+    code span.dt { color: #d73a49; } /* DataType */
+    code span.dv { color: #005cc5; } /* DecVal */
+    code span.er { color: #ff5555; text-decoration: underline; } /* Error */
+    code span.ex { color: #d73a49; font-weight: bold; } /* Extension */
+    code span.fl { color: #005cc5; } /* Float */
+    code span.fu { color: #6f42c1; } /* Function */
+    code span.im { color: #032f62; } /* Import */
+    code span.in { color: #6a737d; } /* Information */
+    code span.kw { color: #d73a49; } /* Keyword */
+    code span.op { color: #24292e; } /* Operator */
+    code span.ot { color: #6f42c1; } /* Other */
+    code span.pp { color: #d73a49; } /* Preprocessor */
+    code span.re { color: #6a737d; } /* RegionMarker */
+    code span.sc { color: #005cc5; } /* SpecialChar */
+    code span.ss { color: #032f62; } /* SpecialString */
+    code span.st { color: #032f62; } /* String */
+    code span.va { color: #e36209; } /* Variable */
+    code span.vs { color: #032f62; } /* VerbatimString */
+    code span.wa { color: #ff5555; } /* Warning */
   </style>
   <link rel="stylesheet" href="class_11_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
-  <link rel="stylesheet" href="../_shared/course.css">
+  <link rel="stylesheet" href="_shared/course.css">
   <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
   <script>document.addEventListener("DOMContentLoaded", function () {
  var mathElements = document.getElementsByClassName("math");
@@ -66,6 +132,7 @@
     }
     .reveal .slide:not(.center) {
       height: 100%;
+      overflow-y: auto;
     }
     .reveal .slide.scrollable {
       overflow-y: auto;
@@ -159,7 +226,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-28</p>
+  <p class="date">2026-10-19</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -862,43 +929,6 @@ factor(continent)South America  3.162  0.005</code></pre>
 </div>
 </div>
 </section>
-<section id="efectos-marginales-sobre-lnmu-ilustración" class="slide level2">
-<h2>Efectos marginales sobre <span class="math inline">\ln(\mu)</span>: ilustración</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>                               Estimate Std. Error
-(Intercept)                    -9.982  0.006
-median_age                     -0.013  0.000
-factor(continent)Asia           0.653  0.005
-factor(continent)Europe         2.681  0.007
-factor(continent)North America  3.068  0.006
-factor(continent)Oceania       -0.103  0.031
-factor(continent)South America  3.162  0.005</code></pre>
-</div>
-</div>
-<div class="pull-left">
-<p>Si <code>continent="South America"</code> y <code>median_age=20</code>, entonces <code>ln(mu)</code> es:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] -7.078</code></pre>
-</div>
-</div>
-<p>Si <code>continent="South America"</code> y <code>median_age=21</code>, entonces <code>ln(mu)</code> es:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] -7.091</code></pre>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<p>Por tanto, el efecto de <code>median_age</code> es:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] -0.013</code></pre>
-</div>
-</div>
-</div>
-</section>
 <section id="efectos-multiplicativos-sobre-mu" class="slide level2 center middle">
 <h2>Efectos multiplicativos sobre <span class="math inline">\mu</span></h2>
 </section>
@@ -939,25 +969,6 @@ factor(continent)South America  3.162  0.005</code></pre>
 </section>
 <section id="efectos-multiplicativos-sobre-mu-tasas" class="slide level2">
 <h2>Efectos multiplicativos sobre <span class="math inline">\mu</span>, tasas</h2>
-<div class="fragment">
-<p>Dado el siguiente modelo de regresión Poisson para tasas: <span class="math display">\ln(\mu_{i})= \beta_{0} + \beta_{1} x_{i1} + \dots + \beta_{k} x_{ik} + \ln(n_{i})</span></p>
-</div>
-<div class="fragment">
-<p>exponenciando a ambos lados obtenemos <span class="math display">\mu_{i} = e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \cdots e^{\beta_{k} x_{ik}} \cdot n_{i}</span></p>
-</div>
-<div class="fragment">
-<p>Examinando esta ecuación observamos que cuando <span class="math inline">x_1 = \dots = x_k = 0</span>, <span class="math display">\mu_{i} = e^{\beta_{0}} \cdot n_{i}</span></p>
-</div>
-<div class="fragment">
-<p>Es decir:</p>
-<ul>
-<li><span class="math inline">e^{\beta_{0}}</span> corresponde a la “tasa” de ocurrencia del evento cuando <span class="math inline">x_1 = \dots = x_k = 0</span></li>
-<li><span class="math inline">e^{\beta_{0}} \cdot n_{i}</span> es el recuento esperado cuando <span class="math inline">x_1 = \dots = x_k = 0</span>.</li>
-</ul>
-</div>
-</section>
-<section id="efectos-multiplicativos-sobre-mu-tasas-1" class="slide level2">
-<h2>Efectos multiplicativos sobre <span class="math inline">\mu</span>, tasas</h2>
 <p>Asimismo, si <span class="math inline">i</span> y <span class="math inline">j</span> son dos observaciones con <span class="math inline">x_{k}=c</span> y <span class="math inline">x_{k}=c+1</span> respectivamente, el ratio entre el recuento esperado de <span class="math inline">i'</span> e <span class="math inline">i</span> (otros factores constantes) está dado por:</p>
 <p><span class="math display">\begin{align}
 \mu_{i'}/\mu_{i} &amp;= \frac{ n_{i'} \cdot e^{\beta_{0}} \cdot e^{\beta_{1} x_{i'1}}  \dots (e^{\beta_{k}})^{c+1}}{n_{i} \cdot e^{\beta_{0}} \cdot e^{\beta_{1} x_{i1}}  \dots (e^{\beta_{k}})^{c}} \\ \\
@@ -967,43 +978,6 @@ factor(continent)South America  3.162  0.005</code></pre>
 <p>En otras palabras,</p>
 <div class="content-box-yellow">
 <p>“Un cambio en <span class="math inline">\Delta</span> unidades de <span class="math inline">x_{k}</span> multiplica la tasa de ocurrencia por <span class="math inline">e^{\Delta \beta_{k}}</span>”</p>
-</div>
-</div>
-</section>
-<section id="efectos-multiplicativos-sobre-mu-ilustración" class="slide level2">
-<h2>Efectos multiplicativos sobre <span class="math inline">\mu</span>: ilustración</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>                                  betas    expbetas
-(Intercept)                    -9.982  0.000
-median_age                     -0.013  0.987
-factor(continent)Asia           0.653  1.922
-factor(continent)Europe         2.681 14.595
-factor(continent)North America  3.068 21.491
-factor(continent)Oceania       -0.103  0.902
-factor(continent)South America  3.162 23.624</code></pre>
-</div>
-</div>
-<div class="pull-left">
-<p>Si <code>continent="South America"</code> y <code>median_age=20</code>, entonces <code>ln(mu)</code> es:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.001</code></pre>
-</div>
-</div>
-<p>Si <code>continent="South America"</code> y <code>median_age=21</code>, entonces <code>ln(mu)</code> es:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.001</code></pre>
-</div>
-</div>
-</div>
-<div class="pull-right">
-<p>Por tanto, el efecto multiplicativo de <code>median_age</code> es:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.987</code></pre>
-</div>
 </div>
 </div>
 </section>
@@ -1053,7 +1027,7 @@ factor(continent)South America  2.987  0.005</code></pre>
 <div class="cell-output-display">
 <div>
 <figure>
-<p><img data-src="class_11_files/figure-revealjs/unnamed-chunk-35-1.png" width="672"></p>
+<p><img data-src="class_11_files/figure-revealjs/unnamed-chunk-27-1.png" width="672"></p>
 </figure>
 </div>
 </div>
@@ -1073,7 +1047,7 @@ factor(continent)South America  2.987  0.005</code></pre>
 <div class="cell-output-display">
 <div>
 <figure>
-<p><img data-src="class_11_files/figure-revealjs/unnamed-chunk-36-1.png" width="576"></p>
+<p><img data-src="class_11_files/figure-revealjs/unnamed-chunk-28-1.png" width="576"></p>
 </figure>
 </div>
 </div>
@@ -1084,7 +1058,7 @@ factor(continent)South America  2.987  0.005</code></pre>
 <div class="cell-output-display">
 <div>
 <figure>
-<p><img data-src="class_11_files/figure-revealjs/unnamed-chunk-37-1.png" width="576"></p>
+<p><img data-src="class_11_files/figure-revealjs/unnamed-chunk-29-1.png" width="576"></p>
 </figure>
 </div>
 </div>
@@ -1140,7 +1114,7 @@ factor(continent)South America  3.162  0.005</code></pre>
 <div class="cell-output-display">
 <div>
 <figure>
-<p><img data-src="class_11_files/figure-revealjs/unnamed-chunk-40-1.png" width="576"></p>
+<p><img data-src="class_11_files/figure-revealjs/unnamed-chunk-32-1.png" width="576"></p>
 </figure>
 </div>
 </div>
@@ -1160,7 +1134,7 @@ factor(continent)South America  3.162  0.005</code></pre>
 <div class="cell-output-display">
 <div>
 <figure>
-<p><img data-src="class_11_files/figure-revealjs/unnamed-chunk-41-1.png" width="576"></p>
+<p><img data-src="class_11_files/figure-revealjs/unnamed-chunk-33-1.png" width="576"></p>
 </figure>
 </div>
 </div>
@@ -1171,7 +1145,7 @@ factor(continent)South America  3.162  0.005</code></pre>
 <div class="cell-output-display">
 <div>
 <figure>
-<p><img data-src="class_11_files/figure-revealjs/unnamed-chunk-42-1.png" width="576"></p>
+<p><img data-src="class_11_files/figure-revealjs/unnamed-chunk-34-1.png" width="576"></p>
 </figure>
 </div>
 </div>
@@ -1197,7 +1171,7 @@ factor(continent)South America  3.162  0.005</code></pre>
 <div class="cell-output-display">
 <div>
 <figure>
-<p><img data-src="class_11_files/figure-revealjs/unnamed-chunk-44-1.png" width="576"></p>
+<p><img data-src="class_11_files/figure-revealjs/unnamed-chunk-36-1.png" width="576"></p>
 </figure>
 </div>
 </div>
@@ -1208,7 +1182,7 @@ factor(continent)South America  3.162  0.005</code></pre>
 <div class="cell-output-display">
 <div>
 <figure>
-<p><img data-src="class_11_files/figure-revealjs/unnamed-chunk-45-1.png" width="576"></p>
+<p><img data-src="class_11_files/figure-revealjs/unnamed-chunk-37-1.png" width="576"></p>
 </figure>
 </div>
 </div>
@@ -1244,208 +1218,102 @@ factor(continent)South America  3.162  0.005</code></pre>
 </div>
 </div>
 <div class="fragment">
-<p>Cantidades de interés:</p>
 <div class="pull-right">
+<p>Cantidades de interés:</p>
 <ul>
-<li>Average Marginal Effects (AME)</li>
-<li>Marginal Effects at the Mean (MEM)</li>
-<li>Marginal Effects at Representative Values (MER)</li>
+<li><strong>AME</strong> (Average Marginal Effects): promedio de los efectos individuales en la muestra.</li>
+<li><strong>MEM</strong> (Marginal Effects at the Mean): efecto evaluado en los valores medios de las covariables.</li>
+<li><strong>MER</strong> (Marginal Effects at Representative Values): efecto evaluado en perfiles representativos (p.&nbsp;ej., un continente específico).</li>
 </ul>
 </div>
 </div>
+<div class="fragment">
+<p>Los tres pueden dar números muy distintos cuando el efecto es heterogéneo. Reporta cuál usas y por qué.</p>
+</div>
 </section>
-<section id="ejemplo-mer-para-tasa" class="slide level2">
-<h2>Ejemplo: MER para tasa</h2>
-<p>Ejemplo MER de “median age” (fijo al promedio global) sobre “tasa de muertes por millón de habitantes” por continente:</p>
+<section id="ame-y-mem-con-marginaleffects" class="slide level2">
+<h2>AME y MEM con <code>marginaleffects</code></h2>
+<p>Para el modelo de conteo: <span class="math inline">\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \sum_{j} \mathbb{1}\{\text{continent}=j\}\beta_{j}</span></p>
 <div class="fragment">
 <div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href=""></a><span class="co"># AME: promedio del efecto marginal de median_age sobre mu, en toda la muestra</span></span>
+<span id="cb12-2"><a href=""></a><span class="fu">avg_slopes</span>(poisson_death_agecont_mean, <span class="at">variables =</span> <span class="st">"median_age"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-3"><a href=""></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(estimate, std.error, conf.low, conf.high)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>
- Estimate Std. Error     z Pr(&gt;|z|)     S  2.500 % 97.500 %
-   -0.404    0.006 -71.500   &lt;0.001   Inf -0.415 -0.393
-   -0.776    0.012 -63.800   &lt;0.001   Inf -0.800 -0.752
-   -5.890    0.105 -56.300   &lt;0.001   Inf -6.095 -5.685
-   -8.673    0.140 -61.700   &lt;0.001   Inf -8.949 -8.398
-   -0.364    0.012 -29.300   &lt;0.001 623.100 -0.389 -0.340
-   -9.534    0.150 -63.800   &lt;0.001   Inf -9.827 -9.241
-
-Term: median_age
-Type: response
-Comparison: dY/dX</code></pre>
+<pre><code># A tibble: 1 × 4
+  estimate std.error conf.low conf.high
+     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1     306.      1.280     303.      308.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href=""></a><span class="co"># MEM: efecto marginal evaluado en los valores medios de las covariables</span></span>
+<span id="cb14-2"><a href=""></a><span class="fu">slopes</span>(poisson_death_agecont_mean, <span class="at">variables =</span> <span class="st">"median_age"</span>,</span>
+<span id="cb14-3"><a href=""></a>       <span class="at">newdata =</span> <span class="fu">datagrid</span>(<span class="at">model =</span> poisson_death_agecont_mean)) <span class="sc">%&gt;%</span></span>
+<span id="cb14-4"><a href=""></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(estimate, std.error, conf.low, conf.high)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 4
+  estimate std.error conf.low conf.high
+     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1     54.400     0.392     53.700      55.200</code></pre>
 </div>
 </div>
+</div>
+<div class="fragment">
+<ul>
+<li><code>avg_slopes()</code> promedia el efecto marginal (<code>me</code> en láminas anteriores) sobre cada observación de la muestra.</li>
+<li><code>slopes()</code> con <code>newdata = datagrid(...)</code> lo evalúa en un único perfil (aquí, las covariables en su valor medio).</li>
+</ul>
 </div>
 </section>
-<section id="datos-de-recuento" class="slide level2 inverse center middle" data-background-color="#003C82">
-<h2>Datos de recuento</h2>
-<h3 id="regresión-poisson-y-quasi-poisson">Regresión Poisson y Quasi-Poisson</h3>
-</section>
-<section id="regresión-poisson-1" class="slide level2">
-<h2>Regresión Poisson</h2>
+<section id="mer-con-marginaleffects" class="slide level2">
+<h2>MER con <code>marginaleffects</code></h2>
+<p>Para el modelo de tasa: <span class="math inline">\ln(\mu_{i}) = \beta_{0} + \beta_{1}\text{medianage}_{i} + \sum_{j} \mathbb{1}\{\text{continent}=j\}\beta_{j} + \ln(\text{population}_{i})</span></p>
+<p>MER de <code>median_age</code> (fijo en su promedio global) sobre la tasa de muertes por millón de habitantes, <span class="bold">uno por cada continente</span>:</p>
+<div class="fragment">
 <div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href=""></a>grid <span class="ot">&lt;-</span> covid_subdata <span class="sc">%&gt;%</span></span>
+<span id="cb16-2"><a href=""></a>  <span class="fu">data_grid</span>(<span class="at">median_age =</span> <span class="fu">mean</span>(median_age, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), continent, <span class="at">population =</span> <span class="dv">10</span><span class="sc">^</span><span class="dv">6</span>)</span>
+<span id="cb16-3"><a href=""></a></span>
+<span id="cb16-4"><a href=""></a><span class="fu">slopes</span>(poisson_death_agecont_rate, <span class="at">newdata =</span> grid, <span class="at">variables =</span> <span class="st">"median_age"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb16-5"><a href=""></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(continent, estimate, std.error, conf.low, conf.high)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>
-====================================================
-                         Dependent variable:        
-                  ----------------------------------
-                                bikers              
-                        (1)               (2)       
-----------------------------------------------------
-temp              2.194*** (0.005) 1.995*** (0.005) 
-hum                                -1.169*** (0.005)
-Constant          3.803*** (0.003) 4.633*** (0.004) 
-----------------------------------------------------
-Observations           8,645             8,645      
-Log Likelihood      -441,483.000     -409,717.000   
-Akaike Inf. Crit.   882,969.000       819,440.000   
-====================================================
-Note:                    *p&lt;0.100; **p&lt;0.050; ***p&lt;0.010</code></pre>
+<pre><code># A tibble: 6 × 5
+  continent     estimate std.error conf.low conf.high
+  &lt;chr&gt;            &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1 Africa          -0.404   0.006   -0.415    -0.393
+2 Asia            -0.776   0.012    -0.800    -0.752
+3 Europe          -5.890    0.105     -6.090     -5.690 
+4 North America   -8.670    0.140     -8.950     -8.400 
+5 Oceania         -0.364   0.012    -0.389    -0.340
+6 South America   -9.530    0.150     -9.830     -9.240 </code></pre>
 </div>
+</div>
+</div>
+<div class="fragment">
+<p>A diferencia del AME, cada fila es el efecto marginal en <span class="bold">un perfil representativo distinto</span> (un continente), no un promedio sobre toda la muestra.</p>
 </div>
 </section>
-<section id="over-dispersion-en-regresión-poisson" class="slide level2">
-<h2>Over-dispersion en regresión Poisson</h2>
+<section id="efectos-marginales-en-resumen" class="slide level2">
+<h2>Efectos marginales: en resumen</h2>
 <div class="fragment">
 <ul>
-<li>En un modelo de regresión Poisson cada <span class="math inline">i</span> sigue una distribución <span class="math inline">y_{i} \sim \text{Poisson}(\mu_{i} = e^{X_{i}\beta})</span></li>
+<li>El efecto marginal de un predictor sobre <span class="math inline">\mu</span> depende de los valores de todas las covariables: no es constante.</li>
 </ul>
 </div>
 <div class="fragment">
 <ul>
-<li>No hay un parámetro adicional para la varianza. Por definición: <span class="math inline">\operatorname{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}=e^{X_{i}\beta}</span></li>
+<li><strong>AME</strong>, <strong>MEM</strong> y <strong>MER</strong> son tres formas razonables de resumir esa heterogeneidad en un número (o unos pocos números).</li>
 </ul>
 </div>
 <div class="fragment">
 <ul>
-<li>Esto puede resultar en una sub-estimación o sobre-estimación de la varianza de los datos.
-<ul>
-<li>Por lo general resulta en una subestimación de la varianza de los datos.</li>
-</ul></li>
+<li>Ninguno es “el” efecto marginal correcto: la elección depende de la pregunta (¿efecto promedio en la población? ¿efecto en un perfil típico o de interés?).</li>
 </ul>
 </div>
 <div class="fragment">
 <ul>
-<li>Este caso se conoce como “over-dispersion”. Los datos son más dispersos de lo esperado de acuerdo al modelo.
-<ul>
-<li>Over-dispersion no afecta la estimación de los coeficientes pero vuelve la inferencia demasiado “liberal”: errores estándar subestimados</li>
-</ul></li>
+<li>En R, el paquete <code>marginaleffects</code> (<code>avg_slopes()</code>, <code>slopes()</code>) implementa los tres de forma consistente para GLMs, incluyendo regresión Poisson.</li>
 </ul>
 </div>
-</section>
-<section id="over-dispersion-en-regresión-poisson-1" class="slide level2">
-<h2>Over-dispersion en regresión Poisson</h2>
-<div class="fragment">
-<ul>
-<li>Es posible detectar over-dispersion inspeccionando los residuos “estandarizados” de un modelo Poisson. Formalmente: <span class="math display">z_{i} = \frac{y_{i} - \mu_{i}}{\sigma_{i}} = \frac{y_{i} - \mu_{i}}{\sqrt{\mu_{i}}} = \frac{y_{i} - e^{X_{i}\beta}}{\sqrt{e^{X_{i}\beta}}}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Si los <span class="math inline">y_{i}</span>’s distribuyen Poisson entonces <span class="math inline">z_{i} \sim \mathcal{N}(0,1)</span>. Luego, la presencia de residuos grandes indican over-dispersion. La “suma de residuos al cuadrado” resume esta información: <span class="math display">\text{ssr} = \sum^{n}_{i=1} z^{2}_{i}</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Si el modelo Poisson es correcto <span class="math inline">\text{ssr} \sim \chi^2_{\text{df}=n-k}</span>, con valor esperado <span class="math inline">\mathbb{E}(\text{ssr})=n-k</span></li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>El ratio entre ambos, <span class="math inline">\frac{\text{ssr}}{n-k}</span>, es un estimado del “factor de dispersión”.</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Obtenemos la inferencia correcta multiplicando los SE’s por <span class="math inline">\sqrt{\frac{\text{ssr}}{n-k}}</span>.</li>
-</ul>
-</div>
-</section>
-<section id="over-dispersion-en-regresión-poisson-2" class="slide level2">
-<h2>Over-dispersion en regresión Poisson</h2>
-<div class="fragment">
-<p>En nuestro modelo Poisson más complejo:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>rss =  794674  , rss esperado =  8642</code></pre>
-</div>
-</div>
-</div>
-<div class="fragment">
-<p>En este caso el factor de over-dispersion es:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>factor de dispersión =  91.950</code></pre>
-</div>
-</div>
-</div>
-</section>
-<section id="regresión-quasi-poisson" class="slide level2">
-<h2>Regresión Quasi-Poisson</h2>
-<p>La regresión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferencia del modelo.</p>
-<div class="fragment">
-<p><span class="math display">y_{i} \sim \text{quasi-Poisson}(\mu_{i} = e^{X_{i}\beta}, \sigma= \sqrt{\omega \cdot  e^{X_{i}\beta}})</span></p>
-<p>donde <span class="math inline">\omega</span> es el factor de dispersion.</p>
-</div>
-<div class="fragment">
-<ul>
-<li>Regresión Poisson es un caso especial de quasi-Poisson ( <span class="math inline">\omega=1</span> ).</li>
-</ul>
-</div>
-<div class="fragment">
-<p>Implementación en <code>R</code>:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>            Estimate Std. Error t value
-(Intercept)    4.633    0.040  115.840
-temp           1.995    0.044   45.140
-hum           -1.169    0.044  -26.360
-                                                                                                                                                            Pr(&gt;|t|)
-(Intercept) 0.000
-temp        0.000
-hum         0.000</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>dispersion =  91.960</code></pre>
-</div>
-</div>
-</div>
-</section>
-<section id="quasi-poisson" class="slide level2">
-<h2>Quasi-Poisson</h2>
-<p>Comparando ambos modelos (mismos coeficientes, errores estándar corregidos por sobre-dispersión):</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>
-=====================================================
-                          Dependent variable:        
-                  -----------------------------------
-                                bikers               
-                       Poisson      glm: quasipoisson
-                                       link = log    
-                         (1)               (2)       
------------------------------------------------------
-temp              1.995*** (0.005)  1.995*** (0.044) 
-hum               -1.169*** (0.005) -1.169*** (0.044)
-Constant          4.633*** (0.004)  4.633*** (0.040) 
------------------------------------------------------
-Observations            8,645             8,645      
-Log Likelihood      -409,717.000                     
-Akaike Inf. Crit.    819,440.000                     
-=====================================================
-Note:                     *p&lt;0.100; **p&lt;0.050; ***p&lt;0.010</code></pre>
-</div>
-</div>
-</section>
-<section id="en-resumen" class="slide level2">
-<h2>En resumen</h2>
-<ul>
-<li>Regresión Poisson modela conteos: <span class="math inline">\mathbb{E}(y_{i}\mid x_{i}) = \mu_{i} = e^{\eta_{i}}</span>, con <span class="math inline">\ln(\mu_{i})=\eta_{i}</span> como componente sistemático (función de enlace log).</li>
-<li>Para modelar tasas se agrega un “offset” <span class="math inline">\ln(n_{i})</span>, con <span class="math inline">n_{i}</span> la exposición.</li>
-<li><span class="math inline">\beta_{k}</span> es el efecto marginal de <span class="math inline">x_{k}</span> sobre <span class="math inline">\ln(\mu)</span>; <span class="math inline">e^{\beta_{k}}</span> es la razón de tasas de incidencia (IRR), el efecto multiplicativo sobre <span class="math inline">\mu</span>.</li>
-<li>El modelo Poisson impone <span class="math inline">\operatorname{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}</span>; cuando esto no se cumple hay over-dispersion.</li>
-<li>Quasi-Poisson corrige los errores estándar con un factor de dispersión <span class="math inline">\omega</span>, sin cambiar los coeficientes estimados.</li>
-<li>La próxima clase pasa de la asociación a la causalidad: qué supuestos adicionales se necesitan para interpretar un coeficiente como un efecto causal.</li>
-</ul>
 </section>
 <section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#007CC3">
 <h2>Gracias</h2>
