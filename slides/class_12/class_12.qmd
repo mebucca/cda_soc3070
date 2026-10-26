@@ -1,6 +1,6 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Sobre-dispersión y quasi-Poisson"
+subtitle: "Sobre-dispersión, Binomial Negativa y Zero-inflated Poission"
 author: "Mauricio Bucca · Sociología UC"
 date: today
 body-classes: theme-benfica
@@ -16,6 +16,7 @@ format:
     width: 1600
     height: 900
     html-math-method: katex
+    auto-stretch: false
 ---
 
 ```{r course-style, include=FALSE}
@@ -46,7 +47,7 @@ regresión Poisson y modelos de conteo.
 ::: {.content-box-primary}
 **Hoy**
 
-sobre-dispersión y quasi-Poisson.
+sobre-dispersión, binomial negativa y exceso de ceros.
 :::
 
 ::: {.content-box-secondary}
@@ -78,13 +79,13 @@ bikedata <- Bikeshare %>% as_tibble()
 ###  Regresión Poisson y Quasi-Poisson
 
 ## Regresión Poisson
-```{r, warning=F, message=F}
+```{r, echo=TRUE, warning=F, message=F}
 poisson_1 <- glm(bikers ~ temp, family=poisson(link="log"), data=bikedata)
 poisson_2 <- glm(bikers ~ temp + hum, family=poisson(link="log"), data=bikedata)
 ```
 
-```{r, echo=F, warning=F, message=F}
-stargazer(poisson_1, poisson_2, type = "text", single.row = TRUE)
+```{r, echo=FALSE, warning=F, message=F}
+stargazer(poisson_1, poisson_2, type = "text", single.row = TRUE, digit.separator = "")
 ```
 
 ## Over-dispersion en regresión Poisson
@@ -99,7 +100,7 @@ stargazer(poisson_1, poisson_2, type = "text", single.row = TRUE)
 
 . . .
 
-- Esto puede resultar en una sub-estimación o sobre-estimación de la varianza de los datos. 
+- Esto puede resultar en una sub-estimación o sobre-estimación de la varianza de los datos.
   - Por lo general resulta en una subestimación de la varianza de los datos.
 
 . . .
@@ -107,17 +108,29 @@ stargazer(poisson_1, poisson_2, type = "text", single.row = TRUE)
 - Este caso se conoce como "over-dispersion". Los datos son más dispersos de lo esperado de acuerdo al modelo.
   - Over-dispersion no afecta la estimación de los coeficientes pero la inferencia demasiado "liberal": errores estándar
 
-## Over-dispersion en regresión Poisson
+## Detectando over-dispersion: residuos estandarizados
 
 . . .
 
-- Es posible detectar over-dispersion inspeccionando los residuos "estandarizados" de un modelo Poisson. Formalmente:
+Es posible detectar over-dispersion inspeccionando los residuos "estandarizados" de un modelo Poisson. Formalmente:
+
+::: {.content-box-yellow}
 $$z_{i} = \frac{y_{i} - \mu_{i}}{\sigma_{i}} = \frac{y_{i} - \mu_{i}}{\sqrt{\mu_{i}}} = \frac{y_{i} - e^{X_{i}\beta}}{\sqrt{e^{X_{i}\beta}}}$$
+:::
 
 . . .
 
-- Si los $y_{i}$'s distribuyen Poisson entonces $z_{i} \sim \mathcal{N}(0,1)$. Luego, la presencia de residuos grandes indican over-dispersion. La "suma de residuos al cuadrado" resume esta información:
+Si los $y_{i}$'s distribuyen Poisson entonces $z_{i} \sim \mathcal{N}(0,1)$. La presencia de residuos grandes indica over-dispersion.
+
+## Detectando over-dispersion: el factor de dispersión
+
+. . .
+
+La "suma de residuos al cuadrado" resume la información de los $z_i$:
+
+::: {.content-box-yellow}
 $$\text{ssr} = \sum^{n}_{i=1} z^{2}_{i}$$
+:::
 
 . . .
 
@@ -136,78 +149,177 @@ $$\text{ssr} = \sum^{n}_{i=1} z^{2}_{i}$$
 . . .
 
 En nuestro modelo Poisson más complejo:
-```{r, warning=F, message=F}
+```{r, echo=TRUE, warning=F, message=F}
 n = length(poisson_2$fitted.values); k = poisson_2$rank
 yhat <- predict(poisson_2, type="response")
 z <- (bikedata$bikers - yhat)/sqrt(yhat)
 rss = sum(z^2)
 ```
-```{r, echo=F,warning=F, message=F}
+```{r, echo=FALSE, warning=F, message=F}
 cat("rss = ", rss, " , rss esperado = ", n-k)
 ```
 
 . . .
 
 En este caso el factor de over-dispersion es:
-```{r}
+```{r, echo=TRUE}
 cat("factor de dispersión = ", rss/(n-k))
 ```
 
+Un factor de ~92 es enorme: los datos son casi cien veces más dispersos de lo que Poisson permite.
+
 ## Regresión Quasi-Poisson
-La regresión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferencia del modelo.
+
+La regresión quasi-Poisson incorpora explícitamente el factor de dispersión y corrige la inferencia del modelo, sin cambiar el modelo de la media.
 
 . . .
 
-$$y_{i} \sim \text{quasi-Poisson}(\mu_{i} = e^{X_{i}\beta}, \sigma= \sqrt{\omega \cdot  e^{X_{i}\beta}})$$
+::: {.content-box-yellow}
+$$y_{i} \sim \text{quasi-Poisson}\left(\mu_{i} = e^{X_{i}\beta}, \;\; \sigma_{i}= \sqrt{\omega \cdot  e^{X_{i}\beta}}\right)$$
+:::
 
-donde $\omega$ es el factor de dispersion.
-
-. . .
-
-  - Regresión Poisson es un caso especial de quasi-Poisson ( $\omega=1$ ).
+donde $\omega$ es el factor de dispersión.
 
 . . .
 
-Implementación en `R`:
-```{r, warning=F, message=F}
-qpoisson_2 <- glm(bikers ~ temp + hum, family=quasipoisson(link="log"), data=bikedata)
-```
-```{r,echo=F}
-summary(qpoisson_2)$coefficients
-cat("dispersion = ", summary(qpoisson_2)$dispersion)
-```
+- Regresión Poisson es un caso especial de quasi-Poisson ( $\omega=1$ ).
+- $\omega$ no afecta $\hat\beta$: solo re-escala los errores estándar por $\sqrt{\omega}$.
 
-## Quasi-Poisson
-```{r, warning=F, message=F}
+## Quasi-Poisson en `R`
+
+```{r, echo=TRUE, warning=F, message=F}
 qpoisson_2 <- glm(bikers ~ temp + hum, family=quasipoisson(link="log"), data=bikedata)
 ```
 
-```{r, echo=F}
-stargazer(poisson_2, qpoisson_2, type = "text", single.row = TRUE)
+. . .
+
+```{r, echo=FALSE, warning=F, message=F}
+stargazer(poisson_2, qpoisson_2, type = "text", single.row = TRUE,
+          column.labels = c("Poisson", "Quasi-Poisson"), model.names = FALSE,
+          omit.stat = c("ll", "n"), digit.separator = "")
 ```
+
+## Quasi-Poisson en `R`: el factor de dispersión
+
+```{r, echo=TRUE}
+cat("factor de dispersión estimado por quasipoisson: ", summary(qpoisson_2)$dispersion)
+```
+
+. . .
+
+Coincide con el que calculamos a mano ($\text{ssr}/(n-k) \approx 92$). Los coeficientes ($\hat\beta$) son idénticos entre Poisson y quasi-Poisson; lo único que cambia son los errores estándar (y, por tanto, los valores-p).
 
 ## Una alternativa: binomial negativa
 
-Quasi-Poisson **corrige los errores estándar** después de ajustar; no cambia el modelo de la media. Existe una alternativa que sí modela explícitamente el exceso de varianza: la **regresión binomial negativa**.
+Quasi-Poisson **corrige los errores estándar** después de ajustar; no cambia el modelo de la media. La **regresión binomial negativa** modela explícitamente el exceso de varianza.
+
+
+
+<br>
 
 . . .
 
-$$\text{Var}(y_i) = \mu_i + \frac{\mu_i^2}{\theta}$$
+¿Por qué esperaríamos exceso de varianza? `temp` y `hum` explican parte de la demanda, pero hay factores no observados (un evento en la ciudad, vacaciones, el ánimo colectivo de una tarde) que hacen que algunas horas sean sistemáticamente más — o menos — concurridas de lo que el modelo predice.
 
-- $\theta$: parámetro de dispersión estimado por el propio modelo (no solo un factor de corrección post-hoc).
+
+
+<br>
+
+. . .
+
+La binomial negativa formaliza esa idea: la tasa $\mu_i$ de cada observación no es fija, sino que varía aleatoriamente alrededor de $e^{X_i\beta}$ por esa heterogeneidad no observada:
+
+::: {.content-box-yellow}
+$$\mu_i \sim \text{Gamma}\left(\text{media}=e^{X_i\beta}, \; \theta\right), \qquad y_i \mid \mu_i \sim \text{Poisson}(\mu_i)$$
+:::
+
+. . .
+
+Al promediar sobre esa heterogeneidad, el resultado marginal es la binomial negativa: más varianza que Poisson porque ahora hay **dos** fuentes de aleatoriedad (la del conteo *y* la de la tasa misma), no una sola.
+
+## Binomial negativa: el modelo
+
+<br>
+
+Integrando la heterogeneidad no observada, el modelo marginal para $y_i$ queda especificado por dos ecuaciones — igual que Poisson, más un parámetro extra:
+
+::: {.content-box-yellow}
+$$\log(\mu_i) = X_{i}\beta$$
+$$\text{Var}(y_i) = \mu_i + \frac{\mu_i^2}{\theta}$$
+:::
+
+. . .
+
+<br>
+
+- El modelo de la **media** es idéntico al de Poisson (y al de quasi-Poisson).
+- $\theta$: parámetro de dispersión estimado por el propio modelo — no un factor de corrección post-hoc como en quasi-Poisson.
 - $\theta \to \infty$ recupera Poisson ($\text{Var}=\mu$); $\theta$ chico implica sobre-dispersión fuerte.
 
-```{r, warning=F, message=F}
+## Binomial negativa en `R`
+
+<br>
+
+```{r, echo=TRUE, warning=F, message=F}
 nb_2 <- glm.nb(bikers ~ temp + hum, data = bikedata)
-stargazer(qpoisson_2, nb_2, type = "text", single.row = TRUE,
-          column.labels = c("Quasi-Poisson", "Binomial Negativa"))
 ```
 
-Quasi-Poisson y binomial negativa suelen dar coeficientes similares; la binomial negativa además permite comparar el ajuste global (AIC, verosimilitud) entre modelos, algo que quasi-Poisson no ofrece por construcción.
+```{r, echo=FALSE, warning=F, message=F}
+stargazer(qpoisson_2, nb_2, type = "text", single.row = TRUE,
+          column.labels = c("Quasi-Poisson", "Binomial Negativa"), model.names = FALSE,
+          omit.stat = c("ll", "n"), digit.separator = "")
+```
+
+<br>
+
+Quasi-Poisson y binomial negativa dan coeficientes muy similares.
+
+## Binomial negativa: ¿cuánta sobre-dispersión hay?
+
+<br>
+
+```{r, echo=TRUE, warning=F, message=F}
+nb_2$theta      # estimador de theta
+nb_2$SE.theta   # error estándar de theta
+```
+
+<br>
+
+. . .
+
+$\hat\theta \approx 1.08$: muy lejos de $\theta \to \infty$ (Poisson), consistente con el factor de dispersión ($\approx 92$) que ya habíamos encontrado con los residuos estandarizados.
+
+
+## Binomial negativa: interpretando los coeficientes (IRR)
+
+<br>
+
+
+Como en Poisson, conviene exponenciar los coeficientes para obtener **razones de tasas de incidencia** (IRR, *incidence rate ratios*):
+
+```{r, echo=TRUE, warning=F, message=F}
+round(exp(cbind(IRR = coef(nb_2), confint(nb_2))), 3)
+```
+
+
+<br>
+
+. . .
+
+
+`temp` y `hum` están en escala normalizada $[0,1]$ en estos datos:
+
+- Ir de la temperatura mínima a la máxima **multiplica por ~10** el número esperado de arriendos, manteniendo humedad constante (IRR $\approx 10.1$, IC95% $[9.0, 11.2]$).
+- Ir de la humedad mínima a la máxima lo **divide por ~3.7** (IRR $\approx 0.27$, IC95% $[0.24, 0.30]$).
+
 
 ## Un problema distinto: exceso de ceros
 
+<br>
+
 Sobre-dispersión es un problema de **varianza** (más dispersión que la que Poisson permite). Existe un problema *distinto*, aunque relacionado: el **exceso de ceros** — más observaciones en cero de las que Poisson (o incluso binomial negativa) predicen.
+
+<br>
 
 . . .
 
@@ -218,11 +330,15 @@ Ocurre cuando el proceso generador de datos mezcla dos mecanismos:
 
 ## ¿Nos pasa esto con `bikers`?
 
+<br>
+
 Antes de aplicar cualquier corrección, conviene **mirar los datos**:
 
-```{r}
+```{r, echo=TRUE}
 mean(bikedata$bikers == 0)
 ```
+
+<br>
 
 . . .
 
@@ -230,17 +346,169 @@ Cero. En dos años de datos horarios, `bikers` nunca es exactamente 0 — siempr
 
 . . .
 
-El diagnóstico habría sido distinto con otro outcome: pensemos en "arriendos de bicicletas de carga" (un servicio de nicho, disponible solo en algunas estaciones). Ahí muchas horas en cero no reflejarían "poca demanda" sino "el servicio ni siquiera estaba disponible" — un mecanismo estructural mezclado con demanda genuina. Para ese tipo de outcome existen modelos **Zero-Inflated Poisson (ZIP)**, **Zero-Inflated Negative Binomial (ZINB)**, y modelos **Hurdle** (dos partes: ¿ocurre el evento?, y dado que ocurre, ¿cuánto?).
+El diagnóstico habría sido distinto con otro outcome, como "arriendos de bicicletas de carga" (servicio de nicho, no disponible en todas las estaciones).
 
-La lección no es "siempre agregar un modelo de ceros inflados": es **revisar `mean(y == 0)` antes de elegir el modelo**, igual como revisamos la dispersión antes de elegir entre Poisson y sus alternativas.
 
-## En resumen
+## Intuición: dos tipos de ceros
+
+<br>
+
+Pensemos en una encuesta que pregunta "¿cuántos cigarrillos fumaste hoy?". Un cero en esa respuesta puede venir de **dos procesos completamente distintos**:
+
+<br>
+
+. . .
+
+- la persona **nunca fuma** — un cero "estructural", no importa el día ni las circunstancias;
+- la persona **sí fuma, pero hoy no lo hizo** — un cero que es solo un resultado más de un proceso de conteo normal (como cualquier otro valor: 0, 1, 2, …).
+
+<br>
+
+. . .
+
+Un modelo Poisson (o binomial negativa) trata todos los ceros como si vinieran del mismo proceso. El **Zero-Inflated Poisson** separa explícitamente ambas fuentes: un sub-modelo (logit) decide quién pertenece al grupo "nunca", y un sub-modelo Poisson describe el conteo del resto.
+
+## Fumadores: una encuesta sobre cigarrillos
+
+```{r, echo=FALSE, warning=F, message=F}
+p_load("pscl")
+set.seed(123)
+n <- 2500
+amigos_fuman <- runif(n, 0, 1)
+
+p_fumador <- plogis(-1.5 + 4 * amigos_fuman)
+fumador <- rbinom(n, 1, p_fumador)
+
+mu <- exp(2.0 + 1.0 * amigos_fuman)
+cigarrillos <- ifelse(fumador == 1, rpois(n, mu), 0)
+
+encuesta <- tibble(amigos_fuman = amigos_fuman, cigarrillos = cigarrillos)
+```
+
+Una encuesta a 2.500 adultos preguntó cuántos cigarrillos fumaron en la última semana. Para cada persona también se registró `amigos_fuman`: la proporción de sus amigos cercanos que fuma (entre 0 y 1) — un proxy simple de exposición social al tabaco.
+
+. . .
+
+```{r, echo=TRUE, warning=F, message=F}
+mean(encuesta$cigarrillos)
+mean(encuesta$cigarrillos == 0)
+```
+
+. . .
+
+Un promedio de ~8 cigarrillos por semana — pero **41% de la muestra reportó cero**. ¿Es eso compatible con un único proceso Poisson de esa media?
+
+## Fumadores: ¿qué forma tiene la distribución?
+
+```{r, echo=TRUE, warning=F, message=F}
+max_k <- 25
+obs_tab <- encuesta %>%
+  count(cigarrillos, name = "n") %>%
+  right_join(tibble(cigarrillos = 0:max_k), by = "cigarrillos") %>%
+  mutate(n = replace_na(n, 0), prop_observada = n / nrow(encuesta))
+
+poisson_tab <- tibble(cigarrillos = 0:max_k,
+                       prop_poisson = dpois(cigarrillos, mean(encuesta$cigarrillos)))
+
+comparacion <- left_join(obs_tab, poisson_tab, by = "cigarrillos")
+```
+
+```{r, echo=FALSE, warning=F, message=F, fig.height=3.6, fig.width=9}
+ggplot(comparacion, aes(x = cigarrillos)) +
+  geom_col(aes(y = prop_observada), fill = course_palette[["primary"]], width = 0.8, alpha = 0.85) +
+  geom_line(aes(y = prop_poisson), color = course_palette[["secondary"]], linewidth = 1.1) +
+  geom_point(aes(y = prop_poisson), color = course_palette[["secondary"]], size = 1.6) +
+  labs(x = "cigarrillos fumados en la última semana", y = "proporción de encuestados")
+```
+
+Barras: datos observados. Línea: lo que predice un Poisson con la misma media. El Poisson predice casi cero observaciones en cero; en los datos, 41% de las respuestas son cero.
+
+## Fumadores: dos procesos distintos
+
+. . .
+
+El salto en cero no es casualidad. Lo más probable es que la muestra mezcle dos grupos:
+
+- personas que **no fuman** — para ellas, cero es el único resultado posible, siempre;
+- personas que **sí fuman** — para ellas, el conteo semanal varía por azar alrededor de su propio promedio (y ocasionalmente también puede dar cero: una semana sin cigarrillos no vuelve no-fumador a nadie).
+
+. . .
+
+Entre 5 y 20 cigarrillos la distribución sí se parece a un Poisson: ahí la línea roja queda cerca de las barras. El problema está solo en el exceso de ceros — eso es lo que el **Zero-Inflated Poisson** modela directamente.
+
+## Zero-Inflated Poisson (ZIP): el modelo
+
+<br>
+
+Con probabilidad $\pi_i$: la persona pertenece al grupo que **nunca** genera el evento (no-fumador). Con probabilidad $1-\pi_i$: proceso de conteo Poisson normal (que también puede dar 0 por azar).
+
+::: {.content-box-yellow}
+$$\mathbb{P}(Y_i=0) = \pi_i + (1-\pi_i)\, e^{-\mu_i}$$
+$$\mathbb{P}(Y_i=y) = (1-\pi_i)\,\frac{\mu_i^{y}\,e^{-\mu_i}}{y!}, \quad y=1,2,\dots$$
+:::
+
+<br>
+
+. . .
+
+El modelo tiene **dos** ecuaciones, cada una con sus propios predictores:
+
+- conteo: $\log(\mu_i) = X_{i}\beta$
+- "nunca lo hace": $\text{logit}(\pi_i) = Z_{i}\gamma$
+
+## Fumadores: ajustando el modelo ZIP
+
+```{r, echo=TRUE, warning=F, message=F}
+zip_fumadores <- zeroinfl(cigarrillos ~ amigos_fuman | amigos_fuman,
+                           data = encuesta, dist = "poisson")
+```
+
+```{r, echo=FALSE, warning=F, message=F}
+cat("--- Modelo de conteo (Poisson, log-link) ---\n")
+round(coef(summary(zip_fumadores))$count, 3)
+```
+```{r, echo=FALSE, warning=F, message=F}
+cat("--- Modelo de no-fumador (logit) ---\n")
+round(coef(summary(zip_fumadores))$zero, 3)
+```
+
+. . .
+
+- Conteo: tener solo amigos fumadores (vs. ninguno) multiplica por ~`r round(exp(coef(zip_fumadores, model="count")[2]), 1)` el consumo esperado **entre quienes sí fuman**.
+- No-fumador: la probabilidad de ser no-fumador cae de ~82% (sin amigos fumadores) a ~8% (todos los amigos fuman) — la exposición social predice sobre todo *quién fuma*, no solo *cuánto*.
+
+## Fumadores: ¿el modelo captura el salto en cero?
+
+```{r, echo=TRUE, warning=F, message=F}
+poisson_naive <- glm(cigarrillos ~ amigos_fuman, family = poisson(link = "log"), data = encuesta)
+
+p_obs     <- mean(encuesta$cigarrillos == 0)
+p_poisson <- mean(dpois(0, predict(poisson_naive, type = "response")))
+p_zip     <- mean(predict(zip_fumadores, type = "prob")[, 1])
+```
+
+```{r, echo=FALSE, warning=F, message=F}
+tibble(modelo = c("Observado", "Poisson (ingenuo)", "ZIP"),
+       prop_ceros = round(c(p_obs, p_poisson, p_zip), 3))
+```
+
+. . .
+
+El Poisson ingenuo predice que casi nadie reporta cero. El ZIP recupera el 41% observado casi exactamente, porque modela explícitamente la mezcla: no-fumadores + fumadores con un conteo Poisson propio. Para una respuesta con exceso de ceros real, existen también **Zero-Inflated Negative Binomial (ZINB)** y modelos **Hurdle** (dos partes: ¿ocurre el evento?, y dado que ocurre, ¿cuánto?).
+
+## En resum
 
 - Poisson asume $\operatorname{Var}(y_{i})=\mathbb{E}(y_{i})=\mu_{i}$; cuando los datos son más dispersos de lo esperado ("over-dispersion"), esto no sesga los coeficientes pero sí subestima los errores estándar.
+
+
 - El factor de dispersión se estima con los residuos estandarizados: $\text{ssr}/(n-k)$.
-- Quasi-Poisson corrige los errores estándar multiplicando por $\sqrt{\text{ssr}/(n-k)}$; la binomial negativa modela explícitamente el exceso de varianza mediante $\theta$.
-- Exceso de ceros es un problema *distinto* de la sobre-dispersión — conviene siempre revisar `mean(y==0)` antes de elegir el modelo.
-- La próxima clase: causalidad.
+
+
+- Quasi-Poisson corrige los errores estándar multiplicando por $\sqrt{\text{ssr}/(n-k)}$; la binomial negativa modela explícitamente el exceso de varianza ($\log\mu_i = X_i\beta$, $\text{Var}(y_i)=\mu_i+\mu_i^2/\theta$) y permite comparar ajuste (AIC) con Poisson.
+
+
+- Exceso de ceros es un problema *distinto* de la sobre-dispersión. El modelo **Zero-Inflated Poisson** mezcla un mecanismo de ceros estructurales (logit) con un proceso de conteo (Poisson) — como vimos con los cigarrillos: separa a los no-fumadores de los fumadores con semanas bajas, y recupera casi exactamente la proporción de ceros observada.
+
 
 ## Gracias {.inverse .center .middle .closing}
 
