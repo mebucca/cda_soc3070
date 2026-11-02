@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-28">
+  <meta name="dcterms.date" content="2026-11-02">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -100,7 +100,7 @@
     code span.wa { color: #ff5555; } /* Warning */
   </style>
   <link rel="stylesheet" href="class_13_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
-  <link rel="stylesheet" href="../_shared/course.css">
+  <link rel="stylesheet" href="_shared/course.css">
   <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
   <script>document.addEventListener("DOMContentLoaded", function () {
  var mathElements = document.getElementsByClassName("math");
@@ -225,7 +225,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-28</p>
+  <p class="date">2026-11-02</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -249,434 +249,736 @@ Mauricio Bucca · Sociología UC
 <h1>Causalidad</h1>
 
 </section>
-<section id="las-preguntas-causales-comparan-mundos" class="slide level2">
-<h2>Las preguntas causales comparan mundos</h2>
-<p>Las ciencias sociales están llenas de preguntas aparentemente sencillas:</p>
-<div class="fragment">
+<section id="causas-y-efectos" class="slide level2">
+<h2>Causas y efectos</h2>
+<p><br></p>
+<p>Las ciencias, en un sentido amplio, están motivadas por preguntas <em>aparentemente</em> sencillas, del tipo:</p>
+<p><br></p>
 <ul>
-<li>¿Una política de transporte cambia el uso de bicicletas?</li>
-<li>¿Un día despejado hace que más personas arrienden una bicicleta?</li>
-<li>¿Trabajar desde casa reduce los viajes en hora punta?</li>
+<li><p>¿Cuán eficaz es un determinado tratamiento para prevenir una enfermedad?</p></li>
+<li><p>¿Las ventas aumentaron debido a la nueva ley o a la campaña publicitaria?</p></li>
+<li><p>Al momento de contratar, ¿discriminan los empleadores en base al género de los/las postulantes?</p></li>
+<li><p>etc.</p></li>
+</ul>
+<p><br></p>
+<div class="fragment">
+<p>Factor común: relaciones <span class="bold">causa-efecto</span>.</p>
+</div>
+</section>
+<section id="mundos-paralelos-i-la-hipótesis-causal" class="slide level2">
+<h2>Mundos paralelos (I): la hipótesis causal</h2>
+<div class="pull-left">
+<p><img data-src="https://m.media-amazon.com/images/M/MV5BNmZhYmQ4YTYtYTEyMy00YzE1LTk0YTUtNjgyMDU5YzMwNzIyXkEyXkFqcGc@._V1_.jpg"></p>
+</div>
+<div class="pull-right">
+<p><br></p>
+<p><span class="bold">Hipótesis causal:</span></p>
+<p><em>“Fumar causa cáncer”</em></p>
+<p><br></p>
+<p><span class="bold">Pregunta contrafactual:</span></p>
+<ul>
+<li><p>“Si fumo, ¿desarrollaré cáncer?” y</p></li>
+<li><p>“Si no fumo, ¿evitaré el cáncer?”</p></li>
 </ul>
 </div>
-<div class="fragment">
-<p>Todas preguntan qué <strong>cambiaría</strong> en un resultado si interviniéramos sobre una causa.</p>
+</section>
+<section id="mundos-paralelos-ii-el-resultado-de-pedro" class="slide level2">
+<h2>Mundos paralelos (II): el resultado de Pedro</h2>
+<div class="pull-left">
+<p><img data-src="https://m.media-amazon.com/images/M/MV5BNmZhYmQ4YTYtYTEyMy00YzE1LTk0YTUtNjgyMDU5YzMwNzIyXkEyXkFqcGc@._V1_.jpg"></p>
+</div>
+<div class="pull-right">
+<p><br></p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 21%">
+<col style="width: 38%">
+<col style="width: 40%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: center;">Si Fumara</th>
+<th style="text-align: center;">Si No Fumara</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Pedro</td>
+<td style="text-align: center;">Desarrolla cáncer</td>
+<td style="text-align: center;">Desarrolla cáncer</td>
+</tr>
+</tbody>
+</table>
 </div>
 </section>
-<section id="nuestro-caso-clima-despejado-y-demanda" class="slide level2">
-<h2>Nuestro caso: clima despejado y demanda</h2>
-<p>Vamos a estudiar una hipótesis concreta:</p>
-<blockquote>
-<p>Un cielo despejado aumenta la probabilidad de demanda alta.</p>
-</blockquote>
-<p>Definimos un predictor binario:</p>
-<p><span class="math display">
-D_i =
-\begin{cases}
-1 &amp; \text{si el clima de la hora } i \text{ está despejado}\\
-0 &amp; \text{si hay nubes, lluvia o nieve}
-\end{cases}
-</span></p>
-<p>El resultado también es binario:</p>
-<p><span class="math display">
-Y_i =
-\begin{cases}
-1 &amp; \text{si la hora tiene demanda alta}\\
-0 &amp; \text{si la hora no tiene demanda alta}
-\end{cases}
-</span></p>
-<p><code>high_demand = 1</code> identifica las horas sobre el percentil 75 de <code>bikers</code>.</p>
+<section id="mundos-paralelos-iii-el-problema-del-multiverso" class="slide level2">
+<h2>Mundos paralelos (III): el problema del multiverso</h2>
+<p><br></p>
+<div class="pull-left">
+<p><img data-src="https://static01.nyt.com/images/2008/10/07/business/07adco_450.jpg?quality=75&amp;auto=webp&amp;disable=upscale"></p>
+</div>
+<div class="pull-right">
+<p>Problema: no tenemos acceso al “multiverso”!</p>
+<p><img data-src="https://theblogofsolis.wordpress.com/wp-content/uploads/2018/01/luckystrikead_1050x700.jpg?w=640"></p>
+<p>Ejemplo: “Pedro fuma”</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 21%">
+<col style="width: 38%">
+<col style="width: 40%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: center;">si Fumara</th>
+<th style="text-align: center;">si No Fumara</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Pedro</td>
+<td style="text-align: center;">Desarrolla cáncer</td>
+<td style="text-align: center;"></td>
+</tr>
+</tbody>
+</table>
+</div>
 </section>
-<section id="primero-vemos-una-asociación" class="slide level2">
-<h2>Primero vemos una asociación</h2>
+<section id="el-mundo-observado-i-concomitancia-de-eventos" class="slide level2">
+<h2>El mundo observado (I): concomitancia de eventos</h2>
+<div class="pull-left">
+<p><img data-src="https://static01.nyt.com/images/2008/10/07/business/07adco_450.jpg?quality=75&amp;auto=webp&amp;disable=upscale"></p>
+</div>
+<div class="pull-right">
+<p><br></p>
+<p>Concomitancia de eventos:</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: center;">Fumador</th>
+<th style="text-align: center;">Cáncer</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Pedro</td>
+<td style="text-align: center;">Sí</td>
+<td style="text-align: center;">Sí</td>
+</tr>
+<tr class="even">
+<td>Juan</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">No</td>
+</tr>
+<tr class="odd">
+<td>Diego</td>
+<td style="text-align: center;">Sí</td>
+<td style="text-align: center;">Sí</td>
+</tr>
+<tr class="even">
+<td>Fulano</td>
+<td style="text-align: center;">Sí</td>
+<td style="text-align: center;">No</td>
+</tr>
+<tr class="odd">
+<td>Menguano</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">No</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>2 de 3 fumadores desarrolla cancer</li>
+<li>0 de 2 no fumadores desarrolla cancer</li>
+</ul>
+</div>
+</section>
+<section id="el-mundo-observado-ii-otra-forma-de-verlo" class="slide level2">
+<h2>El mundo observado (II): otra forma de verlo</h2>
+<div class="pull-left">
+<p><img data-src="https://static01.nyt.com/images/2008/10/07/business/07adco_450.jpg?quality=75&amp;auto=webp&amp;disable=upscale"></p>
+</div>
+<div class="pull-right">
+<p><br></p>
+<p>Otra forma de verlo:</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 38%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: center;">si Fumara</th>
+<th style="text-align: center;">si No Fumara</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Pedro</td>
+<td style="text-align: center;">Desarrolla cáncer</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="even">
+<td>Juan</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">No desarrolla cáncer</td>
+</tr>
+<tr class="odd">
+<td>Diego</td>
+<td style="text-align: center;">Desarrolla cáncer</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="even">
+<td>Fulano</td>
+<td style="text-align: center;">No desarrolla cáncer</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="odd">
+<td>Menguano</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">No desarrolla cáncer</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="de-asociación-a-causalidad" class="slide level2">
+<h2>De Asociación a causalidad</h2>
+<div class="pull-left">
+<p><img data-src="https://www.neoteo.com/wp-content/uploads/2024/06/logo-33-758x707.jpg"></p>
+</div>
+<div class="pull-right">
+<p><br></p>
+<p>Para pasar de asociación a causalidad necesitariamos tener acceso a los mundos paralelos que no vemos:</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 38%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: center;">si Fumara</th>
+<th style="text-align: center;">si No Fumara</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Pedro</td>
+<td style="text-align: center;">Desarrolla cáncer</td>
+<td style="text-align: center;"><span class="bold">(Desarrolla cáncer)</span></td>
+</tr>
+<tr class="even">
+<td>Juan</td>
+<td style="text-align: center;"><span class="bold">(No desarrolla cáncer)</span></td>
+<td style="text-align: center;">No desarrolla cáncer</td>
+</tr>
+<tr class="odd">
+<td>Diego</td>
+<td style="text-align: center;">Desarrolla cáncer</td>
+<td style="text-align: center;"><span class="bold">(Desarrolla cáncer)</span></td>
+</tr>
+<tr class="even">
+<td>Fulano</td>
+<td style="text-align: center;">No desarrolla cáncer</td>
+<td style="text-align: center;"><span class="bold">(No desarrolla cáncer)</span></td>
+</tr>
+<tr class="odd">
+<td>Menguano</td>
+<td style="text-align: center;"><span class="bold">(No desarrolla cáncer)</span></td>
+<td style="text-align: center;">No desarrolla cáncer</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="asociación-neq-causalidad" class="slide level2">
+<h2>Asociación <span class="math inline">\neq</span> Causalidad</h2>
+<div class="pull-left">
+<p><strong>Mundo observado:</strong></p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 38%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: center;">si Fumara</th>
+<th style="text-align: center;">si No Fumara</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Pedro</td>
+<td style="text-align: center;">Desarrolla cáncer</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="even">
+<td>Juan</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">No desarrolla cáncer</td>
+</tr>
+<tr class="odd">
+<td>Diego</td>
+<td style="text-align: center;">Desarrolla cáncer</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="even">
+<td>Fulano</td>
+<td style="text-align: center;">No desarrolla cáncer</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="odd">
+<td>Menguano</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">No desarrolla cáncer</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math display">\mathbb{P}(\text{cancer} \mid \text{fumar} ) = 2/3 &gt; \mathbb{P}(\text{cancer} \mid \text{no fumar}) = 0 </span> <br></p>
+<p>Conclusión #1: <span class="bold">“Fumar y desarrollar cancer están asociados estadísticamente”</span></p>
+</div>
+<div class="fragment">
+<div class="pull-right">
+<p><strong>Mundos paralelos:</strong></p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 38%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: center;">si Fumara</th>
+<th style="text-align: center;">si No Fumara</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Pedro</td>
+<td style="text-align: center;">Desarrolla cáncer</td>
+<td style="text-align: center;"><span class="bold">(Desarrolla cáncer)</span></td>
+</tr>
+<tr class="even">
+<td>Juan</td>
+<td style="text-align: center;"><span class="bold">(No desarrolla cáncer)</span></td>
+<td style="text-align: center;">No desarrolla cáncer</td>
+</tr>
+<tr class="odd">
+<td>Diego</td>
+<td style="text-align: center;">Desarrolla cáncer</td>
+<td style="text-align: center;"><span class="bold">(Desarrolla cáncer)</span></td>
+</tr>
+<tr class="even">
+<td>Fulano</td>
+<td style="text-align: center;">No desarrolla cáncer</td>
+<td style="text-align: center;"><span class="bold">(No desarrolla cáncer)</span></td>
+</tr>
+<tr class="odd">
+<td>Menguano</td>
+<td style="text-align: center;"><span class="bold">(No desarrolla cáncer)</span></td>
+<td style="text-align: center;">No desarrolla cáncer</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">\mathbb{P}(\text{cancer} \mid \text{do(fumar)} ) =  \mathbb{P}(\text{cancer} \mid \text{do(no fumar)}) = 2/5</span></p>
+<p><br></p>
+<p>Conclusión #2: <span class="bold">“Fumar no causa el desarrollo de cancer”</span></p>
+</div>
+</div>
+</section>
+<section id="el-docdot-operator-de-judea-pearl" class="slide level2">
+<h2>El <span class="math inline">do(\cdot)</span>-operator de Judea Pearl</h2>
+<p><br></p>
+<p>Todo lo que vimos con Pedro, Juan, Diego, Fulano y Menguano tiene nombre formal. El operador <span class="math inline">do(\cdot)</span> de Pearl describe qué pasaría si <strong>interviniéramos</strong> sobre <span class="math inline">D</span>, en vez de solo observarlo. Para cada persona <span class="math inline">i</span>:</p>
+<p><br> <span class="math display">
+Y_i \mid do(D{=}1): \text{desarrolla cáncer o no, si fumara}
+\qquad\qquad
+Y_i \mid do(D{=}0): \text{desarrolla cáncer o no, si no fumara}
+</span></p>
+<div class="fragment">
+<p><br></p>
+<p>El efecto causal individual es la diferencia entre ambas intervenciones: exactamente las columnas “si Fumara” / “si No Fumara” de las tablas de Pedro.</p>
+</div>
+<div class="fragment">
+<p>Como nunca observamos ambas intervenciones sobre la misma persona, apuntamos al efecto promedio del tratamiento:</p>
+<p><span class="math display">
+\text{ATE} = \mathbb{E}[Y\mid do(D{=}1)] - \mathbb{E}[Y\mid do(D{=}0)]
+</span></p>
+<p><br></p>
+</div>
+<div class="fragment">
+<p>Pero lo que los datos entregan es otra cosa: <span class="math inline">\mathbb{E}[Y\mid D=1] - \mathbb{E}[Y\mid D=0]</span>, la asociación de Pedro y sus amigos. Condicionar (<span class="math inline">\cdot  \mid D=1</span>) no es lo mismo que intervenir (<span class="math inline">\cdot \mid do(D{=}1)</span>).</p>
+</div>
+</section>
+<section id="el-problema-de-fondo" class="slide level2">
+<h2>El problema de fondo</h2>
+<p>La diferencia entre asociación y causalidad es fundamental y va más allá de los métodos estadísticos utilizados. Consideraciones clave:</p>
+<p><br></p>
+<ul>
+<li><p><span class="bold">NO es un problema de estimación</span>: no se resuelve con técnicas estadísticas más complejas.</p></li>
+<li><p><span class="bold">NO es un problema de incertidumbre estadística</span>: no se soluciona con muestras más grandes.</p></li>
+<li><p><span class="bold">ES un desafío inherente a la forma en que la realidad se manifiesta</span>, y solo puede abordarse adecuadamente mediante un <em>diseño de investigación apropiado</em>, como:</p>
+<ul>
+<li>Experimentos de laboratorio, experimentos naturales, estrategias de inferencia causal, entre otros.</li>
+</ul></li>
+</ul>
+</section></section>
+<section>
+<section id="estrategias-de-identificación" class="title-slide slide level1 inverse center middle" data-background-color="#F0B323">
+<h1>Estrategias de identificación</h1>
 
-<img data-src="class_13_files/figure-revealjs/observed-association-1.png" width="960" class="r-stretch"><p>Las horas despejadas tienen mayor probabilidad de demanda alta. Eso es un hecho descriptivo; todavía no es una conclusión causal.</p>
 </section>
-<section id="la-diferencia-observada" class="slide level2">
-<h2>La diferencia observada</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2 × 3
-  weather_label horas prob_demanda_alta
-  &lt;fct&gt;         &lt;int&gt;             &lt;dbl&gt;
-1 Otro clima     3000             0.189
-2 Despejado      5645             0.282</code></pre>
-</div>
-</div>
-<p>La diferencia observada es de 9,3 puntos porcentuales.</p>
+<section id="dos-caminos-hacia-el-mismo-objetivo" class="slide level2">
+<h2>Dos caminos hacia el mismo objetivo</h2>
+<p><br></p>
+<p><span class="math inline">\mathbb{E}[Y\mid do(D{=}d)]</span> y <span class="math inline">\mathbb{E}[Y\mid D{=}d]</span> coinciden solo si <span class="math inline">D</span> no depende de nada más que de su propio azar.</p>
+<p><br></p>
 <div class="fragment">
-<p><strong>Pregunta:</strong> ¿cuánto de esa diferencia se debe al clima y cuánto a que las horas despejadas son distintas en otros aspectos?</p>
+<p>Si algo más afecta <span class="math inline">D</span> -y ese algo también afecta <span class="math inline">Y</span>-, condicionar en <span class="math inline">D</span> ya no equivale a intervenir sobre <span class="math inline">D</span>.</p>
+<p><br></p>
+</div>
+<div class="fragment">
+<p>Dos caminos para igualarlos:</p>
+<ol type="1">
+<li><p><span class="bold">Diseñar <span class="math inline">D</span></span>: que no dependa de nada. Aleatorización (RCT).</p></li>
+<li><p><span class="bold">Medir lo que afecta <span class="math inline">D</span></span> y ajustar por ello. Backdoor criterion.</p></li>
+</ol>
+<p><br></p>
+</div>
+<div class="fragment">
+<p>Para comparar ambos caminos con la misma vara, simulamos un mundo donde fijamos de antemano el efecto causal, <span class="math inline">\tau</span>.</p>
 </div>
 </section>
-<section id="el-coeficiente-del-logit-resume-la-asociación" class="slide level2">
-<h2>El coeficiente del logit resume la asociación</h2>
-<p>Ajustamos:</p>
-<p><span class="math display">
-\operatorname{logit}\{\Pr(Y_i=1\mid D_i)\}
-=\beta_0+\beta_1D_i.
-</span></p>
+<section id="el-proceso-generador-de-datos" class="slide level2">
+<h2>El proceso generador de datos</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href=""></a>logit_crudo <span class="ot">&lt;-</span> <span class="fu">glm</span>(</span>
-<span id="cb2-2"><a href=""></a>  high_demand <span class="sc">~</span> clear_weather,</span>
-<span id="cb2-3"><a href=""></a>  <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>),</span>
-<span id="cb2-4"><a href=""></a>  <span class="at">data =</span> bikedata</span>
-<span id="cb2-5"><a href=""></a>)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href=""></a><span class="fu">set.seed</span>(<span class="dv">13</span>)</span>
+<span id="cb1-2"><a href=""></a>n <span class="ot">&lt;-</span> <span class="dv">2000</span></span>
+<span id="cb1-3"><a href=""></a>tau_verdadero <span class="ot">&lt;-</span> <span class="fu">log</span>(<span class="dv">2</span>) <span class="co"># efecto causal de D sobre Y, en log-odds; lo fijamos nosotros</span></span>
+<span id="cb1-4"><a href=""></a></span>
+<span id="cb1-5"><a href=""></a>X <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, n, <span class="at">replace =</span> <span class="cn">TRUE</span>, <span class="at">prob =</span> <span class="fu">c</span>(<span class="fl">0.3</span>, <span class="fl">0.4</span>, <span class="fl">0.3</span>)) <span class="co"># edad: joven/media/vieja; la medimos</span></span>
+<span id="cb1-6"><a href=""></a></span>
+<span id="cb1-7"><a href=""></a>D <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n, <span class="dv">1</span>, <span class="fu">plogis</span>(<span class="sc">-</span><span class="fl">1.5</span> <span class="sc">+</span> <span class="fl">1.5</span> <span class="sc">*</span> (X <span class="sc">-</span> <span class="dv">2</span>))) <span class="co"># X afecta a D</span></span>
+<span id="cb1-8"><a href=""></a>Y <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n, <span class="dv">1</span>, <span class="fu">plogis</span>(<span class="sc">-</span><span class="dv">3</span> <span class="sc">+</span> tau_verdadero <span class="sc">*</span> D <span class="sc">+</span> <span class="dv">1</span> <span class="sc">*</span> (X <span class="sc">-</span> <span class="dv">2</span>))) <span class="co"># X también afecta a Y</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Ahora <span class="math inline">D</span> y <span class="math inline">Y</span> tienen un mecanismo concreto: <span class="math inline">X</span> (edad) afecta a ambas. Por eso condicionar en <span class="math inline">D</span> no identifica el efecto de intervenir sobre <span class="math inline">D</span>.</p>
+</section>
+<section id="flechas-que-entran-a-d" class="slide level2">
+<h2>Flechas que entran a <span class="math inline">D</span></h2>
+<div class="pull-left">
+<p>Mundo observacional: <span class="math inline">X</span> es un backdoor path hacia <span class="math inline">D</span>.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_13_files/figure-revealjs/dag-confound-1.png" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div class="pull-right">
+<p>Mundo aleatorizado: se corta la flecha <span class="math inline">X\to D</span>.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_13_files/figure-revealjs/dag-rct-1.png" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="por-qué-aleatorizar-funciona" class="slide level2">
+<h2>Por qué aleatorizar funciona</h2>
+<p>En general, <span class="math inline">\mathbb{E}[Y\mid do(D{=}d)] \neq \mathbb{E}[Y\mid D{=}d]</span>: condicionar en <span class="math inline">D</span> arrastra también a <span class="math inline">X</span>, a través de las flechas que entran a <span class="math inline">D</span>.</p>
+<div class="fragment">
+<p>Aleatorizar hace, físicamente, lo que el operador <span class="math inline">do(\cdot)</span> hace en el papel: corta toda flecha que entra a <span class="math inline">D</span>. Sin flechas entrantes, ya no hay backdoor path que bloquear:</p>
+<p><span class="math display">\mathbb{E}[Y\mid D{=}d] = \mathbb{E}[Y\mid do(D{=}d)]</span></p>
+</div>
+<div class="fragment">
+<p>La comparación simple entre grupos ya identifica el efecto causal, sin ajustar por nada.</p>
+</div>
+</section>
+<section id="un-experimento-aleatorizado" class="slide level2">
+<h2>Un experimento aleatorizado</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href=""></a><span class="fu">set.seed</span>(<span class="dv">13</span>)</span>
+<span id="cb2-2"><a href=""></a></span>
+<span id="cb2-3"><a href=""></a><span class="co"># 1. muestra: n personas, cada una con su edad</span></span>
+<span id="cb2-4"><a href=""></a>n <span class="ot">&lt;-</span> <span class="dv">2000</span></span>
+<span id="cb2-5"><a href=""></a>X <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, n, <span class="at">replace =</span> <span class="cn">TRUE</span>, <span class="at">prob =</span> <span class="fu">c</span>(<span class="fl">0.3</span>, <span class="fl">0.4</span>, <span class="fl">0.3</span>))</span>
 <span id="cb2-6"><a href=""></a></span>
-<span id="cb2-7"><a href=""></a><span class="fu">coef</span>(logit_crudo)[[<span class="st">"clear_weather"</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-7"><a href=""></a><span class="co"># 2. asigna: se sortea D al azar, sin mirar X</span></span>
+<span id="cb2-8"><a href=""></a>D <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">rep</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">1</span>, <span class="at">each =</span> n <span class="sc">/</span> <span class="dv">2</span>))</span>
+<span id="cb2-9"><a href=""></a></span>
+<span id="cb2-10"><a href=""></a><span class="co"># 3. estima: se observa Y y se compara entre los dos grupos</span></span>
+<span id="cb2-11"><a href=""></a>Y <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n, <span class="dv">1</span>, <span class="fu">plogis</span>(<span class="sc">-</span><span class="dv">3</span> <span class="sc">+</span> tau_verdadero <span class="sc">*</span> D <span class="sc">+</span> <span class="dv">1</span> <span class="sc">*</span> (X <span class="sc">-</span> <span class="dv">2</span>)))</span>
+<span id="cb2-12"><a href=""></a>logit_rct <span class="ot">&lt;-</span> <span class="fu">glm</span>(Y <span class="sc">~</span> D, <span class="at">family =</span> binomial)</span>
+<span id="cb2-13"><a href=""></a><span class="fu">coef</span>(logit_rct)[[<span class="st">"D"</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.522</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a><span class="fu">exp</span>(<span class="fu">coef</span>(logit_crudo)[[<span class="st">"clear_weather"</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 1.686</code></pre>
+<pre><code>[1] 0.862</code></pre>
 </div>
 </div>
-<p>En estos datos, <span class="math inline">\hat\beta_1=0,522</span> y <span class="math inline">e^{\hat\beta_1}=1,69</span>.</p>
-<div class="fragment">
-<p>Las <em>odds</em> de demanda alta son aproximadamente 69% mayores bajo clima despejado. Por ahora, esta es una <strong>asociación</strong>.</p>
-</div>
+<p><span class="math inline">\hat\beta_D=0,862</span>, cerca de <span class="math inline">\tau=0,693</span>. Con 2.000 personas, y sin ajustar por <span class="math inline">X</span>. Lo único que cambió frente al mundo observacional es la línea de <span class="math inline">D</span>: en vez de depender de <span class="math inline">X</span>, se sortea.</p>
 </section>
-<section id="predicciones-del-logit" class="slide level2">
-<h2>Predicciones del logit</h2>
-
-<img data-src="class_13_files/figure-revealjs/logit-predictions-1.png" width="960" class="r-stretch"><p>Con un único predictor binario, el logit produce dos probabilidades predichas: una para <span class="math inline">D=0</span> y otra para <span class="math inline">D=1</span>.</p>
-</section></section>
-<section>
-<section id="mundos-paralelos" class="title-slide slide level1 inverse center middle" data-background-color="#F0B323">
-<h1>Mundos paralelos</h1>
-
-</section>
-<section id="dos-resultados-potenciales-para-cada-hora" class="slide level2">
-<h2>Dos resultados potenciales para cada hora</h2>
-<p>Para cada hora <span class="math inline">i</span> imaginamos dos resultados:</p>
-<p><span class="math display">
-Y_i(1): \text{demanda alta o no si esa hora estuviera despejada}
-</span></p>
-<p><span class="math display">
-Y_i(0): \text{demanda alta o no si esa misma hora tuviera otro clima}
-</span></p>
-<p>El efecto causal individual es:</p>
-<p><span class="math display">\tau_i = Y_i(1)-Y_i(0)\in\{-1,0,1\}.</span></p>
-<p>Esta comparación mantiene fija la unidad y cambia solo el tratamiento.</p>
-</section>
-<section id="en-el-multiverso-veríamos-ambas-columnas" class="slide level2">
-<h2>En el multiverso veríamos ambas columnas</h2>
-<table class="caption-top">
-<thead>
-<tr class="header">
-<th>Hora</th>
-<th style="text-align: right;"><span class="math inline">Y_i(1)</span>: despejado</th>
-<th style="text-align: right;"><span class="math inline">Y_i(0)</span>: otro clima</th>
-<th style="text-align: right;">Efecto</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Lunes, 08:00</td>
-<td style="text-align: right;">Alta (1)</td>
-<td style="text-align: right;">No alta (0)</td>
-<td style="text-align: right;">+1</td>
-</tr>
-<tr class="even">
-<td>Martes, 14:00</td>
-<td style="text-align: right;">No alta (0)</td>
-<td style="text-align: right;">No alta (0)</td>
-<td style="text-align: right;">0</td>
-</tr>
-<tr class="odd">
-<td>Viernes, 18:00</td>
-<td style="text-align: right;">Alta (1)</td>
-<td style="text-align: right;">Alta (1)</td>
-<td style="text-align: right;">0</td>
-</tr>
-<tr class="even">
-<td>Domingo, 11:00</td>
-<td style="text-align: right;">No alta (0)</td>
-<td style="text-align: right;">Alta (1)</td>
-<td style="text-align: right;">−1</td>
-</tr>
-</tbody>
-</table>
-<p>Si pudiéramos observar ambas columnas, calcular el efecto causal sería trivial.</p>
-<div class="fragment">
-<p>Pero estos valores son una <strong>ilustración</strong>: en los datos reales nunca vemos las dos columnas para la misma hora.</p>
-</div>
-</section>
-<section id="en-el-mundo-observado-falta-un-contrafactual" class="slide level2">
-<h2>En el mundo observado falta un contrafactual</h2>
-<table class="caption-top">
-<thead>
-<tr class="header">
-<th>Hora</th>
-<th>Clima observado</th>
-<th style="text-align: right;"><span class="math inline">Y_i(1)</span></th>
-<th style="text-align: right;"><span class="math inline">Y_i(0)</span></th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Lunes, 08:00</td>
-<td>despejado</td>
-<td style="text-align: right;">Alta (1)</td>
-<td style="text-align: right;"><strong>?</strong></td>
-</tr>
-<tr class="even">
-<td>Martes, 14:00</td>
-<td>otro clima</td>
-<td style="text-align: right;"><strong>?</strong></td>
-<td style="text-align: right;">No alta (0)</td>
-</tr>
-<tr class="odd">
-<td>Viernes, 18:00</td>
-<td>despejado</td>
-<td style="text-align: right;">Alta (1)</td>
-<td style="text-align: right;"><strong>?</strong></td>
-</tr>
-<tr class="even">
-<td>Domingo, 11:00</td>
-<td>otro clima</td>
-<td style="text-align: right;"><strong>?</strong></td>
-<td style="text-align: right;">Alta (1)</td>
-</tr>
-</tbody>
-</table>
-<p>Para cada unidad observamos:</p>
-<p><span class="math display">Y_i = D_iY_i(1)+(1-D_i)Y_i(0).</span></p>
-<p>El otro resultado potencial es contrafactual. Este es el <strong>problema fundamental de la inferencia causal</strong>.</p>
-</section>
-<section id="del-efecto-individual-al-efecto-promedio" class="slide level2">
-<h2>Del efecto individual al efecto promedio</h2>
-<p>Como no observamos <span class="math inline">\tau_i</span> para ninguna hora, apuntamos al <strong>efecto promedio del tratamiento</strong>:</p>
-<p><span class="math display">
-\text{ATE}=\mathbb{E}[Y_i(1)-Y_i(0)]
-=\mathbb{E}[Y_i(1)]-\mathbb{E}[Y_i(0)].
-</span></p>
-<div class="fragment">
-<p>En cambio, los datos entregan la diferencia entre dos grupos de horas:</p>
-<p><span class="math display">
-\mathbb{E}[Y_i\mid D_i=1]-\mathbb{E}[Y_i\mid D_i=0].
-</span></p>
-<p>Una comparación es entre <strong>mundos posibles para las mismas unidades</strong>; la otra es entre <strong>unidades diferentes en el mundo observado</strong>.</p>
-<p>Como <span class="math inline">Y</span> es binario, ambas expresiones son diferencias de probabilidades. El ATE es un efecto causal promedio medido en puntos porcentuales.</p>
-</div>
-</section>
-<section id="asociación-no-es-causalidad" class="slide level2">
-<h2>Asociación no es causalidad</h2>
-<div class="pull-left">
-<p><strong>Asociación observada</strong></p>
-<p><span class="math display">
-\mathbb{E}[Y\mid D=1]-
-\mathbb{E}[Y\mid D=0]
-</span></p>
-<p>Compara horas despejadas con horas no despejadas.</p>
-</div>
-<div class="pull-right">
-<p><strong>Efecto causal</strong></p>
-<p><span class="math display">
-\mathbb{E}[Y(1)-Y(0)]
-</span></p>
-<p>Compara cada hora consigo misma bajo dos climas posibles.</p>
-</div>
-<div class="fragment">
-<p>La asociación identifica el efecto causal solo bajo supuestos adicionales.</p>
-</div>
-</section></section>
-<section>
-<section id="por-qué-pueden-diferir" class="title-slide slide level1 inverse center middle" data-background-color="#F0B323">
-<h1>¿Por qué pueden diferir?</h1>
-
-</section>
-<section id="el-mes-cambia-el-clima-y-también-la-demanda" class="slide level2">
-<h2>El mes cambia el clima y también la demanda</h2>
-
-<img data-src="class_13_files/figure-revealjs/clear-by-month-1.png" width="960" class="r-stretch"><p>Los meses no tienen la misma probabilidad de estar despejados. Además, estación, vacaciones y horas de luz afectan la probabilidad de demanda alta.</p>
-</section>
-<section id="confusión-una-causa-común-abre-un-camino-alternativo" class="slide level2">
-<h2>Confusión: una causa común abre un camino alternativo</h2>
-
-<img data-src="class_13_files/figure-revealjs/dag-confound-1.png" width="960" class="r-stretch"><p>El camino <span class="math inline">D \leftarrow X \rightarrow Y</span> mezcla el efecto del clima con diferencias estacionales.</p>
-</section>
-<section id="ajustar-por-el-confusor-cambia-el-coeficiente" class="slide level2">
-<h2>Ajustar por el confusor cambia el coeficiente</h2>
+<section id="fue-suerte" class="slide level2">
+<h2>¿Fue suerte?</h2>
+<p>Repetimos el estudio aleatorizado 300 veces, cada vez con 600 personas nuevas, y lo comparamos con repetir el estudio observacional:</p>
 <div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2 × 3
-  modelo                 beta_clima odds_ratio
-  &lt;chr&gt;                       &lt;dbl&gt;      &lt;dbl&gt;
-1 Logit crudo                 0.522       1.690
-2 Logit ajustado por mes      0.443       1.560</code></pre>
-</div>
-</div>
-<p>El coeficiente cambia al comparar horas dentro del mismo mes: parte de la asociación cruda reflejaba composición estacional.</p>
-<div class="fragment">
-<p>Esto <strong>no prueba</strong> que el coeficiente ajustado sea causal. Solo elimina la confusión explicada por <code>month</code> bajo la forma funcional elegida.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a>n_rep <span class="ot">&lt;-</span> <span class="dv">600</span></span>
+<span id="cb4-2"><a href=""></a>reps  <span class="ot">&lt;-</span> <span class="dv">300</span></span>
+<span id="cb4-3"><a href=""></a></span>
+<span id="cb4-4"><a href=""></a>beta_crudo <span class="ot">&lt;-</span> <span class="fu">replicate</span>(reps, {</span>
+<span id="cb4-5"><a href=""></a>  X <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, n_rep, <span class="at">replace =</span> <span class="cn">TRUE</span>, <span class="at">prob =</span> <span class="fu">c</span>(<span class="fl">0.3</span>, <span class="fl">0.4</span>, <span class="fl">0.3</span>)) <span class="co"># muestra</span></span>
+<span id="cb4-6"><a href=""></a>  D <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n_rep, <span class="dv">1</span>, <span class="fu">plogis</span>(<span class="sc">-</span><span class="fl">1.5</span> <span class="sc">+</span> <span class="fl">1.5</span> <span class="sc">*</span> (X <span class="sc">-</span> <span class="dv">2</span>)))              <span class="co"># D depende de X</span></span>
+<span id="cb4-7"><a href=""></a>  Y <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n_rep, <span class="dv">1</span>, <span class="fu">plogis</span>(<span class="sc">-</span><span class="dv">3</span> <span class="sc">+</span> tau_verdadero <span class="sc">*</span> D <span class="sc">+</span> <span class="dv">1</span> <span class="sc">*</span> (X <span class="sc">-</span> <span class="dv">2</span>)))</span>
+<span id="cb4-8"><a href=""></a>  <span class="fu">coef</span>(<span class="fu">glm</span>(Y <span class="sc">~</span> D, <span class="at">family =</span> binomial))[[<span class="st">"D"</span>]]</span>
+<span id="cb4-9"><a href=""></a>})</span>
+<span id="cb4-10"><a href=""></a></span>
+<span id="cb4-11"><a href=""></a>beta_rct <span class="ot">&lt;-</span> <span class="fu">replicate</span>(reps, {</span>
+<span id="cb4-12"><a href=""></a>  X <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, n_rep, <span class="at">replace =</span> <span class="cn">TRUE</span>, <span class="at">prob =</span> <span class="fu">c</span>(<span class="fl">0.3</span>, <span class="fl">0.4</span>, <span class="fl">0.3</span>)) <span class="co"># muestra</span></span>
+<span id="cb4-13"><a href=""></a>  D <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">rep</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">1</span>, <span class="at">each =</span> n_rep <span class="sc">/</span> <span class="dv">2</span>))                          <span class="co"># asigna</span></span>
+<span id="cb4-14"><a href=""></a>  Y <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n_rep, <span class="dv">1</span>, <span class="fu">plogis</span>(<span class="sc">-</span><span class="dv">3</span> <span class="sc">+</span> tau_verdadero <span class="sc">*</span> D <span class="sc">+</span> <span class="dv">1</span> <span class="sc">*</span> (X <span class="sc">-</span> <span class="dv">2</span>)))</span>
+<span id="cb4-15"><a href=""></a>  <span class="fu">coef</span>(<span class="fu">glm</span>(Y <span class="sc">~</span> D, <span class="at">family =</span> binomial))[[<span class="st">"D"</span>]]                       <span class="co"># estima</span></span>
+<span id="cb4-16"><a href=""></a>})</span>
+<span id="cb4-17"><a href=""></a></span>
+<span id="cb4-18"><a href=""></a>dist_rct <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb4-19"><a href=""></a>  <span class="at">estrategia =</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">"Crudo (observacional)"</span>, <span class="st">"Aleatorizado (RCT)"</span>), <span class="at">each =</span> reps),</span>
+<span id="cb4-20"><a href=""></a>  <span class="at">beta =</span> <span class="fu">c</span>(beta_crudo, beta_rct)</span>
+<span id="cb4-21"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="el-mismo-coeficiente-admite-dos-lecturas" class="slide level2">
-<h2>El mismo coeficiente admite dos lecturas</h2>
+<section id="fue-suerte-ii" class="slide level2">
+<h2>¿Fue suerte? (II)</h2>
+
+<img data-src="class_13_files/figure-revealjs/rct-replicaciones-plot-1.png" width="960" class="r-stretch"><p>La línea punteada es <span class="math inline">\tau</span>. El diseño aleatorizado centra la distribución de <span class="math inline">\hat\beta_D</span> en <span class="math inline">\tau</span>; el observacional no, por más réplicas que corramos.</p>
+</section>
+<section id="no-siempre-podemos-aleatorizar" class="slide level2">
+<h2>No siempre podemos aleatorizar</h2>
+<p>No podemos asignar aleatoriamente el tabaquismo a personas: sería inviable y profundamente antiético. Esta es la norma, no la excepción, en ciencias sociales y en salud pública.</p>
+</section>
+<section id="por-qué-pueden-diferir-i-asociación-espuria" class="slide level2">
+<h2>¿Por qué pueden diferir? (I): asociación espuria</h2>
+<ul>
+<li><p>Hay varias razones por las cuales puede pasar que asociación y causalidad no coincidan.</p></li>
+<li><p>Un caso paradigmático es cuando existe asociación espuria.</p></li>
+</ul>
 <div class="pull-left">
-<p><strong>Lectura asociacional</strong></p>
-<p><span class="math display">
-\beta_1=
-\log\frac{\operatorname{odds}(Y=1\mid D=1,X)}
-{\operatorname{odds}(Y=1\mid D=0,X)}
-</span></p>
-<p>Describe una comparación condicional en los datos observados.</p>
+<p><img data-src="espurio.png"> Edad actúa como un <span class="bold">“confounder”</span></p>
+</div>
+<div class="fragment">
+<div class="pull-right">
+<p><br></p>
+<p>Mundos paralelos:</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 13%">
+<col style="width: 10%">
+<col style="width: 36%">
+<col style="width: 39%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Nombre</th>
+<th style="text-align: center;">Edad</th>
+<th style="text-align: center;">si Fumara</th>
+<th style="text-align: center;">si No Fumara</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Pedro</td>
+<td style="text-align: center;">Viejo</td>
+<td style="text-align: center;">Desarrolla cáncer</td>
+<td style="text-align: center;"><span class="bold">Desarrolla cáncer</span></td>
+</tr>
+<tr class="even">
+<td>Juan</td>
+<td style="text-align: center;">Jóven</td>
+<td style="text-align: center;"><span class="bold">No desarrolla cáncer</span></td>
+<td style="text-align: center;">No desarrolla cáncer</td>
+</tr>
+<tr class="odd">
+<td>Diego</td>
+<td style="text-align: center;">Viejo</td>
+<td style="text-align: center;">Desarrolla cáncer</td>
+<td style="text-align: center;"><span class="bold">Desarrolla cáncer</span></td>
+</tr>
+<tr class="even">
+<td>Fulano</td>
+<td style="text-align: center;">Jóven</td>
+<td style="text-align: center;">No desarrolla cáncer</td>
+<td style="text-align: center;"><span class="bold">No desarrolla cáncer</span></td>
+</tr>
+<tr class="odd">
+<td>Menguano</td>
+<td style="text-align: center;">Jóven</td>
+<td style="text-align: center;"><span class="bold">No desarrolla cáncer</span></td>
+<td style="text-align: center;">No desarrolla cáncer</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="por-qué-pueden-diferir-ii-el-mundo-observado-con-confusión" class="slide level2">
+<h2>¿Por qué pueden diferir? (II): el mundo observado con confusión</h2>
+<div class="pull-left">
+<p><img data-src="espurio.png"> Edad actúa como un <span class="bold">“confounder”</span></p>
 </div>
 <div class="pull-right">
-<p><strong>Lectura causal</strong></p>
-<p><span class="math display">
-\beta_1=
-\log\frac{\operatorname{odds}\{Y(1)=1\mid X\}}
-{\operatorname{odds}\{Y(0)=1\mid X\}}
-</span></p>
-<p>Compara resultados potenciales bajo dos intervenciones.</p>
-</div>
-<div class="fragment">
-<p>La segunda lectura necesita diseño y supuestos causales. La ecuación logística, por sí sola, solo garantiza la primera.</p>
-</div>
-</section>
-<section id="la-causalidad-no-está-en-la-complejidad" class="slide level2">
-<h2>La causalidad no está en la complejidad</h2>
-<p>El mismo logit puede ser:</p>
-<ul>
-<li><strong>asociacional</strong>, si el tratamiento está confundido;</li>
-<li><strong>causal</strong>, si el diseño hace creíble la comparación contrafactual.</li>
-</ul>
-<div class="fragment">
-<p>Un modelo más complejo puede ajustar mejor la asociación, pero no fabrica el contrafactual faltante.</p>
-</div>
-<div class="fragment">
-<p>Una muestra más grande reduce el error estándar:</p>
-<p><span class="math display">
-n\uparrow \quad\Longrightarrow\quad SE(\hat\beta_1)\downarrow
-</span></p>
-<p>pero no elimina el sesgo por confusión. Podemos estimar una asociación no causal con enorme precisión.</p>
-</div>
-</section>
-<section id="el-supuesto-decisivo-no-viene-de-la-regresión" class="slide level2">
-<h2>El supuesto decisivo no viene de la regresión</h2>
-<p>La <strong>intercambiabilidad condicional</strong> o no-confusión exige:</p>
-<p><span class="math display">
-\{Y_i(1),Y_i(0)\}\perp D_i\mid X_i.
-</span></p>
-<p>En palabras: dentro de grupos con igual <span class="math inline">X</span>, recibir <span class="math inline">D=1</span> o <span class="math inline">D=0</span> es “como si” fuera aleatorio respecto de los resultados potenciales.</p>
-<div class="fragment">
-<p>Este supuesto:</p>
-<ul>
-<li>no se demuestra con un <span class="math inline">p</span>-value;</li>
-<li>no aparece automáticamente al aumentar <span class="math inline">n</span>;</li>
-<li>requiere teoría, conocimiento del proceso y un buen diseño.</li>
-</ul>
-</div>
-</section>
-<section id="también-necesitamos-comparaciones-posibles" class="slide level2">
-<h2>También necesitamos comparaciones posibles</h2>
-<p>Para cada combinación de confusores debe existir alguna posibilidad de observar ambos tratamientos:</p>
-<p><span class="math display">
-0&lt;\Pr(D_i=1\mid X_i=x)&lt;1.
-</span></p>
-<p>Este supuesto se llama <strong>positividad</strong> u <strong>overlap</strong>.</p>
-<div class="fragment">
-<p>Si en cierto mes nunca hubiera horas despejadas, los datos no permitirían estimar qué ocurriría bajo clima despejado para ese mes: el contrafactual requeriría extrapolación.</p>
+<p><br></p>
+<p>Mundos observados:</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Nombre</th>
+<th>Edad</th>
+<th style="text-align: center;">Fumador</th>
+<th style="text-align: center;">Cáncer</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Pedro</td>
+<td>Viejo</td>
+<td style="text-align: center;">Sí</td>
+<td style="text-align: center;">Sí</td>
+</tr>
+<tr class="even">
+<td>Juan</td>
+<td>Jóven</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">No</td>
+</tr>
+<tr class="odd">
+<td>Diego</td>
+<td>Viejo</td>
+<td style="text-align: center;">Sí</td>
+<td style="text-align: center;">Sí</td>
+</tr>
+<tr class="even">
+<td>Fulano</td>
+<td>Joven</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">No</td>
+</tr>
+<tr class="odd">
+<td>Menguano</td>
+<td>Joven</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">No</td>
+</tr>
+</tbody>
+</table>
 </div>
 </section>
-<section id="consistencia-el-tratamiento-debe-estar-bien-definido" class="slide level2">
-<h2>Consistencia: el tratamiento debe estar bien definido</h2>
-<p>La <strong>consistencia</strong> conecta el resultado observado con el potencial:</p>
-<p><span class="math display">
-D_i=d \quad\Longrightarrow\quad Y_i=Y_i(d).
-</span></p>
-<p>Pero “otro clima” mezcla nubes, lluvia y nieve. ¿Son realmente la misma intervención?</p>
+<section id="el-backdoor-criterion" class="slide level2">
+<h2>El backdoor criterion</h2>
+<div class="pull-left">
+<p><span class="math inline">\mathbb{E}[Y\mid do(D{=}d)]</span> no se lee directo de los datos: hay que decidir qué ajustar.</p>
+<p><br></p>
+<p>El <strong>backdoor criterion</strong>: <span class="math inline">X</span> alcanza si no es descendiente de <span class="math inline">D</span>, y bloquea todo camino entre <span class="math inline">D</span> y <span class="math inline">Y</span> que entra a <span class="math inline">D</span> por una flecha.</p>
+<p><br></p>
 <div class="fragment">
-<p>Cuanto más heterogénea sea la definición de <span class="math inline">D=0</span>, más difícil es interpretar un único efecto. Definir con precisión el tratamiento es parte del análisis causal.</p>
+<p>Cuando lo cumple, promediar la asociación condicional dentro de cada valor de <span class="math inline">X</span>, ponderando por cuán común es cada uno, identifica el efecto de intervenir:</p>
+<p><span class="math display">
+\mathbb{E}[Y\mid do(D{=}d)] = \sum_x \mathbb{E}[Y\mid D{=}d, X{=}x]\,\mathbb{P}(X{=}x)
+</span></p>
 </div>
-</section></section>
-<section>
-<section id="el-dag-guía-los-controles" class="title-slide slide level1 inverse center middle" data-background-color="#F0B323">
-<h1>El DAG guía los controles</h1>
+</div>
+<div class="pull-right">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_13_files/figure-revealjs/dag-backdoor-1.png" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Ajustar por <span class="math inline">X</span> bloquea el backdoor path <span class="math inline">D \leftarrow X \to Y</span>.</p>
+</div>
+</section>
+<section id="el-backdoor-criterion-en-la-simulación" class="slide level2">
+<h2>El backdoor criterion en la simulación</h2>
+<p><span class="math inline">X</span> es el único backdoor path hacia <span class="math inline">D</span> en nuestro mundo simulado. Ajustar por <span class="math inline">X</span> debería alcanzar:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href=""></a>n_rep <span class="ot">&lt;-</span> <span class="dv">600</span></span>
+<span id="cb5-2"><a href=""></a>reps  <span class="ot">&lt;-</span> <span class="dv">300</span></span>
+<span id="cb5-3"><a href=""></a></span>
+<span id="cb5-4"><a href=""></a>resultados <span class="ot">&lt;-</span> <span class="fu">replicate</span>(reps, {</span>
+<span id="cb5-5"><a href=""></a>  X <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, n_rep, <span class="at">replace =</span> <span class="cn">TRUE</span>, <span class="at">prob =</span> <span class="fu">c</span>(<span class="fl">0.3</span>, <span class="fl">0.4</span>, <span class="fl">0.3</span>))</span>
+<span id="cb5-6"><a href=""></a>  D <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n_rep, <span class="dv">1</span>, <span class="fu">plogis</span>(<span class="sc">-</span><span class="fl">1.5</span> <span class="sc">+</span> <span class="fl">1.5</span> <span class="sc">*</span> (X <span class="sc">-</span> <span class="dv">2</span>)))</span>
+<span id="cb5-7"><a href=""></a>  Y <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n_rep, <span class="dv">1</span>, <span class="fu">plogis</span>(<span class="sc">-</span><span class="dv">3</span> <span class="sc">+</span> tau_verdadero <span class="sc">*</span> D <span class="sc">+</span> <span class="dv">1</span> <span class="sc">*</span> (X <span class="sc">-</span> <span class="dv">2</span>)))</span>
+<span id="cb5-8"><a href=""></a></span>
+<span id="cb5-9"><a href=""></a>  crudo    <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">glm</span>(Y <span class="sc">~</span> D,     <span class="at">family =</span> binomial))[[<span class="st">"D"</span>]]</span>
+<span id="cb5-10"><a href=""></a>  ajustado <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">glm</span>(Y <span class="sc">~</span> D <span class="sc">+</span> X, <span class="at">family =</span> binomial))[[<span class="st">"D"</span>]]</span>
+<span id="cb5-11"><a href=""></a>  <span class="fu">c</span>(<span class="at">crudo =</span> crudo, <span class="at">ajustado =</span> ajustado)</span>
+<span id="cb5-12"><a href=""></a>})</span>
+<span id="cb5-13"><a href=""></a></span>
+<span id="cb5-14"><a href=""></a>dist_backdoor <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb5-15"><a href=""></a>  <span class="at">estimador =</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">"Crudo"</span>, <span class="st">"Ajustado por X"</span>), <span class="at">each =</span> reps),</span>
+<span id="cb5-16"><a href=""></a>  <span class="at">beta =</span> <span class="fu">c</span>(resultados[<span class="st">"crudo"</span>, ], resultados[<span class="st">"ajustado"</span>, ])</span>
+<span id="cb5-17"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="el-backdoor-criterion-en-la-simulación-ii" class="slide level2">
+<h2>El backdoor criterion en la simulación (II)</h2>
 
+<img data-src="class_13_files/figure-revealjs/backdoor-demo-plot-1.png" width="960" class="r-stretch"><p>La línea punteada es <span class="math inline">\tau</span>. Ajustar por <span class="math inline">X</span>, el único backdoor path en este mundo, centra <span class="math inline">\hat\beta_D</span> en <span class="math inline">\tau</span>. El crudo, no.</p>
 </section>
-<section id="no-todas-las-covariables-son-confusores" class="slide level2">
-<h2>No todas las covariables son confusores</h2>
-<ul>
-<li><strong>Confusor:</strong> causa tanto <span class="math inline">D</span> como <span class="math inline">Y</span>. Controlarlo puede bloquear una asociación espuria.</li>
-<li><strong>Mediador:</strong> está en el camino <span class="math inline">D\rightarrow M\rightarrow Y</span>. Controlarlo elimina parte del efecto total.</li>
-<li><strong>Colisionador:</strong> recibe flechas <span class="math inline">D\rightarrow C\leftarrow Y</span>. Controlarlo puede crear una asociación espuria.</li>
-</ul>
-<div class="fragment">
-<p>El DAG representa supuestos sustantivos; no se “descubre” mirando significancia estadística.</p>
+<section id="el-backdoor-criterion-no-siempre-alcanza" class="slide level2">
+<h2>El backdoor criterion no siempre alcanza</h2>
+<p>El criterio no es magia: hay que elegir bien qué ajustar. Dos formas típicas de fallar:</p>
+<div class="pull-left">
+<p><strong>Un confusor no observado</strong></p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_13_files/figure-revealjs/dag-no-observado-1.png" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><span class="math inline">U</span> existe, pero no está en los datos: no hay forma de ajustar por él. El backdoor path queda abierto.</p>
+</div>
+<div class="pull-right">
+<p><strong>Ajustar por la variable equivocada</strong></p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="class_13_files/figure-revealjs/dag-collider-1.png" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><span class="math inline">C</span> es un <em>collider</em>: efecto común de <span class="math inline">D</span> e <span class="math inline">Y</span>, no su causa. Ajustar por él abre un camino espurio en vez de cerrarlo.</p>
 </div>
 </section>
-<section id="más-controles-no-garantizan-causalidad" class="slide level2">
-<h2>Más controles no garantizan causalidad</h2>
-<p>Agregar variables a una regresión ayuda solo si esas variables cumplen el rol causal correcto.</p>
-<div class="fragment">
-<ul>
-<li>Omitir un confusor deja abierto un camino no causal.</li>
-<li>Incluir un mediador cambia el estimando: pasamos del efecto total a un efecto directo.</li>
-<li>Incluir un colisionador puede introducir sesgo.</li>
-<li>Ajustar por una variable medida después del tratamiento suele ser especialmente riesgoso.</li>
-</ul>
-</div>
-<div class="fragment">
-<p>La lista de controles se decide con un argumento causal <strong>antes</strong> de mirar qué especificación entrega el coeficiente preferido.</p>
+<section id="el-mensaje-de-esta-clase" class="slide level2">
+<h2>El mensaje de esta clase</h2>
+<p><br> <br></p>
+<div class="content-box-primary">
+<p><strong>La causalidad no es un problema de inferencia. Es un problema de diseño: cómo se asignó <span class="math inline">D</span>.</strong></p>
 </div>
 </section>
-<section id="diseño-antes-que-sofisticación" class="slide level2">
-<h2>Diseño antes que sofisticación</h2>
-<p>La diferencia entre asociación y causalidad:</p>
-<ul>
-<li><strong>no</strong> es principalmente un problema de estimación;</li>
-<li><strong>no</strong> desaparece con una muestra más grande;</li>
-<li><strong>sí</strong> depende de cómo se asigna el tratamiento y cómo se construye la comparación.</li>
-</ul>
-<div class="fragment">
-<p>Experimentos aleatorizados, experimentos naturales y diseños cuasi-experimentales buscan hacer creíble la comparación contrafactual.</p>
-</div>
-</section>
-<section id="cómo-leer-los-coeficientes-desde-ahora" class="slide level2">
-<h2>Cómo leer los coeficientes desde ahora</h2>
-<p>Sin supuestos causales, el coeficiente de un logit describe una asociación condicional:</p>
-<blockquote>
-<p>Entre observaciones con iguales covariables, ¿cómo cambian las log-odds de <span class="math inline">Y=1</span> cuando cambia <span class="math inline">D</span>?</p>
-</blockquote>
-<div class="fragment">
-<p>Ese mismo coeficiente <strong>puede</strong> interpretarse como un efecto causal condicional si además:</p>
-<ol type="1">
-<li>definimos tratamiento, outcome, población y estimando;</li>
-<li>explicitamos un DAG;</li>
-<li>justificamos no-confusión, positividad y consistencia;</li>
-<li>evitamos controles que abran sesgos nuevos.</li>
-</ol>
-</div>
-</section>
-<section id="ejercicio-construya-el-argumento-causal" class="slide level2">
-<h2>Ejercicio: construya el argumento causal</h2>
-<p>Suponga que queremos estimar el efecto de <code>workingday</code> sobre la probabilidad de <code>high_demand</code>.</p>
-<ol type="1">
-<li>Defina <span class="math inline">Y_i(1)</span> y <span class="math inline">Y_i(0)</span> y precise cuál es la unidad <span class="math inline">i</span>.</li>
-<li>Dibuje un DAG con al menos un confusor plausible.</li>
-<li>Identifique una variable que <strong>no</strong> debería controlarse y explique su rol.</li>
-<li>Proponga un diseño que haga más creíble la comparación causal.</li>
-<li>Evalúe dónde podría fallar la positividad.</li>
-</ol>
-</section>
-<section id="en-resumen" class="slide level2">
-<h2>En resumen</h2>
-<ul>
-<li>Causalidad compara resultados potenciales de la misma unidad.</li>
-<li>Solo observamos uno: el otro es contrafactual.</li>
-<li>Un coeficiente logístico es asociacional por defecto; puede ser causal bajo un diseño y supuestos adecuados.</li>
-<li>Los confusores crean caminos alternativos entre tratamiento y resultado.</li>
-<li>Más datos reducen incertidumbre, pero no eliminan confusión.</li>
-<li>La causalidad depende del diseño, no de la complejidad del modelo.</li>
-</ul>
-</section>
-<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#8E1B3D">
-<h2>Gracias</h2>
-<p><strong>Hasta la próxima clase</strong></p>
-<p>Mauricio Bucca</p>
+<section id="hasta-la-próxima-clase.-gracias" class="slide level2 inverse center middle closing" data-background-color="#8E1B3D">
+<h2>Hasta la próxima clase. Gracias!</h2>
+<p><br> Mauricio Bucca <br> https://mebucca.github.io/ <br> github.com/mebucca</p>
 
 </section></section>
     </div>
