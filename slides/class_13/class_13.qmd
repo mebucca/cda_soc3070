@@ -23,7 +23,8 @@ execute:
 
 ```{r course-style, include=FALSE}
 library(pacman)
-p_load(tidyverse)
+p_load(tidyverse, splines)
+options(scipen = 999)
 
 # Encuentra `_shared/bikeshare.R` sin depender del working directory.
 source(local({
@@ -36,36 +37,7 @@ source(local({
   if (!length(hits)) stop("No se encontró _shared/bikeshare.R desde ", getwd())
   normalizePath(hits[[1]])
 }))
-course <- use_course_data("roma")
-course_palette <- course$palette
-
-bikedata <- course$data %>%
-  mutate(
-    month = as.integer(mnth),
-    clear_weather = as.integer(weathersit == "clear"),
-    weather_label = factor(
-      clear_weather,
-      levels = c(0, 1),
-      labels = c("Otro clima", "Despejado")
-    ),
-    demand_label = factor(
-      high_demand,
-      levels = c(0, 1),
-      labels = c("Demanda no alta", "Demanda alta")
-    )
-  )
-
-logit_crudo <- glm(
-  high_demand ~ clear_weather,
-  family = binomial(link = "logit"),
-  data = bikedata
-)
-
-logit_mes <- glm(
-  high_demand ~ clear_weather + factor(month),
-  family = binomial(link = "logit"),
-  data = bikedata
-)
+course_palette <- use_course_style("roma")
 ```
 
 ## Antes · Hoy · Después {.class-rhythm}
@@ -94,522 +66,617 @@ predicción, overfitting y validación cruzada.
 
 # Causalidad {.inverse .center .middle}
 
-## Las preguntas causales comparan mundos
+## Causas y efectos
 
-Las ciencias sociales están llenas de preguntas aparentemente sencillas:
+<br>
 
-. . .
+Las ciencias, en un sentido amplio, están motivadas por preguntas *aparentemente* sencillas, del tipo:
 
-- ¿Una política de transporte cambia el uso de bicicletas?
-- ¿Un día despejado hace que más personas arrienden una bicicleta?
-- ¿Trabajar desde casa reduce los viajes en hora punta?
+<br>
 
-. . .
+  - ¿Cuán eficaz es un determinado tratamiento para prevenir una enfermedad?
 
-Todas preguntan qué **cambiaría** en un resultado si interviniéramos sobre una causa.
+  - ¿Las ventas aumentaron debido a la nueva ley o a la campaña publicitaria?
 
-## Nuestro caso: clima despejado y demanda
+  - Al momento de contratar, ¿discriminan los empleadores en base al género de los/las postulantes?
 
-Vamos a estudiar una hipótesis concreta:
+  - etc.
 
-> Un cielo despejado aumenta la probabilidad de demanda alta.
-
-Definimos un predictor binario:
-
-$$
-D_i =
-\begin{cases}
-1 & \text{si el clima de la hora } i \text{ está despejado}\\
-0 & \text{si hay nubes, lluvia o nieve}
-\end{cases}
-$$
-
-El resultado también es binario:
-
-$$
-Y_i =
-\begin{cases}
-1 & \text{si la hora tiene demanda alta}\\
-0 & \text{si la hora no tiene demanda alta}
-\end{cases}
-$$
-
-`high_demand = 1` identifica las horas sobre el percentil 75 de `bikers`.
-
-## Primero vemos una asociación
-
-```{r observed-association, echo=FALSE, fig.height=4.5}
-bikedata %>%
-  group_by(weather_label) %>%
-  summarise(prop_high = mean(high_demand), .groups = "drop") %>%
-  ggplot(aes(weather_label, prop_high, fill = weather_label)) +
-  geom_col(width = 0.58) +
-  geom_text(
-    aes(label = scales::percent(prop_high, accuracy = 0.1)),
-    vjust = -0.45, size = 5
-  ) +
-  scale_fill_course(guide = "none") +
-  scale_y_continuous(
-    labels = scales::percent_format(accuracy = 1),
-    limits = c(0, 0.34)
-  ) +
-  labs(x = NULL, y = "Probabilidad observada de demanda alta")
-```
-
-Las horas despejadas tienen mayor probabilidad de demanda alta. Eso es un hecho descriptivo; todavía no es una conclusión causal.
-
-## La diferencia observada
-
-```{r observed-means, echo=FALSE}
-observed_means <- bikedata %>%
-  group_by(weather_label) %>%
-  summarise(
-    horas = n(),
-    prob_demanda_alta = mean(high_demand),
-    .groups = "drop"
-  )
-
-observed_means
-```
-
-```{r observed-difference, echo=FALSE}
-raw_difference <- with(
-  bikedata,
-  mean(high_demand[clear_weather == 1]) -
-    mean(high_demand[clear_weather == 0])
-)
-```
-
-La diferencia observada es de `r sub("\\.", ",", formatC(100 * raw_difference, format = "f", digits = 1))` puntos porcentuales.
+<br>
 
 . . .
 
-**Pregunta:** ¿cuánto de esa diferencia se debe al clima y cuánto a que las horas despejadas son distintas en otros aspectos?
+Factor común: relaciones [causa-efecto]{.bold}.
 
-## El coeficiente del logit resume la asociación
-
-Ajustamos:
-
-$$
-\operatorname{logit}\{\Pr(Y_i=1\mid D_i)\}
-=\beta_0+\beta_1D_i.
-$$
-
-```{r crude-logit, echo=TRUE}
-logit_crudo <- glm(
-  high_demand ~ clear_weather,
-  family = binomial(link = "logit"),
-  data = bikedata
-)
-
-coef(logit_crudo)[["clear_weather"]]
-exp(coef(logit_crudo)[["clear_weather"]])
-```
-
-En estos datos, $\hat\beta_1=`r sub("\\.", ",", formatC(coef(logit_crudo)[["clear_weather"]], format = "f", digits = 3))`$ y $e^{\hat\beta_1}=`r sub("\\.", ",", formatC(exp(coef(logit_crudo)[["clear_weather"]]), format = "f", digits = 2))`$.
-
-. . .
-
-Las *odds* de demanda alta son aproximadamente `r formatC(100 * (exp(coef(logit_crudo)[["clear_weather"]]) - 1), format = "f", digits = 0)`% mayores bajo clima despejado. Por ahora, esta es una **asociación**.
-
-## Predicciones del logit
-
-```{r logit-predictions, echo=FALSE, fig.height=4.6}
-prediction_data <- tibble(
-  clear_weather = c(0, 1),
-  weather_label = factor(
-    c(0, 1),
-    levels = c(0, 1),
-    labels = c("Otro clima", "Despejado")
-  )
-)
-
-pred_link <- predict(
-  logit_crudo,
-  newdata = prediction_data,
-  type = "link",
-  se.fit = TRUE
-)
-
-prediction_data <- prediction_data %>%
-  mutate(
-    probability = plogis(pred_link$fit),
-    lower = plogis(pred_link$fit - 1.96 * pred_link$se.fit),
-    upper = plogis(pred_link$fit + 1.96 * pred_link$se.fit)
-  )
-
-ggplot(
-  prediction_data,
-  aes(weather_label, probability, group = 1, color = weather_label)
-) +
-  geom_line(linewidth = 1, color = course_palette[["secondary"]]) +
-  geom_pointrange(
-    aes(ymin = lower, ymax = upper),
-    linewidth = 1, size = 1.2
-  ) +
-  scale_color_course(guide = "none") +
-  scale_y_continuous(
-    labels = scales::percent_format(accuracy = 1),
-    limits = c(0.15, 0.31)
-  ) +
-  labs(x = NULL, y = "Probabilidad predicha de demanda alta")
-```
-
-Con un único predictor binario, el logit produce dos probabilidades predichas: una para $D=0$ y otra para $D=1$.
-
-# Mundos paralelos {.inverse .center .middle}
-
-## Dos resultados potenciales para cada hora
-
-Para cada hora $i$ imaginamos dos resultados:
-
-$$
-Y_i(1): \text{demanda alta o no si esa hora estuviera despejada}
-$$
-
-$$
-Y_i(0): \text{demanda alta o no si esa misma hora tuviera otro clima}
-$$
-
-El efecto causal individual es:
-
-$$\tau_i = Y_i(1)-Y_i(0)\in\{-1,0,1\}.$$
-
-Esta comparación mantiene fija la unidad y cambia solo el tratamiento.
-
-## En el multiverso veríamos ambas columnas
-
-| Hora | $Y_i(1)$: despejado | $Y_i(0)$: otro clima | Efecto |
-|---|---:|---:|---:|
-| Lunes, 08:00 | Alta (1) | No alta (0) | +1 |
-| Martes, 14:00 | No alta (0) | No alta (0) | 0 |
-| Viernes, 18:00 | Alta (1) | Alta (1) | 0 |
-| Domingo, 11:00 | No alta (0) | Alta (1) | −1 |
-
-Si pudiéramos observar ambas columnas, calcular el efecto causal sería trivial.
-
-. . .
-
-Pero estos valores son una **ilustración**: en los datos reales nunca vemos las dos columnas para la misma hora.
-
-## En el mundo observado falta un contrafactual
-
-| Hora | Clima observado | $Y_i(1)$ | $Y_i(0)$ |
-|---|---|---:|---:|
-| Lunes, 08:00 | despejado | Alta (1) | **?** |
-| Martes, 14:00 | otro clima | **?** | No alta (0) |
-| Viernes, 18:00 | despejado | Alta (1) | **?** |
-| Domingo, 11:00 | otro clima | **?** | Alta (1) |
-
-Para cada unidad observamos:
-
-$$Y_i = D_iY_i(1)+(1-D_i)Y_i(0).$$
-
-El otro resultado potencial es contrafactual. Este es el **problema fundamental de la inferencia causal**.
-
-## Del efecto individual al efecto promedio
-
-Como no observamos $\tau_i$ para ninguna hora, apuntamos al **efecto promedio del tratamiento**:
-
-$$
-\text{ATE}=\mathbb{E}[Y_i(1)-Y_i(0)]
-=\mathbb{E}[Y_i(1)]-\mathbb{E}[Y_i(0)].
-$$
-
-. . .
-
-En cambio, los datos entregan la diferencia entre dos grupos de horas:
-
-$$
-\mathbb{E}[Y_i\mid D_i=1]-\mathbb{E}[Y_i\mid D_i=0].
-$$
-
-Una comparación es entre **mundos posibles para las mismas unidades**; la otra es entre **unidades diferentes en el mundo observado**.
-
-Como $Y$ es binario, ambas expresiones son diferencias de probabilidades. El ATE es un efecto causal promedio medido en puntos porcentuales.
-
-## Asociación no es causalidad
+## Mundos paralelos (I): la hipótesis causal
 
 ::: {.pull-left}
-
-**Asociación observada**
-
-$$
-\mathbb{E}[Y\mid D=1]-
-\mathbb{E}[Y\mid D=0]
-$$
-
-Compara horas despejadas con horas no despejadas.
-
+![](https://m.media-amazon.com/images/M/MV5BNmZhYmQ4YTYtYTEyMy00YzE1LTk0YTUtNjgyMDU5YzMwNzIyXkEyXkFqcGc@._V1_.jpg)
 :::
 
 ::: {.pull-right}
+<br>
 
-**Efecto causal**
+[Hipótesis causal:]{.bold}
 
-$$
-\mathbb{E}[Y(1)-Y(0)]
-$$
+_"Fumar causa cáncer"_
 
-Compara cada hora consigo misma bajo dos climas posibles.
+<br>
 
+[Pregunta contrafactual:]{.bold}
+
+  - "Si fumo, ¿desarrollaré cáncer?" y
+
+  - "Si no fumo, ¿evitaré el cáncer?"
+:::
+
+## Mundos paralelos (II): el resultado de Pedro
+
+::: {.pull-left}
+![](https://m.media-amazon.com/images/M/MV5BNmZhYmQ4YTYtYTEyMy00YzE1LTk0YTUtNjgyMDU5YzMwNzIyXkEyXkFqcGc@._V1_.jpg)
+:::
+
+::: {.pull-right}
+<br>
+
+|                |      Si Fumara               |     Si No Fumara              |
+|----------------|:---------------------------:|:----------------------------:|
+| Pedro        | Desarrolla cáncer           | Desarrolla cáncer       |
+:::
+
+## Mundos paralelos (III): el problema del multiverso
+
+<br>
+
+::: {.pull-left}
+![](https://static01.nyt.com/images/2008/10/07/business/07adco_450.jpg?quality=75&auto=webp&disable=upscale)
+:::
+
+::: {.pull-right}
+Problema: no tenemos acceso al "multiverso"!
+
+![](https://theblogofsolis.wordpress.com/wp-content/uploads/2018/01/luckystrikead_1050x700.jpg?w=640)
+
+Ejemplo: "Pedro fuma"
+
+|                |      si Fumara               |     si No Fumara              |
+|----------------|:---------------------------:|:----------------------------:|
+| Pedro          |  Desarrolla cáncer             |        |
+:::
+
+## El mundo observado (I): concomitancia de eventos
+
+::: {.pull-left}
+![](https://static01.nyt.com/images/2008/10/07/business/07adco_450.jpg?quality=75&auto=webp&disable=upscale)
+:::
+
+::: {.pull-right}
+<br>
+
+Concomitancia de eventos:
+
+|                | Fumador | Cáncer |
+|----------------|:-----------:|:----------:|
+| Pedro          | Sí          | Sí         |
+| Juan           | No          | No         |
+| Diego          | Sí          | Sí         |
+| Fulano         | Sí          | No         |
+| Menguano       | No          | No         |
+
+- 2 de 3 fumadores desarrolla cancer
+- 0 de 2 no fumadores desarrolla cancer
+:::
+
+## El mundo observado (II): otra forma de verlo
+
+::: {.pull-left}
+![](https://static01.nyt.com/images/2008/10/07/business/07adco_450.jpg?quality=75&auto=webp&disable=upscale)
+:::
+
+::: {.pull-right}
+<br>
+
+Otra forma de verlo:
+
+|                |      si Fumara         |     si No Fumara      |
+|----------------|:--------------------------:|:--------------------------:|
+| Pedro          | Desarrolla cáncer          |                           |
+| Juan           |                            | No desarrolla cáncer       |
+| Diego          | Desarrolla cáncer          |                           |
+| Fulano         | No desarrolla cáncer       |                          |
+| Menguano       |                            | No desarrolla cáncer       |
+:::
+
+## De Asociación a causalidad
+
+::: {.pull-left}
+![](https://www.neoteo.com/wp-content/uploads/2024/06/logo-33-758x707.jpg)
+:::
+
+::: {.pull-right}
+<br>
+
+Para pasar de asociación a causalidad necesitariamos tener acceso a los mundos paralelos que no vemos:
+
+|                |      si Fumara         |     si No Fumara      |
+|----------------|:--------------------------:|:--------------------------:|
+| Pedro          | Desarrolla cáncer          |     [(Desarrolla cáncer)]{.bold}                      |
+| Juan           |  [(No desarrolla cáncer)]{.bold}                           | No desarrolla cáncer       |
+| Diego          | Desarrolla cáncer          |    [(Desarrolla cáncer)]{.bold}                        |
+| Fulano         | No desarrolla cáncer       |    [(No desarrolla cáncer)]{.bold}                      |
+| Menguano       | [(No desarrolla cáncer)]{.bold}                           | No desarrolla cáncer       |
+:::
+
+## Asociación $\neq$ Causalidad
+
+::: {.pull-left}
+**Mundo observado:**
+
+|                |      si Fumara         |     si No Fumara      |
+|----------------|:--------------------------:|:--------------------------:|
+| Pedro          | Desarrolla cáncer          |                         |
+| Juan           |                             | No desarrolla cáncer       |
+| Diego          | Desarrolla cáncer          |                          |
+| Fulano         | No desarrolla cáncer       |                      |
+| Menguano       |                          | No desarrolla cáncer       |
+
+$$\mathbb{P}(\text{cancer} \mid \text{fumar} ) = 2/3 > \mathbb{P}(\text{cancer} \mid \text{no fumar}) = 0 $$
+<br>
+
+Conclusión #1: ["Fumar y desarrollar cancer están asociados estadísticamente"]{.bold}
 :::
 
 . . .
 
-La asociación identifica el efecto causal solo bajo supuestos adicionales.
+::: {.pull-right}
+**Mundos paralelos:**
 
-# ¿Por qué pueden diferir? {.inverse .center .middle}
+|                |      si Fumara         |     si No Fumara      |
+|----------------|:--------------------------:|:--------------------------:|
+| Pedro          | Desarrolla cáncer          |     [(Desarrolla cáncer)]{.bold}                      |
+| Juan           |  [(No desarrolla cáncer)]{.bold}                           | No desarrolla cáncer       |
+| Diego          | Desarrolla cáncer          |    [(Desarrolla cáncer)]{.bold}                        |
+| Fulano         | No desarrolla cáncer       |    [(No desarrolla cáncer)]{.bold}                      |
+| Menguano       | [(No desarrolla cáncer)]{.bold}                           | No desarrolla cáncer       |
 
-## El mes cambia el clima y también la demanda
+$\mathbb{P}(\text{cancer} \mid \text{do(fumar)} ) =  \mathbb{P}(\text{cancer} \mid \text{do(no fumar)}) = 2/5$
 
-```{r clear-by-month, echo=FALSE, fig.height=4.2}
-bikedata %>%
-  group_by(mnth) %>%
-  summarise(
-    prop_clear = mean(clear_weather),
-    prop_high = mean(high_demand),
-    .groups = "drop"
-  ) %>%
-  ggplot(aes(mnth, prop_clear, group = 1)) +
-  geom_line(linewidth = 1.2, color = course_palette[["primary"]]) +
-  geom_point(size = 3, color = course_palette[["secondary"]]) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  labs(x = "Mes", y = "Proporción de horas despejadas")
+<br>
+
+Conclusión #2: ["Fumar no causa el desarrollo de cancer"]{.bold}
+:::
+
+## El $do(\cdot)$-operator de Judea Pearl
+
+<br>
+
+Todo lo que vimos con Pedro, Juan, Diego, Fulano y Menguano tiene nombre formal. El operador $do(\cdot)$ de Pearl describe qué pasaría si **interviniéramos** sobre $D$, en vez de solo observarlo. Para cada persona $i$:
+
+<br>
+$$
+Y_i \mid do(D{=}1): \text{desarrolla cáncer o no, si fumara}
+\qquad\qquad
+Y_i \mid do(D{=}0): \text{desarrolla cáncer o no, si no fumara}
+$$
+
+
+. . .
+
+<br>
+
+El efecto causal individual es la diferencia entre ambas intervenciones: exactamente las columnas "si Fumara" / "si No Fumara" de las tablas de Pedro.
+
+. . .
+
+Como nunca observamos ambas intervenciones sobre la misma persona, apuntamos al efecto promedio del tratamiento:
+
+$$
+\text{ATE} = \mathbb{E}[Y\mid do(D{=}1)] - \mathbb{E}[Y\mid do(D{=}0)]
+$$
+
+<br>
+
+. . .
+
+Pero lo que los datos entregan es otra cosa: $\mathbb{E}[Y\mid D=1] - \mathbb{E}[Y\mid D=0]$, la asociación de Pedro y sus amigos. Condicionar ($\cdot  \mid D=1$) no es lo mismo que intervenir ($\cdot \mid do(D{=}1)$).
+
+
+## El problema de fondo
+
+La diferencia entre asociación y causalidad es fundamental y va más allá de los métodos estadísticos utilizados. Consideraciones clave:
+
+<br>
+
+- [NO es un problema de estimación]{.bold}: no se resuelve con técnicas estadísticas más complejas.
+
+- [NO es un problema de incertidumbre estadística]{.bold}: no se soluciona con muestras más grandes.
+
+- [ES un desafío inherente a la forma en que la realidad se manifiesta]{.bold}, y solo puede abordarse adecuadamente mediante un _diseño de investigación apropiado_, como:
+
+  - Experimentos de laboratorio, experimentos naturales, estrategias de inferencia causal, entre otros.
+
+
+# Estrategias de identificación {.inverse .center .middle}
+
+## Dos caminos hacia el mismo objetivo
+
+<br>
+
+$\mathbb{E}[Y\mid do(D{=}d)]$ y $\mathbb{E}[Y\mid D{=}d]$ coinciden solo si $D$ no depende de nada más que de su propio azar.
+
+<br>
+
+. . .
+
+Si algo más afecta $D$ -y ese algo también afecta $Y$-, condicionar en $D$ ya no equivale a intervenir sobre $D$.
+
+<br>
+
+. . .
+
+Dos caminos para igualarlos:
+
+1. [Diseñar $D$]{.bold}: que no dependa de nada. Aleatorización (RCT).
+
+2. [Medir lo que afecta $D$]{.bold} y ajustar por ello. Backdoor criterion.
+
+<br>
+
+. . .
+
+Para comparar ambos caminos con la misma vara, simulamos un mundo donde fijamos de antemano el efecto causal, $\tau$.
+
+## El proceso generador de datos
+
+```{r dgp-observacional, echo=TRUE}
+set.seed(13)
+n <- 2000
+tau_verdadero <- log(2) # efecto causal de D sobre Y, en log-odds; lo fijamos nosotros
+
+X <- sample(1:3, n, replace = TRUE, prob = c(0.3, 0.4, 0.3)) # edad: joven/media/vieja; la medimos
+
+D <- rbinom(n, 1, plogis(-1.5 + 1.5 * (X - 2))) # X afecta a D
+Y <- rbinom(n, 1, plogis(-3 + tau_verdadero * D + 1 * (X - 2))) # X también afecta a Y
 ```
 
-Los meses no tienen la misma probabilidad de estar despejados. Además, estación, vacaciones y horas de luz afectan la probabilidad de demanda alta.
+Ahora $D$ y $Y$ tienen un mecanismo concreto: $X$ (edad) afecta a ambas. Por eso condicionar en $D$ no identifica el efecto de intervenir sobre $D$.
 
-## Confusión: una causa común abre un camino alternativo
+## Flechas que entran a $D$
 
-```{r dag-confound, echo=FALSE, fig.height=4.2}
-nodes <- tibble(
+::: {.pull-left}
+Mundo observacional: $X$ es un backdoor path hacia $D$.
+
+```{r dag-confound, echo=FALSE, fig.height=4.4}
+dag_nodes <- tibble(
   x = c(1, 3, 2), y = c(1, 1, 2.45),
-  label = c("D\nClima despejado", "Y\nDemanda alta", "X\nMes")
+  label = c("D\nFuma", "Y\nCáncer", "X\nEdad")
 )
-edges <- tibble(
-  x = c(2, 2, 1), y = c(2.28, 2.28, 1),
-  xend = c(1.12, 2.88, 2.82), yend = c(1.18, 1.18, 1)
+
+draw_dag <- function(edges) {
+  ggplot() +
+    geom_segment(
+      data = edges, aes(x, y, xend = xend, yend = yend),
+      arrow = arrow(length = unit(0.22, "cm"), type = "closed"),
+      color = course_palette[["secondary"]], linewidth = 1.1
+    ) +
+    geom_point(
+      data = dag_nodes, aes(x, y), size = 30, shape = 21,
+      fill = course_palette[["primary"]], color = "white"
+    ) +
+    geom_text(
+      data = dag_nodes, aes(x, y, label = label),
+      color = "white", size = 4.2, lineheight = 0.9
+    ) +
+    coord_cartesian(xlim = c(0.45, 3.55), ylim = c(0.55, 2.9)) +
+    theme_void()
+}
+
+edges_confundido <- tibble(
+  x = c(2, 2, 1), y = c(2.26, 2.26, 1),
+  xend = c(1.12, 2.88, 2.82), yend = c(1.2, 1.2, 1)
 )
+
+draw_dag(edges_confundido)
+```
+:::
+
+::: {.pull-right}
+Mundo aleatorizado: se corta la flecha $X\to D$.
+
+```{r dag-rct, echo=FALSE, fig.height=4.4}
+edges_aleatorizado <- edges_confundido[2:3, ] # sin X -> D: aleatorizar corta esa flecha
+draw_dag(edges_aleatorizado)
+```
+:::
+
+## Por qué aleatorizar funciona
+
+En general, $\mathbb{E}[Y\mid do(D{=}d)] \neq \mathbb{E}[Y\mid D{=}d]$: condicionar en $D$ arrastra también a $X$, a través de las flechas que entran a $D$.
+
+. . .
+
+Aleatorizar hace, físicamente, lo que el operador $do(\cdot)$ hace en el papel: corta toda flecha que entra a $D$. Sin flechas entrantes, ya no hay backdoor path que bloquear:
+
+$$\mathbb{E}[Y\mid D{=}d] = \mathbb{E}[Y\mid do(D{=}d)]$$
+
+. . .
+
+La comparación simple entre grupos ya identifica el efecto causal, sin ajustar por nada.
+
+## Un experimento aleatorizado
+
+```{r rct-demo, echo=TRUE}
+set.seed(13)
+
+# 1. muestra: n personas, cada una con su edad
+n <- 2000
+X <- sample(1:3, n, replace = TRUE, prob = c(0.3, 0.4, 0.3))
+
+# 2. asigna: se sortea D al azar, sin mirar X
+D <- sample(rep(0:1, each = n / 2))
+
+# 3. estima: se observa Y y se compara entre los dos grupos
+Y <- rbinom(n, 1, plogis(-3 + tau_verdadero * D + 1 * (X - 2)))
+logit_rct <- glm(Y ~ D, family = binomial)
+coef(logit_rct)[["D"]]
+```
+
+$\hat\beta_D=`r sub("\\.", ",", formatC(coef(logit_rct)[["D"]], format = "f", digits = 3))`$, cerca de $\tau=`r sub("\\.", ",", formatC(tau_verdadero, format = "f", digits = 3))`$. Con 2.000 personas, y sin ajustar por $X$. Lo único que cambió frente al mundo observacional es la línea de $D$: en vez de depender de $X$, se sortea.
+
+## ¿Fue suerte?
+
+Repetimos el estudio aleatorizado 300 veces, cada vez con 600 personas nuevas, y lo comparamos con repetir el estudio observacional:
+
+```{r rct-replicaciones, echo=TRUE}
+n_rep <- 600
+reps  <- 300
+
+beta_crudo <- replicate(reps, {
+  X <- sample(1:3, n_rep, replace = TRUE, prob = c(0.3, 0.4, 0.3)) # muestra
+  D <- rbinom(n_rep, 1, plogis(-1.5 + 1.5 * (X - 2)))              # D depende de X
+  Y <- rbinom(n_rep, 1, plogis(-3 + tau_verdadero * D + 1 * (X - 2)))
+  coef(glm(Y ~ D, family = binomial))[["D"]]
+})
+
+beta_rct <- replicate(reps, {
+  X <- sample(1:3, n_rep, replace = TRUE, prob = c(0.3, 0.4, 0.3)) # muestra
+  D <- sample(rep(0:1, each = n_rep / 2))                          # asigna
+  Y <- rbinom(n_rep, 1, plogis(-3 + tau_verdadero * D + 1 * (X - 2)))
+  coef(glm(Y ~ D, family = binomial))[["D"]]                       # estima
+})
+
+dist_rct <- tibble(
+  estrategia = rep(c("Crudo (observacional)", "Aleatorizado (RCT)"), each = reps),
+  beta = c(beta_crudo, beta_rct)
+)
+```
+
+## ¿Fue suerte? (II)
+
+```{r rct-replicaciones-plot, echo=FALSE, fig.width=10, fig.height=5.5}
+ggplot(dist_rct, aes(beta, fill = estrategia)) +
+  geom_density(alpha = 0.7, color = "white") +
+  geom_vline(xintercept = tau_verdadero, linetype = "dashed", linewidth = 0.9) +
+  scale_fill_manual(values = unname(course_palette[c("series-1", "series-3")])) +
+  labs(x = expression(hat(beta)[D] ~ "(300 réplicas)"), y = "densidad", fill = NULL)
+```
+
+La línea punteada es $\tau$. El diseño aleatorizado centra la distribución de $\hat\beta_D$ en $\tau$; el observacional no, por más réplicas que corramos.
+
+## No siempre podemos aleatorizar
+
+No podemos asignar aleatoriamente el tabaquismo a personas: sería inviable y profundamente antiético. Esta es la norma, no la excepción, en ciencias sociales y en salud pública.
+
+
+## ¿Por qué pueden diferir? (I): asociación espuria
+
+- Hay varias razones por las cuales puede pasar que asociación y causalidad no coincidan.
+
+- Un caso paradigmático es cuando existe asociación espuria.
+
+::: {.pull-left}
+![](espurio.png)
+Edad actúa como un ["confounder"]{.bold}
+:::
+
+. . .
+
+::: {.pull-right}
+<br>
+
+Mundos paralelos:
+
+| Nombre   | Edad | si Fumara            | si No Fumara          |
+|----------|:------:|:--------------------------:|:----------------------------:|
+| Pedro    | Viejo   | Desarrolla cáncer        | [Desarrolla cáncer]{.bold}      |
+| Juan     | Jóven   | [No desarrolla cáncer]{.bold} | No desarrolla cáncer       |
+| Diego    | Viejo   | Desarrolla cáncer        | [Desarrolla cáncer]{.bold}      |
+| Fulano   | Jóven   | No desarrolla cáncer     | [No desarrolla cáncer]{.bold}   |
+| Menguano | Jóven   | [No desarrolla cáncer]{.bold} | No desarrolla cáncer       |
+:::
+
+## ¿Por qué pueden diferir? (II): el mundo observado con confusión
+
+::: {.pull-left}
+![](espurio.png)
+Edad actúa como un ["confounder"]{.bold}
+:::
+
+::: {.pull-right}
+<br>
+
+Mundos observados:
+
+| Nombre   | Edad | Fumador | Cáncer |
+|----------|------|:-----------:|:----------:|
+| Pedro    | Viejo   | Sí          | Sí         |
+| Juan     | Jóven   | No          | No         |
+| Diego    | Viejo   | Sí          | Sí         |
+| Fulano   | Joven   | No          | No         |
+| Menguano | Joven   | No          | No         |
+:::
+
+## El backdoor criterion
+
+::: {.pull-left}
+$\mathbb{E}[Y\mid do(D{=}d)]$ no se lee directo de los datos: hay que decidir qué ajustar.
+
+<br>
+
+El **backdoor criterion**: $X$ alcanza si no es descendiente de $D$, y bloquea todo camino entre $D$ y $Y$ que entra a $D$ por una flecha.
+
+<br>
+
+. . .
+
+Cuando lo cumple, promediar la asociación condicional dentro de cada valor de $X$, ponderando por cuán común es cada uno, identifica el efecto de intervenir:
+
+$$
+\mathbb{E}[Y\mid do(D{=}d)] = \sum_x \mathbb{E}[Y\mid D{=}d, X{=}x]\,\mathbb{P}(X{=}x)
+$$
+:::
+
+::: {.pull-right}
+```{r dag-backdoor, echo=FALSE, fig.height=4.6}
+draw_dag(edges_confundido) +
+  geom_point(
+    data = dag_nodes[3, ], aes(x, y), size = 38, shape = 1,
+    color = course_palette[["accent"]], stroke = 1.8
+  )
+```
+
+Ajustar por $X$ bloquea el backdoor path $D \leftarrow X \to Y$.
+:::
+
+## El backdoor criterion en la simulación
+
+$X$ es el único backdoor path hacia $D$ en nuestro mundo simulado. Ajustar por $X$ debería alcanzar:
+
+```{r backdoor-demo, echo=TRUE}
+n_rep <- 600
+reps  <- 300
+
+resultados <- replicate(reps, {
+  X <- sample(1:3, n_rep, replace = TRUE, prob = c(0.3, 0.4, 0.3))
+  D <- rbinom(n_rep, 1, plogis(-1.5 + 1.5 * (X - 2)))
+  Y <- rbinom(n_rep, 1, plogis(-3 + tau_verdadero * D + 1 * (X - 2)))
+
+  crudo    <- coef(glm(Y ~ D,     family = binomial))[["D"]]
+  ajustado <- coef(glm(Y ~ D + X, family = binomial))[["D"]]
+  c(crudo = crudo, ajustado = ajustado)
+})
+
+dist_backdoor <- tibble(
+  estimador = rep(c("Crudo", "Ajustado por X"), each = reps),
+  beta = c(resultados["crudo", ], resultados["ajustado", ])
+)
+```
+
+## El backdoor criterion en la simulación (II)
+
+```{r backdoor-demo-plot, echo=FALSE, fig.width=10, fig.height=5.5}
+ggplot(dist_backdoor, aes(beta, fill = estimador)) +
+  geom_density(alpha = 0.7, color = "white") +
+  geom_vline(xintercept = tau_verdadero, linetype = "dashed", linewidth = 0.9) +
+  scale_fill_manual(values = unname(course_palette[c("series-1", "series-2")])) +
+  labs(x = expression(hat(beta)[D] ~ "(300 réplicas)"), y = "densidad", fill = NULL)
+```
+
+La línea punteada es $\tau$. Ajustar por $X$, el único backdoor path en este mundo, centra $\hat\beta_D$ en $\tau$. El crudo, no.
+
+## El backdoor criterion no siempre alcanza
+
+El criterio no es magia: hay que elegir bien qué ajustar. Dos formas típicas de fallar:
+
+::: {.pull-left}
+**Un confusor no observado**
+
+```{r dag-no-observado, echo=FALSE, fig.height=4.2}
+nodes_u <- tibble(
+  x = c(1, 3, 2), y = c(1, 1, 2.45),
+  label = c("D\nFuma", "Y\nCáncer", "U\n(oculto)")
+)
+edges_u_oculto <- tibble(x = c(2, 2), y = c(2.26, 2.26), xend = c(1.12, 2.88), yend = c(1.2, 1.2))
+edge_dy <- tibble(x = 1.18, y = 1, xend = 2.82, yend = 1)
 
 ggplot() +
   geom_segment(
-    data = edges, aes(x, y, xend = xend, yend = yend),
+    data = edges_u_oculto, aes(x, y, xend = xend, yend = yend),
+    arrow = arrow(length = unit(0.22, "cm"), type = "closed"),
+    color = course_palette[["secondary"]], linewidth = 1.1, linetype = "22"
+  ) +
+  geom_segment(
+    data = edge_dy, aes(x, y, xend = xend, yend = yend),
     arrow = arrow(length = unit(0.22, "cm"), type = "closed"),
     color = course_palette[["secondary"]], linewidth = 1.1
   ) +
   geom_point(
-    data = nodes, aes(x, y), size = 25, shape = 21,
+    data = nodes_u, aes(x, y), size = 30, shape = 21,
     fill = course_palette[["primary"]], color = "white"
   ) +
   geom_text(
-    data = nodes, aes(x, y, label = label),
-    color = "white", size = 4, lineheight = 0.9
+    data = nodes_u, aes(x, y, label = label),
+    color = "white", size = 4.2, lineheight = 0.9
   ) +
   coord_cartesian(xlim = c(0.45, 3.55), ylim = c(0.55, 2.9)) +
   theme_void()
 ```
 
-El camino $D \leftarrow X \rightarrow Y$ mezcla el efecto del clima con diferencias estacionales.
-
-## Ajustar por el confusor cambia el coeficiente
-
-```{r control-demo, echo=FALSE}
-tibble(
-  modelo = c("Logit crudo", "Logit ajustado por mes"),
-  beta_clima = c(
-    coef(logit_crudo)[["clear_weather"]],
-    coef(logit_mes)[["clear_weather"]]
-  ),
-  odds_ratio = exp(c(
-    coef(logit_crudo)[["clear_weather"]],
-    coef(logit_mes)[["clear_weather"]]
-  ))
-)
-```
-
-El coeficiente cambia al comparar horas dentro del mismo mes: parte de la asociación cruda reflejaba composición estacional.
-
-. . .
-
-Esto **no prueba** que el coeficiente ajustado sea causal. Solo elimina la confusión explicada por `month` bajo la forma funcional elegida.
-
-## El mismo coeficiente admite dos lecturas
-
-::: {.pull-left}
-
-**Lectura asociacional**
-
-$$
-\beta_1=
-\log\frac{\operatorname{odds}(Y=1\mid D=1,X)}
-{\operatorname{odds}(Y=1\mid D=0,X)}
-$$
-
-Describe una comparación condicional en los datos observados.
-
+$U$ existe, pero no está en los datos: no hay forma de ajustar por él. El backdoor path queda abierto.
 :::
 
 ::: {.pull-right}
+**Ajustar por la variable equivocada**
 
-**Lectura causal**
+```{r dag-collider, echo=FALSE, fig.height=4.2}
+nodes_c <- tibble(
+  x = c(1, 3, 2), y = c(1, 1, 2.45),
+  label = c("D\nFuma", "Y\nCáncer", "C\nEspera")
+)
+edges_c <- tibble(
+  x = c(1.12, 2.88, 1), y = c(1.2, 1.2, 1),
+  xend = c(1.88, 2.12, 2.82), yend = c(2.2, 2.2, 1)
+)
 
-$$
-\beta_1=
-\log\frac{\operatorname{odds}\{Y(1)=1\mid X\}}
-{\operatorname{odds}\{Y(0)=1\mid X\}}
-$$
+ggplot() +
+  geom_segment(
+    data = edges_c, aes(x, y, xend = xend, yend = yend),
+    arrow = arrow(length = unit(0.22, "cm"), type = "closed"),
+    color = course_palette[["secondary"]], linewidth = 1.1
+  ) +
+  geom_point(
+    data = nodes_c, aes(x, y), size = 30, shape = 21,
+    fill = course_palette[["primary"]], color = "white"
+  ) +
+  geom_point(
+    data = nodes_c[3, ], aes(x, y), size = 38, shape = 1,
+    color = course_palette[["secondary"]], stroke = 1.8
+  ) +
+  geom_text(
+    data = nodes_c, aes(x, y, label = label),
+    color = "white", size = 4.2, lineheight = 0.9
+  ) +
+  coord_cartesian(xlim = c(0.45, 3.55), ylim = c(0.55, 2.9)) +
+  theme_void()
+```
 
-Compara resultados potenciales bajo dos intervenciones.
-
+$C$ es un *collider*: efecto común de $D$ e $Y$, no su causa. Ajustar por él abre un camino espurio en vez de cerrarlo.
 :::
 
-. . .
+## El mensaje de esta clase
 
-La segunda lectura necesita diseño y supuestos causales. La ecuación logística, por sí sola, solo garantiza la primera.
+<br>
+<br>
 
-## La causalidad no está en la complejidad
+::: {.content-box-primary}
+**La causalidad no es un problema de inferencia. Es un problema de diseño: cómo se asignó $D$.**
+:::
 
-El mismo logit puede ser:
 
-- **asociacional**, si el tratamiento está confundido;
-- **causal**, si el diseño hace creíble la comparación contrafactual.
 
-. . .
+## Hasta la próxima clase. Gracias! {.inverse .center .middle .closing}
 
-Un modelo más complejo puede ajustar mejor la asociación, pero no fabrica el contrafactual faltante.
-
-. . .
-
-Una muestra más grande reduce el error estándar:
-
-$$
-n\uparrow \quad\Longrightarrow\quad SE(\hat\beta_1)\downarrow
-$$
-
-pero no elimina el sesgo por confusión. Podemos estimar una asociación no causal con enorme precisión.
-
-## El supuesto decisivo no viene de la regresión
-
-La **intercambiabilidad condicional** o no-confusión exige:
-
-$$
-\{Y_i(1),Y_i(0)\}\perp D_i\mid X_i.
-$$
-
-En palabras: dentro de grupos con igual $X$, recibir $D=1$ o $D=0$ es “como si” fuera aleatorio respecto de los resultados potenciales.
-
-. . .
-
-Este supuesto:
-
-- no se demuestra con un $p$-value;
-- no aparece automáticamente al aumentar $n$;
-- requiere teoría, conocimiento del proceso y un buen diseño.
-
-## También necesitamos comparaciones posibles
-
-Para cada combinación de confusores debe existir alguna posibilidad de observar ambos tratamientos:
-
-$$
-0<\Pr(D_i=1\mid X_i=x)<1.
-$$
-
-Este supuesto se llama **positividad** u **overlap**.
-
-. . .
-
-Si en cierto mes nunca hubiera horas despejadas, los datos no permitirían estimar qué ocurriría bajo clima despejado para ese mes: el contrafactual requeriría extrapolación.
-
-## Consistencia: el tratamiento debe estar bien definido
-
-La **consistencia** conecta el resultado observado con el potencial:
-
-$$
-D_i=d \quad\Longrightarrow\quad Y_i=Y_i(d).
-$$
-
-Pero “otro clima” mezcla nubes, lluvia y nieve. ¿Son realmente la misma intervención?
-
-. . .
-
-Cuanto más heterogénea sea la definición de $D=0$, más difícil es interpretar un único efecto. Definir con precisión el tratamiento es parte del análisis causal.
-
-# El DAG guía los controles {.inverse .center .middle}
-
-## No todas las covariables son confusores
-
-- **Confusor:** causa tanto $D$ como $Y$. Controlarlo puede bloquear una asociación espuria.
-- **Mediador:** está en el camino $D\rightarrow M\rightarrow Y$. Controlarlo elimina parte del efecto total.
-- **Colisionador:** recibe flechas $D\rightarrow C\leftarrow Y$. Controlarlo puede crear una asociación espuria.
-
-. . .
-
-El DAG representa supuestos sustantivos; no se “descubre” mirando significancia estadística.
-
-## Más controles no garantizan causalidad
-
-Agregar variables a una regresión ayuda solo si esas variables cumplen el rol causal correcto.
-
-. . .
-
-- Omitir un confusor deja abierto un camino no causal.
-- Incluir un mediador cambia el estimando: pasamos del efecto total a un efecto directo.
-- Incluir un colisionador puede introducir sesgo.
-- Ajustar por una variable medida después del tratamiento suele ser especialmente riesgoso.
-
-. . .
-
-La lista de controles se decide con un argumento causal **antes** de mirar qué especificación entrega el coeficiente preferido.
-
-## Diseño antes que sofisticación
-
-La diferencia entre asociación y causalidad:
-
-- **no** es principalmente un problema de estimación;
-- **no** desaparece con una muestra más grande;
-- **sí** depende de cómo se asigna el tratamiento y cómo se construye la comparación.
-
-. . .
-
-Experimentos aleatorizados, experimentos naturales y diseños cuasi-experimentales buscan hacer creíble la comparación contrafactual.
-
-## Cómo leer los coeficientes desde ahora
-
-Sin supuestos causales, el coeficiente de un logit describe una asociación condicional:
-
-> Entre observaciones con iguales covariables, ¿cómo cambian las log-odds de $Y=1$ cuando cambia $D$?
-
-. . .
-
-Ese mismo coeficiente **puede** interpretarse como un efecto causal condicional si además:
-
-1. definimos tratamiento, outcome, población y estimando;
-2. explicitamos un DAG;
-3. justificamos no-confusión, positividad y consistencia;
-4. evitamos controles que abran sesgos nuevos.
-
-## Ejercicio: construya el argumento causal
-
-Suponga que queremos estimar el efecto de `workingday` sobre la probabilidad de `high_demand`.
-
-1. Defina $Y_i(1)$ y $Y_i(0)$ y precise cuál es la unidad $i$.
-2. Dibuje un DAG con al menos un confusor plausible.
-3. Identifique una variable que **no** debería controlarse y explique su rol.
-4. Proponga un diseño que haga más creíble la comparación causal.
-5. Evalúe dónde podría fallar la positividad.
-
-## En resumen
-
-- Causalidad compara resultados potenciales de la misma unidad.
-- Solo observamos uno: el otro es contrafactual.
-- Un coeficiente logístico es asociacional por defecto; puede ser causal bajo un diseño y supuestos adecuados.
-- Los confusores crean caminos alternativos entre tratamiento y resultado.
-- Más datos reducen incertidumbre, pero no eliminan confusión.
-- La causalidad depende del diseño, no de la complejidad del modelo.
-
-## Gracias {.inverse .center .middle .closing}
-
-**Hasta la próxima clase**
-
-Mauricio Bucca
+<br>
+Mauricio Bucca <br>
+https://mebucca.github.io/ <br>
+github.com/mebucca
