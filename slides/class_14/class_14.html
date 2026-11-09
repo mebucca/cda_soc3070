@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-28">
+  <meta name="dcterms.date" content="2026-11-09">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -100,7 +100,7 @@
     code span.wa { color: #ff5555; } /* Warning */
   </style>
   <link rel="stylesheet" href="class_14_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
-  <link rel="stylesheet" href="../_shared/course.css">
+  <link rel="stylesheet" href="_shared/course.css">
   <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
   <script>document.addEventListener("DOMContentLoaded", function () {
  var mathElements = document.getElementsByClassName("math");
@@ -225,7 +225,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-28</p>
+  <p class="date">2026-11-09</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -249,8 +249,10 @@ Mauricio Bucca · Sociología UC
 <h1>Predecir es generalizar</h1>
 
 </section>
-<section id="dos-preguntas-dos-criterios-de-éxito" class="slide level2">
-<h2>Dos preguntas, dos criterios de éxito</h2>
+<section id="dos-preguntas-y-dos-criterios-de-éxito" class="slide level2">
+<h2>Dos preguntas y dos criterios de éxito</h2>
+<p><br></p>
+<div class="fragment">
 <div class="pull-left">
 <p><strong>Problemas de <span class="math inline">\hat{\beta}</span></strong></p>
 <ul>
@@ -261,6 +263,8 @@ Mauricio Bucca · Sociología UC
 </ul>
 <p>El foco está en <strong>explicación e inferencia</strong>.</p>
 </div>
+</div>
+<div class="fragment">
 <div class="pull-right">
 <p><strong>Problemas de <span class="math inline">\hat{y}</span></strong></p>
 <ul>
@@ -274,52 +278,39 @@ Mauricio Bucca · Sociología UC
 <div class="footnote">
 <p>Distinción inspirada en Mullainathan y Spiess (2017).</p>
 </div>
+</div>
 </section>
-<section id="el-examen-ocurre-en-datos-nuevos" class="slide level2">
-<h2>El examen ocurre en datos nuevos</h2>
+<section id="aprender-de-los-datos-existentes-y-predecir-en-datos-nuevos" class="slide level2">
+<h2>Aprender de los datos existentes y predecir en datos nuevos</h2>
+<p><br></p>
 <p>Un modelo recibe predictores <span class="math inline">X</span> y construye una regla:</p>
 <p><span class="math display">
 \widehat{f}:X\longrightarrow \widehat{Y}.
 </span></p>
+<div class="fragment">
+<p><br></p>
 <p>El objetivo predictivo no es reproducir los datos que ya vimos, sino minimizar el error esperado en una nueva observación:</p>
 <p><span class="math display">
 \mathbb{E}\left[L\{Y_{\text{nuevo}},\widehat f(X_{\text{nuevo}})\}\right].
 </span></p>
+</div>
 <div class="fragment">
-<p>La función de pérdida <span class="math inline">L</span> depende de la tarea: error cuadrático, error absoluto, log-loss, error de clasificación, etc.</p>
+<p><br></p>
+<p>Donde <span class="math inline">L</span> es una función de pérdida (la función específica depende de la tarea: error cuadrático, error absoluto, log-loss, error de clasificación, etc.)</p>
 </div>
 </section>
 <section id="nuestro-problema-de-hoy" class="slide level2">
 <h2>Nuestro problema de hoy</h2>
+<p><br></p>
 <p>Usaremos <code>bikers</code> como outcome:</p>
 <blockquote>
 <p>¿Cuántos arriendos habrá en una hora que el modelo no usó para aprender?</p>
 </blockquote>
+<p><br></p>
 <p>Los predictores disponibles describen clima, calendario y hora del día.</p>
 <div class="fragment">
+<p><br></p>
 <p>No necesitamos comprometernos con una familia de modelos: la lógica de evaluación es la misma para una regresión, un árbol, una red neuronal o cualquier otra regla de predicción.</p>
-</div>
-</section>
-<section id="ajustar-y-evaluar-son-operaciones-distintas" class="slide level2">
-<h2>Ajustar y evaluar son operaciones distintas</h2>
-<div class="pull-left">
-<p><strong>Ajustar</strong></p>
-<p>Usar datos para aprender:</p>
-<p><span class="math display">
-\text{datos de entrenamiento}
-\longrightarrow \widehat f
-</span></p>
-</div>
-<div class="pull-right">
-<p><strong>Evaluar</strong></p>
-<p>Aplicar la regla sin reestimarla:</p>
-<p><span class="math display">
-\widehat f(X_{\text{nuevo}})
-\longrightarrow \text{pérdida}
-</span></p>
-</div>
-<div class="fragment">
-<p>Si ajustamos y evaluamos con los mismos casos, el modelo ya conoce las respuestas del examen.</p>
 </div>
 </section></section>
 <section>
@@ -329,33 +320,84 @@ Mauricio Bucca · Sociología UC
 </section>
 <section id="buen-ajuste-no-implica-buena-predicción" class="slide level2">
 <h2>Buen ajuste no implica buena predicción</h2>
-<p>Un modelo flexible puede capturar:</p>
+<p><br></p>
+<p>Un modelo complejo aprende patrones complejos a partir de los datos. Puede aprender dos cosas:</p>
+<p><br></p>
 <ul>
-<li>patrones estables que volverán a aparecer;</li>
-<li>ruido idiosincrático de la muestra de entrenamiento.</li>
+<li>patrones estables que volverán a aparecer (en nuevos datos);</li>
+<li>ruido idiosincrático de los datos donde ajustamos el model (training set).</li>
 </ul>
+<p><br></p>
 <div class="fragment">
-<p>El segundo componente reduce el error de entrenamiento, pero deteriora la predicción en casos nuevos. Eso es <strong>overfitting</strong> o sobreajuste.</p>
+<p>La complejidad del modelo ayudar a reducing el error en el training set, pero puede deteriorar la predicción en casos nuevos. Eso es <strong>overfitting</strong> o sobreajuste.</p>
 </div>
 </section>
 <section id="tres-regímenes-de-complejidad" class="slide level2">
 <h2>Tres regímenes de complejidad</h2>
-<div class="center">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="underfit_right_overfit.png" style="width:78.0%"></p>
-<figcaption>Subajuste, ajuste adecuado y sobreajuste</figcaption>
-</figure>
-</div>
-</div>
 <ul>
 <li><strong>Subajuste:</strong> la regla es demasiado rígida y omite señal.</li>
 <li><strong>Buen balance:</strong> captura patrones reproducibles.</li>
 <li><strong>Sobreajuste:</strong> persigue fluctuaciones que no se repiten.</li>
 </ul>
+
+<img data-src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRL9SUfXKKjoggrRQay7H5CE-IlxuhXiFKMj0QRAZA0tC60My7qBph-ZJI&amp;s=10.png" class="r-stretch"><div class="fragment">
+<p>Más adelante vemos los tres regímenes sobre datos simulados.</p>
+</div>
 </section>
-<section id="sesgo-y-varianza-describen-errores-distintos" class="slide level2">
-<h2>Sesgo y varianza describen errores distintos</h2>
+<section id="trade-off-entre-sesgo-y-varianza" class="slide level2">
+<h2>Trade-off entre Sesgo y Varianza</h2>
+<p><br></p>
+<p>En predicción con pérdida cuadrática:</p>
+<p><span class="math display">
+\underbrace{\mathbb{E}\left[(Y-\widehat f(X))^2\right]}_{\text{error esperado}}
+=
+\underbrace{\text{Sesgo}^2}_{\text{rigidez}}
++
+\underbrace{\text{Varianza}}_{\text{inestabilidad}}
++
+\underbrace{\sigma^2}_{\text{ruido irreducible}}
+</span></p>
+<div class="fragment">
+<p>sesgo y varianza son dos cantidades distintas que simplemente se sumanl, pero reducir uno suele aumentar el otro: ese es el <strong>trade-off sesgo–varianza</strong>.</p>
+<p><br></p>
+</div>
+<div class="fragment">
+<ul>
+<li><p>El trade-off aparece porque, en la práctica, <strong>ambas dependen de la flexibilidad del modelo</strong>.</p></li>
+<li><p>Cambio en flexibilidad no cambia sesgo y varianza por separado: cambia la regla de ajuste completa, y eso mueve a ambos a la vez.</p></li>
+</ul>
+</div>
+</section>
+<section id="un-ejemplo-k-vecinos-más-cercanos" class="slide level2">
+<h2>Un ejemplo: <span class="math inline">k</span> vecinos más cercanos</h2>
+
+<img data-src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTBHSqbKSPfVo5iPr4AgUcea7rw1FGd1vnBBA8NJXYZjRPiZ5tjzq-Fu7ar&amp;s=10.png" class="r-stretch"><p><span class="math display">
+\widehat f(x_0) = \frac{1}{k}\sum_{i \,\in\, N_k(x_0)} y_i
+\qquad\Longrightarrow\qquad
+\text{Varianza}(x_0) = \frac{\sigma^2}{k}
+</span></p>
+<div class="fragment">
+<div class="pull-left">
+<p><strong><span class="math inline">k</span> chico (flexible)</strong></p>
+<ul>
+<li>promedia pocos vecinos, muy cercanos a <span class="math inline">x_0</span>;</li>
+<li>sigue de cerca la forma local de <span class="math inline">f</span>: <strong>sesgo bajo</strong>;</li>
+<li>cada vecino pesa <span class="math inline">1/k</span>, mucho: <strong>varianza alta</strong>.</li>
+</ul>
+</div>
+<div class="pull-right">
+<p><strong><span class="math inline">k</span> grande (rígido)</strong></p>
+<ul>
+<li>promedia casi todos los datos, lejos y cerca;</li>
+<li>el promedio global ignora la forma local de <span class="math inline">f</span>: <strong>sesgo alto</strong> (salvo que <span class="math inline">f</span> sea constante);</li>
+<li>cada dato pesa <span class="math inline">1/k</span>, poco: <strong>varianza baja</strong>.</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="trade-off-entre-sesgo-y-varianza-1" class="slide level2">
+<h2>Trade-off entre Sesgo y Varianza</h2>
+<p><br></p>
 <div class="pull-left">
 <p><strong>Sesgo alto</strong></p>
 <p>El modelo aprende una regla sistemáticamente equivocada.</p>
@@ -374,80 +416,194 @@ Mauricio Bucca · Sociología UC
 <li>riesgo de sobreajuste.</li>
 </ul>
 </div>
-<div class="fragment">
-<p>Reducir uno suele aumentar el otro: ese es el <strong>trade-off sesgo–varianza</strong>.</p>
-</div>
-</section>
-<section id="la-descomposición-del-error" class="slide level2">
-<h2>La descomposición del error</h2>
-<p>En predicción con pérdida cuadrática:</p>
-<p><span class="math display">
-\underbrace{\mathbb{E}\left[(Y-\widehat f(X))^2\right]}_{\text{error esperado}}
-=
-\underbrace{\text{Sesgo}^2}_{\text{rigidez}}
-+
-\underbrace{\text{Varianza}}_{\text{inestabilidad}}
-+
-\underbrace{\sigma^2}_{\text{ruido irreducible}}.
-</span></p>
-<div class="fragment">
-<p>La complejidad óptima no elimina todo error. Busca el punto donde agregar flexibilidad deja de recuperar señal y empieza a perseguir ruido.</p>
-</div>
-</section>
-<section id="el-error-de-entrenamiento-siempre-sonríe" class="slide level2">
-<h2>El error de entrenamiento siempre sonríe</h2>
-
-<img data-src="class_14_files/figure-revealjs/complexity-demo-1.png" width="960" class="r-stretch"><p>En esta demostración con <code>bikers</code>, el error de entrenamiento cae al aumentar flexibilidad; el error en datos separados puede subir.</p>
-</section>
-<section id="el-error-relevante-es-fuera-de-muestra" class="slide level2">
-<h2>El error relevante es fuera de muestra</h2>
-<ul>
-<li><strong>Error de entrenamiento:</strong> mide qué tan bien la regla reproduce los casos usados para ajustarla.</li>
-<li><strong>Error de generalización:</strong> mide qué tan bien predice casos generados por el mismo proceso, pero no usados para aprender.</li>
-</ul>
-<div class="fragment">
-<p>El overfitting es la brecha:</p>
-<p><span class="math display">
-\text{error fuera de muestra}
--
-\text{error de entrenamiento}.
-</span></p>
-<p>No podemos diagnosticarla mirando solo el ajuste in-sample.</p>
-</div>
 </section></section>
 <section>
-<section id="separar-para-aprender" class="title-slide slide level1 inverse center middle" data-background-color="#D19F00">
-<h1>Separar para aprender</h1>
+<section id="sesgo-y-varianza-con-datos-simulados" class="title-slide slide level1 inverse center middle" data-background-color="#D19F00">
+<h1>Sesgo y varianza con datos simulados</h1>
 
 </section>
-<section id="la-regla-básica-no-usar-dos-veces-la-respuesta" class="slide level2">
-<h2>La regla básica: no usar dos veces la respuesta</h2>
-<div class="center">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="train_test.png" style="width:72.0%"></p>
-<figcaption>Separación entre entrenamiento y evaluación</figcaption>
-</figure>
+<section id="un-proceso-generador-conocido" class="slide level2">
+<h2>Un proceso generador conocido</h2>
+<p>Para separar sesgo y varianza necesitamos conocer la verdad <span class="math inline">f</span>. Eso solo es posible simulando:</p>
+<p><span class="math display">
+Y = f(X) + \varepsilon, \qquad f(x) = 2 + 3\sin(2x), \qquad \varepsilon \sim N(0,1)
+</span></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href=""></a>f_true <span class="ot">&lt;-</span> <span class="cf">function</span>(x) <span class="dv">2</span> <span class="sc">+</span> <span class="dv">3</span> <span class="sc">*</span> <span class="fu">sin</span>(<span class="dv">2</span> <span class="sc">*</span> x)</span>
+<span id="cb1-2"><a href=""></a>sigma <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb1-3"><a href=""></a>x0 <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="co"># punto donde evaluamos sesgo y varianza más adelante</span></span>
+<span id="cb1-4"><a href=""></a></span>
+<span id="cb1-5"><a href=""></a>simulate_training_set <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">n =</span> <span class="dv">30</span>) {</span>
+<span id="cb1-6"><a href=""></a>  x <span class="ot">&lt;-</span> <span class="fu">runif</span>(n, <span class="dv">0</span>, <span class="dv">3</span>)</span>
+<span id="cb1-7"><a href=""></a>  <span class="fu">tibble</span>(<span class="at">x =</span> x, <span class="at">y =</span> <span class="fu">f_true</span>(x) <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="at">sd =</span> sigma))</span>
+<span id="cb1-8"><a href=""></a>}</span>
+<span id="cb1-9"><a href=""></a></span>
+<span id="cb1-10"><a href=""></a>fit_poly <span class="ot">&lt;-</span> <span class="cf">function</span>(data, degree) <span class="fu">lm</span>(y <span class="sc">~</span> <span class="fu">poly</span>(x, degree, <span class="at">raw =</span> <span class="cn">TRUE</span>), <span class="at">data =</span> data)</span>
+<span id="cb1-11"><a href=""></a>grid <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">x =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">3</span>, <span class="at">length.out =</span> <span class="dv">200</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>En la práctica nunca observamos <span class="math inline">f</span>; aquí la conocemos porque la definimos nosotros. <code>fit_poly()</code> es el único ajuste que vamos a reutilizar en todo lo que sigue.</p>
+</section>
+<section id="mismo-training-set-con-tres-niveles-de-flexibilidad" class="slide level2">
+<h2>Mismo training set con tres niveles de flexibilidad</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href=""></a><span class="fu">set.seed</span>(<span class="dv">3070</span>)</span>
+<span id="cb2-2"><a href=""></a>train_demo <span class="ot">&lt;-</span> <span class="fu">simulate_training_set</span>(<span class="dv">40</span>)</span>
+<span id="cb2-3"><a href=""></a></span>
+<span id="cb2-4"><a href=""></a>fits_demo <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">4</span>, <span class="dv">15</span>), <span class="cf">function</span>(d) {</span>
+<span id="cb2-5"><a href=""></a>  grid <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(</span>
+<span id="cb2-6"><a href=""></a>    <span class="at">y_hat =</span> <span class="fu">predict</span>(<span class="fu">fit_poly</span>(train_demo, d), <span class="at">newdata =</span> grid),</span>
+<span id="cb2-7"><a href=""></a>    <span class="at">grado =</span> <span class="fu">factor</span>(d)</span>
+<span id="cb2-8"><a href=""></a>  )</span>
+<span id="cb2-9"><a href=""></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Una sola muestra (<code>train_demo</code>), tres reglas ajustadas sobre ella (grados 1, 4 y 15).</p>
+</section>
+<section id="mismo-training-set-con-tres-niveles-de-flexibilidad-1" class="slide level2">
+<h2>Mismo training set con tres niveles de flexibilidad</h2>
+
+<img data-src="class_14_files/figure-revealjs/three-regimes-plot-1.png" width="1152" class="r-stretch"><p>Curva punteada = <span class="math inline">f(x)</span>. Grado 1 subajusta; grado 15 persigue el ruido de esta muestra particular.</p>
+</section>
+<section id="y-si-hubiéramos-tenido-otra-muestra" class="slide level2">
+<h2>¿Y si hubiéramos tenido otra muestra?</h2>
+<p>Ajustamos los mismos dos grados extremos (1 y 15) en 40 training sets distintos, cada uno de tamaño 30.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href=""></a><span class="fu">set.seed</span>(<span class="dv">3070</span>)</span>
+<span id="cb3-2"><a href=""></a>spaghetti <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(<span class="fu">c</span>(<span class="st">"Rígido (grado 1)"</span> <span class="ot">=</span> <span class="dv">1</span>, <span class="st">"Flexible (grado 15)"</span> <span class="ot">=</span> <span class="dv">15</span>), <span class="cf">function</span>(d) {</span>
+<span id="cb3-3"><a href=""></a>  <span class="fu">map_dfr</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">40</span>, <span class="cf">function</span>(sim) {</span>
+<span id="cb3-4"><a href=""></a>    grid <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">y_hat =</span> <span class="fu">predict</span>(<span class="fu">fit_poly</span>(<span class="fu">simulate_training_set</span>(<span class="dv">30</span>), d), <span class="at">newdata =</span> grid), <span class="at">sim =</span> sim)</span>
+<span id="cb3-5"><a href=""></a>  })</span>
+<span id="cb3-6"><a href=""></a>}, <span class="at">.id =</span> <span class="st">"modelo"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb3-7"><a href=""></a>  <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="fu">factor</span>(modelo, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Rígido (grado 1)"</span>, <span class="st">"Flexible (grado 15)"</span>)))</span>
+<span id="cb3-8"><a href=""></a></span>
+<span id="cb3-9"><a href=""></a>spaghetti_prom <span class="ot">&lt;-</span> spaghetti <span class="sc">%&gt;%</span> <span class="fu">summarise</span>(<span class="at">y_hat =</span> <span class="fu">mean</span>(y_hat), <span class="at">.by =</span> <span class="fu">c</span>(modelo, x))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="ajustes-dos-grados-de-flexibilidad" class="slide level2">
+<h2>40 ajustes, dos grados de flexibilidad</h2>
+
+<img data-src="class_14_files/figure-revealjs/spaghetti-plot-1.png" width="1248" class="r-stretch"><p>Punteada = <span class="math inline">f(x)</span> · gruesa = promedio de los 40 ajustes · finas = cada ajuste individual. El panel rígido agrupa sus ajustes de cerca, pero lejos de la verdad (sesgo alto, varianza baja); el panel flexible dispersa sus ajustes, pero su promedio sigue de cerca la verdad (sesgo bajo, varianza alta). Es el mismo mecanismo que los vecinos más cercanos.</p>
+</section>
+<section id="sesgo-y-varianza-con-diferentes-grados-de-flexibilidad" class="slide level2">
+<h2>Sesgo y varianza con diferentes grados de flexibilidad</h2>
+<p><br></p>
+<p>Repetimos esto mismo para los grados 1 a 12, y nos quedamos solo con la predicción en <span class="math inline">x_0</span> de cada ajuste.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a><span class="fu">set.seed</span>(<span class="dv">3070</span>)</span>
+<span id="cb4-2"><a href=""></a>predicciones <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">12</span>, <span class="cf">function</span>(d) {</span>
+<span id="cb4-3"><a href=""></a>  preds <span class="ot">&lt;-</span> <span class="fu">map_dbl</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">300</span>, <span class="sc">~</span> <span class="fu">predict</span>(<span class="fu">fit_poly</span>(<span class="fu">simulate_training_set</span>(<span class="dv">30</span>), d), <span class="at">newdata =</span> <span class="fu">tibble</span>(<span class="at">x =</span> x0)))</span>
+<span id="cb4-4"><a href=""></a>  <span class="fu">tibble</span>(<span class="at">grado =</span> d, <span class="at">prediccion =</span> preds)</span>
+<span id="cb4-5"><a href=""></a>})</span>
+<span id="cb4-6"><a href=""></a></span>
+<span id="cb4-7"><a href=""></a>bias_var <span class="ot">&lt;-</span> predicciones <span class="sc">%&gt;%</span></span>
+<span id="cb4-8"><a href=""></a>  <span class="fu">summarise</span>(<span class="at">sesgo2 =</span> (<span class="fu">mean</span>(prediccion) <span class="sc">-</span> <span class="fu">f_true</span>(x0))<span class="sc">^</span><span class="dv">2</span>, <span class="at">varianza =</span> <span class="fu">var</span>(prediccion), <span class="at">.by =</span> grado)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Para cada grado, <code>prediccion</code> guarda 300 estimaciones de <span class="math inline">\widehat f(x_0)</span>: una por muestra simulada. <code>bias_var</code> resume cada grado en dos números.</p>
+</section>
+<section id="el-trade-off-sesgo-varianza-descompuesto" class="slide level2">
+<h2>El trade-off sesgo-varianza, descompuesto</h2>
+
+<img data-src="class_14_files/figure-revealjs/bias-variance-plot-1.png" width="1152" class="r-stretch"><p>La línea negra es el error esperado total; el área es su descomposición en sesgo² y varianza. El mínimo está en grado 4, no en los extremos.</p>
+</section></section>
+<section>
+<section id="un-primer-intento-criterios-de-información" class="title-slide slide level1 inverse center middle" data-background-color="#D19F00">
+<h1>Un primer intento: criterios de información</h1>
+
+</section>
+<section id="penalizar-la-complejidad-dentro-de-la-misma-muestra" class="slide level2">
+<h2>Penalizar la complejidad dentro de la misma muestra</h2>
+<p><br></p>
+<p>Criterios de Información:</p>
+<p><span class="math display">
+\text{IC} = \underbrace{-2\log\mathcal{L}_M}_{\text{ajuste}} + \underbrace{k\cdot q}_{\text{parsimonia}}
+</span></p>
+<div class="fragment">
+<p><span class="math display">
+\text{AIC}=\text{IC}_{q=2},\quad \text{BIC}=\text{IC}_{q=\log n}
+</span></p>
+<p><br></p>
+</div>
+<div class="fragment">
+<ul>
+<li><span class="math inline">\mathcal{L}_M</span>: Likelihood maximizada del modelo <span class="math inline">M</span>; <span class="math inline">k</span>: número de parámetros.</li>
+<li>Un valor más bajo indica mejor balance entre ajuste y parsimonia.</li>
+<li>Como <span class="math inline">\log(n) &gt; 2</span> para casi cualquier <span class="math inline">n</span> en ciencias sociales, BIC castiga la complejidad con más fuerza que AIC.</li>
+</ul>
+<p><img data-src="https://miro.medium.com/0*ixgk7pTe2E--J7wI.png"></p>
+</div>
+</section>
+<section id="dos-reglas-candidatas" class="slide level2">
+<h2>Dos reglas candidatas</h2>
+<p><br></p>
+<p>Usaremos estas mismas dos reglas en todo lo que resta de la clase: primero con AIC/BIC, después con validación cruzada.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href=""></a>simple_formula <span class="ot">&lt;-</span> bikers <span class="sc">~</span></span>
+<span id="cb5-2"><a href=""></a>  temp <span class="sc">+</span> hum <span class="sc">+</span> workingday <span class="sc">+</span> <span class="fu">factor</span>(hr)</span>
+<span id="cb5-3"><a href=""></a></span>
+<span id="cb5-4"><a href=""></a>flexible_formula <span class="ot">&lt;-</span> bikers <span class="sc">~</span></span>
+<span id="cb5-5"><a href=""></a>  <span class="fu">poly</span>(temp, <span class="dv">5</span>, <span class="at">raw =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb5-6"><a href=""></a>  <span class="fu">poly</span>(hum, <span class="dv">5</span>, <span class="at">raw =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb5-7"><a href=""></a>  <span class="fu">factor</span>(mnth) <span class="sc">+</span></span>
+<span id="cb5-8"><a href=""></a>  <span class="fu">factor</span>(hr) <span class="sc">*</span> workingday <span class="sc">+</span></span>
+<span id="cb5-9"><a href=""></a>  <span class="fu">factor</span>(weekday) <span class="sc">+</span></span>
+<span id="cb5-10"><a href=""></a>  windspeed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="aic-y-bic-calculados-en-el-training-set" class="slide level2">
+<h2>AIC y BIC, calculados en el training set</h2>
+<p><br></p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  modelo       AIC     BIC
+  &lt;chr&gt;      &lt;dbl&gt;   &lt;dbl&gt;
+1 Simple   100344. 100542.
+2 Flexible  94129.  94672.</code></pre>
 </div>
 </div>
-<ol type="1">
+<p>El modelo flexible gana en ambos criterios, pero ambos números se calculan con los mismos datos que se usaron para estimar los coeficientes.</p>
+</section>
+<section id="limitaciones-de-los-criterios-de-información" class="slide level2">
+<h2>Limitaciones de los criterios de información</h2>
+<p><br></p>
+<ul>
+<li>Penalizan la complejidad, pero <strong>in-sample</strong>: nunca miran un caso que el modelo no haya visto al ajustar.</li>
+<li>Suponen una forma específica de penalización (<span class="math inline">2k</span> o <span class="math inline">\log(n)k</span>) que no siempre refleja el costo real de equivocarse.</li>
+<li>No dicen nada sobre la <em>estabilidad</em> del desempeño entre muestras.</li>
+</ul>
+</section>
+<section id="limitaciones-de-los-criterios-de-información-1" class="slide level2">
+<h2>Limitaciones de los criterios de información</h2>
+
+<img data-src="https://www.mihaileric.com/static/model-selection-meme-bd4a6a86f615583d1a1bbc497ca4640e-67414.jpeg" class="r-stretch"><p><br></p>
+<p>Para saber cómo predice el modelo en casos nuevos, hay que evaluarlo en casos nuevos: ese es el principio</p>
+</section></section>
+<section>
+<section id="separar-para-gobernar" class="title-slide slide level1 inverse center middle" data-background-color="#D19F00">
+<h1>Separar para gobernar</h1>
+<p>de la validación fuera de muestra.</p>
+</section>
+<section id="la-regla-básica-no-usar-dos-veces-los-mismos-datos" class="slide level2">
+<h2>La regla básica: no usar dos veces los mismos datos</h2>
+<p><br></p>
+
+<img data-src="class_14_files/figure-revealjs/train-test-diagram-1.png" width="960" class="r-stretch"><ol type="1">
 <li>Ajustamos el modelo en el <strong>training set</strong>.</li>
 <li>Congelamos la regla aprendida.</li>
-<li>Predecimos el <strong>test set</strong>.</li>
+<li>Predecimos el <strong>testing set</strong>.</li>
 <li>Comparamos predicción y resultado con una pérdida.</li>
 </ol>
 </section>
-<section id="un-único-split-es-frágil" class="slide level2">
-<h2>Un único split es frágil</h2>
-<p>Separar una vez training y test evita el doble uso, pero:</p>
-<ul>
-<li>el resultado depende de qué casos quedaron en cada lado;</li>
-<li>una partición difícil puede hacer parecer malo a un buen modelo;</li>
-<li>una partición fácil puede producir optimismo;</li>
-<li>en muestras pequeñas reservamos demasiada información solo para evaluar.</li>
-</ul>
+<section id="el-validation-set-approach-es-frágil" class="slide level2">
+<h2>El “validation set approach” es frágil</h2>
+<p><br></p>
+<p>Separar una vez en training set y testing set —el <strong>validation set approach</strong>— evita el doble uso, pero tiene dos problemas:</p>
+<ol type="1">
+<li><strong>Alta variabilidad:</strong> el error estimado depende de qué casos cayeron en cada lado; repetir el split con otra semilla puede dar un número bastante distinto.</li>
+<li><strong>Sesgo por tamaño:</strong> el modelo se ajusta con <em>menos</em> datos que los disponibles, y los modelos suelen desempeñarse peor con menos datos. Eso tiende a <strong>sobreestimar</strong> el error fuera de muestra del modelo final.</li>
+</ol>
+<p><br></p>
 <div class="fragment">
-<p>Queremos repetir el examen con distintas particiones sin evaluar sobre casos usados para entrenar.</p>
+<p>Queremos usar <em>todos</em> los datos para entrenar y <em>todos</em> los datos para evaluar, sin usar el mismo caso para ambas cosas a la vez.</p>
 </div>
 </section></section>
 <section>
@@ -455,18 +611,15 @@ Mauricio Bucca · Sociología UC
 <h1>Validación cruzada</h1>
 
 </section>
-<section id="cada-observación-rinde-examen-una-vez" class="slide level2">
-<h2>Cada observación rinde examen una vez</h2>
-<div class="center">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="kfold_cv.gif" style="width:70.0%"></p>
-<figcaption>Esquema de validación cruzada</figcaption>
-</figure>
-</div>
-</div>
-<p>En <span class="math inline">k</span>-fold cross-validation, dividimos los datos en <span class="math inline">k</span> grupos. Cada fold actúa una vez como evaluación y <span class="math inline">k-1</span> veces como parte del entrenamiento.</p>
-</section>
+<section id="k-fold-cross-validation" class="slide level2">
+<h2>k-fold cross-validation</h2>
+<p><br></p>
+<p>Dividimos los datos en <span class="math inline">k</span> grupos y cada uno actúa una vez como testing set:</p>
+<p><span class="math display">
+\widehat E_{\text{CV}}=\frac{1}{k}\sum_{j=1}^{k}E_j.
+</span></p>
+
+<img data-src="class_14_files/figure-revealjs/kfold-diagram-1.png" width="864" class="r-stretch"></section>
 <section id="el-algoritmo-es-una-envoltura-genérica" class="slide level2">
 <h2>El algoritmo es una envoltura genérica</h2>
 <p>Para <span class="math inline">j=1,\ldots,k</span>:</p>
@@ -497,255 +650,34 @@ Mauricio Bucca · Sociología UC
 <p>Dos modelos con el mismo error promedio pueden diferir mucho en estabilidad.</p>
 </div>
 </section>
-<section id="cuántos-folds" class="slide level2">
-<h2>¿Cuántos folds?</h2>
+<section id="sesgo-y-varianza-en-la-elección-de-k" class="slide level2">
+<h2>Sesgo y varianza en la elección de <span class="math inline">k</span></h2>
+<p><br></p>
 <div class="pull-left">
-<p><strong><span class="math inline">k</span> pequeño</strong></p>
+<p><strong><span class="math inline">k</span> chico (p.&nbsp;ej. 5)</strong></p>
 <ul>
-<li>entrenamientos más pequeños;</li>
-<li>menor costo computacional;</li>
-<li>estimación más sesgada del desempeño final.</li>
+<li>entrena con menos datos: algo más de sesgo;</li>
+<li>los folds comparten pocos casos entre sí;</li>
+<li>los <span class="math inline">k</span> errores <span class="math inline">E_j</span> quedan poco correlacionados <span class="math inline">\Rightarrow</span> <strong>baja varianza</strong> al promediar.</li>
 </ul>
 </div>
 <div class="pull-right">
-<p><strong><span class="math inline">k</span> grande</strong></p>
+<p><strong><span class="math inline">k</span> grande, hasta LOOCV</strong></p>
 <ul>
-<li>entrenamientos parecidos al dataset completo;</li>
-<li>mayor costo;</li>
-<li>errores entre folds más correlacionados.</li>
+<li>entrena con casi todos los datos: sesgo mínimo;</li>
+<li>los folds casi se superponen entre sí;</li>
+<li>los errores quedan muy correlacionados <span class="math inline">\Rightarrow</span> <strong>alta varianza</strong> al promediar.</li>
 </ul>
 </div>
+<p><br></p>
 <div class="fragment">
-<p><span class="math inline">k=5</span> o <span class="math inline">k=10</span> suele ofrecer un balance razonable.</p>
-</div>
-</section>
-<section id="loocv-es-el-caso-extremo" class="slide level2">
-<h2>LOOCV es el caso extremo</h2>
-<p>Si <span class="math inline">k=n</span>, cada fold contiene una sola observación:</p>
-<p><span class="math display">
-\text{LOOCV}=\text{Leave-One-Out Cross-Validation}.
-</span></p>
-<ul>
-<li>Entrena <span class="math inline">n</span> veces con <span class="math inline">n-1</span> casos.</li>
-<li>Usa casi todos los datos en cada ajuste.</li>
-<li>Puede ser costoso y producir una estimación de error con alta varianza.</li>
-</ul>
-<div class="fragment">
-<p>Usar más folds no garantiza una mejor decisión.</p>
+<p>Promediar cantidades correlacionadas reduce poco el ruido. Por eso <span class="math inline">k=5</span> o <span class="math inline">k=10</span> suele predecir el desempeño real mejor que LOOCV, además de costar menos cómputo.</p>
 </div>
 </section></section>
 <section>
 <section id="cross-validation-con-bikers" class="title-slide slide level1 inverse center middle" data-background-color="#D19F00">
-<h1>Cross-validation con <code>bikers</code></h1>
+<h1>Cross-validation con <code>bikers</code> …</h1>
 
-</section>
-<section id="la-partición-debe-parecerse-al-uso-futuro" class="slide level2">
-<h2>La partición debe parecerse al uso futuro</h2>
-<p>Los datos contienen 24 horas dentro de cada día. Si repartimos horas al azar, el training set puede contener otras horas del mismo día que estamos evaluando.</p>
-<div class="fragment">
-<p>Para predecir demanda en <strong>días nuevos</strong>, dejamos días completos fuera:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href=""></a><span class="fu">set.seed</span>(<span class="dv">3070</span>)</span>
-<span id="cb1-2"><a href=""></a>folds <span class="ot">&lt;-</span> <span class="fu">group_vfold_cv</span>(</span>
-<span id="cb1-3"><a href=""></a>  bikedata,</span>
-<span id="cb1-4"><a href=""></a>  <span class="at">group =</span> day,</span>
-<span id="cb1-5"><a href=""></a>  <span class="at">v =</span> <span class="dv">10</span></span>
-<span id="cb1-6"><a href=""></a>)</span>
-<span id="cb1-7"><a href=""></a></span>
-<span id="cb1-8"><a href=""></a>folds <span class="sc">%&gt;%</span></span>
-<span id="cb1-9"><a href=""></a>  <span class="fu">select</span>(id) <span class="sc">%&gt;%</span></span>
-<span id="cb1-10"><a href=""></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 3 × 1
-  id        
-  &lt;chr&gt;     
-1 Resample01
-2 Resample02
-3 Resample03</code></pre>
-</div>
-</div>
-<p>Mostramos tres de los diez folds. La unidad de partición es parte del estimando predictivo.</p>
-</div>
-</section>
-<section id="dos-reglas-candidatas" class="slide level2">
-<h2>Dos reglas candidatas</h2>
-<p>Para hacer visible el procedimiento, usamos dos reglas reproducibles:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href=""></a>simple_formula <span class="ot">&lt;-</span> bikers <span class="sc">~</span></span>
-<span id="cb3-2"><a href=""></a>  temp <span class="sc">+</span> hum <span class="sc">+</span> workingday <span class="sc">+</span> <span class="fu">factor</span>(hr)</span>
-<span id="cb3-3"><a href=""></a></span>
-<span id="cb3-4"><a href=""></a>flexible_formula <span class="ot">&lt;-</span> bikers <span class="sc">~</span></span>
-<span id="cb3-5"><a href=""></a>  <span class="fu">poly</span>(temp, <span class="dv">5</span>, <span class="at">raw =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
-<span id="cb3-6"><a href=""></a>  <span class="fu">poly</span>(hum, <span class="dv">5</span>, <span class="at">raw =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
-<span id="cb3-7"><a href=""></a>  <span class="fu">factor</span>(mnth) <span class="sc">+</span></span>
-<span id="cb3-8"><a href=""></a>  <span class="fu">factor</span>(hr) <span class="sc">*</span> workingday <span class="sc">+</span></span>
-<span id="cb3-9"><a href=""></a>  <span class="fu">factor</span>(weekday) <span class="sc">+</span></span>
-<span id="cb3-10"><a href=""></a>  windspeed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>El objetivo no es enseñar estas especificaciones. Son dos objetos <code>fit/predict</code> que la misma validación cruzada puede comparar.</p>
-</section>
-<section id="una-función-evalúa-cualquier-fórmula" class="slide level2">
-<h2>Una función evalúa cualquier fórmula</h2>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a>evaluate_fold <span class="ot">&lt;-</span> <span class="cf">function</span>(split, formula) {</span>
-<span id="cb4-2"><a href=""></a>  train_data <span class="ot">&lt;-</span> <span class="fu">analysis</span>(split)</span>
-<span id="cb4-3"><a href=""></a>  test_data <span class="ot">&lt;-</span> <span class="fu">assessment</span>(split)</span>
-<span id="cb4-4"><a href=""></a>  fit <span class="ot">&lt;-</span> <span class="fu">lm</span>(formula, <span class="at">data =</span> train_data)</span>
-<span id="cb4-5"><a href=""></a></span>
-<span id="cb4-6"><a href=""></a>  <span class="fu">tibble</span>(</span>
-<span id="cb4-7"><a href=""></a>    <span class="at">RMSE_train =</span> <span class="fu">rmse</span>(</span>
-<span id="cb4-8"><a href=""></a>      train_data<span class="sc">$</span>bikers, <span class="fu">predict</span>(fit, train_data)</span>
-<span id="cb4-9"><a href=""></a>    ),</span>
-<span id="cb4-10"><a href=""></a>    <span class="at">RMSE_test =</span> <span class="fu">rmse</span>(</span>
-<span id="cb4-11"><a href=""></a>      test_data<span class="sc">$</span>bikers, <span class="fu">predict</span>(fit, test_data)</span>
-<span id="cb4-12"><a href=""></a>    )</span>
-<span id="cb4-13"><a href=""></a>  )</span>
-<span id="cb4-14"><a href=""></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>Cada ajuste conoce solo el training set de su fold.</p>
-</section>
-<section id="repetimos-el-examen-diez-veces" class="slide level2">
-<h2>Repetimos el examen diez veces</h2>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href=""></a>candidate_models <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb5-2"><a href=""></a>  <span class="at">Simple =</span> simple_formula,</span>
-<span id="cb5-3"><a href=""></a>  <span class="at">Flexible =</span> flexible_formula</span>
-<span id="cb5-4"><a href=""></a>)</span>
-<span id="cb5-5"><a href=""></a></span>
-<span id="cb5-6"><a href=""></a>cv_results <span class="ot">&lt;-</span> <span class="fu">imap_dfr</span>(</span>
-<span id="cb5-7"><a href=""></a>  candidate_models,</span>
-<span id="cb5-8"><a href=""></a>  <span class="cf">function</span>(formula, model_name) {</span>
-<span id="cb5-9"><a href=""></a>    <span class="fu">map_dfr</span>(folds<span class="sc">$</span>splits, evaluate_fold, formula) <span class="sc">%&gt;%</span></span>
-<span id="cb5-10"><a href=""></a>      <span class="fu">mutate</span>(<span class="at">modelo =</span> model_name, <span class="at">.before =</span> <span class="dv">1</span>)</span>
-<span id="cb5-11"><a href=""></a>  }</span>
-<span id="cb5-12"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>El resultado contiene veinte evaluaciones: diez por regla. <code>RMSE_test</code> se calcula siempre fuera de muestra.</p>
-</section>
-<section id="el-promedio-importa-la-variación-también" class="slide level2">
-<h2>El promedio importa; la variación también</h2>
-
-<img data-src="class_14_files/figure-revealjs/cv-plot-1.png" width="960" class="r-stretch"><p>Cada punto es un fold; el punto blanco es el promedio.</p>
-</section>
-<section id="resumimos-desempeño-y-estabilidad" class="slide level2">
-<h2>Resumimos desempeño y estabilidad</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2 × 4
-  modelo   RMSE_promedio SD_entre_folds brecha_generalización
-  &lt;chr&gt;            &lt;dbl&gt;          &lt;dbl&gt;                 &lt;dbl&gt;
-1 Flexible          57.000           4.990                 1.580 
-2 Simple            80.500           3.090                 0.559</code></pre>
-</div>
-</div>
-<p>En este ejercicio, la regla flexible predice mejor días nuevos. La brecha y la dispersión recuerdan que un único número no resume toda la incertidumbre predictiva.</p>
-</section>
-<section id="cross-validation-no-está-casada-con-rmse" class="slide level2">
-<h2>Cross-validation no está casada con RMSE</h2>
-<p>Podemos conservar los mismos folds y cambiar la pérdida:</p>
-<table class="caption-top">
-<thead>
-<tr class="header">
-<th>Tipo de outcome</th>
-<th>Pérdidas posibles</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>continuo (<code>bikers</code>)</td>
-<td>RMSE, MAE</td>
-</tr>
-<tr class="even">
-<td>binario (<code>high_demand</code>)</td>
-<td>log-loss, error de clasificación</td>
-</tr>
-<tr class="odd">
-<td>multinomial (<code>demand_level</code>)</td>
-<td>cross-entropy, accuracy</td>
-</tr>
-<tr class="even">
-<td>conteo</td>
-<td>deviance, MAE, RMSE</td>
-</tr>
-</tbody>
-</table>
-<div class="fragment">
-<p>La métrica debe reflejar el uso sustantivo de la predicción y el costo de equivocarse.</p>
-</div>
-</section>
-<section id="cross-validation-también-sirve-para-elegir" class="slide level2">
-<h2>Cross-validation también sirve para elegir</h2>
-<p>La usamos para comparar:</p>
-<ul>
-<li>algoritmos;</li>
-<li>predictores;</li>
-<li>transformaciones;</li>
-<li>niveles de regularización;</li>
-<li>hiperparámetros;</li>
-<li>reglas de decisión.</li>
-</ul>
-<div class="fragment">
-<p>Pero toda elección guiada por CV convierte esos folds en parte del entrenamiento del procedimiento completo.</p>
-</div>
-</section>
-<section id="el-test-final-se-toca-una-sola-vez" class="slide level2">
-<h2>El test final se toca una sola vez</h2>
-<p>Un flujo limpio separa tres funciones:</p>
-<ol type="1">
-<li><strong>Training folds:</strong> ajustar parámetros.</li>
-<li><strong>Validation folds:</strong> comparar alternativas y elegir.</li>
-<li><strong>Test final:</strong> estimar desempeño del procedimiento elegido.</li>
-</ol>
-<div class="fragment">
-<p>Si miramos repetidamente el test para modificar el modelo, terminamos sobreajustando el test.</p>
-</div>
-</section>
-<section id="fugas-de-información" class="slide level2">
-<h2>Fugas de información</h2>
-<p>Hay <em>data leakage</em> cuando información del fold reservado influye en el ajuste:</p>
-<ul>
-<li>estandarizar con media y desviación de todo el dataset;</li>
-<li>imputar usando también los casos de evaluación;</li>
-<li>seleccionar predictores antes de crear folds;</li>
-<li>ajustar umbrales con las respuestas del test;</li>
-<li>repartir observaciones relacionadas entre training y test.</li>
-</ul>
-<div class="fragment">
-<p>Toda operación que “aprende” de los datos debe ocurrir dentro de cada fold.</p>
-</div>
-</section>
-<section id="series-de-tiempo-requieren-otra-partición" class="slide level2">
-<h2>Series de tiempo requieren otra partición</h2>
-<p>Si el objetivo fuera predecir el futuro, folds aleatorios podrían dejar observaciones futuras en training y pasadas en evaluación.</p>
-<div class="fragment">
-<p>En ese caso usaríamos validación temporal:</p>
-<p><span class="math display">
-\text{pasado}\longrightarrow\text{futuro},
-</span></p>
-<p>con ventanas móviles o acumulativas. La validación debe imitar las restricciones reales de despliegue.</p>
-</div>
-</section>
-<section id="ejercicio" class="slide level2">
-<h2>Ejercicio</h2>
-<p>Con los mismos folds por <code>day</code>:</p>
-<ol type="1">
-<li>proponga una tercera regla de predicción;</li>
-<li>evalúela con MAE y RMSE;</li>
-<li>compare promedio y dispersión entre folds;</li>
-<li>identifique una posible fuga de información;</li>
-<li>explique cómo cambiaría los folds si el objetivo fuera predecir el mes siguiente.</li>
-</ol>
-</section>
-<section id="en-resumen" class="slide level2">
-<h2>En resumen</h2>
-<ul>
-<li>Predecir significa generalizar a casos nuevos.</li>
-<li>El error de entrenamiento es optimista por construcción.</li>
-<li>El overfitting surge cuando la flexibilidad captura ruido.</li>
-<li>Validación cruzada repite evaluaciones fuera de muestra.</li>
-<li>Folds y pérdidas deben imitar la tarea predictiva real.</li>
-<li>El test final se reserva para una sola evaluación.</li>
-</ul>
 </section>
 <section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#087E4B">
 <h2>Gracias</h2>

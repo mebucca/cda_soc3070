@@ -71,7 +71,12 @@ clasificador logístico: métricas y umbrales.
 
 # Predecir es generalizar {.inverse .center .middle}
 
-## Dos preguntas, dos criterios de éxito
+## Dos preguntas y dos criterios de éxito
+
+<br>
+
+. . .
+
 
 ::: {.pull-left}
 
@@ -85,6 +90,9 @@ clasificador logístico: métricas y umbrales.
 El foco está en **explicación e inferencia**.
 
 :::
+
+. . .
+
 
 ::: {.pull-right}
 
@@ -103,13 +111,19 @@ El foco está en **generalización**.
 Distinción inspirada en Mullainathan y Spiess (2017).
 :::
 
-## El examen ocurre en datos nuevos
+## Aprender de los datos existentes y predecir en datos nuevos
+
+<br>
 
 Un modelo recibe predictores $X$ y construye una regla:
 
 $$
 \widehat{f}:X\longrightarrow \widehat{Y}.
 $$
+
+. . .
+
+<br>
 
 El objetivo predictivo no es reproducir los datos que ya vimos, sino minimizar el error esperado en una nueva observación:
 
@@ -119,78 +133,130 @@ $$
 
 . . .
 
-La función de pérdida $L$ depende de la tarea: error cuadrático, error absoluto, log-loss, error de clasificación, etc.
+<br>
+
+Donde $L$ es una función de pérdida (la función específica depende de la tarea: error cuadrático, error absoluto, log-loss, error de clasificación, etc.)
 
 ## Nuestro problema de hoy
+
+<br>
+
 
 Usaremos `bikers` como outcome:
 
 > ¿Cuántos arriendos habrá en una hora que el modelo no usó para aprender?
 
+<br>
+
 Los predictores disponibles describen clima, calendario y hora del día.
 
 . . .
 
+<br>
+
 No necesitamos comprometernos con una familia de modelos: la lógica de evaluación es la misma para una regresión, un árbol, una red neuronal o cualquier otra regla de predicción.
-
-## Ajustar y evaluar son operaciones distintas
-
-::: {.pull-left}
-
-**Ajustar**
-
-Usar datos para aprender:
-
-$$
-\text{datos de entrenamiento}
-\longrightarrow \widehat f
-$$
-
-:::
-
-::: {.pull-right}
-
-**Evaluar**
-
-Aplicar la regla sin reestimarla:
-
-$$
-\widehat f(X_{\text{nuevo}})
-\longrightarrow \text{pérdida}
-$$
-
-:::
-
-. . .
-
-Si ajustamos y evaluamos con los mismos casos, el modelo ya conoce las respuestas del examen.
 
 # Overfitting {.inverse .center .middle}
 
 ## Buen ajuste no implica buena predicción
 
-Un modelo flexible puede capturar:
+<br>
 
-- patrones estables que volverán a aparecer;
-- ruido idiosincrático de la muestra de entrenamiento.
+Un modelo complejo aprende patrones complejos a partir de los datos. Puede aprender dos cosas:
+
+<br>
+
+- patrones estables que volverán a aparecer (en nuevos datos);
+- ruido idiosincrático de los datos donde ajustamos el model (training set).
+
+<br>
 
 . . .
 
-El segundo componente reduce el error de entrenamiento, pero deteriora la predicción en casos nuevos. Eso es **overfitting** o sobreajuste.
+La complejidad del modelo ayudar a reducing el error en el training set, pero puede deteriorar la predicción en casos nuevos. Eso es **overfitting** o sobreajuste.
 
 ## Tres regímenes de complejidad
-
-::: {.center}
-
-![Subajuste, ajuste adecuado y sobreajuste](underfit_right_overfit.png){width="78%"}
-
-:::
 
 - **Subajuste:** la regla es demasiado rígida y omite señal.
 - **Buen balance:** captura patrones reproducibles.
 - **Sobreajuste:** persigue fluctuaciones que no se repiten.
 
-## Sesgo y varianza describen errores distintos
+
+![](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRL9SUfXKKjoggrRQay7H5CE-IlxuhXiFKMj0QRAZA0tC60My7qBph-ZJI&s=10)
+
+. . .
+
+Más adelante vemos los tres regímenes sobre datos simulados.
+
+## Trade-off entre Sesgo y Varianza
+
+<br>
+
+En predicción con pérdida cuadrática:
+
+$$
+\underbrace{\mathbb{E}\left[(Y-\widehat f(X))^2\right]}_{\text{error esperado}}
+=
+\underbrace{\text{Sesgo}^2}_{\text{rigidez}}
++
+\underbrace{\text{Varianza}}_{\text{inestabilidad}}
++
+\underbrace{\sigma^2}_{\text{ruido irreducible}}
+$$
+
+. . .
+
+sesgo y varianza son dos cantidades distintas que simplemente se sumanl, pero reducir uno suele aumentar el otro: ese es el **trade-off sesgo–varianza**.
+
+
+<br>
+
+. . .
+
+- El trade-off aparece porque, en la práctica, **ambas dependen de la flexibilidad del modelo**.
+
+- Cambio en flexibilidad no cambia sesgo y varianza por separado: cambia la regla de ajuste completa, y eso mueve a ambos a la vez.
+
+
+## Un ejemplo: $k$ vecinos más cercanos
+
+![](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTBHSqbKSPfVo5iPr4AgUcea7rw1FGd1vnBBA8NJXYZjRPiZ5tjzq-Fu7ar&s=10)
+
+
+$$
+\widehat f(x_0) = \frac{1}{k}\sum_{i \,\in\, N_k(x_0)} y_i
+\qquad\Longrightarrow\qquad
+\text{Varianza}(x_0) = \frac{\sigma^2}{k}
+$$
+
+. . .
+
+::: {.pull-left}
+
+**$k$ chico (flexible)**
+
+- promedia pocos vecinos, muy cercanos a $x_0$;
+- sigue de cerca la forma local de $f$: **sesgo bajo**;
+- cada vecino pesa $1/k$, mucho: **varianza alta**.
+
+:::
+
+::: {.pull-right}
+
+**$k$ grande (rígido)**
+
+- promedia casi todos los datos, lejos y cerca;
+- el promedio global ignora la forma local de $f$: **sesgo alto** (salvo que $f$ sea constante);
+- cada dato pesa $1/k$, poco: **varianza baja**.
+
+:::
+
+
+
+
+## Trade-off entre Sesgo y Varianza
+
+<br>
 
 ::: {.pull-left}
 
@@ -216,121 +282,309 @@ Pequeños cambios en la muestra producen reglas muy diferentes.
 
 :::
 
-. . .
 
-Reducir uno suele aumentar el otro: ese es el **trade-off sesgo–varianza**.
 
-## La descomposición del error
 
-En predicción con pérdida cuadrática:
+
+# Sesgo y varianza con datos simulados {.inverse .center .middle}
+
+## Un proceso generador conocido
+
+Para separar sesgo y varianza necesitamos conocer la verdad $f$. Eso solo es posible simulando:
 
 $$
-\underbrace{\mathbb{E}\left[(Y-\widehat f(X))^2\right]}_{\text{error esperado}}
-=
-\underbrace{\text{Sesgo}^2}_{\text{rigidez}}
-+
-\underbrace{\text{Varianza}}_{\text{inestabilidad}}
-+
-\underbrace{\sigma^2}_{\text{ruido irreducible}}.
+Y = f(X) + \varepsilon, \qquad f(x) = 2 + 3\sin(2x), \qquad \varepsilon \sim N(0,1)
 $$
 
-. . .
+```{r sim-setup, echo=TRUE}
+f_true <- function(x) 2 + 3 * sin(2 * x)
+sigma <- 1
+x0 <- 1 # punto donde evaluamos sesgo y varianza más adelante
 
-La complejidad óptima no elimina todo error. Busca el punto donde agregar flexibilidad deja de recuperar señal y empieza a perseguir ruido.
+simulate_training_set <- function(n = 30) {
+  x <- runif(n, 0, 3)
+  tibble(x = x, y = f_true(x) + rnorm(n, sd = sigma))
+}
 
-## El error de entrenamiento siempre sonríe
-
-```{r complexity-demo, echo=FALSE, fig.height=4.5}
-set.seed(3070)
-demo_id <- sample(seq_len(nrow(bikedata)), 600)
-demo_train <- bikedata[demo_id[1:300], ]
-demo_test <- bikedata[demo_id[301:600], ]
-
-complexity_results <- map_dfr(1:16, function(degree) {
-  model <- lm(bikers ~ poly(temp, degree, raw = TRUE), data = demo_train)
-  tibble(
-    complejidad = degree,
-    Entrenamiento = rmse(
-      demo_train$bikers,
-      predict(model, newdata = demo_train)
-    ),
-    Evaluación = rmse(
-      demo_test$bikers,
-      predict(model, newdata = demo_test)
-    )
-  )
-}) %>%
-  pivot_longer(
-    c(Entrenamiento, Evaluación),
-    names_to = "muestra",
-    values_to = "RMSE"
-  )
-
-ggplot(complexity_results, aes(complejidad, RMSE, color = muestra)) +
-  geom_line(linewidth = 1.2) +
-  geom_point(size = 2.5) +
-  scale_color_course(name = NULL) +
-  labs(x = "Flexibilidad de la regla", y = "RMSE")
+fit_poly <- function(data, degree) lm(y ~ poly(x, degree, raw = TRUE), data = data)
+grid <- tibble(x = seq(0, 3, length.out = 200))
 ```
 
-En esta demostración con `bikers`, el error de entrenamiento cae al aumentar flexibilidad; el error en datos separados puede subir.
+En la práctica nunca observamos $f$; aquí la conocemos porque la definimos nosotros. `fit_poly()` es el único ajuste que vamos a reutilizar en todo lo que sigue.
 
-## El error relevante es fuera de muestra
+## Mismo training set con tres niveles de flexibilidad
 
-- **Error de entrenamiento:** mide qué tan bien la regla reproduce los casos usados para ajustarla.
-- **Error de generalización:** mide qué tan bien predice casos generados por el mismo proceso, pero no usados para aprender.
+```{r three-regimes-demo, echo=TRUE, results='hide'}
+set.seed(3070)
+train_demo <- simulate_training_set(40)
+
+fits_demo <- map_dfr(c(1, 4, 15), function(d) {
+  grid %>% mutate(
+    y_hat = predict(fit_poly(train_demo, d), newdata = grid),
+    grado = factor(d)
+  )
+})
+```
+
+Una sola muestra (`train_demo`), tres reglas ajustadas sobre ella (grados 1, 4 y 15).
+
+## Mismo training set con tres niveles de flexibilidad
+
+```{r three-regimes-plot, echo=FALSE, fig.width=12, fig.height=6}
+ggplot() +
+  geom_point(data = train_demo, aes(x, y), alpha = 0.5, size = 2.6) +
+  geom_function(fun = f_true, linetype = "dashed", linewidth = 1, color = "grey20") +
+  geom_line(data = fits_demo, aes(x, y_hat, color = grado), linewidth = 1.4) +
+  scale_color_course(name = "Grado del polinomio") +
+  coord_cartesian(ylim = c(-6, 10)) +
+  labs(x = "x", y = "y") +
+  theme_course(base_size = 16)
+```
+
+Curva punteada = $f(x)$. Grado 1 subajusta; grado 15 persigue el ruido de esta muestra particular.
+
+## ¿Y si hubiéramos tenido otra muestra?
+
+Ajustamos los mismos dos grados extremos (1 y 15) en 40 training sets distintos, cada uno de tamaño 30.
+
+```{r spaghetti-demo, echo=TRUE, results='hide'}
+set.seed(3070)
+spaghetti <- map_dfr(c("Rígido (grado 1)" = 1, "Flexible (grado 15)" = 15), function(d) {
+  map_dfr(1:40, function(sim) {
+    grid %>% mutate(y_hat = predict(fit_poly(simulate_training_set(30), d), newdata = grid), sim = sim)
+  })
+}, .id = "modelo") %>%
+  mutate(modelo = factor(modelo, levels = c("Rígido (grado 1)", "Flexible (grado 15)")))
+
+spaghetti_prom <- spaghetti %>% summarise(y_hat = mean(y_hat), .by = c(modelo, x))
+```
+
+## 40 ajustes, dos grados de flexibilidad
+
+```{r spaghetti-plot, echo=FALSE, fig.width=13, fig.height=6}
+ggplot(spaghetti, aes(x, y_hat, group = sim)) +
+  geom_line(color = unname(course_palette["primary"]), alpha = 0.15, linewidth = 0.6) +
+  geom_line(
+    data = spaghetti_prom, aes(x, y_hat), inherit.aes = FALSE,
+    color = unname(course_palette["secondary"]), linewidth = 1.6
+  ) +
+  geom_function(fun = f_true, inherit.aes = FALSE, linetype = "dashed", linewidth = 1, color = "grey15") +
+  coord_cartesian(ylim = c(-6, 10)) +
+  facet_wrap(~modelo) +
+  labs(x = "x", y = "y") +
+  theme_course(base_size = 16)
+```
+
+Punteada = $f(x)$ · gruesa = promedio de los 40 ajustes · finas = cada ajuste individual. El panel rígido agrupa sus ajustes de cerca, pero lejos de la verdad (sesgo alto, varianza baja); el panel flexible dispersa sus ajustes, pero su promedio sigue de cerca la verdad (sesgo bajo, varianza alta). Es el mismo mecanismo que los vecinos más cercanos.
+
+## Sesgo y varianza con diferentes grados de flexibilidad
+
+<br>
+
+Repetimos esto mismo para los grados 1 a 12, y nos quedamos solo con la predicción en $x_0$ de cada ajuste.
+
+```{r bias-variance-sim, echo=TRUE, results='hide'}
+set.seed(3070)
+predicciones <- map_dfr(1:12, function(d) {
+  preds <- map_dbl(1:300, ~ predict(fit_poly(simulate_training_set(30), d), newdata = tibble(x = x0)))
+  tibble(grado = d, prediccion = preds)
+})
+
+bias_var <- predicciones %>%
+  summarise(sesgo2 = (mean(prediccion) - f_true(x0))^2, varianza = var(prediccion), .by = grado)
+```
+
+Para cada grado, `prediccion` guarda 300 estimaciones de $\widehat f(x_0)$: una por muestra simulada. `bias_var` resume cada grado en dos números.
+
+## El trade-off sesgo-varianza, descompuesto
+
+```{r bias-variance-plot, echo=FALSE, fig.width=12, fig.height=6}
+bias_var_long <- bias_var %>%
+  mutate(total = sesgo2 + varianza + sigma^2) %>%
+  pivot_longer(c(varianza, sesgo2), names_to = "componente", values_to = "valor") %>%
+  mutate(componente = factor(componente, levels = c("varianza", "sesgo2"), labels = c("Varianza", "Sesgo²")))
+
+optimo <- bias_var_long %>% distinct(grado, total) %>% slice_min(total, n = 1)
+total_line <- bias_var_long %>% distinct(grado, total)
+
+ggplot(bias_var_long, aes(grado, valor, fill = componente)) +
+  geom_area(position = "stack", alpha = 0.9) +
+  geom_line(data = total_line, aes(x = grado, y = total), inherit.aes = FALSE, color = "black", linewidth = 1.2) +
+  geom_hline(yintercept = sigma^2, linetype = "dashed", color = "grey40", linewidth = 0.7) +
+  geom_vline(xintercept = optimo$grado, linetype = "dotted", color = "grey20", linewidth = 0.7) +
+  geom_point(
+    data = optimo, aes(x = grado, y = total), inherit.aes = FALSE,
+    shape = 21, size = 5, fill = "white", color = "black", stroke = 1.4
+  ) +
+  annotate("text", x = 12, y = sigma^2, label = "ruido irreducible", hjust = 1, vjust = -0.7, size = 5, color = "grey40") +
+  scale_fill_course(name = NULL) +
+  labs(x = "Grado del polinomio (flexibilidad)", y = expression("Componentes del error en " * x[0])) +
+  theme_course(base_size = 16)
+```
+
+La línea negra es el error esperado total; el área es su descomposición en sesgo² y varianza. El mínimo está en grado `r as.character(optimo$grado)`, no en los extremos.
+
+
+# Un primer intento: criterios de información {.inverse .center .middle}
+
+## Penalizar la complejidad dentro de la misma muestra
+
+<br>
+
+Criterios de Información:
+
+
+$$
+\text{IC} = \underbrace{-2\log\mathcal{L}_M}_{\text{ajuste}} + \underbrace{k\cdot q}_{\text{parsimonia}}
+$$
 
 . . .
 
-El overfitting es la brecha:
 
 $$
-\text{error fuera de muestra}
--
-\text{error de entrenamiento}.
+\text{AIC}=\text{IC}_{q=2},\quad \text{BIC}=\text{IC}_{q=\log n}
 $$
 
-No podemos diagnosticarla mirando solo el ajuste in-sample.
+<br>
 
-# Separar para aprender {.inverse .center .middle}
+. . .
 
-## La regla básica: no usar dos veces la respuesta
 
-::: {.center}
+- $\mathcal{L}_M$: Likelihood maximizada del modelo $M$; $k$: número de parámetros.
+- Un valor más bajo indica mejor balance entre ajuste y parsimonia.
+- Como $\log(n) > 2$ para casi cualquier $n$ en ciencias sociales, BIC castiga la complejidad con más fuerza que AIC.
 
-![Separación entre entrenamiento y evaluación](train_test.png){width="72%"}
+![](https://miro.medium.com/0*ixgk7pTe2E--J7wI.png
+)
 
-:::
+
+## Dos reglas candidatas
+
+<br>
+
+Usaremos estas mismas dos reglas en todo lo que resta de la clase: primero con AIC/BIC, después con validación cruzada.
+
+```{r candidate-formulas, echo=TRUE}
+simple_formula <- bikers ~
+  temp + hum + workingday + factor(hr)
+
+flexible_formula <- bikers ~
+  poly(temp, 5, raw = TRUE) +
+  poly(hum, 5, raw = TRUE) +
+  factor(mnth) +
+  factor(hr) * workingday +
+  factor(weekday) +
+  windspeed
+```
+
+## AIC y BIC, calculados en el training set
+
+<br>
+
+```{r aic-bic-demo, echo=FALSE}
+m_simple <- lm(simple_formula, data = bikedata)
+m_flexible <- lm(flexible_formula, data = bikedata)
+
+tibble(
+  modelo = c("Simple", "Flexible"),
+  AIC = c(AIC(m_simple), AIC(m_flexible)),
+  BIC = c(BIC(m_simple), BIC(m_flexible))
+)
+```
+
+El modelo flexible gana en ambos criterios, pero ambos números se calculan con los mismos datos que se usaron para estimar los coeficientes.
+
+## Limitaciones de los criterios de información
+
+<br>
+
+- Penalizan la complejidad, pero **in-sample**: nunca miran un caso que el modelo no haya visto al ajustar.
+- Suponen una forma específica de penalización ($2k$ o $\log(n)k$) que no siempre refleja el costo real de equivocarse.
+- No dicen nada sobre la *estabilidad* del desempeño entre muestras.
+
+## Limitaciones de los criterios de información
+
+
+![](https://www.mihaileric.com/static/model-selection-meme-bd4a6a86f615583d1a1bbc497ca4640e-67414.jpeg)
+
+<br>
+
+
+Para saber cómo predice el modelo en casos nuevos, hay que evaluarlo en casos nuevos: ese es el principio 
+
+# Separar para gobernar {.inverse .center .middle}
+
+de la validación fuera de muestra.
+
+
+
+## La regla básica: no usar dos veces los mismos datos
+
+<br>
+
+```{r train-test-diagram, echo=FALSE, fig.width=10, fig.height=2.6}
+split_df <- tibble(
+  segmento = factor(c("Training set", "Testing set"), levels = c("Training set", "Testing set")),
+  inicio = c(0, 0.8), fin = c(0.8, 1)
+)
+
+ggplot(split_df) +
+  geom_rect(aes(xmin = inicio, xmax = fin, ymin = 0, ymax = 1, fill = segmento), color = "white", linewidth = 1.6) +
+  geom_text(aes(x = (inicio + fin) / 2, y = 0.5, label = segmento), color = "white", fontface = "bold", size = 7) +
+  scale_fill_course(guide = "none") +
+  coord_cartesian(xlim = c(0, 1), ylim = c(0, 1), expand = FALSE) +
+  theme_void(base_size = 14)
+```
 
 1. Ajustamos el modelo en el **training set**.
 2. Congelamos la regla aprendida.
-3. Predecimos el **test set**.
+3. Predecimos el **testing set**.
 4. Comparamos predicción y resultado con una pérdida.
 
-## Un único split es frágil
+## El "validation set approach" es frágil
 
-Separar una vez training y test evita el doble uso, pero:
+<br>
 
-- el resultado depende de qué casos quedaron en cada lado;
-- una partición difícil puede hacer parecer malo a un buen modelo;
-- una partición fácil puede producir optimismo;
-- en muestras pequeñas reservamos demasiada información solo para evaluar.
+Separar una vez en training set y testing set —el **validation set approach**— evita el doble uso, pero tiene dos problemas:
+
+
+1. **Alta variabilidad:** el error estimado depende de qué casos cayeron en cada lado; repetir el split con otra semilla puede dar un número bastante distinto.
+2. **Sesgo por tamaño:** el modelo se ajusta con *menos* datos que los disponibles, y los modelos suelen desempeñarse peor con menos datos. Eso tiende a **sobreestimar** el error fuera de muestra del modelo final.
+
+<br>
 
 . . .
 
-Queremos repetir el examen con distintas particiones sin evaluar sobre casos usados para entrenar.
+Queremos usar *todos* los datos para entrenar y *todos* los datos para evaluar, sin usar el mismo caso para ambas cosas a la vez.
 
 # Validación cruzada {.inverse .center .middle}
 
-## Cada observación rinde examen una vez
+## k-fold cross-validation 
 
-::: {.center}
+<br>
 
-![Esquema de validación cruzada](kfold_cv.gif){width="70%"}
+Dividimos los datos en $k$ grupos y cada uno actúa una vez como testing set:
 
-:::
+$$
+\widehat E_{\text{CV}}=\frac{1}{k}\sum_{j=1}^{k}E_j.
+$$
 
-En $k$-fold cross-validation, dividimos los datos en $k$ grupos. Cada fold actúa una vez como evaluación y $k-1$ veces como parte del entrenamiento.
+```{r kfold-diagram, echo=FALSE, fig.width=9, fig.height=4.6}
+k_demo <- 5
+fold_grid <- expand_grid(fold = 1:k_demo, bloque = 1:k_demo) %>%
+  mutate(tipo = if_else(bloque == fold, "Testing set", "Training set"))
+
+ggplot(fold_grid, aes(bloque, k_demo - fold + 1, fill = tipo)) +
+  geom_tile(color = "white", linewidth = 1.6) +
+  scale_fill_course(name = NULL) +
+  scale_y_continuous(breaks = k_demo:1, labels = paste("Fold", 1:k_demo)) +
+  labs(x = NULL, y = NULL) +
+  theme_course(base_size = 15) +
+  theme(
+    axis.text.x = element_blank(), axis.ticks = element_blank(),
+    panel.grid = element_blank(), axis.line = element_blank(), panel.border = element_blank()
+  )
+```
 
 ## El algoritmo es una envoltura genérica
 
@@ -364,253 +618,39 @@ Los $k$ errores $\{E_1,\ldots,E_k\}$ permiten estudiar:
 
 Dos modelos con el mismo error promedio pueden diferir mucho en estabilidad.
 
-## ¿Cuántos folds?
+## Sesgo y varianza en la elección de $k$
+
+<br>
 
 ::: {.pull-left}
 
-**$k$ pequeño**
+**$k$ chico (p. ej. 5)**
 
-- entrenamientos más pequeños;
-- menor costo computacional;
-- estimación más sesgada del desempeño final.
+- entrena con menos datos: algo más de sesgo;
+- los folds comparten pocos casos entre sí;
+- los $k$ errores $E_j$ quedan poco correlacionados $\Rightarrow$ **baja varianza** al promediar.
 
 :::
 
 ::: {.pull-right}
 
-**$k$ grande**
+**$k$ grande, hasta LOOCV**
 
-- entrenamientos parecidos al dataset completo;
-- mayor costo;
-- errores entre folds más correlacionados.
+- entrena con casi todos los datos: sesgo mínimo;
+- los folds casi se superponen entre sí;
+- los errores quedan muy correlacionados $\Rightarrow$ **alta varianza** al promediar.
 
 :::
 
-. . .
-
-$k=5$ o $k=10$ suele ofrecer un balance razonable.
-
-## LOOCV es el caso extremo
-
-Si $k=n$, cada fold contiene una sola observación:
-
-$$
-\text{LOOCV}=\text{Leave-One-Out Cross-Validation}.
-$$
-
-- Entrena $n$ veces con $n-1$ casos.
-- Usa casi todos los datos en cada ajuste.
-- Puede ser costoso y producir una estimación de error con alta varianza.
+<br>
 
 . . .
 
-Usar más folds no garantiza una mejor decisión.
+Promediar cantidades correlacionadas reduce poco el ruido. Por eso $k=5$ o $k=10$ suele predecir el desempeño real mejor que LOOCV, además de costar menos cómputo.
 
-# Cross-validation con `bikers` {.inverse .center .middle}
 
-## La partición debe parecerse al uso futuro
+# Cross-validation con `bikers` ... {.inverse .center .middle}
 
-Los datos contienen 24 horas dentro de cada día. Si repartimos horas al azar, el training set puede contener otras horas del mismo día que estamos evaluando.
-
-. . .
-
-Para predecir demanda en **días nuevos**, dejamos días completos fuera:
-
-```{r make-folds, echo=TRUE}
-set.seed(3070)
-folds <- group_vfold_cv(
-  bikedata,
-  group = day,
-  v = 10
-)
-
-folds %>%
-  select(id) %>%
-  slice_head(n = 3)
-```
-
-Mostramos tres de los diez folds. La unidad de partición es parte del estimando predictivo.
-
-## Dos reglas candidatas
-
-Para hacer visible el procedimiento, usamos dos reglas reproducibles:
-
-```{r candidate-formulas, echo=TRUE}
-simple_formula <- bikers ~
-  temp + hum + workingday + factor(hr)
-
-flexible_formula <- bikers ~
-  poly(temp, 5, raw = TRUE) +
-  poly(hum, 5, raw = TRUE) +
-  factor(mnth) +
-  factor(hr) * workingday +
-  factor(weekday) +
-  windspeed
-```
-
-El objetivo no es enseñar estas especificaciones. Son dos objetos `fit/predict` que la misma validación cruzada puede comparar.
-
-## Una función evalúa cualquier fórmula
-
-```{r cv-function, echo=TRUE}
-evaluate_fold <- function(split, formula) {
-  train_data <- analysis(split)
-  test_data <- assessment(split)
-  fit <- lm(formula, data = train_data)
-
-  tibble(
-    RMSE_train = rmse(
-      train_data$bikers, predict(fit, train_data)
-    ),
-    RMSE_test = rmse(
-      test_data$bikers, predict(fit, test_data)
-    )
-  )
-}
-```
-
-Cada ajuste conoce solo el training set de su fold.
-
-## Repetimos el examen diez veces
-
-```{r run-cv, echo=TRUE, results='hide'}
-candidate_models <- list(
-  Simple = simple_formula,
-  Flexible = flexible_formula
-)
-
-cv_results <- imap_dfr(
-  candidate_models,
-  function(formula, model_name) {
-    map_dfr(folds$splits, evaluate_fold, formula) %>%
-      mutate(modelo = model_name, .before = 1)
-  }
-)
-```
-
-El resultado contiene veinte evaluaciones: diez por regla. `RMSE_test` se calcula siempre fuera de muestra.
-
-## El promedio importa; la variación también
-
-```{r cv-plot, echo=FALSE, fig.height=4.5}
-ggplot(cv_results, aes(modelo, RMSE_test, color = modelo)) +
-  geom_boxplot(width = 0.45, outlier.shape = NA, alpha = 0.15) +
-  geom_jitter(width = 0.08, size = 3) +
-  stat_summary(
-    fun = mean, geom = "point", shape = 21, size = 4.5,
-    fill = "white", color = "black"
-  ) +
-  scale_color_course(guide = "none") +
-  labs(x = NULL, y = "RMSE en días reservados")
-```
-
-Cada punto es un fold; el punto blanco es el promedio.
-
-## Resumimos desempeño y estabilidad
-
-```{r cv-summary, echo=FALSE}
-cv_summary <- cv_results %>%
-  group_by(modelo) %>%
-  summarise(
-    RMSE_promedio = mean(RMSE_test),
-    SD_entre_folds = sd(RMSE_test),
-    brecha_generalización = mean(RMSE_test - RMSE_train),
-    .groups = "drop"
-  )
-
-cv_summary
-```
-
-En este ejercicio, la regla flexible predice mejor días nuevos. La brecha y la dispersión recuerdan que un único número no resume toda la incertidumbre predictiva.
-
-## Cross-validation no está casada con RMSE
-
-Podemos conservar los mismos folds y cambiar la pérdida:
-
-| Tipo de outcome | Pérdidas posibles |
-|---|---|
-| continuo (`bikers`) | RMSE, MAE |
-| binario (`high_demand`) | log-loss, error de clasificación |
-| multinomial (`demand_level`) | cross-entropy, accuracy |
-| conteo | deviance, MAE, RMSE |
-
-. . .
-
-La métrica debe reflejar el uso sustantivo de la predicción y el costo de equivocarse.
-
-## Cross-validation también sirve para elegir
-
-La usamos para comparar:
-
-- algoritmos;
-- predictores;
-- transformaciones;
-- niveles de regularización;
-- hiperparámetros;
-- reglas de decisión.
-
-. . .
-
-Pero toda elección guiada por CV convierte esos folds en parte del entrenamiento del procedimiento completo.
-
-## El test final se toca una sola vez
-
-Un flujo limpio separa tres funciones:
-
-1. **Training folds:** ajustar parámetros.
-2. **Validation folds:** comparar alternativas y elegir.
-3. **Test final:** estimar desempeño del procedimiento elegido.
-
-. . .
-
-Si miramos repetidamente el test para modificar el modelo, terminamos sobreajustando el test.
-
-## Fugas de información
-
-Hay *data leakage* cuando información del fold reservado influye en el ajuste:
-
-- estandarizar con media y desviación de todo el dataset;
-- imputar usando también los casos de evaluación;
-- seleccionar predictores antes de crear folds;
-- ajustar umbrales con las respuestas del test;
-- repartir observaciones relacionadas entre training y test.
-
-. . .
-
-Toda operación que “aprende” de los datos debe ocurrir dentro de cada fold.
-
-## Series de tiempo requieren otra partición
-
-Si el objetivo fuera predecir el futuro, folds aleatorios podrían dejar observaciones futuras en training y pasadas en evaluación.
-
-. . .
-
-En ese caso usaríamos validación temporal:
-
-$$
-\text{pasado}\longrightarrow\text{futuro},
-$$
-
-con ventanas móviles o acumulativas. La validación debe imitar las restricciones reales de despliegue.
-
-## Ejercicio
-
-Con los mismos folds por `day`:
-
-1. proponga una tercera regla de predicción;
-2. evalúela con MAE y RMSE;
-3. compare promedio y dispersión entre folds;
-4. identifique una posible fuga de información;
-5. explique cómo cambiaría los folds si el objetivo fuera predecir el mes siguiente.
-
-## En resumen
-
-- Predecir significa generalizar a casos nuevos.
-- El error de entrenamiento es optimista por construcción.
-- El overfitting surge cuando la flexibilidad captura ruido.
-- Validación cruzada repite evaluaciones fuera de muestra.
-- Folds y pérdidas deben imitar la tarea predictiva real.
-- El test final se reserva para una sola evaluación.
 
 ## Gracias {.inverse .center .middle .closing}
 

@@ -1,0 +1,368 @@
+---
+title: "Práctica: Overfitting y Validación Cruzada con `bikers`"
+author: "SOC3070 · Mauricio Bucca"
+date: today
+format:
+  html:
+    theme: default
+    highlight: tango
+    code-copy: true
+    code-fold: show
+    toc: true
+    toc-depth: 2
+execute:
+  warning: false
+  message: false
+---
+
+```{r setup, echo=FALSE}
+library(pacman)
+p_load(tidyverse, rsample, broom, caret)
+
+# Encuentra `_shared/bikeshare.R` sin depender del working directory.
+source(local({
+  d <- normalizePath(getwd(), mustWork = FALSE)
+  cands <- d
+  while (!identical(dirname(d), d)) { d <- dirname(d); cands <- c(cands, d) }
+  cands <- c(cands, Sys.glob(file.path(getwd(), c("*", "*/*", "*/*/*"))))
+  hits <- file.path(cands, "_shared", "bikeshare.R")
+  hits <- hits[file.exists(hits)]
+  if (!length(hits)) stop("No se encontró _shared/bikeshare.R desde ", getwd())
+  normalizePath(hits[[1]])
+}))
+course <- use_course_data("celtic")
+course_palette <- course$palette
+bikedata <- course$data
+
+rmse <- function(truth, estimate) sqrt(mean((truth - estimate)^2))
+```
+
+## 1. Contexto y objetivos
+
+Este notebook retoma el ejemplo de `bikers` de la clase 14, con el código completo y paso a paso. Lo usamos en clase para reproducir en vivo cada decisión del análisis:
+
+1. por qué un criterio *in-sample* (AIC/BIC) no basta para diagnosticar overfitting;
+2. cómo se ve la curva training set vs. testing set cuando aumentamos la flexibilidad;
+3. por qué un solo split training set/testing set es una estimación ruidosa del error de generalización;
+4. cómo se construye un k-fold cross-validation: primero a mano en un fold, después automatizado con `caret`;
+5. cómo se compara el desempeño (y la estabilidad) de dos reglas de predicción con esos folds.
+
+Los conceptos son los mismos que en las diapositivas; acá se muestra el código completo. Cada bloque corresponde a uno o más chunks ocultos en `class_14.qmd`.
+
+## 2. Los datos: `bikers`
+
+```{r explore-data, echo=TRUE}
+glimpse(bikedata)
+
+bikedata %>%
+  summarise(
+    n = n(),
+    bikers_prom = mean(bikers),
+    bikers_sd = sd(bikers),
+    temp_rango = paste(round(range(temp), 2), collapse = " a "),
+    dias = n_distinct(day)
+  )
+```
+
+El outcome es `bikers` (arriendos por hora). Tenemos predictores de clima (`temp`, `hum`, `windspeed`), calendario (`mnth`, `weekday`, `holiday`, `workingday`) y hora del día (`hr`). La variable `day` identifica el día calendario de cada observación. La necesitamos más adelante para construir folds que no mezclen horas del mismo día entre training set y testing set.
+
+```{r explore-plot, echo=TRUE, fig.width=11, fig.height=5}
+ggplot(bikedata, aes(temp, bikers)) +
+  geom_point(alpha = 0.15, size = 1.6, color = unname(course_palette["primary"])) +
+  geom_smooth(se = FALSE, color = unname(course_palette["secondary"]), linewidth = 1.3) +
+  labs(x = "Temperatura (normalizada)", y = "Arriendos por hora") +
+  theme_course(base_size = 15)
+```
+
+La relación entre temperatura y demanda no es lineal: hay más arriendos a temperaturas intermedias que a temperaturas muy bajas o muy altas. Un polinomio de grado 1 va a subajustar esta curva.
+
+## 3. Dos modelos
+
+Fijamos dos especificaciones, igual que en las diapositivas, y las usamos en todo lo que sigue: dos objetos `fit/predict` con distinta flexibilidad.
+
+```{r candidate-formulas, echo=TRUE}
+simple_formula <- bikers ~
+  temp + hum + workingday + factor(hr)
+
+flexible_formula <- bikers ~
+  poly(temp, 5, raw = TRUE) +
+  poly(hum, 5, raw = TRUE) +
+  factor(mnth) +
+  factor(hr) * workingday +
+  factor(weekday) +
+  windspeed
+```
+
+- `simple_formula`: efectos lineales de clima, un indicador de día laboral, y un efecto fijo por hora del día (24 categorías).
+- `flexible_formula`: polinomios de grado 5 en temperatura y humedad, efectos fijos por mes y día de la semana, una interacción hora × día-laboral, y velocidad del viento.
+
+`flexible_formula` tiene muchos más parámetros. La pregunta de la sección 4 es: ¿eso la hace mejor?
+
+## 4. ¿Qué regla ajusta mejor en los mismos datos que se usaron para estimar?
+
+```{r aic-bic-demo, echo=TRUE}
+m_simple <- lm(simple_formula, data = bikedata)
+m_flexible <- lm(flexible_formula, data = bikedata)
+
+tibble(
+  modelo = c("Simple", "Flexible"),
+  n_parametros = c(length(coef(m_simple)), length(coef(m_flexible))),
+  RMSE_insample = c(
+    rmse(bikedata$bikers, predict(m_simple)),
+    rmse(bikedata$bikers, predict(m_flexible))
+  ),
+  AIC = c(AIC(m_simple), AIC(m_flexible)),
+  BIC = c(BIC(m_simple), BIC(m_flexible))
+)
+```
+
+El modelo flexible gana en RMSE in-sample, en AIC y en BIC. Tiene más parámetros, así que ajusta mejor los datos que ya vio. Falta saber si esa ventaja se mantiene en datos que el modelo *no* usó para aprender. Por eso separamos training set y testing set.
+
+## 5. Training set vs. testing set
+
+Para ver el fenómeno de overfitting con el mínimo de partes móviles, simplificamos a un solo predictor (`temp`) y variamos su grado polinomial de 1 a 16.
+
+```{r single-split, echo=TRUE}
+set.seed(3070)
+demo_id <- sample(seq_len(nrow(bikedata)), 600)
+demo_train <- bikedata[demo_id[1:300], ]
+demo_test <- bikedata[demo_id[301:600], ]
+
+nrow(demo_train); nrow(demo_test)
+```
+
+Para cada grado, ajustamos en el training set y evaluamos en ambos conjuntos:
+
+```{r complexity-demo, echo=TRUE, results='hold'}
+complexity_results <- tibble()
+for (degree in 1:16) {
+  model <- lm(bikers ~ poly(temp, degree, raw = TRUE), data = demo_train)
+  fila <- tibble(
+    complejidad = degree,
+    `Training set` = rmse(demo_train$bikers, predict(model, newdata = demo_train)),
+    `Testing set` = rmse(demo_test$bikers, predict(model, newdata = demo_test))
+  )
+  complexity_results <- bind_rows(complexity_results, fila)
+}
+
+complexity_results
+```
+
+```{r complexity-plot, echo=TRUE, fig.width=11, fig.height=5.5}
+complexity_results %>%
+  pivot_longer(c(`Training set`, `Testing set`), names_to = "conjunto", values_to = "RMSE") %>%
+  ggplot(aes(complejidad, RMSE, color = conjunto)) +
+  geom_line(linewidth = 1.3) +
+  geom_point(size = 3) +
+  scale_color_course(name = NULL) +
+  labs(x = "Grado del polinomio en temp", y = "RMSE") +
+  theme_course(base_size = 15)
+```
+
+El error en el training set cae de forma monótona: más flexibilidad siempre ajusta mejor los datos que ya vio. El error en el testing set cae, toca un mínimo y después sube: el mismo patrón de overfitting que vimos con datos simulados, ahora con datos reales.
+
+## 6. ¿Qué tan estable es un solo split?
+
+El "validation set approach" (un solo split) tiene un problema: el número que obtenemos depende de qué observaciones cayeron al azar en cada lado. Lo mostramos repitiendo el split 15 veces, con una complejidad fija (grado 8), y mirando cuánto se mueve el RMSE en el testing set.
+
+```{r split-instability, echo=TRUE}
+rmse_testing <- numeric(15)
+for (seed in 1:15) {
+  set.seed(seed)
+  split_id <- sample(seq_len(nrow(bikedata)), 600)
+  train <- bikedata[split_id[1:300], ]
+  test <- bikedata[split_id[301:600], ]
+  model <- lm(bikers ~ poly(temp, 8, raw = TRUE), data = train)
+  rmse_testing[seed] <- rmse(test$bikers, predict(model, newdata = test))
+}
+
+split_instability <- tibble(seed = 1:15, RMSE_testing = rmse_testing)
+
+split_instability
+
+split_instability %>%
+  summarise(media = mean(RMSE_testing), sd = sd(RMSE_testing))
+```
+
+```{r split-instability-plot, echo=TRUE, fig.width=9, fig.height=4.5}
+ggplot(split_instability, aes(seed, RMSE_testing)) +
+  geom_point(size = 3, color = unname(course_palette["primary"])) +
+  geom_hline(aes(yintercept = mean(RMSE_testing)), linetype = "dashed", color = "grey30") +
+  labs(x = "Semilla del split", y = "RMSE en el testing set") +
+  theme_course(base_size = 15)
+```
+
+Con la misma regla (grado 8) y los mismos datos, el RMSE estimado cambia de split a split. Si eligiéramos el grado del polinomio mirando un solo split, la conclusión dependería más de la suerte de la partición que de la regla en sí. Por eso conviene usar **varios** splits (folds) y promediar: validación cruzada.
+
+## 7. k-fold cross-validation, paso a paso
+
+### 7.1 Construir los folds
+
+Los datos tienen 24 horas dentro de cada día. Si repartimos horas al azar entre folds, el training set de un fold puede contener otras horas del mismo día que estamos evaluando. Esto sobreestima el desempeño si el objetivo es predecir días completos nuevos. Por eso agrupamos por `day`.
+
+`group_vfold_cv(data, group, v)` (de `rsample`) arma `v` folds agrupando por la variable `group`: ningún grupo —acá, ningún día— queda repartido entre el training set y el testing set del mismo fold. Devuelve un objeto `folds` con una columna `splits` (una lista donde cada elemento es un *split*: un objeto que guarda qué filas de `data` van a training y cuáles a testing en ese fold) y una columna `id` con el nombre de cada fold.
+
+Para sacarle los datos a un split hay dos funciones: `analysis(split)` devuelve el training set de ese fold, y `assessment(split)` devuelve el testing set.
+
+```{r make-folds, echo=TRUE}
+set.seed(3070)
+folds <- group_vfold_cv(bikedata, group = day, v = 10)
+names(folds$splits) <- folds$id
+
+folds %>% select(id)
+
+n_folds <- length(folds$splits)
+fold_sizes <- tibble(fold = seq_len(n_folds), n_train = NA_integer_, n_test = NA_integer_)
+for (i in seq_len(n_folds)) {
+  fold_sizes$n_train[i] <- nrow(analysis(folds$splits[[i]]))
+  fold_sizes$n_test[i] <- nrow(assessment(folds$splits[[i]]))
+}
+
+fold_sizes
+```
+
+```{r fold-sizes-plot, echo=TRUE, fig.width=10, fig.height=5}
+ggplot(fold_sizes, aes(factor(fold), n_test)) +
+  geom_col(fill = unname(course_palette["primary"])) +
+  geom_hline(yintercept = mean(fold_sizes$n_test), linetype = "dashed", color = "grey30") +
+  labs(x = "Fold", y = "Observaciones en el testing set") +
+  theme_course(base_size = 15)
+```
+
+Los diez folds quedan de tamaño parecido porque hay muchos días y cada uno aporta pocas observaciones relativo al total.
+
+### 7.2 Un solo fold, a mano
+
+Antes de automatizar nada, miramos qué pasa en **un** fold con `simple_formula`:
+
+```{r one-fold-demo, echo=TRUE}
+fold1 <- folds$splits[[1]]
+train1 <- analysis(fold1)
+test1 <- assessment(fold1)
+
+n_distinct(train1$day); n_distinct(test1$day)
+intersect(train1$day, test1$day)  # debe estar vacío
+
+fit1 <- lm(simple_formula, data = train1)
+
+tibble(
+  n_train = nrow(train1),
+  n_test = nrow(test1),
+  RMSE_train = rmse(train1$bikers, predict(fit1, train1)),
+  RMSE_test = rmse(test1$bikers, predict(fit1, test1))
+)
+```
+
+`fit1` nunca vio ninguna observación de `test1`, ni siquiera horas de los mismos días. `intersect(train1$day, test1$day)` confirma que no hay días compartidos.
+
+### 7.3 Automatizar con `caret`
+
+Repetir el ajuste a mano en cada fold funciona, pero `caret` hace exactamente eso con dos comandos: `trainControl()` para decirle cómo evaluar, y `train()` para ajustar y evaluar en un solo paso. Reusamos los mismos folds que construimos en 7.1 — no hace falta generar otros.
+
+```{r caret-indices, echo=TRUE}
+train_indices <- lapply(folds$splits, function(s) s$in_id)
+length(train_indices)
+length(train_indices[[1]])  # observaciones en el training set del fold 1
+```
+
+`lapply(lista, función)` aplica esa función a cada elemento de la lista y devuelve una lista nueva; acá la aplicamos a cada split de `folds$splits`. `split$in_id` es el vector de filas que `rsample` asignó al training set de ese fold — lo mismo que devuelve `analysis()`, pero como índices en vez de datos. `caret` necesita justo eso: una lista con los índices de entrenamiento de cada fold.
+
+```{r caret-control, echo=TRUE}
+ctrl <- trainControl(method = "cv", index = train_indices, savePredictions = "final")
+```
+
+- `method = "cv"`: evaluar con cross-validation (el default de `caret` es bootstrap).
+- `index = train_indices`: usar nuestros folds —agrupados por día— en vez de que `caret` arme folds aleatorios por su cuenta.
+- `savePredictions = "final"`: guardar la predicción fuera de muestra de cada caso, por si después queremos inspeccionarlas.
+
+```{r caret-train, echo=TRUE}
+candidate_models <- list(Simple = simple_formula, Flexible = flexible_formula)
+
+cv_models <- list()
+for (model_name in names(candidate_models)) {
+  cv_models[[model_name]] <- train(
+    candidate_models[[model_name]],
+    data = bikedata,
+    method = "lm",
+    trControl = ctrl
+  )
+}
+```
+
+`train()` es el comando central de `caret`: toma una fórmula, un `data`, un `method` (qué algoritmo ajustar — acá `"lm"`, pero con la misma sintaxis podría ser un árbol o un random forest) y un `trControl` (cómo evaluar). Para cada fold en `ctrl$index`, ajusta `lm(formula, data = training de ese fold)` y lo evalúa en el resto. El loop repite esto una vez por fórmula.
+
+### 7.4 Qué devuelve `train()`
+
+```{r caret-results, echo=TRUE}
+cv_models$Simple$results
+cv_models$Flexible$results
+```
+
+`$results` trae el promedio y la desviación estándar de RMSE, R² y MAE entre los 10 folds: el mismo resumen que antes armábamos a mano.
+
+```{r caret-resample, echo=TRUE}
+cv_models$Simple$resample
+```
+
+`$resample` trae el detalle fold por fold: una fila por fold, con `RMSE`, `Rsquared`, `MAE` y `Resample` (el nombre del fold).
+
+### 7.5 Comparar los dos modelos
+
+```{r caret-compare, echo=TRUE}
+cv_compare <- bind_rows(
+  cv_models$Simple$resample %>% mutate(modelo = "Simple"),
+  cv_models$Flexible$resample %>% mutate(modelo = "Flexible")
+)
+
+cv_compare
+```
+
+Juntamos el `$resample` de cada modelo en una sola tabla larga, igual que hacíamos a mano antes.
+
+```{r caret-compare-plot, echo=TRUE, fig.width=10, fig.height=5.5}
+ggplot(cv_compare, aes(modelo, RMSE, color = modelo)) +
+  geom_boxplot(width = 0.45, outlier.shape = NA, alpha = 0.15) +
+  geom_jitter(width = 0.08, size = 3.2) +
+  stat_summary(fun = mean, geom = "point", shape = 21, size = 5, fill = "white", color = "black") +
+  scale_color_course(guide = "none") +
+  labs(x = NULL, y = "RMSE en días reservados") +
+  theme_course(base_size = 15)
+```
+
+```{r caret-paired-plot, echo=TRUE, fig.width=10, fig.height=5.5}
+ggplot(cv_compare, aes(modelo, RMSE, group = Resample)) +
+  geom_line(color = "grey70", linewidth = 0.7) +
+  geom_point(aes(color = modelo), size = 3.5) +
+  scale_color_course(guide = "none") +
+  labs(x = NULL, y = "RMSE en días reservados") +
+  theme_course(base_size = 15)
+```
+
+Cada línea conecta el *mismo* fold entre las dos reglas: vemos si la regla flexible gana en promedio o en casi todos los folds.
+
+`caret` tiene un atajo para esta comparación: `resamples()` junta varios modelos ajustados con el mismo `index`, y `summary()` imprime el resumen de cada uno.
+
+```{r caret-resamples, echo=TRUE}
+resamps <- resamples(cv_models)
+summary(resamps)
+```
+
+Una diferencia con lo que hicimos a mano: `$resample` solo trae el error en el testing set de cada fold. `caret` no guarda el ajuste de cada fold por separado, así que no hay forma directa de recuperar el error en el training set de cada uno. Para calcular la brecha de generalización (training set vs. testing set) hay que hacerlo a mano, como en 7.2.
+
+## 8. Fugas de información y el test final
+
+Reglas que hay que respetar para que todo lo anterior siga siendo válido:
+
+- estandarizar, imputar o seleccionar predictores **dentro** de cada fold, nunca con todo el dataset;
+- no repartir observaciones relacionadas (como horas del mismo día) entre training set y testing set; por eso usamos `group_vfold_cv(group = day)`;
+- si usamos CV para elegir entre `simple_formula` y `flexible_formula` (o para afinar cualquier hiperparámetro), esos folds pasan a ser parte del entrenamiento del procedimiento completo: ya no sirven como estimación independiente del error final.
+
+## 9. Ejercicio
+
+Con los mismos `train_indices` (folds agrupados por `day`):
+
+1. proponga una tercera regla de predicción (puede ser una variante de `flexible_formula`);
+2. ajústela con `train(tercera_formula, data = bikedata, method = "lm", trControl = ctrl)`;
+3. compare su `$results` con los de `cv_models$Simple` y `cv_models$Flexible`;
+4. identifique una posible fuga de información si alguien construyera esa regla de otra forma;
+5. explique cómo cambiaría la construcción de los folds si el objetivo fuera predecir el mes siguiente en vez de días dentro del mismo período.
