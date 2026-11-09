@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="SOC3070 · Mauricio Bucca">
-<meta name="dcterms.date" content="2026-07-28">
+<meta name="dcterms.date" content="2026-11-09">
 
-<title>Práctica: Evaluación de Modelos Logísticos y Cross-Validation</title>
+<title>Práctica: Overfitting y Validación Cruzada con bikers</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -78,15 +78,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </head>
 
-<body class="fullcontent quarto-light">
+<body class="quarto-light">
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
-
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul class="collapse">
+  <li><a href="#contexto-y-objetivos" id="toc-contexto-y-objetivos" class="nav-link active" data-scroll-target="#contexto-y-objetivos">1. Contexto y objetivos</a></li>
+  <li><a href="#los-datos-bikers" id="toc-los-datos-bikers" class="nav-link" data-scroll-target="#los-datos-bikers">2. Los datos: <code>bikers</code></a></li>
+  <li><a href="#dos-modelos" id="toc-dos-modelos" class="nav-link" data-scroll-target="#dos-modelos">3. Dos modelos</a></li>
+  <li><a href="#qué-regla-ajusta-mejor-en-los-mismos-datos-que-se-usaron-para-estimar" id="toc-qué-regla-ajusta-mejor-en-los-mismos-datos-que-se-usaron-para-estimar" class="nav-link" data-scroll-target="#qué-regla-ajusta-mejor-en-los-mismos-datos-que-se-usaron-para-estimar">4. ¿Qué regla ajusta mejor en los mismos datos que se usaron para estimar?</a></li>
+  <li><a href="#training-set-vs.-testing-set" id="toc-training-set-vs.-testing-set" class="nav-link" data-scroll-target="#training-set-vs.-testing-set">5. Training set vs.&nbsp;testing set</a></li>
+  <li><a href="#qué-tan-estable-es-un-solo-split" id="toc-qué-tan-estable-es-un-solo-split" class="nav-link" data-scroll-target="#qué-tan-estable-es-un-solo-split">6. ¿Qué tan estable es un solo split?</a></li>
+  <li><a href="#k-fold-cross-validation-paso-a-paso" id="toc-k-fold-cross-validation-paso-a-paso" class="nav-link" data-scroll-target="#k-fold-cross-validation-paso-a-paso">7. k-fold cross-validation, paso a paso</a></li>
+  <li><a href="#fugas-de-información-y-el-test-final" id="toc-fugas-de-información-y-el-test-final" class="nav-link" data-scroll-target="#fugas-de-información-y-el-test-final">8. Fugas de información y el test final</a></li>
+  <li><a href="#ejercicio" id="toc-ejercicio" class="nav-link" data-scroll-target="#ejercicio">9. Ejercicio</a></li>
+  </ul>
+</nav>
+</div>
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Práctica: Evaluación de Modelos Logísticos y Cross-Validation</h1>
+<h1 class="title">Práctica: Overfitting y Validación Cruzada con <code>bikers</code></h1>
 </div>
 
 
@@ -103,7 +119,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">July 28, 2026</p>
+      <p class="date">November 9, 2026</p>
     </div>
   </div>
   
@@ -115,242 +131,635 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="contexto-y-objetivos" class="level3">
-<h3 class="anchored" data-anchor-id="contexto-y-objetivos">1. Contexto y objetivos</h3>
-<p>Evaluar el desempeño predictivo de un modelo logístico con cross-validation.</p>
+<section id="contexto-y-objetivos" class="level2">
+<h2 class="anchored" data-anchor-id="contexto-y-objetivos">1. Contexto y objetivos</h2>
+<p>Este notebook retoma el ejemplo de <code>bikers</code> de la clase 14, con el código completo y paso a paso. Lo usamos en clase para reproducir en vivo cada decisión del análisis:</p>
+<ol type="1">
+<li>por qué un criterio <em>in-sample</em> (AIC/BIC) no basta para diagnosticar overfitting;</li>
+<li>cómo se ve la curva training set vs.&nbsp;testing set cuando aumentamos la flexibilidad;</li>
+<li>por qué un solo split training set/testing set es una estimación ruidosa del error de generalización;</li>
+<li>cómo se construye un k-fold cross-validation: primero a mano en un fold, después automatizado con <code>caret</code>;</li>
+<li>cómo se compara el desempeño (y la estabilidad) de dos reglas de predicción con esos folds.</li>
+</ol>
+<p>Los conceptos son los mismos que en las diapositivas; acá se muestra el código completo. Cada bloque corresponde a uno o más chunks ocultos en <code>class_14.qmd</code>.</p>
 </section>
-<section id="cargar-y-preparar-los-datos" class="level3">
-<h3 class="anchored" data-anchor-id="cargar-y-preparar-los-datos">2. Cargar y preparar los datos</h3>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre class="python-output"><code>#&gt; Rows: 8,645
-#&gt; Columns: 22
-#&gt; $ season            &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,…
-#&gt; $ mnth              &lt;fct&gt; Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Ja…
-#&gt; $ day               &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2,…
-#&gt; $ hr                &lt;fct&gt; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, …
-#&gt; $ holiday           &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-#&gt; $ weekday           &lt;dbl&gt; 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 0, 0,…
-#&gt; $ workingday        &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-#&gt; $ weathersit        &lt;fct&gt; clear, clear, clear, clear, clear, cloudy/misty, clear, clear, clear, clear, clear, clear, c…
-#&gt; $ temp              &lt;dbl&gt; 0.240, 0.220, 0.220, 0.240, 0.240, 0.240, 0.220, 0.200, 0.240, 0.320, 0.380, 0.360, 0.420, 0.460, 0.460, 0.…
-#&gt; $ atemp             &lt;dbl&gt; 0.288, 0.273, 0.273, 0.288, 0.288, 0.258, 0.273, 0.258, 0.288, 0.348, 0.394, 0.330…
-#&gt; $ hum               &lt;dbl&gt; 0.810, 0.800, 0.800, 0.750, 0.750, 0.750, 0.800, 0.860, 0.750, 0.760, 0.760, 0.810, 0.770, 0.720, 0.720, 0.…
-#&gt; $ windspeed         &lt;dbl&gt; 0.000, 0.000, 0.000, 0.000, 0.000, 0.090, 0.000, 0.000, 0.000, 0.000, 0.254, 0.280…
-#&gt; $ casual            &lt;dbl&gt; 3, 8, 5, 3, 0, 0, 2, 1, 1, 8, 12, 26, 29, 47, 35, 40, 41, 15, 9, 6, 11, 3, 11, 15, 4, 1, 1, …
-#&gt; $ registered        &lt;dbl&gt; 13, 32, 27, 10, 1, 1, 0, 2, 7, 6, 24, 30, 55, 47, 71, 70, 52, 52, 26, 31, 25, 31, 17, 24, 13…
-#&gt; $ bikers            &lt;dbl&gt; 16, 40, 32, 13, 1, 1, 2, 3, 8, 14, 36, 56, 84, 94, 106, 110, 93, 67, 35, 37, 36, 34, 28, 39,…
-#&gt; $ high_demand       &lt;int&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-#&gt; $ demand            &lt;fct&gt; baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, ba…
-#&gt; $ demand_level      &lt;ord&gt; baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, media, media, media, media…
-#&gt; $ hour              &lt;int&gt; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, …
-#&gt; $ day_type          &lt;fct&gt; no hábil, no hábil, no hábil, no hábil, no hábil, no hábil, no hábil, no hábil, no hábil, no…
-#&gt; $ weather           &lt;fct&gt; clear, clear, clear, clear, clear, cloudy/misty, clear, clear, clear, clear, clear, clear, c…
-#&gt; $ high_demand_class &lt;fct&gt; baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, ba…</code></pre>
-</div>
-</div>
-</section>
-<section id="dos-modelos-de-distinta-complejidad" class="level3">
-<h3 class="anchored" data-anchor-id="dos-modelos-de-distinta-complejidad">3. Dos modelos de distinta complejidad</h3>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre class="python-output"><code>#&gt;                   Estimate Std. Error
-#&gt; (Intercept)       2.059     0.125
-#&gt; temp             -4.635     0.153
-#&gt; factor(holiday)1  0.004     0.169
-#&gt; hum               2.404     0.143</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre class="python-output"><code>#&gt;                                  Estimate Std. Error
-#&gt; (Intercept)                      31.142    515.362
-#&gt; factor(holiday)1               -129.688     30.668
-#&gt; temp                            -44.128      3.818
-#&gt; hum                              -8.492      1.608
-#&gt; I(temp^2)                        34.118      3.365
-#&gt; factor(hr)1                      -0.056    729.062
-#&gt; factor(hr)2                      -0.106    733.392
-#&gt; factor(hr)3                      -0.127    740.449
-#&gt; factor(hr)4                      -0.136    743.584
-#&gt; factor(hr)5                      -0.242    733.704
-#&gt; factor(hr)6                      -0.249    727.854
-#&gt; factor(hr)7                     -19.619    515.361
-#&gt; factor(hr)8                     -20.576    515.361
-#&gt; factor(hr)9                     -18.225    515.361
-#&gt; factor(hr)10                    -17.479    515.361
-#&gt; factor(hr)11                    -17.704    515.361
-#&gt; factor(hr)12                    -18.355    515.361
-#&gt; factor(hr)13                    -18.153    515.361
-#&gt; factor(hr)14                    -17.984    515.361
-#&gt; factor(hr)15                    -18.073    515.361
-#&gt; factor(hr)16                    -19.761    515.361
-#&gt; factor(hr)17                    -20.790    515.361
-#&gt; factor(hr)18                    -20.505    515.361
-#&gt; factor(hr)19                    -19.952    515.361
-#&gt; factor(hr)20                    -18.902    515.361
-#&gt; factor(hr)21                    -17.576    515.361
-#&gt; factor(hr)22                    -15.016    515.362
-#&gt; factor(hr)23                      0.081    726.445
-#&gt; factor(holiday)1:temp           544.347    120.676
-#&gt; factor(holiday)1:hum            251.785     63.866
-#&gt; temp:hum                         39.096      6.271
-#&gt; factor(holiday)1:I(temp^2)     -563.512    118.980
-#&gt; hum:I(temp^2)                   -34.056      5.808
-#&gt; factor(holiday)1:temp:hum      -999.431    239.168
-#&gt; factor(holiday)1:hum:I(temp^2)  983.159    223.606</code></pre>
-</div>
-</div>
-</section>
-<section id="evaluación-in-sample-aic-y-bic" class="level3">
-<h3 class="anchored" data-anchor-id="evaluación-in-sample-aic-y-bic">4. Evaluación in-sample: AIC y BIC</h3>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre class="python-output"><code>#&gt; # A tibble: 3 × 3
-#&gt;   Modelo                                                                    AIC   BIC
-#&gt;   &lt;chr&gt;                                                                   &lt;dbl&gt; &lt;dbl&gt;
-#&gt; 1 "high_demand_class ~ temp + factor(holiday) + hum"                      8230. 8258.
-#&gt; 2 "high_demand_class ~ factor(holiday) * temp * hum + factor(holiday) * " 5192. 5439.
-#&gt; 3 "    I(temp^2) * hum + factor(hr)"                                      5192. 5439.</code></pre>
-</div>
-</div>
-</section>
-<section id="limitación-posible-overfitting" class="level3">
-<h3 class="anchored" data-anchor-id="limitación-posible-overfitting">5. Limitación: posible overfitting</h3>
-<p>Usamos cross-validation para evaluar fuera de muestra.</p>
-</section>
-<section id="cross-validation-con-caret" class="level3">
-<h3 class="anchored" data-anchor-id="cross-validation-con-caret">6. Cross-validation con caret</h3>
+<section id="los-datos-bikers" class="level2">
+<h2 class="anchored" data-anchor-id="los-datos-bikers">2. Los datos: <code>bikers</code></h2>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> ctrl <span class="ot">&lt;-</span> <span class="fu">trainControl</span>(</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">method =</span> <span class="st">"repeatedcv"</span>,</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">number =</span> <span class="dv">10</span>,</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">savePredictions =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">classProbs =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">summaryFunction =</span> twoClassSummary</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> )</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> <span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> cv_m0 <span class="ot">&lt;-</span> <span class="fu">train</span>(</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   high_demand_class <span class="sc">~</span> temp <span class="sc">+</span> <span class="fu">factor</span>(holiday) <span class="sc">+</span> hum,</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">data =</span> bikedata, <span class="at">method =</span> <span class="st">"glm"</span>,</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">family =</span> <span class="st">"binomial"</span>, <span class="at">trControl =</span> ctrl,</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">metric =</span> <span class="st">"ROC"</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> )</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> cv_m1 <span class="ot">&lt;-</span> <span class="fu">train</span>(</span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   high_demand_class <span class="sc">~</span> <span class="fu">factor</span>(holiday) <span class="sc">*</span> temp <span class="sc">*</span> hum <span class="sc">+</span></span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>     <span class="fu">factor</span>(holiday) <span class="sc">*</span> <span class="fu">I</span>(temp<span class="sc">^</span><span class="dv">2</span>) <span class="sc">*</span> hum <span class="sc">+</span> <span class="fu">factor</span>(hr),</span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">data =</span> bikedata, <span class="at">method =</span> <span class="st">"glm"</span>,</span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">family =</span> <span class="st">"binomial"</span>, <span class="at">trControl =</span> ctrl,</span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="at">metric =</span> <span class="st">"ROC"</span></span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-</div>
-</section>
-<section id="resultados-del-cross-validation" class="level3">
-<h3 class="anchored" data-anchor-id="resultados-del-cross-validation">7. Resultados del cross-validation</h3>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> cv_m0<span class="sc">$</span>results</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(bikedata)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre class="python-output"><code>#&gt;   parameter    ROC   Sens   Spec   ROCSD  SensSD  SpecSD
-#&gt; 1      none 0.771 0.277 0.932 0.015 0.034 0.015</code></pre>
+<pre><code>Rows: 8,645
+Columns: 21
+$ season       &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1…
+$ mnth         &lt;fct&gt; Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Jan, Ja…
+$ day          &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2…
+$ hr           &lt;fct&gt; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3,…
+$ holiday      &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…
+$ weekday      &lt;dbl&gt; 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0…
+$ workingday   &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…
+$ weathersit   &lt;fct&gt; clear, clear, clear, clear, clear, cloudy/misty, clear, clear, clear, clear, clear, clear, clear,…
+$ temp         &lt;dbl&gt; 0.240, 0.220, 0.220, 0.240, 0.240, 0.240, 0.220, 0.200, 0.240, 0.320, 0.380, 0.360, 0.420, 0.460, 0.460, 0.440, 0…
+$ atemp        &lt;dbl&gt; 0.288, 0.273, 0.273, 0.288, 0.288, 0.258, 0.273, 0.258, 0.288, 0.348, 0.394, 0.333, 0…
+$ hum          &lt;dbl&gt; 0.810, 0.800, 0.800, 0.750, 0.750, 0.750, 0.800, 0.860, 0.750, 0.760, 0.760, 0.810, 0.770, 0.720, 0.720, 0.770, 0…
+$ windspeed    &lt;dbl&gt; 0.000, 0.000, 0.000, 0.000, 0.000, 0.090, 0.000, 0.000, 0.000, 0.000, 0.254, 0.284, 0…
+$ casual       &lt;dbl&gt; 3, 8, 5, 3, 0, 0, 2, 1, 1, 8, 12, 26, 29, 47, 35, 40, 41, 15, 9, 6, 11, 3, 11, 15, 4, 1, 1, 2, 2,…
+$ registered   &lt;dbl&gt; 13, 32, 27, 10, 1, 1, 0, 2, 7, 6, 24, 30, 55, 47, 71, 70, 52, 52, 26, 31, 25, 31, 17, 24, 13, 16,…
+$ bikers       &lt;dbl&gt; 16, 40, 32, 13, 1, 1, 2, 3, 8, 14, 36, 56, 84, 94, 106, 110, 93, 67, 35, 37, 36, 34, 28, 39, 17, …
+$ high_demand  &lt;int&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…
+$ demand       &lt;fct&gt; baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, b…
+$ demand_level &lt;ord&gt; baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, baja, media, media, media, media, med…
+$ hour         &lt;int&gt; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3,…
+$ day_type     &lt;fct&gt; no hábil, no hábil, no hábil, no hábil, no hábil, no hábil, no hábil, no hábil, no hábil, no hábi…
+$ weather      &lt;fct&gt; clear, clear, clear, clear, clear, cloudy/misty, clear, clear, clear, clear, clear, clear, clear,…</code></pre>
 </div>
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> cv_m1<span class="sc">$</span>results</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>bikedata <span class="sc">%&gt;%</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> <span class="fu">n</span>(),</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">bikers_prom =</span> <span class="fu">mean</span>(bikers),</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">bikers_sd =</span> <span class="fu">sd</span>(bikers),</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">temp_rango =</span> <span class="fu">paste</span>(<span class="fu">round</span>(<span class="fu">range</span>(temp), <span class="dv">2</span>), <span class="at">collapse =</span> <span class="st">" a "</span>),</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">dias =</span> <span class="fu">n_distinct</span>(day)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre class="python-output"><code>#&gt;   parameter    ROC   Sens  Spec    ROCSD  SensSD   SpecSD
-#&gt; 1      none 0.920 0.648 0.925 0.007 0.036 0.008</code></pre>
+<pre><code># A tibble: 1 × 5
+      n bikers_prom bikers_sd temp_rango   dias
+  &lt;int&gt;       &lt;dbl&gt;     &lt;dbl&gt; &lt;chr&gt;       &lt;int&gt;
+1  8645        144.      134. 0.020 a 0.960   365</code></pre>
 </div>
 </div>
-</section>
-<section id="matrices-de-confusión-promedio" class="level3">
-<h3 class="anchored" data-anchor-id="matrices-de-confusión-promedio">8. Matrices de confusión promedio</h3>
+<p>El outcome es <code>bikers</code> (arriendos por hora). Tenemos predictores de clima (<code>temp</code>, <code>hum</code>, <code>windspeed</code>), calendario (<code>mnth</code>, <code>weekday</code>, <code>holiday</code>, <code>workingday</code>) y hora del día (<code>hr</code>). La variable <code>day</code> identifica el día calendario de cada observación. La necesitamos más adelante para construir folds que no mezclen horas del mismo día entre training set y testing set.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">confusionMatrix</span>(cv_m0)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre class="python-output"><code>#&gt; Cross-Validated (10 fold, repeated 1 times) Confusion Matrix 
-#&gt; 
-#&gt; (entries are percentual average cell counts across resamples)
-#&gt;  
-#&gt;           Reference
-#&gt; Prediction alta baja
-#&gt;       alta  6.900  5.100
-#&gt;       baja 18.000 70.000
-#&gt;                            
-#&gt;  Accuracy (average) : 0.769</code></pre>
-</div>
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">confusionMatrix</span>(cv_m1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre class="python-output"><code>#&gt; Cross-Validated (10 fold, repeated 1 times) Confusion Matrix 
-#&gt; 
-#&gt; (entries are percentual average cell counts across resamples)
-#&gt;  
-#&gt;           Reference
-#&gt; Prediction alta baja
-#&gt;       alta 16.200  5.600
-#&gt;       baja  8.800 69.400
-#&gt;                            
-#&gt;  Accuracy (average) : 0.856</code></pre>
-</div>
-</div>
-</section>
-<section id="visualización-del-desempeño-cruzado" class="level3">
-<h3 class="anchored" data-anchor-id="visualización-del-desempeño-cruzado">9. Visualización del desempeño cruzado</h3>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> resamps <span class="ot">&lt;-</span> <span class="fu">resamples</span>(<span class="fu">list</span>(<span class="at">Simple =</span> cv_m0, <span class="at">Complejo =</span> cv_m1))</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">bwplot</span>(resamps, <span class="at">metric =</span> <span class="st">"ROC"</span>, <span class="at">main =</span> <span class="st">"Comparación de desempeño (10-fold CV)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(bikedata, <span class="fu">aes</span>(temp, bikers)) <span class="sc">+</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.15</span>, <span class="at">size =</span> <span class="fl">1.6</span>, <span class="at">color =</span> <span class="fu">unname</span>(course_palette[<span class="st">"primary"</span>])) <span class="sc">+</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">se =</span> <span class="cn">FALSE</span>, <span class="at">color =</span> <span class="fu">unname</span>(course_palette[<span class="st">"secondary"</span>]), <span class="at">linewidth =</span> <span class="fl">1.3</span>) <span class="sc">+</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Temperatura (normalizada)"</span>, <span class="at">y =</span> <span class="st">"Arriendos por hora"</span>) <span class="sc">+</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_course</span>(<span class="at">base_size =</span> <span class="dv">15</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="nb_14_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="nb_14_files/figure-html/explore-plot-1.png" class="img-fluid figure-img" width="1056"></p>
 </figure>
 </div>
 </div>
+</div>
+<p>La relación entre temperatura y demanda no es lineal: hay más arriendos a temperaturas intermedias que a temperaturas muy bajas o muy altas. Un polinomio de grado 1 va a subajustar esta curva.</p>
+</section>
+<section id="dos-modelos" class="level2">
+<h2 class="anchored" data-anchor-id="dos-modelos">3. Dos modelos</h2>
+<p>Fijamos dos especificaciones, igual que en las diapositivas, y las usamos en todo lo que sigue: dos objetos <code>fit/predict</code> con distinta flexibilidad.</p>
+<div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r python-code code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> cv_compare <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   cv_m0<span class="sc">$</span>resample <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Simple"</span>),</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   cv_m1<span class="sc">$</span>resample <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Complejo"</span>)</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span> )</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> </span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="er">&gt;</span> <span class="fu">ggplot</span>(cv_compare, <span class="fu">aes</span>(<span class="at">x =</span> modelo, <span class="at">y =</span> ROC, <span class="at">fill =</span> modelo)) <span class="sc">+</span></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">unname</span>(course_palette[<span class="fu">c</span>(<span class="st">"primary"</span>, <span class="st">"secondary"</span>)])) <span class="sc">+</span></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="fu">labs</span>(</span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>     <span class="at">title =</span> <span class="st">"Desempeño en validación cruzada"</span>,</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>     <span class="at">subtitle =</span> <span class="st">"Comparación del área bajo la curva (ROC)"</span>,</span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>     <span class="at">x =</span> <span class="st">""</span>, <span class="at">y =</span> <span class="st">"ROC promedio"</span></span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   ) <span class="sc">+</span></span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="sc">+</span>   <span class="fu">theme_course</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>simple_formula <span class="ot">&lt;-</span> bikers <span class="sc">~</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  temp <span class="sc">+</span> hum <span class="sc">+</span> workingday <span class="sc">+</span> <span class="fu">factor</span>(hr)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>flexible_formula <span class="ot">&lt;-</span> bikers <span class="sc">~</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">poly</span>(temp, <span class="dv">5</span>, <span class="at">raw =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">poly</span>(hum, <span class="dv">5</span>, <span class="at">raw =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factor</span>(mnth) <span class="sc">+</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factor</span>(hr) <span class="sc">*</span> workingday <span class="sc">+</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factor</span>(weekday) <span class="sc">+</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  windspeed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<ul>
+<li><code>simple_formula</code>: efectos lineales de clima, un indicador de día laboral, y un efecto fijo por hora del día (24 categorías).</li>
+<li><code>flexible_formula</code>: polinomios de grado 5 en temperatura y humedad, efectos fijos por mes y día de la semana, una interacción hora × día-laboral, y velocidad del viento.</li>
+</ul>
+<p><code>flexible_formula</code> tiene muchos más parámetros. La pregunta de la sección 4 es: ¿eso la hace mejor?</p>
+</section>
+<section id="qué-regla-ajusta-mejor-en-los-mismos-datos-que-se-usaron-para-estimar" class="level2">
+<h2 class="anchored" data-anchor-id="qué-regla-ajusta-mejor-en-los-mismos-datos-que-se-usaron-para-estimar">4. ¿Qué regla ajusta mejor en los mismos datos que se usaron para estimar?</h2>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>m_simple <span class="ot">&lt;-</span> <span class="fu">lm</span>(simple_formula, <span class="at">data =</span> bikedata)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>m_flexible <span class="ot">&lt;-</span> <span class="fu">lm</span>(flexible_formula, <span class="at">data =</span> bikedata)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">modelo =</span> <span class="fu">c</span>(<span class="st">"Simple"</span>, <span class="st">"Flexible"</span>),</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_parametros =</span> <span class="fu">c</span>(<span class="fu">length</span>(<span class="fu">coef</span>(m_simple)), <span class="fu">length</span>(<span class="fu">coef</span>(m_flexible))),</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">RMSE_insample =</span> <span class="fu">c</span>(</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rmse</span>(bikedata<span class="sc">$</span>bikers, <span class="fu">predict</span>(m_simple)),</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rmse</span>(bikedata<span class="sc">$</span>bikers, <span class="fu">predict</span>(m_flexible))</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">AIC =</span> <span class="fu">c</span>(<span class="fu">AIC</span>(m_simple), <span class="fu">AIC</span>(m_flexible)),</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">BIC =</span> <span class="fu">c</span>(<span class="fu">BIC</span>(m_simple), <span class="fu">BIC</span>(m_flexible))</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 5
+  modelo   n_parametros RMSE_insample     AIC     BIC
+  &lt;chr&gt;           &lt;int&gt;         &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
+1 Simple             27          80.000 100344. 100542.
+2 Flexible           76          55.500  94129.  94672.</code></pre>
+</div>
+</div>
+<p>El modelo flexible gana en RMSE in-sample, en AIC y en BIC. Tiene más parámetros, así que ajusta mejor los datos que ya vio. Falta saber si esa ventaja se mantiene en datos que el modelo <em>no</em> usó para aprender. Por eso separamos training set y testing set.</p>
+</section>
+<section id="training-set-vs.-testing-set" class="level2">
+<h2 class="anchored" data-anchor-id="training-set-vs.-testing-set">5. Training set vs.&nbsp;testing set</h2>
+<p>Para ver el fenómeno de overfitting con el mínimo de partes móviles, simplificamos a un solo predictor (<code>temp</code>) y variamos su grado polinomial de 1 a 16.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">3070</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>demo_id <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(bikedata)), <span class="dv">600</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>demo_train <span class="ot">&lt;-</span> bikedata[demo_id[<span class="dv">1</span><span class="sc">:</span><span class="dv">300</span>], ]</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>demo_test <span class="ot">&lt;-</span> bikedata[demo_id[<span class="dv">301</span><span class="sc">:</span><span class="dv">600</span>], ]</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(demo_train); <span class="fu">nrow</span>(demo_test)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 300</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 300</code></pre>
+</div>
+</div>
+<p>Para cada grado, ajustamos en el training set y evaluamos en ambos conjuntos:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>complexity_results <span class="ot">&lt;-</span> <span class="fu">tibble</span>()</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (degree <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">16</span>) {</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  model <span class="ot">&lt;-</span> <span class="fu">lm</span>(bikers <span class="sc">~</span> <span class="fu">poly</span>(temp, degree, <span class="at">raw =</span> <span class="cn">TRUE</span>), <span class="at">data =</span> demo_train)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  fila <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">complejidad =</span> degree,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Training set</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">rmse</span>(demo_train<span class="sc">$</span>bikers, <span class="fu">predict</span>(model, <span class="at">newdata =</span> demo_train)),</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Testing set</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">rmse</span>(demo_test<span class="sc">$</span>bikers, <span class="fu">predict</span>(model, <span class="at">newdata =</span> demo_test))</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  complexity_results <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(complexity_results, fila)</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>complexity_results</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 16 × 3
+   complejidad `Training set` `Testing set`
+         &lt;int&gt;          &lt;dbl&gt;         &lt;dbl&gt;
+ 1           1           116.          112.
+ 2           2           116.          112.
+ 3           3           116.          112.
+ 4           4           116.          112.
+ 5           5           116.          112.
+ 6           6           115.          112.
+ 7           7           115.          111.
+ 8           8           115.          112.
+ 9           9           115.          114.
+10          10           114.          124.
+11          11           114.          125.
+12          12           114.          117.
+13          13           114.          117.
+14          14           114.          118.
+15          15           114.          118.
+16          16           113.          139.</code></pre>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>complexity_results <span class="sc">%&gt;%</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="fu">c</span>(<span class="st">`</span><span class="at">Training set</span><span class="st">`</span>, <span class="st">`</span><span class="at">Testing set</span><span class="st">`</span>), <span class="at">names_to =</span> <span class="st">"conjunto"</span>, <span class="at">values_to =</span> <span class="st">"RMSE"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(complejidad, RMSE, <span class="at">color =</span> conjunto)) <span class="sc">+</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">1.3</span>) <span class="sc">+</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_course</span>(<span class="at">name =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Grado del polinomio en temp"</span>, <span class="at">y =</span> <span class="st">"RMSE"</span>) <span class="sc">+</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_course</span>(<span class="at">base_size =</span> <span class="dv">15</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="nb_14_files/figure-html/unnamed-chunk-8-2.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="nb_14_files/figure-html/complexity-plot-1.png" class="img-fluid figure-img" width="1056"></p>
 </figure>
 </div>
 </div>
 </div>
+<p>El error en el training set cae de forma monótona: más flexibilidad siempre ajusta mejor los datos que ya vio. El error en el testing set cae, toca un mínimo y después sube: el mismo patrón de overfitting que vimos con datos simulados, ahora con datos reales.</p>
 </section>
-<section id="conclusión" class="level3">
-<h3 class="anchored" data-anchor-id="conclusión">10. Conclusión</h3>
-<p>Cross-validation permite estimar error fuera de muestra y evitar sobreajuste. En regresión logística, guía la selección de modelos con verdadero poder clasificador.</p>
+<section id="qué-tan-estable-es-un-solo-split" class="level2">
+<h2 class="anchored" data-anchor-id="qué-tan-estable-es-un-solo-split">6. ¿Qué tan estable es un solo split?</h2>
+<p>El “validation set approach” (un solo split) tiene un problema: el número que obtenemos depende de qué observaciones cayeron al azar en cada lado. Lo mostramos repitiendo el split 15 veces, con una complejidad fija (grado 8), y mirando cuánto se mueve el RMSE en el testing set.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>rmse_testing <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">15</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (seed <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">15</span>) {</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(seed)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  split_id <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(bikedata)), <span class="dv">600</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  train <span class="ot">&lt;-</span> bikedata[split_id[<span class="dv">1</span><span class="sc">:</span><span class="dv">300</span>], ]</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  test <span class="ot">&lt;-</span> bikedata[split_id[<span class="dv">301</span><span class="sc">:</span><span class="dv">600</span>], ]</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  model <span class="ot">&lt;-</span> <span class="fu">lm</span>(bikers <span class="sc">~</span> <span class="fu">poly</span>(temp, <span class="dv">8</span>, <span class="at">raw =</span> <span class="cn">TRUE</span>), <span class="at">data =</span> train)</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  rmse_testing[seed] <span class="ot">&lt;-</span> <span class="fu">rmse</span>(test<span class="sc">$</span>bikers, <span class="fu">predict</span>(model, <span class="at">newdata =</span> test))</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>split_instability <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">seed =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">15</span>, <span class="at">RMSE_testing =</span> rmse_testing)</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>split_instability</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 15 × 2
+    seed RMSE_testing
+   &lt;int&gt;        &lt;dbl&gt;
+ 1     1         110.
+ 2     2         113.
+ 3     3         128.
+ 4     4         121.
+ 5     5         126.
+ 6     6         118.
+ 7     7         120.
+ 8     8         121.
+ 9     9         115.
+10    10         113.
+11    11         118.
+12    12         130.
+13    13         139.
+14    14         121.
+15    15         131.</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>split_instability <span class="sc">%&gt;%</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">media =</span> <span class="fu">mean</span>(RMSE_testing), <span class="at">sd =</span> <span class="fu">sd</span>(RMSE_testing))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 2
+  media    sd
+  &lt;dbl&gt; &lt;dbl&gt;
+1  122.  7.930</code></pre>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(split_instability, <span class="fu">aes</span>(seed, RMSE_testing)) <span class="sc">+</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">color =</span> <span class="fu">unname</span>(course_palette[<span class="st">"primary"</span>])) <span class="sc">+</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="fu">aes</span>(<span class="at">yintercept =</span> <span class="fu">mean</span>(RMSE_testing)), <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"grey30"</span>) <span class="sc">+</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Semilla del split"</span>, <span class="at">y =</span> <span class="st">"RMSE en el testing set"</span>) <span class="sc">+</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_course</span>(<span class="at">base_size =</span> <span class="dv">15</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="nb_14_files/figure-html/split-instability-plot-1.png" class="img-fluid figure-img" width="864"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Con la misma regla (grado 8) y los mismos datos, el RMSE estimado cambia de split a split. Si eligiéramos el grado del polinomio mirando un solo split, la conclusión dependería más de la suerte de la partición que de la regla en sí. Por eso conviene usar <strong>varios</strong> splits (folds) y promediar: validación cruzada.</p>
+</section>
+<section id="k-fold-cross-validation-paso-a-paso" class="level2">
+<h2 class="anchored" data-anchor-id="k-fold-cross-validation-paso-a-paso">7. k-fold cross-validation, paso a paso</h2>
+<section id="construir-los-folds" class="level3">
+<h3 class="anchored" data-anchor-id="construir-los-folds">7.1 Construir los folds</h3>
+<p>Los datos tienen 24 horas dentro de cada día. Si repartimos horas al azar entre folds, el training set de un fold puede contener otras horas del mismo día que estamos evaluando. Esto sobreestima el desempeño si el objetivo es predecir días completos nuevos. Por eso agrupamos por <code>day</code>.</p>
+<p><code>group_vfold_cv(data, group, v)</code> (de <code>rsample</code>) arma <code>v</code> folds agrupando por la variable <code>group</code>: ningún grupo —acá, ningún día— queda repartido entre el training set y el testing set del mismo fold. Devuelve un objeto <code>folds</code> con una columna <code>splits</code> (una lista donde cada elemento es un <em>split</em>: un objeto que guarda qué filas de <code>data</code> van a training y cuáles a testing en ese fold) y una columna <code>id</code> con el nombre de cada fold.</p>
+<p>Para sacarle los datos a un split hay dos funciones: <code>analysis(split)</code> devuelve el training set de ese fold, y <code>assessment(split)</code> devuelve el testing set.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">3070</span>)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>folds <span class="ot">&lt;-</span> <span class="fu">group_vfold_cv</span>(bikedata, <span class="at">group =</span> day, <span class="at">v =</span> <span class="dv">10</span>)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(folds<span class="sc">$</span>splits) <span class="ot">&lt;-</span> folds<span class="sc">$</span>id</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>folds <span class="sc">%&gt;%</span> <span class="fu">select</span>(id)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 10 × 1
+   id        
+   &lt;chr&gt;     
+ 1 Resample01
+ 2 Resample02
+ 3 Resample03
+ 4 Resample04
+ 5 Resample05
+ 6 Resample06
+ 7 Resample07
+ 8 Resample08
+ 9 Resample09
+10 Resample10</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>n_folds <span class="ot">&lt;-</span> <span class="fu">length</span>(folds<span class="sc">$</span>splits)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>fold_sizes <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">fold =</span> <span class="fu">seq_len</span>(n_folds), <span class="at">n_train =</span> <span class="cn">NA_integer_</span>, <span class="at">n_test =</span> <span class="cn">NA_integer_</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_len</span>(n_folds)) {</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  fold_sizes<span class="sc">$</span>n_train[i] <span class="ot">&lt;-</span> <span class="fu">nrow</span>(<span class="fu">analysis</span>(folds<span class="sc">$</span>splits[[i]]))</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  fold_sizes<span class="sc">$</span>n_test[i] <span class="ot">&lt;-</span> <span class="fu">nrow</span>(<span class="fu">assessment</span>(folds<span class="sc">$</span>splits[[i]]))</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>fold_sizes</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 10 × 3
+    fold n_train n_test
+   &lt;int&gt;   &lt;int&gt;  &lt;int&gt;
+ 1     1    7766    879
+ 2     2    7765    880
+ 3     3    7771    874
+ 4     4    7769    876
+ 5     5    7771    874
+ 6     6    7793    852
+ 7     7    7784    861
+ 8     8    7801    844
+ 9     9    7783    862
+10    10    7802    843</code></pre>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(fold_sizes, <span class="fu">aes</span>(<span class="fu">factor</span>(fold), n_test)) <span class="sc">+</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="fu">unname</span>(course_palette[<span class="st">"primary"</span>])) <span class="sc">+</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="fu">mean</span>(fold_sizes<span class="sc">$</span>n_test), <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"grey30"</span>) <span class="sc">+</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Fold"</span>, <span class="at">y =</span> <span class="st">"Observaciones en el testing set"</span>) <span class="sc">+</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_course</span>(<span class="at">base_size =</span> <span class="dv">15</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="nb_14_files/figure-html/fold-sizes-plot-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Los diez folds quedan de tamaño parecido porque hay muchos días y cada uno aporta pocas observaciones relativo al total.</p>
+</section>
+<section id="un-solo-fold-a-mano" class="level3">
+<h3 class="anchored" data-anchor-id="un-solo-fold-a-mano">7.2 Un solo fold, a mano</h3>
+<p>Antes de automatizar nada, miramos qué pasa en <strong>un</strong> fold con <code>simple_formula</code>:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>fold1 <span class="ot">&lt;-</span> folds<span class="sc">$</span>splits[[<span class="dv">1</span>]]</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>train1 <span class="ot">&lt;-</span> <span class="fu">analysis</span>(fold1)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>test1 <span class="ot">&lt;-</span> <span class="fu">assessment</span>(fold1)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="fu">n_distinct</span>(train1<span class="sc">$</span>day); <span class="fu">n_distinct</span>(test1<span class="sc">$</span>day)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 328</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 37</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">intersect</span>(train1<span class="sc">$</span>day, test1<span class="sc">$</span>day)  <span class="co"># debe estar vacío</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>numeric(0)</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>fit1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(simple_formula, <span class="at">data =</span> train1)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_train =</span> <span class="fu">nrow</span>(train1),</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_test =</span> <span class="fu">nrow</span>(test1),</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">RMSE_train =</span> <span class="fu">rmse</span>(train1<span class="sc">$</span>bikers, <span class="fu">predict</span>(fit1, train1)),</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">RMSE_test =</span> <span class="fu">rmse</span>(test1<span class="sc">$</span>bikers, <span class="fu">predict</span>(fit1, test1))</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 4
+  n_train n_test RMSE_train RMSE_test
+    &lt;int&gt;  &lt;int&gt;      &lt;dbl&gt;     &lt;dbl&gt;
+1    7766    879       79.900      81.100</code></pre>
+</div>
+</div>
+<p><code>fit1</code> nunca vio ninguna observación de <code>test1</code>, ni siquiera horas de los mismos días. <code>intersect(train1$day, test1$day)</code> confirma que no hay días compartidos.</p>
+</section>
+<section id="automatizar-con-caret" class="level3">
+<h3 class="anchored" data-anchor-id="automatizar-con-caret">7.3 Automatizar con <code>caret</code></h3>
+<p>Repetir el ajuste a mano en cada fold funciona, pero <code>caret</code> hace exactamente eso con dos comandos: <code>trainControl()</code> para decirle cómo evaluar, y <code>train()</code> para ajustar y evaluar en un solo paso. Reusamos los mismos folds que construimos en 7.1 — no hace falta generar otros.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>train_indices <span class="ot">&lt;-</span> <span class="fu">lapply</span>(folds<span class="sc">$</span>splits, <span class="cf">function</span>(s) s<span class="sc">$</span>in_id)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(train_indices)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 10</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(train_indices[[<span class="dv">1</span>]])  <span class="co"># observaciones en el training set del fold 1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 7766</code></pre>
+</div>
+</div>
+<p><code>lapply(lista, función)</code> aplica esa función a cada elemento de la lista y devuelve una lista nueva; acá la aplicamos a cada split de <code>folds$splits</code>. <code>split$in_id</code> es el vector de filas que <code>rsample</code> asignó al training set de ese fold — lo mismo que devuelve <code>analysis()</code>, pero como índices en vez de datos. <code>caret</code> necesita justo eso: una lista con los índices de entrenamiento de cada fold.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>ctrl <span class="ot">&lt;-</span> <span class="fu">trainControl</span>(<span class="at">method =</span> <span class="st">"cv"</span>, <span class="at">index =</span> train_indices, <span class="at">savePredictions =</span> <span class="st">"final"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<ul>
+<li><code>method = "cv"</code>: evaluar con cross-validation (el default de <code>caret</code> es bootstrap).</li>
+<li><code>index = train_indices</code>: usar nuestros folds —agrupados por día— en vez de que <code>caret</code> arme folds aleatorios por su cuenta.</li>
+<li><code>savePredictions = "final"</code>: guardar la predicción fuera de muestra de cada caso, por si después queremos inspeccionarlas.</li>
+</ul>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>candidate_models <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">Simple =</span> simple_formula, <span class="at">Flexible =</span> flexible_formula)</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>cv_models <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (model_name <span class="cf">in</span> <span class="fu">names</span>(candidate_models)) {</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  cv_models[[model_name]] <span class="ot">&lt;-</span> <span class="fu">train</span>(</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>    candidate_models[[model_name]],</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> bikedata,</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">method =</span> <span class="st">"lm"</span>,</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">trControl =</span> ctrl</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p><code>train()</code> es el comando central de <code>caret</code>: toma una fórmula, un <code>data</code>, un <code>method</code> (qué algoritmo ajustar — acá <code>"lm"</code>, pero con la misma sintaxis podría ser un árbol o un random forest) y un <code>trControl</code> (cómo evaluar). Para cada fold en <code>ctrl$index</code>, ajusta <code>lm(formula, data = training de ese fold)</code> y lo evalúa en el resto. El loop repite esto una vez por fórmula.</p>
+</section>
+<section id="qué-devuelve-train" class="level3">
+<h3 class="anchored" data-anchor-id="qué-devuelve-train">7.4 Qué devuelve <code>train()</code></h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>cv_models<span class="sc">$</span>Simple<span class="sc">$</span>results</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>  intercept  RMSE Rsquared   MAE RMSESD RsquaredSD MAESD
+1      TRUE 80.480   0.638 59.940  3.089    0.048 2.248</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>cv_models<span class="sc">$</span>Flexible<span class="sc">$</span>results</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>  intercept RMSE Rsquared  MAE RMSESD RsquaredSD MAESD
+1      TRUE   57   0.818 42.800  4.991    0.040 2.541</code></pre>
+</div>
+</div>
+<p><code>$results</code> trae el promedio y la desviación estándar de RMSE, R² y MAE entre los 10 folds: el mismo resumen que antes armábamos a mano.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>cv_models<span class="sc">$</span>Simple<span class="sc">$</span>resample</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>    RMSE Rsquared   MAE   Resample
+1  81.080   0.605 59.420 Resample01
+2  81.260   0.636 59.860 Resample02
+3  83.770   0.560 63.160 Resample03
+4  83.760   0.631 62.500 Resample04
+5  77.380   0.612 56.700 Resample05
+6  85.170   0.598 62.060 Resample06
+7  79.690   0.710 59.170 Resample07
+8  75.650   0.700 56.750 Resample08
+9  78.530   0.641 58.780 Resample09
+10 78.470   0.685 61.030 Resample10</code></pre>
+</div>
+</div>
+<p><code>$resample</code> trae el detalle fold por fold: una fila por fold, con <code>RMSE</code>, <code>Rsquared</code>, <code>MAE</code> y <code>Resample</code> (el nombre del fold).</p>
+</section>
+<section id="comparar-los-dos-modelos" class="level3">
+<h3 class="anchored" data-anchor-id="comparar-los-dos-modelos">7.5 Comparar los dos modelos</h3>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>cv_compare <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>  cv_models<span class="sc">$</span>Simple<span class="sc">$</span>resample <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Simple"</span>),</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>  cv_models<span class="sc">$</span>Flexible<span class="sc">$</span>resample <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">modelo =</span> <span class="st">"Flexible"</span>)</span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>cv_compare</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>    RMSE Rsquared   MAE   Resample   modelo
+1  81.080   0.605 59.420 Resample01   Simple
+2  81.260   0.636 59.860 Resample02   Simple
+3  83.770   0.560 63.160 Resample03   Simple
+4  83.760   0.631 62.500 Resample04   Simple
+5  77.380   0.612 56.700 Resample05   Simple
+6  85.170   0.598 62.060 Resample06   Simple
+7  79.690   0.710 59.170 Resample07   Simple
+8  75.650   0.700 56.750 Resample08   Simple
+9  78.530   0.641 58.780 Resample09   Simple
+10 78.470   0.685 61.030 Resample10   Simple
+11 61.420   0.777 44.390 Resample01 Flexible
+12 59.400   0.804 44.570 Resample02 Flexible
+13 56.450   0.797 41.910 Resample03 Flexible
+14 51.920   0.859 39.640 Resample04 Flexible
+15 57.620   0.792 42.820 Resample05 Flexible
+16 67.370   0.749 47.490 Resample06 Flexible
+17 51.920   0.875 39.840 Resample07 Flexible
+18 55.500   0.838 42.660 Resample08 Flexible
+19 50.950   0.851 40.050 Resample09 Flexible
+20 57.430   0.833 44.620 Resample10 Flexible</code></pre>
+</div>
+</div>
+<p>Juntamos el <code>$resample</code> de cada modelo en una sola tabla larga, igual que hacíamos a mano antes.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(cv_compare, <span class="fu">aes</span>(modelo, RMSE, <span class="at">color =</span> modelo)) <span class="sc">+</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">width =</span> <span class="fl">0.45</span>, <span class="at">outlier.shape =</span> <span class="cn">NA</span>, <span class="at">alpha =</span> <span class="fl">0.15</span>) <span class="sc">+</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>(<span class="at">width =</span> <span class="fl">0.08</span>, <span class="at">size =</span> <span class="fl">3.2</span>) <span class="sc">+</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_summary</span>(<span class="at">fun =</span> mean, <span class="at">geom =</span> <span class="st">"point"</span>, <span class="at">shape =</span> <span class="dv">21</span>, <span class="at">size =</span> <span class="dv">5</span>, <span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_course</span>(<span class="at">guide =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">"RMSE en días reservados"</span>) <span class="sc">+</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_course</span>(<span class="at">base_size =</span> <span class="dv">15</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="nb_14_files/figure-html/caret-compare-plot-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(cv_compare, <span class="fu">aes</span>(modelo, RMSE, <span class="at">group =</span> Resample)) <span class="sc">+</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"grey70"</span>, <span class="at">linewidth =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">color =</span> modelo), <span class="at">size =</span> <span class="fl">3.5</span>) <span class="sc">+</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_course</span>(<span class="at">guide =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">"RMSE en días reservados"</span>) <span class="sc">+</span></span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_course</span>(<span class="at">base_size =</span> <span class="dv">15</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="nb_14_files/figure-html/caret-paired-plot-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Cada línea conecta el <em>mismo</em> fold entre las dos reglas: vemos si la regla flexible gana en promedio o en casi todos los folds.</p>
+<p><code>caret</code> tiene un atajo para esta comparación: <code>resamples()</code> junta varios modelos ajustados con el mismo <code>index</code>, y <code>summary()</code> imprime el resumen de cada uno.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>resamps <span class="ot">&lt;-</span> <span class="fu">resamples</span>(cv_models)</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(resamps)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+summary.resamples(object = resamps)
+
+Models: Simple, Flexible 
+Number of resamples: 10 
+
+MAE 
+          Min. 1st Qu. Median  Mean 3rd Qu.  Max. NA's
+Simple   56.700   58.870  59.640 59.940   61.800 63.160    0
+Flexible 39.640   40.520  42.740 42.800   44.520 47.490    0
+
+RMSE 
+          Min. 1st Qu. Median  Mean 3rd Qu.  Max. NA's
+Simple   75.650   78.490  80.390 80.480   83.140 85.170    0
+Flexible 50.950   52.820  56.940 57.000   58.960 67.370    0
+
+Rsquared 
+           Min. 1st Qu. Median   Mean 3rd Qu.   Max. NA's
+Simple   0.560  0.607 0.634 0.638  0.674 0.710    0
+Flexible 0.749  0.793 0.819 0.818  0.847 0.875    0</code></pre>
+</div>
+</div>
+<p>Una diferencia con lo que hicimos a mano: <code>$resample</code> solo trae el error en el testing set de cada fold. <code>caret</code> no guarda el ajuste de cada fold por separado, así que no hay forma directa de recuperar el error en el training set de cada uno. Para calcular la brecha de generalización (training set vs.&nbsp;testing set) hay que hacerlo a mano, como en 7.2.</p>
+</section>
+</section>
+<section id="fugas-de-información-y-el-test-final" class="level2">
+<h2 class="anchored" data-anchor-id="fugas-de-información-y-el-test-final">8. Fugas de información y el test final</h2>
+<p>Reglas que hay que respetar para que todo lo anterior siga siendo válido:</p>
+<ul>
+<li>estandarizar, imputar o seleccionar predictores <strong>dentro</strong> de cada fold, nunca con todo el dataset;</li>
+<li>no repartir observaciones relacionadas (como horas del mismo día) entre training set y testing set; por eso usamos <code>group_vfold_cv(group = day)</code>;</li>
+<li>si usamos CV para elegir entre <code>simple_formula</code> y <code>flexible_formula</code> (o para afinar cualquier hiperparámetro), esos folds pasan a ser parte del entrenamiento del procedimiento completo: ya no sirven como estimación independiente del error final.</li>
+</ul>
+</section>
+<section id="ejercicio" class="level2">
+<h2 class="anchored" data-anchor-id="ejercicio">9. Ejercicio</h2>
+<p>Con los mismos <code>train_indices</code> (folds agrupados por <code>day</code>):</p>
+<ol type="1">
+<li>proponga una tercera regla de predicción (puede ser una variante de <code>flexible_formula</code>);</li>
+<li>ajústela con <code>train(tercera_formula, data = bikedata, method = "lm", trControl = ctrl)</code>;</li>
+<li>compare su <code>$results</code> con los de <code>cv_models$Simple</code> y <code>cv_models$Flexible</code>;</li>
+<li>identifique una posible fuga de información si alguien construyera esa regla de otra forma;</li>
+<li>explique cómo cambiaría la construcción de los folds si el objetivo fuera predecir el mes siguiente en vez de días dentro del mismo período.</li>
+</ol>
 </section>
 
 </main>
