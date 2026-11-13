@@ -54,9 +54,9 @@ Clases los días Lunes, bloques 12:20-13:30 (B1) y 14:50-16:00 (B2). Calendario 
 
 | Día | Mes       | Bloque | Contenido                                            | Material |
 |-----|-----------|--------|---------------------------------------------------------|----------|
-| 26  | Octubre   | B1     | Clasificador Logístico Binomial                       | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_15/class_15#0) [`[Code]`](slides/class_15/class_15.qmd) |
-| 26  | Octubre   | B2     | Clasificador Logístico Multinomial                    | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_15/class_15#0) [`[Code]`](slides/class_15/class_15.qmd) |
-| 2   | Noviembre | B1 & B2| Regularización: Ridge & Lasso                          | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_16/class_16#0) [`[Code]`](slides/class_16/class_16.qmd) |
+| 26  | Octubre   | B1 & B2| Regularización: Ridge & Lasso                          | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_16/class_16#0) [`[Code]`](slides/class_16/class_16.qmd) |
+| 2   | Noviembre | B1     | Clasificador Logístico Binomial                       | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_15/class_15#0) [`[Code]`](slides/class_15/class_15.qmd) |
+| 2   | Noviembre | B2     | Clasificador Logístico Multinomial                    | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_15/class_15#0) [`[Code]`](slides/class_15/class_15.qmd) |
 | 9   | Noviembre | B1     | Árboles de Regresión y Random Forests                  | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_17/class_17#0) [`[Code]`](slides/class_17/class_17.qmd) |
 | 9   | Noviembre | B2     | Gradient Boosting                                       | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_17/class_17#0) [`[Code]`](slides/class_17/class_17.qmd) |
 | 16  | Noviembre | B1     | Introducción a Redes Neuronales                         | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_18/class_18#0) [`[Code]`](slides/class_18/class_18.qmd) |
