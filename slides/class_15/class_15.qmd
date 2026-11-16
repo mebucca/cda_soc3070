@@ -1,6 +1,6 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Clasificación Logística: Probabilidades, Umbrales y Decisiones"
+subtitle: "Clasificador Logístico"
 author: "Mauricio Bucca · Sociología UC"
 date: today
 body-classes: theme-milan
@@ -12,7 +12,12 @@ format:
     slide-number: false
     theme: default
     highlight-style: github
-    code-block-font-size: 0.84em
+    include-in-header:
+      text: |
+        <style>
+        /* Código legible al proyectar (el default de revealjs + curso queda muy chico). */
+        .reveal div.sourceCode pre code { font-size: 1.15em !important; line-height: 1.4; }
+        </style>
     width: 1600
     height: 900
     html-math-method: katex
@@ -23,6 +28,10 @@ execute:
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+library(nnet)
+library(pROC)
+library(ggrepel)
+library(ISLR2)
 
 source(local({
   d <- normalizePath(getwd(), mustWork = FALSE)
@@ -37,94 +46,207 @@ source(local({
 
 course <- use_course_data("milan")
 course_palette <- course$palette
-setup <- bikeshare_learning_setup(course$data)
-bikedata <- setup$data
-bikedata$high_demand <- setup$high_demand
 
-id_train <- setup$id_train
-id_valid <- setup$id_valid
-id_test <- setup$id_test
-train_days <- setup$train_days
-valid_days <- setup$valid_days
-test_days <- setup$test_days
-demand_cutoff <- setup$demand_cutoff
+# Gráficos legibles al proyectar: texto más grande que el default del curso,
+# y resolución alta para que se vean nítidos al escalarlos con out.width.
+theme_set(theme_julia(base_size = 15))
+knitr::opts_chunk$set(dpi = 150, fig.align = "center")
+options(knitr.kable.NA = "")
 
-train <- bikedata[id_train, ]
-valid <- bikedata[id_valid, ]
-test <- bikedata[id_test, ]
-dev <- bind_rows(train, valid)
+# El hook del curso fuerza 3 decimales en todo texto de salida (también dentro
+# de tablas: "τ = 0.5" se volvía "τ = 0.500"). Aquí las tablas ya fijan sus
+# decimales con kable(digits = ...), así que volvemos al hook de Quarto.
+course_hook_env <- environment(knitr::knit_hooks$get("output"))
+if (!is.null(course_hook_env) && exists("default_output", envir = course_hook_env, inherits = FALSE)) {
+  knitr::knit_hooks$set(output = get("default_output", envir = course_hook_env))
+}
+
+# Inline: enteros sin decimales, demás números con 3 decimales (estándar del
+# curso). El texto ya formateado (f2(), pct()) se imprime tal cual.
+knitr::knit_hooks$set(inline = function(x) {
+  if (is.numeric(x)) {
+    if (all(abs(x - round(x)) < 1e-9)) {
+      return(formatC(round(x), format = "d",
+                     big.mark = if (max(abs(x)) >= 1e4) " " else ""))
+    }
+    return(course_number(x))
+  }
+  as.character(x)
+})
+
+f2 <- function(x) formatC(x, format = "f", digits = 2)
+pct <- function(x, digits = 1) paste0(formatC(100 * x, format = "f", digits = digits), "%")
+safe_ratio <- function(num, den) ifelse(den == 0, NA_real_, num / den)
 
 log_loss <- function(y, p) {
   p <- pmin(pmax(p, 1e-8), 1 - 1e-8)
   -mean(y * log(p) + (1 - y) * log(1 - p))
 }
 
-roc_auc <- function(y, p) {
-  n1 <- sum(y == 1); n0 <- sum(y == 0)
-  (sum(rank(p, ties.method = "average")[y == 1]) - n1 * (n1 + 1) / 2) /
-    (n1 * n0)
-}
+col_pos <- course_palette[["primary"]]    # clase positiva (Sí)
+col_neg <- course_palette[["series-4"]]   # clase negativa (No)
+col_tau <- course_palette[["secondary"]]  # umbrales y marcas
 
-binary_metrics <- function(y, p, threshold) {
-  predicted <- as.integer(p >= threshold)
-  tp <- sum(predicted == 1 & y == 1)
-  tn <- sum(predicted == 0 & y == 0)
-  fp <- sum(predicted == 1 & y == 0)
-  fn <- sum(predicted == 0 & y == 1)
+# --- Ejemplo binario: ¿quién no paga su tarjeta de crédito? (ISLR2::Default) ---
+# Corte transversal (sin estructura temporal): split al azar 70/30.
+data(Default, package = "ISLR2")
+
+set.seed(42)
+n_default <- nrow(Default)
+id_train_default <- sample(seq_len(n_default), size = round(0.7 * n_default))
+train_default <- Default[id_train_default, ]
+test_default <- Default[-id_train_default, ]
+
+logit_default <- glm(default ~ balance + income + student,
+                     data = train_default, family = binomial)
+p_default <- predict(logit_default, newdata = test_default, type = "response")
+y_default <- as.integer(test_default$default == "Yes")
+
+prevalence_default <- mean(Default$default == "Yes")
+prevalence_train_default <- mean(train_default$default == "Yes")
+null_accuracy_default <- mean(y_default == 0)
+log_loss_default <- log_loss(y_default, p_default)
+log_loss_base_default <- log_loss(y_default, rep(prevalence_train_default, length(y_default)))
+income_student <- tapply(Default$income, Default$student, mean)
+
+# Costos de los errores (se usan recién en la sección de decisión).
+cost_fp <- 1
+cost_fn <- 5
+tau_cost_theory <- cost_fp / (cost_fp + cost_fn)
+
+# Conteos de la matriz de confusión y métricas para cualquier umbral.
+class_metrics <- function(y, p, tau) {
+  yhat <- as.integer(p > tau)
+  TP <- sum(yhat == 1 & y == 1); FP <- sum(yhat == 1 & y == 0)
+  FN <- sum(yhat == 0 & y == 1); TN <- sum(yhat == 0 & y == 0)
   tibble(
-    log_loss = log_loss(y, p),
-    brier = mean((y - p)^2),
-    ROC_AUC = roc_auc(y, p),
-    sensitivity = tp / (tp + fn),
-    specificity = tn / (tn + fp),
-    precision = tp / (tp + fp),
-    cost_per_100 = 100 * (3 * fn + fp) / length(y)
+    tau = tau, TP = TP, FP = FP, FN = FN, TN = TN,
+    accuracy = (TP + TN) / length(y),
+    sensitivity = safe_ratio(TP, TP + FN),
+    specificity = safe_ratio(TN, TN + FP),
+    precision = safe_ratio(TP, TP + FP),
+    F1 = safe_ratio(2 * TP, 2 * TP + FP + FN),
+    FPR = safe_ratio(FP, FP + TN),
+    costo_100 = 100 * (cost_fp * FP + cost_fn * FN) / length(y)
   )
 }
 
-roc_points <- function(y, p) {
-  thresholds <- sort(unique(c(Inf, p, -Inf)), decreasing = TRUE)
-  map_dfr(thresholds, function(t) {
-    pred <- as.integer(p >= t)
-    tibble(
-      threshold = t,
-      TPR = sum(pred == 1 & y == 1) / sum(y == 1),
-      FPR = sum(pred == 1 & y == 0) / sum(y == 0)
-    )
-  })
-}
+m05 <- class_metrics(y_default, p_default, 0.5)
 
-model_formula <- high_demand ~
-  temp + I(temp^2) + hum + I(hum^2) + windspeed +
-  holiday + factor(weathersit) + factor(hr) * workingday +
-  sin(2 * pi * month / 12) + cos(2 * pi * month / 12)
+tau_grid <- round(seq(0.01, 0.99, by = 0.01), 2)
+metrics_grid <- map_dfr(tau_grid, ~ class_metrics(y_default, p_default, .x))
+tau_acc_best <- metrics_grid$tau[which.max(metrics_grid$accuracy)]
+tau_f1_best <- metrics_grid$tau[which.max(metrics_grid$F1)]
+tau_cost_test <- metrics_grid$tau[which.min(metrics_grid$costo_100)]
+m_acc <- class_metrics(y_default, p_default, tau_acc_best)
+m_f1 <- class_metrics(y_default, p_default, tau_f1_best)
+m_cost_theory <- class_metrics(y_default, p_default, tau_cost_theory)
+m_cost_test <- class_metrics(y_default, p_default, tau_cost_test)
 
-logit_train <- glm(
-  model_formula, data = train,
-  family = binomial(link = "logit")
+tau_show <- c(0.1, 0.3, 0.5)
+metrics_show <- map_dfr(tau_show, ~ class_metrics(y_default, p_default, .x))
+m01 <- metrics_show %>% filter(tau == 0.1)
+
+roc_default <- roc(response = y_default, predictor = p_default, quiet = TRUE)
+auc_default <- as.numeric(auc(roc_default))
+roc_df_default <- coords(roc_default, x = "all",
+                         ret = c("threshold", "specificity", "sensitivity"),
+                         transpose = FALSE) %>%
+  as_tibble() %>%
+  mutate(FPR = 1 - specificity) %>%
+  arrange(FPR, sensitivity)
+
+youden_default <- coords(roc_default, x = "best", best.method = "youden", transpose = FALSE)
+topleft_default <- coords(roc_default, x = "best", best.method = "closest.topleft", transpose = FALSE)
+tau_youden <- youden_default$threshold[1]
+m_youden <- class_metrics(y_default, p_default, tau_youden)
+
+calib_df <- tibble(p = p_default, y = y_default) %>%
+  mutate(bin = cut(p, breaks = c(0, 0.05, seq(0.1, 1, by = 0.1)), include.lowest = TRUE)) %>%
+  group_by(bin) %>%
+  summarise(predicho = mean(p), observado = mean(y), n = n(), .groups = "drop")
+
+# --- Variabilidad entre splits (datos completos, 8 semillas) ---
+split_variability <- map_dfr(1:8, function(s) {
+  set.seed(s)
+  idt <- sample(seq_len(n_default), size = round(0.7 * n_default))
+  fit <- glm(default ~ balance + income + student, data = Default[idt, ], family = binomial)
+  held <- Default[-idt, ]
+  yy <- as.integer(held$default == "Yes")
+  pp <- predict(fit, newdata = held, type = "response")
+  tibble(split = s, defaults = sum(yy),
+         AUC = as.numeric(auc(roc(yy, pp, quiet = TRUE))),
+         F1 = class_metrics(yy, pp, 0.5)$F1)
+})
+
+# --- 5-fold CV DENTRO del training set: el test set no se toca ---
+set.seed(1)
+k_folds <- 5
+fold_id <- sample(rep(1:k_folds, length.out = nrow(train_default)))
+
+cv_preds <- map(1:k_folds, function(i) {
+  fit <- glm(default ~ balance + income + student,
+             data = train_default[fold_id != i, ], family = binomial)
+  held <- train_default[fold_id == i, ]
+  list(y = as.integer(held$default == "Yes"),
+       p = predict(fit, newdata = held, type = "response"))
+})
+
+cv_results <- map_dfr(1:k_folds, function(i) {
+  y <- cv_preds[[i]]$y
+  p <- cv_preds[[i]]$p
+  m <- class_metrics(y, p, 0.5)
+  tibble(fold = as.character(i), defaults = sum(y),
+         log_loss = log_loss(y, p),
+         AUC = as.numeric(auc(roc(y, p, quiet = TRUE))),
+         accuracy = m$accuracy, sensitivity = m$sensitivity,
+         specificity = m$specificity, precision = m$precision, F1 = m$F1)
+})
+
+cv_mean <- cv_results %>% dplyr::select(-fold, -defaults) %>% summarise(across(everything(), mean))
+cv_sd <- cv_results %>% dplyr::select(-fold, -defaults) %>% summarise(across(everything(), sd))
+cv_table <- bind_rows(
+  cv_results,
+  cv_mean %>% mutate(fold = "Media", .before = 1),
+  cv_sd %>% mutate(fold = "DE", .before = 1)
 )
-valid_prob <- predict(logit_train, valid, type = "response")
 
-threshold_curve <- map_dfr(seq(0.05, 0.90, by = 0.01), function(threshold) {
-  pred <- as.integer(valid_prob >= threshold)
-  tibble(
-    threshold = threshold,
-    false_negative = sum(pred == 0 & valid$high_demand == 1),
-    false_positive = sum(pred == 1 & valid$high_demand == 0)
-  )
-}) %>%
-  mutate(cost = 3 * false_negative + false_positive)
+# --- CV para elegir τ ---
+tau_cv_grid <- round(seq(0.02, 0.90, by = 0.01), 2)
+tau_cv_curves <- map_dfr(1:k_folds, function(i) {
+  map_dfr(tau_cv_grid, ~ class_metrics(cv_preds[[i]]$y, cv_preds[[i]]$p, .x)) %>%
+    mutate(fold = i)
+})
 
-selected_threshold <- threshold_curve %>%
-  slice_min(cost, n = 1, with_ties = FALSE) %>%
-  pull(threshold)
+# Enfoque ingenuo: el mejor τ de cada fold (inestable: pocos defaults por fold).
+tau_best_per_fold <- tau_cv_curves %>%
+  group_by(fold) %>%
+  summarise(tau_f1 = tau[which.max(F1)], tau_costo = tau[which.min(costo_100)], .groups = "drop") %>%
+  left_join(cv_results %>% transmute(fold = as.integer(fold), defaults), by = "fold")
 
-logit_final <- glm(
-  model_formula, data = dev,
-  family = binomial(link = "logit")
-)
-test_prob <- predict(logit_final, test, type = "response")
-test_class <- as.integer(test_prob >= selected_threshold)
+# Enfoque correcto: promediar la curva completa entre folds y recién ahí optimizar.
+tau_cv_avg <- tau_cv_curves %>%
+  group_by(tau) %>%
+  summarise(F1 = mean(F1, na.rm = TRUE), costo_100 = mean(costo_100), .groups = "drop")
+tau_cv_f1_best <- tau_cv_avg$tau[which.max(tau_cv_avg$F1)]
+tau_cv_cost_best <- tau_cv_avg$tau[which.min(tau_cv_avg$costo_100)]
+
+# Evaluación final: el modelo ajustado con todo el training set, en el test set, una vez.
+# Cada fila reporta solo la métrica para la que se eligió su τ.
+final_eval <- tibble(
+  criterio = c("Por defecto: clasificador de Bayes",
+               "Para F1, en validation (CV)",
+               "Para F1, mirando el test set",
+               "Para costo, en validation (CV)",
+               "Para costo, mirando el test set"),
+  tau = c(0.5, tau_cv_f1_best, tau_f1_best, tau_cv_cost_best, tau_cost_test),
+  objetivo = c("ambas", "F1", "F1", "costo", "costo")
+) %>%
+  mutate(m = map(tau, ~ class_metrics(y_default, p_default, .x) %>% dplyr::select(F1, costo_100))) %>%
+  unnest(m) %>%
+  mutate(F1 = if_else(objetivo == "costo", NA_real_, F1),
+         costo_100 = if_else(objetivo == "F1", NA_real_, costo_100)) %>%
+  dplyr::select(-objetivo)
 ```
 
 ## Antes · Hoy · Después {.class-rhythm}
@@ -134,515 +256,1405 @@ test_class <- as.integer(test_prob >= selected_threshold)
 ::: {.content-box}
 **Antes**
 
-estimación, incertidumbre y validación: qué aprende un modelo de una muestra.
+overfitting y cross-validation
 :::
 
 ::: {.content-box-primary}
 **Hoy**
 
-usar un logit para producir probabilidades y convertirlas en decisiones.
+clasificación: de una probabilidad a una decisión
 :::
 
 ::: {.content-box-secondary}
 **Después**
 
-regularizar cuando la matriz de predictores se vuelve grande e inestable.
+Regularización: Ridge, LASSO y Elastic Net
 :::
 
 :::
 
-# El problema antes que el algoritmo {.inverse .center .middle}
 
-## La solicitud predictiva del módulo
+# Uso predictivo de modelos de regresión {.inverse .center .middle}
 
-> **Al cierre de cada día, estimar qué horas del día siguiente tendrán demanda alta, para priorizar el rebalanceo de bicicletas.**
+## Regresión como machine learning
 
-| Elemento | Definición |
+<br>
+
+:::: {.columns}
+::: {.column width="58%"}
+![](https://www.researchgate.net/publication/376856079/figure/fig1/AS:11431281226110814@1709092685557/Famous-internet-meme-displaying-the-relation-between-statistics-Machine-Learning-and.png){fig-align="center" width="100%"}
+:::
+
+::: {.column width="42%" .fragment}
+- Regresión logística: el **"hello world"** de ML.
+- La conexión:
+
+![](https://images-na.ssl-images-amazon.com/images/I/61atw0HUOPL._AC_UL600_SR600,600_.jpg){fig-align="center" height="430px" fig-alt="IESL"}
+:::
+::::
+
+# Regresión logística como clasificador {.inverse .center .middle}
+
+
+## De probabilidades a clases
+
+- El input de una regresión logística es una observacion dicotomica: $y_i \in \{0,1\}$
+
+
+. . .
+
+
+- La regresión logística estima una probabilidad para cada caso, también llamada **score**: $\hat{p}_i = \widehat{\Pr}(Y_i=1\mid X_i)$.
+
+. . .
+
+- Para convertir el score en una clase usamos un **umbral** $\tau$:
+
+$$
+\hat{y}_i =
+\begin{cases}
+1 & \text{si } \hat{p}_i > \tau \\
+0 & \text{si } \hat{p}_i \leq \tau
+\end{cases}
+$$
+
+. . .
+
+- El valor por defecto es $\tau=0.5$.
+
+. . .
+
+
+- En la práctica, el umbral se ajusta al problema:
+  - **Spam:** es peor mandar un correo real a la carpeta de spam que dejar pasar un spam → umbral alto.
+  - **Subsidio:** es peor dejar fuera a quien lo necesita → umbral bajo.
+  - **Examen médico:** detección temprana → umbral bajo; confirmar un diagnóstico → umbral alto.
+
+. . .
+
+::: {.content-box-primary}
+Un clasificador = un modelo que entrega $\hat p$ + una regla de decisión que lo convierte en $\hat y$.
+:::
+
+
+## De probabilidades a clases
+
+
+<br>
+<br>
+
+![](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*I0VM3MoGudyoW3ZGGpT8Dg@2x.png){fig-align="center"}
+
+
+## Matriz de confusión: realidad vs. predicción
+
+<br>
+
+:::: {.columns}
+::: {.column width="55%"}
+![](https://miro.medium.com/1*mL-nYY6MFhiG0uoR5kJaCA.jpeg){fig-align="center" width="100%"}
+:::
+
+::: {.column width="45%" .fragment}
+<br>
+
+- **TP** (*true positive*): predijimos 1 y era 1.
+- **FP** (*false positive*): predijimos 1 y era 0. Falsa alarma.
+- **FN** (*false negative*): predijimos 0 y era 1. Un caso que se nos escapó.
+- **TN** (*true negative*): predijimos 0 y era 0.
+:::
+::::
+
+
+## Las métricas: cada una responde una pregunta distinta
+
+| Métrica | Fórmula | Pregunta que responde |
+|---|:---:|---|
+| **Accuracy** | $(TP+TN)/N$ | ¿Qué fracción de los casos clasifico bien? |
+| **Error rate** | $(FP+FN)/N = 1-\text{accuracy}$ | ¿Qué fracción clasifico mal? |
+| **Sensitivity** | $TP/(TP+FN)$ | De los positivos reales, ¿qué fracción detecto? |
+| **Specificity** | $TN/(TN+FP)$ | De los negativos reales, ¿qué fracción clasifico como negativos? |
+| **Precision** | $TP/(TP+FP)$ | Cuando predigo positivo, ¿qué fracción de las veces acierto? |
+| **Prevalence** | $(TP+FN)/N$ | ¿Qué tan común es la clase positiva? |
+
+<br>
+
+. . .
+
+- Sensitivity y specificity leen la tabla **por columna** (condicionan en la realidad).
+  
+- Precision lee la tabla **por fila** (condiciona en la predicción).
+  
+- Sinónimos en la literatura: sensitivity = **recall** = **TPR** (*true positive rate*). Y **FPR** (*false positive rate*) $= FP/(FP+TN) = 1-\text{specificity}$.
+
+## Un ejemplo con números
+
+<br>
+
+
+
+:::: {.columns}
+::: {.column width="48%"}
+100 casos simulados:
+
+|  | Real 1 | Real 0 | Total |
+|---|:---:|:---:|:---:|
+| **Predice 1** | TP = 18 | FP = 12 | 30 |
+| **Predice 0** | FN = 6 | TN = 64 | 70 |
+| **Total** | 24 | 76 | 100 |
+:::
+
+::: {.column width="52%"}
+- Accuracy $=(18+64)/100=0.82$
+- Sensitivity $=18/(18+6)=0.75$
+- Specificity $=64/(64+12)\approx0.84$
+- Precision $=18/(18+12)=0.60$
+- Prevalence $=(18+6)/100=0.24$
+:::
+::::
+
+
+## F1: un solo número para precision y sensitivity
+
+Recordemos:
+
+| Métrica | Fórmula | Pregunta que responde |
+|---|:---:|---|
+| **Sensitivity** | $TP/(TP+FN)$ | De los positivos reales, ¿qué fracción detecto? |
+| **Precision** | $TP/(TP+FP)$ | Cuando predigo positivo, ¿qué fracción de las veces acierto? |
+
+. . .
+
+Precision y sensitivity suelen moverse en direcciones opuestas (dependen del umbral en sentido opuesto). **F1** las resume en un número:
+
+$$
+F_1=2\cdot\frac{\text{precision}\cdot\text{sensitivity}}{\text{precision}+\text{sensitivity}}=\frac{2\,TP}{2\,TP+FP+FN}
+$$
+
+. . .
+
+En el ejemplo anterior: $F_1=2(0.60)(0.75)/(0.60+0.75)\approx0.67$.
+
+. . .
+
+- $F_1$ es la **media armónica** de las dos: castiga cuando cualquiera de las dos es baja. Con precision $=0.60$ y sensitivity $=0.10$, $F_1\approx0.17$: refleja que el clasificador casi no detecta positivos.
+- $F_1$ **no usa los TN**. Por eso es útil cuando los negativos son la inmensa mayoría: los TN inflan la accuracy, pero no mueven $F_1$.
+
+
+## Mover $\tau$ mueve casos entre celdas
+
+<br>
+
+- **Bajar $\tau$:** más casos cruzan a "predice 1". Algunos FN se vuelven TP (sube sensitivity), pero algunos TN se vuelven FP (baja specificity, y en general baja precision).
+
+- **Subir $\tau$:** lo contrario. Menos falsas alarmas, más casos que se escapan.
+
+. . .
+
+- Por eso **todas** las métricas de la matriz de confusión dependen de $\tau$: no existe "la accuracy del modelo", sino "la accuracy del modelo con umbral $\tau$".
+
+<br>
+
+. . .
+
+::: {.content-box-primary}
+Las métricas de la matriz de confusión evalúan el par (modelo, $\tau$), no el modelo solo. Lo vamos a ver con datos reales.
+:::
+
+# ¿Quién no paga su tarjeta de crédito? {.inverse .center .middle}
+
+## Los datos: `Default` (ISLR)
+
+<br>
+
+- `r n_default` clientes de un banco (datos simulados del libro ISLR). Pregunta: ¿quién hará **default**, es decir, dejará de pagar su deuda?
+  
+- Predictores: `balance` (saldo promedio que queda en la tarjeta después del pago mensual, en US\$), `income` (ingreso anual, en US\$) y `student` (¿es estudiante?).
+  
+- Outcome: `default` = Yes / No. La clase positiva ($Y=1$) es Yes.
+
+<br>
+
+```{r default-glimpse, echo=FALSE}
+Default %>%
+  dplyr::select(default, student, balance, income) %>%
+  slice_head(n = 4) %>%
+  knitr::kable(digits = 0)
+```
+
+
+<br>
+
+. . .
+
+**Importante**: Hacemos un **split al azar** 70/30: un training set de `r nrow(train_default)` personas para ajustar y un test set de `r nrow(test_default)` para evaluar. Todas las métricas de esta sección se calculan en el test set.
+
+## Por qué este ejemplo
+
+<br>
+
+- Solo `r pct(prevalence_default)` de las personas hace default: la prevalence es muy baja.
+
+. . .
+
+- Un clasificador que **nunca** predice default acierta en `r pct(null_accuracy_default)` de los casos, por puro desbalance.
+
+. . .
+
+- Es un caso donde la métrica que usemos y el umbral que elijamos cambian por completo qué tan "bueno" parece el modelo.
+
+<br>
+
+::: {.content-box-primary}
+En este ejemplo el umbral importa, y mucho.
+:::
+
+## Ajustamos el modelo
+
+<br>
+
+$$
+\ln\frac{p_i}{1-p_i}=\beta_0+\beta_1\,\text{balance}_i+\beta_2\,\text{income}_i+\beta_3\,\text{student}_i
+$$
+
+<br>
+
+```{r default-coef, echo=FALSE}
+coef_default <- coef(summary(logit_default))
+scale_default <- c(1, 100, 10000, 1)
+tibble(
+  Variable = c("Intercepto", "balance (por US$100)", "income (por US$10 000)", "student (Yes vs. No)"),
+  Coeficiente = coef_default[, "Estimate"] * scale_default,
+  z = coef_default[, "z value"],
+  `p-valor` = coef_default[, "Pr(>|z|)"]
+) %>%
+  knitr::kable(digits = 3)
+```
+
+<br>
+
+. . .
+
+
+- `balance` es, por lejos, el predictor más fuerte.
+  
+- Para predecir no necesitamos interpretar cada $\beta$: de aquí en adelante, lo que usamos es $\hat p_i$.
+
+
+## La trampa de la accuracy
+
+<br>
+
+Comparemos el logit con $\tau=0.5$ contra un clasificador que **nunca** predice default (ignora `balance`, `income` y `student`):
+
+<br>
+
+
+```{r null-accuracy, echo=FALSE}
+tibble(
+  Clasificador = c('Siempre predice "No"', "Logit con τ = 0.5"),
+  Accuracy = c(null_accuracy_default, m05$accuracy)
+) %>%
+  knitr::kable(digits = 3)
+```
+
+<br>
+
+. . .
+
+El modelo apenas mejora a un clasificador que no mira los datos. Pero el modelo **sí** sabe algo: el problema está en cómo lo estamos evaluando. Miremos la matriz de confusión.
+
+## La matriz de confusión a $\tau = 0.5$
+
+<br>
+
+
+:::: {.columns}
+::: {.column width="52%"}
+```{r default-confusion, echo=FALSE}
+tibble(
+  ` ` = c("**Predice Sí**", "**Predice No**", "**Total**"),
+  `Real Sí` = c(paste0("TP = ", m05$TP), paste0("FN = ", m05$FN), m05$TP + m05$FN),
+  `Real No` = c(paste0("FP = ", m05$FP), paste0("TN = ", m05$TN), m05$FP + m05$TN)
+) %>%
+  knitr::kable(align = "lcc")
+```
+:::
+
+::: {.column width="48%"}
+```{r default-metrics, echo=FALSE}
+m05 %>%
+  dplyr::select(Sensitivity = sensitivity, Specificity = specificity, Precision = precision, F1) %>%
+  pivot_longer(everything(), names_to = "Métrica", values_to = "Valor") %>%
+  knitr::kable(digits = 3)
+```
+:::
+::::
+
+<br>
+
+. . .
+
+- De `r m05$TP + m05$FN` personas que hicieron default, el modelo detectó solo `r m05$TP` (sensitivity `r pct(m05$sensitivity, 0)`).
+- Cuando predice "Sí", casi siempre acierta (precision `r pct(m05$precision, 0)`). El problema es que casi nunca lo hace.
+
+## ¿Por qué? La distribución de los scores
+
+<br>
+
+
+```{r score-plot-fn, include=FALSE}
+scores_df <- tibble(
+  p = p_default,
+  clase = factor(if_else(y_default == 1, "Sí hizo default", "No hizo default"),
+                 levels = c("No hizo default", "Sí hizo default"))
+)
+
+plot_scores <- function(taus) {
+  labs_df <- tibble(tau = taus, clase = factor("No hizo default", levels = levels(scores_df$clase)))
+  ggplot(scores_df, aes(p, fill = clase)) +
+    geom_histogram(breaks = seq(0, 1, by = 0.025), color = "white", linewidth = 0.3) +
+    geom_vline(xintercept = taus, linetype = "dashed", color = col_tau, linewidth = 0.9) +
+    geom_text(data = labs_df, aes(x = tau, y = Inf, label = paste0("τ = ", tau)),
+              inherit.aes = FALSE, hjust = -0.08, vjust = 1.5, size = 5, color = col_tau) +
+    facet_wrap(~ clase, ncol = 1, scales = "free_y") +
+    scale_fill_manual(values = c(col_neg, col_pos), guide = "none") +
+    scale_x_continuous(breaks = seq(0, 1, 0.1), expand = expansion(mult = 0.01)) +
+    labs(x = "Probabilidad predicha de default (score)", y = "Número de personas") +
+    theme(strip.text = element_text(size = rel(1.05), face = "bold"),
+          panel.grid.minor = element_blank())
+}
+```
+
+:::: {.columns}
+::: {.column width="58%"}
+```{r score-plot-05, echo=FALSE, fig.width=7.2, fig.height=5.6, out.width="100%"}
+plot_scores(0.5)
+```
+:::
+
+::: {.column width="42%"}
+- **Arriba:** casi todos los que pagan tienen un score cercano a 0. Bien.
+
+. . .
+
+- **Abajo:** la mayoría de quienes hicieron default también queda a la izquierda de 0.5. El score mediano entre ellos es `r f2(median(p_default[y_default == 1]))`.
+
+. . .
+
+- El modelo **sí** les asigna un riesgo alto en términos relativos (muy por encima del `r pct(prevalence_default)` promedio), pero ese riesgo casi nunca supera 0.5. Con $\tau=0.5$, quedan como FN.
+:::
+::::
+
+## Tres umbrales, tres matrices de confusión
+
+<br>
+
+:::: {.columns}
+::: {.column width="58%"}
+```{r score-plot-3, echo=FALSE, fig.width=7.2, fig.height=5.6, out.width="100%"}
+plot_scores(tau_show)
+```
+:::
+
+::: {.column width="42%"}
+```{r tau-counts, echo=FALSE}
+metrics_show %>%
+  dplyr::select(tau, TP, FP, FN, TN) %>%
+  knitr::kable(col.names = c("τ", "TP", "FP", "FN", "TN"), digits = 1)
+```
+
+::: {.fragment}
+Al bajar $\tau$ de 0.5 a 0.1:
+
+- TP sube de `r m05$TP` a `r m01$TP`: detectamos `r m01$TP - m05$TP` defaults más.
+- FP sube de `r m05$FP` a `r m01$FP`: el precio son `r m01$FP - m05$FP` falsas alarmas más.
+
+¿Vale la pena? Depende de la métrica.
+:::
+:::
+::::
+
+
+## El "mejor" modelo depende de la métrica
+
+<br>
+
+:::: {.columns}
+::: {.column width="56%"}
+```{r tau-table, echo=FALSE}
+map_dfr(c(0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7), ~ class_metrics(y_default, p_default, .x)) %>%
+  dplyr::select(tau, accuracy, sensitivity, specificity, precision, F1) %>%
+  knitr::kable(col.names = c("τ", "Accuracy", "Sensitivity", "Specificity", "Precision", "F1"), digits = 3)
+```
+:::
+
+::: {.column width="44%" .fragment}
+Buscando en una grilla fina de umbrales:
+
+- **Accuracy** es máxima en $\tau=`r f2(tau_acc_best)`$, pero casi plana entre 0.5 y 0.6.
+- **F1** es máximo en $\tau=`r f2(tau_f1_best)`$.
+- **Sensitivity** solo sube al bajar $\tau$; **precision**, en general, baja.
+
+No hay un umbral que gane en todo: primero hay que decidir qué métrica importa.
+:::
+::::
+
+. . .
+
+::: {.content-box-yellow}
+**Ojo:** estos $\tau$ los elegimos mirando el **test set**, el mismo con que los evaluamos. Sirve para ver el trade-off, pero es hacer trampa. Al final de la clase vemos cómo elegir $\tau$ sin tocar el test set.
+:::
+
+## El "mejor" modelo depende de la métrica
+
+<br>
+
+```{r tau-plot, echo=FALSE, fig.width=12, fig.height=5, out.width="88%"}
+tradeoff_df <- metrics_grid %>%
+  transmute(tau, Accuracy = accuracy, Sensitivity = sensitivity, Precision = precision, F1 = F1) %>%
+  pivot_longer(-tau, names_to = "métrica", values_to = "valor") %>%
+  filter(!is.na(valor)) %>%
+  mutate(métrica = factor(métrica, levels = c("Accuracy", "Sensitivity", "Precision", "F1")))
+
+# Etiquetas directas en puntos donde las cuatro curvas están separadas.
+label_at <- c(Accuracy = 0.20, Sensitivity = 0.12, Precision = 0.45, F1 = 0.62)
+end_labels <- tradeoff_df %>%
+  filter(near(tau, label_at[as.character(métrica)])) %>%
+  mutate(valor = valor + 0.07)
+opt_marks <- tibble(tau = c(tau_f1_best, tau_acc_best),
+                    label = c(paste0("máx. F1\nτ = ", f2(tau_f1_best)),
+                              paste0("máx. accuracy\nτ = ", f2(tau_acc_best))))
+
+ggplot(tradeoff_df, aes(tau, valor, color = métrica)) +
+  geom_vline(data = opt_marks, aes(xintercept = tau), inherit.aes = FALSE,
+             linetype = "dotted", color = "grey40", linewidth = 0.8) +
+  geom_text(data = opt_marks, aes(x = tau, y = 0.04, label = label), inherit.aes = FALSE,
+            hjust = -0.05, size = 4.6, color = "grey25", lineheight = 0.9) +
+  geom_line(linewidth = 1.3) +
+  geom_label(data = end_labels, aes(label = métrica), size = 5.2, fontface = "bold",
+             label.size = 0, fill = "white", show.legend = FALSE) +
+  scale_color_manual(values = course_colors(course_palette, 4), guide = "none") +
+  scale_x_continuous(breaks = seq(0, 1, 0.1), limits = c(0, 1)) +
+  scale_y_continuous(limits = c(0, 1.06), breaks = seq(0, 1, 0.2)) +
+  labs(x = "Umbral τ", y = "Valor de la métrica") +
+  theme(panel.grid.minor = element_blank())
+```
+
+Accuracy queda alta en casi todo el rango (predecir "No" casi siempre es gratis cuando el default es raro). Sensitivity cae al subir $\tau$; precision sube. F1 vive en la tensión entre ambas: por eso su óptimo está en un punto intermedio.
+
+# Curvas: evaluar todos los umbrales a la vez {.inverse .center .middle}
+
+## Curva ROC
+
+:::: {.columns}
+::: {.column width="45%"}
+- Cada $\tau$ produce un par (FPR, sensitivity): un punto en el gráfico.
+- Al recorrer $\tau$ de 1 a 0, esos puntos trazan la **curva ROC**.
+
+. . .
+
+- Los tres umbrales que ya vimos están marcados: bajar $\tau$ nos mueve hacia arriba (más sensitivity) y hacia la derecha (más FPR).
+- La diagonal es un clasificador al azar. Mientras más arriba a la izquierda, mejor.
+:::
+
+::: {.column width="55%"}
+```{r plot-roc, echo=FALSE, fig.width=6.4, fig.height=6, out.width="82%"}
+ggplot(roc_df_default, aes(FPR, sensitivity)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey60", linewidth = 0.8) +
+  geom_path(linewidth = 1.4, color = col_pos) +
+  geom_point(data = metrics_show, aes(FPR, sensitivity), color = col_tau, size = 4) +
+  geom_label_repel(data = metrics_show, aes(FPR, sensitivity, label = paste0("τ = ", tau)),
+                   size = 5, seed = 42, nudge_x = 0.15, nudge_y = -0.08,
+                   min.segment.length = 0, segment.color = col_tau) +
+  coord_equal(xlim = c(0, 1), ylim = c(0, 1), expand = FALSE) +
+  scale_x_continuous(breaks = seq(0, 1, 0.2)) +
+  scale_y_continuous(breaks = seq(0, 1, 0.2)) +
+  labs(x = "FPR (1 − specificity)", y = "Sensitivity (TPR)") +
+  theme(panel.grid.minor = element_blank())
+```
+:::
+::::
+
+## AUC: área bajo la curva ROC
+
+:::: {.columns}
+::: {.column width="48%"}
+```{r plot-auc, echo=FALSE, fig.width=6.4, fig.height=6, out.width="88%"}
+set.seed(123)
+roc_random <- roc(y_default, runif(length(y_default)), quiet = TRUE)
+roc_random_df <- coords(roc_random, x = "all", ret = c("specificity", "sensitivity"), transpose = FALSE) %>%
+  as_tibble() %>% mutate(FPR = 1 - specificity) %>% arrange(FPR, sensitivity)
+
+bind_rows(
+  roc_df_default %>% mutate(modelo = paste0("Logit (AUC = ", f2(auc_default), ")")),
+  roc_random_df %>% mutate(modelo = paste0("Score al azar (AUC = ", f2(as.numeric(auc(roc_random))), ")"))
+) %>%
+  ggplot(aes(FPR, sensitivity, color = modelo)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey60", linewidth = 0.8) +
+  geom_path(linewidth = 1.4) +
+  scale_color_manual(values = c(col_pos, "grey55"), name = NULL) +
+  coord_equal(xlim = c(0, 1), ylim = c(0, 1), expand = FALSE) +
+  scale_x_continuous(breaks = seq(0, 1, 0.2)) +
+  scale_y_continuous(breaks = seq(0, 1, 0.2)) +
+  labs(x = "FPR (1 − specificity)", y = "Sensitivity (TPR)") +
+  theme(legend.position = c(0.62, 0.15),
+        legend.background = element_rect(fill = "white", color = "grey80"),
+        panel.grid.minor = element_blank())
+```
+:::
+
+::: {.column width="52%"}
+- El **AUC** resume la curva ROC en un número entre 0.5 (azar) y 1 (perfecto).
+- **Interpretación:** si tomamos al azar una persona que hizo default y una que no, el AUC es la probabilidad de que el modelo le dé mayor score a la primera.
+
+::: {.fragment}
+| AUC | Discriminación |
 |---|---|
-| Unidad | una hora del sistema |
-| Target | demanda sobre el percentil 75 histórico |
-| Horizonte | hasta 24 horas |
-| Información | calendario, hora y pronóstico meteorológico |
-| Acción | priorizar capacidad en horas con alto riesgo |
-| Costo | omitir una hora alta cuesta 3× una falsa alarma |
+| ≈ 0.5 | ninguna (azar) |
+| 0.7 – 0.8 | aceptable |
+| 0.8 – 0.9 | buena |
+| > 0.9 | excelente |
+:::
 
-Las clases 15–18 resolverán **la misma solicitud** con modelos distintos.
+::: {.fragment}
+Nuestro modelo: AUC = `r auc_default`, excelente. Y sin embargo, a $\tau=0.5$ detecta solo `r pct(m05$sensitivity, 0)` de los defaults. No hay contradicción: el AUC mide si el modelo **ordena** bien, no si el umbral es bueno.
+:::
+:::
+::::
 
-## Qué significa “predecir mañana”
 
-Al momento de puntuar conocemos:
+## Elegir $\tau$ con la curva ROC: índice de Youden
 
-- hora y mes;
-- día hábil y feriado;
-- pronóstico de temperatura, humedad, viento y condición climática.
+<br>
 
-No conocemos:
+Dos criterios estándar que solo usan la curva ROC:
 
-- `bikers` de mañana;
-- el umbral recalculado con datos futuros;
-- errores reales del pronóstico meteorológico.
+- **Índice de Youden:** Es el punto de la curva más alejado de la diagonal.
+  
+- **Más cercano a $(0,1)$:** el $\tau$ cuyo punto está más cerca de la esquina superior izquierda (sensitivity y specificity perfectas).
 
-En este dataset usamos clima observado como sustituto del pronóstico. Un despliegue real debe incorporar el error de ese pronóstico.
+<br>
 
-## La definición del outcome también se aprende
+. . .
 
-```{r outcome-definition}
-tibble(
-  umbral_bikers = demand_cutoff,
-  prevalencia_train = scales::percent(mean(train$high_demand), accuracy = 0.1),
-  prevalencia_valid = scales::percent(mean(valid$high_demand), accuracy = 0.1),
-  prevalencia_test = scales::percent(mean(test$high_demand), accuracy = 0.1)
-)
+```{r youden-table, echo=FALSE}
+bind_rows(
+  youden_default %>% mutate(Criterio = "Youden"),
+  topleft_default %>% mutate(Criterio = "Más cercano a (0,1)")
+) %>%
+  dplyr::select(Criterio, threshold, sensitivity, specificity) %>%
+  knitr::kable(col.names = c("Criterio", "τ", "Sensitivity", "Specificity"), digits = 3,
+               format.args = list(nsmall = 3))
 ```
 
-“Demanda alta” significa `bikers >` `r round(demand_cutoff, 1)`. El percentil se calcula **solo con entrenamiento**. Calcularlo con todo el dataset usaría información del futuro incluso antes de ajustar el modelo.
+<br>
 
-## El tiempo define el examen
+. . .
 
-```{r split-table}
-tibble(
-  conjunto = c("Entrenamiento", "Validación", "Test"),
-  días = c(length(train_days), length(valid_days), length(test_days)),
-  horas = c(nrow(train), nrow(valid), nrow(test)),
-  período = c(
-    paste0(min(train_days), "–", max(train_days)),
-    paste0(min(valid_days), "–", max(valid_days)),
-    paste0(min(test_days), "–", max(test_days))
-  ),
-  uso = c("estimar β", "elegir umbral", "evaluar una vez")
-)
-```
+Ambos eligen $\tau\approx`r f2(tau_youden)`$: muy bajo, porque le dan **el mismo peso** a sensitivity y specificity, y con `r pct(prevalence_default)` de positivos eso implica marcar a mucha gente. A ese umbral, la precision es solo `r f2(m_youden$precision)`. Es un criterio más, no "el" óptimo.
 
-Una partición aleatoria permitiría que horas vecinas del mismo período aparezcan a ambos lados del examen. La partición cronológica reproduce mejor el uso futuro.
+## Curva precision-recall (alternativa a la ROC)
 
-## Train, validación y test no son sinónimos
+<br>
 
-| Conjunto | Pregunta |
-|---|---|
-| Entrenamiento | ¿qué coeficientes explican mejor el pasado? |
-| Validación | ¿qué regla de decisión funciona en un futuro cercano? |
-| Test | ¿qué desempeño esperamos en un período todavía no usado? |
-
-Cada vez que miramos test para cambiar una decisión, deja de ser test y se convierte en validación.
-
-# Teoría del clasificador logístico {.inverse .center .middle}
-
-## El output primario es una probabilidad
-
-Para cada hora $i$:
-
-$$
-Y_i\in\{0,1\},
-\qquad
-p_i=\mathbb P(Y_i=1\mid X_i).
-$$
-
-La probabilidad responde: “con la información disponible, ¿qué riesgo hay de que esta hora tenga demanda alta?”.
-
-La etiqueta `alta/baja` aparece después, cuando una decisión aplica un umbral.
-
-## De probabilidad a log-odds
-
-La probabilidad vive entre 0 y 1. El predictor lineal vive entre $-\infty$ y $\infty$. El logit conecta ambas escalas:
-
-$$
-\log\left(\frac{p_i}{1-p_i}\right)
-=\beta_0+x_i^\top\boldsymbol\beta.
-$$
-
-Un aumento unitario en $x_j$ multiplica las odds por $\exp(\beta_j)$, manteniendo el resto constante.
-
-## La sigmoide devuelve la probabilidad
-
-$$
-p_i=\sigma(\eta_i)
-=\frac{1}{1+\exp(-\eta_i)},
-\qquad
-\eta_i=\beta_0+x_i^\top\boldsymbol\beta.
-$$
-
-```{r sigmoid, echo=FALSE, fig.height=4.8}
-tibble(eta = seq(-7, 7, length.out = 400)) %>%
-  mutate(probability = plogis(eta)) %>%
-  ggplot(aes(eta, probability)) +
-  geom_hline(yintercept = 0.5, linetype = "dashed", color = "grey55") +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "grey55") +
-  geom_line(color = course_palette[["primary"]], linewidth = 1.4) +
-  labs(x = "Predictor lineal η", y = "P(demanda alta)")
-```
-
-## Aprender significa minimizar log-loss
-
-Para una observación Bernoulli:
-
-$$
-L_i(\beta)
-=-\left[
-y_i\log(p_i)+(1-y_i)\log(1-p_i)
-\right].
-$$
-
-La pérdida:
-
-- recompensa alta probabilidad para el resultado observado;
-- castiga especialmente una predicción equivocada y segura;
-- evalúa la calidad de la **probabilidad**, no todavía la acción.
-
-Maximizar likelihood equivale a minimizar la suma de estas pérdidas.
-
-## Devianza: la misma pérdida en otra escala
-
-$$
-D(M)=-2\ell(M),
-\qquad
-D_{\text{residual}}=2n\times\overline{\text{log-loss}}.
-$$
-
-```{r deviance-link}
-tibble(
-  devianza_reportada = deviance(logit_train),
-  dos_n_log_loss = 2 * nrow(train) * log_loss(
-    train$high_demand,
-    predict(logit_train, train, type = "response")
-  ),
-  devianza_nula = logit_train$null.deviance
-)
-```
-
-La devianza es útil para comparar ajuste; para comunicar predicción usamos log-loss promedio porque mantiene una escala por observación.
-
-## Inferencia y predicción hacen preguntas distintas
-
-| Énfasis inferencial | Énfasis predictivo |
-|---|---|
-| ¿qué parámetro es compatible con los datos? | ¿qué tan bien generaliza a horas futuras? |
-| errores estándar e intervalos | test temporal y calibración |
-| forma funcional interpretable | pérdida y costo operacional |
-| coeficientes individuales | probabilidades caso a caso |
-
-No son proyectos rivales. El mismo logit sirve para ambos, pero el diseño de evaluación cambia.
-
-## Un umbral no pertenece al modelo
-
-La regla:
-
-$$
-\widehat y_i(t)=\mathbb 1(\widehat p_i\ge t)
-$$
-
-traduce riesgo en acción.
-
-- $t$ bajo: detecta más horas altas, con más falsas alarmas.
-- $t$ alto: interviene menos, pero omite más horas altas.
-- $t=0.50$ no es “neutral”; solo supone costos y prevalencias particulares.
-
-## La matriz de confusión nombra los errores
-
-| | Observado alto | Observado bajo |
-|---|---:|---:|
-| Priorizar | verdadero positivo | falso positivo |
-| No priorizar | **falso negativo** | verdadero negativo |
-
-Para rebalanceo, un falso negativo puede producir falta de bicicletas o docks; un falso positivo usa capacidad operativa de más. Por eso fijamos costo 3:1.
-
-## Tres familias de métricas
-
-| Propiedad | Pregunta | Métrica |
-|---|---|---|
-| Probabilidades | ¿asigna riesgo correcto? | log-loss, Brier |
-| Ranking | ¿ordena altas sobre bajas? | ROC AUC |
-| Decisión | ¿qué errores produce al actuar? | sensibilidad, precisión, costo |
-
-Una sola accuracy mezcla las tres preguntas y depende del umbral.
-
-## Discriminación no es calibración
-
-- **Discriminación:** una hora alta recibe más score que una baja.
-- **Calibración:** entre horas con $\widehat p\approx0.7$, cerca de 70% son altas.
-
-Un modelo puede ordenar bien y exagerar los riesgos. La operación necesita ambas: priorizar y dimensionar capacidad.
-
-# Aplicación: Capital Bikeshare {.inverse .center .middle}
-
-## 1 · Especificar el modelo con información disponible
-
-```{r formula-display, eval=FALSE}
-model_formula <- high_demand ~
-  temp + I(temp^2) + hum + I(hum^2) + windspeed +
-  holiday + factor(weathersit) +
-  factor(hr) * workingday +
-  sin(2*pi*month/12) + cos(2*pi*month/12)
-```
-
-- clima: relaciones potencialmente no lineales;
-- hora × día hábil: picos de commuting;
-- seno/coseno del mes: estacionalidad circular.
-
-No usamos `bikers`: sería conocer el outcome al puntuar.
-
-## 2 · Empezar por un baseline
-
-```{r baseline}
-baseline_probability <- mean(train$high_demand)
-tibble(
-  modelo = "Prevalencia de entrenamiento",
-  probabilidad_constante = baseline_probability,
-  log_loss_validación = log_loss(
-    valid$high_demand,
-    rep(baseline_probability, nrow(valid))
-  )
-)
-```
-
-Un modelo útil debe superar esta regla: asignar a toda hora el mismo riesgo histórico.
-
-## 3 · Ajustar solo con el pasado
-
-```{r fit-logit}
-coef(summary(logit_train)) %>%
-  as.data.frame() %>%
-  rownames_to_column("término") %>%
+:::: {.columns}
+::: {.column width="52%"}
+```{r pr-curve, echo=FALSE, fig.width=6.4, fig.height=5.6, out.width="95%"}
+pr_df <- coords(roc_default, x = "all", ret = c("threshold", "precision", "recall"), transpose = FALSE) %>%
   as_tibble() %>%
-  arrange(desc(abs(Estimate))) %>%
-  slice_head(n = 10)
+  filter(is.finite(precision)) %>%
+  arrange(recall, desc(precision))
+
+ggplot(pr_df, aes(recall, precision)) +
+  geom_hline(yintercept = mean(y_default), linetype = "dashed", color = "grey55") +
+  annotate("text", x = 0.02, y = mean(y_default) + 0.05, hjust = 0, size = 4.6, color = "grey40",
+           label = "azar: precision = prevalence") +
+  geom_path(linewidth = 1.4, color = col_pos) +
+  geom_point(data = metrics_show, aes(sensitivity, precision), color = col_tau, size = 4) +
+  geom_label_repel(data = metrics_show, aes(sensitivity, precision, label = paste0("τ = ", tau)),
+                   size = 5, seed = 42, nudge_x = -0.15, nudge_y = -0.1,
+                   min.segment.length = 0, segment.color = col_tau) +
+  coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
+  scale_x_continuous(breaks = seq(0, 1, 0.2)) +
+  scale_y_continuous(breaks = seq(0, 1, 0.2)) +
+  labs(x = "Sensitivity (recall)", y = "Precision") +
+  theme(panel.grid.minor = element_blank())
 ```
+:::
 
-Los coeficientes describen cambios condicionales en log-odds. En un flujo predictivo, su primer examen no es el valor-$p$: es si las probabilidades generalizan a validación.
+::: {.column width="48%"}
+- La ROC usa FPR $=FP/(FP+TN)$. Con casi `r nrow(test_default) - sum(y_default)` negativos en el denominador, incluso muchas falsas alarmas producen un FPR chico.
+- Precision $=TP/(TP+FP)$ compara las falsas alarmas con los **pocos** TP.
 
-## 4 · Evaluar probabilidades en validación
+. . .
 
-```{r validation-probabilities}
-bind_rows(
-  binary_metrics(
-    valid$high_demand,
-    rep(baseline_probability, nrow(valid)),
-    threshold = 0.50
-  ) %>% mutate(modelo = "Prevalencia"),
-  binary_metrics(
-    valid$high_demand, valid_prob,
-    threshold = 0.50
-  ) %>% mutate(modelo = "Logit")
-) %>%
-  select(modelo, log_loss, brier, ROC_AUC)
+**Ejemplo, $\tau=0.1$:** `r m01$FP` falsas alarmas dan un FPR de solo `r f2(m01$FPR)` (en la ROC se ve muy bien), pero precision $=`r f2(m01$precision)`$: de cada 10 alarmas, solo `r round(10 * m01$precision)` son defaults reales.
+
+. . .
+
+Con una clase positiva rara, la curva precision-recall es más honesta. F1 resume un punto de esta curva.
+:::
+::::
+
+## Calibración: ¿$\hat p$ significa lo que dice?
+
+<br>
+
+
+:::: {.columns}
+::: {.column width="50%"}
+```{r calibration-plot, echo=FALSE, fig.width=6.4, fig.height=6, out.width="90%"}
+ggplot(calib_df, aes(predicho, observado)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey55") +
+  geom_point(aes(size = n), color = col_pos, alpha = 0.85) +
+  scale_size_area(max_size = 14, breaks = c(10, 100, 1000), name = "Personas\nen el grupo") +
+  coord_equal(xlim = c(0, 1), ylim = c(0, 1)) +
+  scale_x_continuous(breaks = seq(0, 1, 0.2)) +
+  scale_y_continuous(breaks = seq(0, 1, 0.2)) +
+  labs(x = "Probabilidad predicha (promedio del grupo)",
+       y = "Fracción que hizo default") +
+  theme(legend.position = c(0.2, 0.78),
+        legend.background = element_rect(fill = "white", color = "grey80"),
+        panel.grid.minor = element_blank())
 ```
+:::
 
-Log-loss y Brier evalúan magnitud de probabilidades; ROC AUC evalúa ranking sin fijar todavía una acción.
+::: {.column width="50%"}
+ROC y precision-recall evalúan si el modelo **ordena** bien. La **calibración** evalúa si $\hat p$ es una probabilidad creíble: entre las personas con $\hat p\approx0.3$, ¿cerca de 30% hace default?
 
-## 5 · Elegir el umbral por costo
+. . .
 
-```{r threshold-cost, fig.height=5}
-threshold_curve %>%
-  ggplot(aes(threshold, cost)) +
-  geom_line(color = course_palette[["primary"]], linewidth = 1.3) +
-  geom_point(
-    data = ~ slice_min(.x, cost, n = 1),
-    color = course_palette[["secondary"]], size = 3.8
-  ) +
-  labs(x = "Umbral t", y = "Costo = 3·FN + FP")
-```
+- Agrupamos por score y comparamos el promedio predicho con la frecuencia observada. Calibración perfecta = puntos sobre la diagonal.
+- Nuestro modelo está **bien calibrado**: el total de defaults esperado ($\sum\hat p_i$) es `r formatC(sum(p_default), format = "f", digits = 1)`, y ocurrieron `r sum(y_default)`. Los grupos de scores altos son pequeños, por eso se alejan más.
 
-```{r selected-threshold}
-tibble(
-  umbral_elegido = selected_threshold,
-  costo_validación = min(threshold_curve$cost)
-)
-```
+. . .
 
-El test no participa en esta elección.
+- Ordenar bien y estar calibrado son cosas distintas: si dividimos todos los $\hat p$ por 2, el orden no cambia (mismo AUC), pero la calibración se arruina.
+:::
+::::
 
-## 6 · Reajustar y abrir el test una vez
+## Mapa de métricas
 
-```{r test-results}
-bind_rows(
-  binary_metrics(
-    test$high_demand,
-    rep(baseline_probability, nrow(test)),
-    selected_threshold
-  ) %>% mutate(modelo = "Prevalencia"),
-  binary_metrics(
-    test$high_demand, test_prob,
-    selected_threshold
-  ) %>% mutate(modelo = "Logit")
-) %>%
-  select(modelo, everything())
-```
+<br>
 
-El resultado final debe reportar probabilidad, ranking y costo. Elegir solo la métrica que “se ve mejor” después de observar test sería otra forma de filtración.
+| Métrica | Pregunta | ¿Depende de $\tau$? | Úsala cuando... |
+|---|---|:---:|---|
+| **Log-loss** | ¿Las probabilidades son buenas? | No | importan las probabilidades |
+| **AUC (ROC)** | ¿Ordena positivos sobre negativos? | No | comparas modelos |
+| **Curva precision-recall** | ¿Cuánta precision cuesta la sensitivity? | No | la clase positiva es rara |
+| **Calibración** | ¿$\hat p$ significa lo que dice? | No | usarás $\hat p$ como probabilidad |
+| **Accuracy** | ¿Qué fracción acierto? | Sí | clases balanceadas, errores iguales |
+| **Sensitivity** | ¿Detecto a los positivos? | Sí | perder un positivo es grave |
+| **Precision** | Cuando digo "positivo", ¿acierto? | Sí | las falsas alarmas son caras |
+| **F1** | ¿Equilibro precision y sensitivity? | Sí | positivos raros; FP y FN igual de graves |
 
-## 7 · Leer los errores como decisiones
+# Del diagnóstico a la decisión {.inverse .center .middle}
 
-```{r test-confusion}
-table(
-  observado = factor(
-    if_else(test$high_demand == 1, "alta", "baja"),
-    levels = c("baja", "alta")
-  ),
-  acción = factor(
-    if_else(test_class == 1, "priorizar", "no priorizar"),
-    levels = c("no priorizar", "priorizar")
-  )
-)
-```
+## Medir no es decidir
 
-La matriz debe leerse con la solicitud al lado: ¿cuántas horas críticas no anticipamos y cuánta capacidad extra movilizamos?
+<br>
 
-## 8 · La curva ROC muestra el intercambio completo
+- Ya calculamos log-loss, accuracy, sensitivity, precision, F1, ROC, AUC, precision-recall y calibración para este modelo.
 
-```{r roc-plot, fig.height=5}
-roc_points(test$high_demand, test_prob) %>%
-  arrange(FPR, TPR) %>%
-  ggplot(aes(FPR, TPR)) +
-  geom_abline(
-    slope = 1, intercept = 0, linetype = "dashed",
-    color = "grey55"
-  ) +
-  geom_path(color = course_palette[["primary"]], linewidth = 1.3) +
-  coord_equal() +
-  labs(x = "Tasa de falsos positivos", y = "Sensibilidad")
-```
+. . .
 
-ROC AUC es la probabilidad de que una hora alta reciba mayor score que una baja elegidas al azar. No dice qué umbral usar: eso exige costos.
+- Ninguna métricas sabe que, para el banco, **no detectar** a quien no pagará cuesta más que **molestar** a un buen cliente.
+  
+-  Eso no es una propiedad del modelo: es una decisión del banco (o de una política pública) que se agrega **después** de medir qué tan bueno es el modelo.
 
-## 9 · Verificar calibración fuera de muestra
+. . .
 
-```{r calibration, fig.height=5}
-calibration <- tibble(y = test$high_demand, p = test_prob) %>%
-  mutate(bin = ntile(p, 8)) %>%
-  group_by(bin) %>%
-  summarise(
-    predicha = mean(p),
-    observada = mean(y),
-    horas = n(),
-    .groups = "drop"
-  )
+Dos preguntas:
 
-calibration %>%
-  ggplot(aes(predicha, observada, size = horas)) +
-  geom_abline(
-    slope = 1, intercept = 0,
-    color = course_palette[["secondary"]], linewidth = 1
-  ) +
-  geom_point(color = course_palette[["primary"]], alpha = 0.85) +
-  scale_x_continuous(limits = c(0, 1)) +
-  scale_y_continuous(limits = c(0, 1)) +
-  labs(x = "Probabilidad media predicha", y = "Frecuencia observada")
-```
+1. Si todos los errores cuestan lo mismo, ¿qué umbral es el óptimo? → **clasificador de Bayes**.
+2. Si no cuestan lo mismo, ¿cómo cambia el umbral? → **costo de los errores**.
 
-## 10 · Seguir una predicción concreta
+## El clasificador de Bayes
 
-```{r case-trace}
-case_id <- which.max(test_prob)
-tibble(
-  día = test$day[case_id],
-  hora = test$hour[case_id],
-  día_hábil = test$day_type[case_id],
-  temperatura = test$temp[case_id],
-  probabilidad = test_prob[case_id],
-  umbral = selected_threshold,
-  acción = if_else(test_class[case_id] == 1, "priorizar", "no priorizar"),
-  demanda_observada = test$bikers[case_id],
-  clase_observada = if_else(test$high_demand[case_id] == 1, "alta", "baja")
-)
-```
-
-Ésta es la interfaz real del modelo: una fila conocida al cierre del día → una probabilidad → una acción trazable.
-
-## 11 · Localizar dónde falla
-
-```{r error-by-hour, fig.height=5}
-tibble(
-  hour = test$hour,
-  error = abs(test$high_demand - test_prob)
-) %>%
-  group_by(hour) %>%
-  summarise(MAE_probabilidad = mean(error), .groups = "drop") %>%
-  ggplot(aes(hour, MAE_probabilidad)) +
-  geom_line(color = course_palette[["primary"]], linewidth = 1.2) +
-  geom_point(color = course_palette[["secondary"]], size = 2.4) +
-  scale_x_continuous(breaks = seq(0, 23, 3)) +
-  labs(x = "Hora", y = "|observado − probabilidad|")
-```
-
-Una métrica global puede ocultar franjas horarias sistemáticamente difíciles. Ese patrón puede justificar nuevas variables o un modelo más flexible.
-
-## Lo que esta demostración todavía no resuelve
-
-- **Forecast real:** usamos clima observado como proxy.
-- **Deriva:** la demanda y la red de estaciones pueden cambiar.
-- **Capacidad:** una probabilidad no indica cuántas bicicletas mover.
-- **Interferencia:** rebalancear cambia el outcome que queremos predecir.
-- **Causalidad:** un coeficiente no mide el efecto de intervenir sobre el clima o el calendario.
-
-Una aplicación honesta separa desempeño del modelo, política operativa e impacto causal.
-
-# Extensión multinomial {.inverse .center .middle}
-
-## Cuando hay más de dos acciones
-
-Podríamos clasificar la demanda en `baja`, `media` y `alta`:
+:::: {.columns}
+::: {.column width="50%"}
+El **clasificador de Bayes** asigna cada caso a su clase más probable:
 
 $$
-\mathbb P(Y=j\mid X)
-=
-\frac{\exp(\eta_j)}
-{\sum_{k=1}^{J}\exp(\eta_k)},
-\qquad j=1,\dots,J.
+\hat y(x)=\arg\max_k \Pr(Y=k\mid X=x)
 $$
 
-El softmax genera una distribución que suma 1. La acción podría ser “retirar”, “no intervenir” o “agregar” bicicletas.
+::: {.fragment}
+Con dos clases, eso es exactamente $\tau=0.5$. **¿Por qué es óptimo?**
 
-## Binario y multinomial comparten la lógica
+- Si $p>0.5$ y predecimos 1, nos equivocamos con probabilidad $1-p<0.5$.
+- Si predecimos 0, con probabilidad $p>0.5$.
 
-| Paso | Binario | Multinomial |
+Elegir siempre la opción con menor probabilidad de error **minimiza el error rate esperado** (es decir, maximiza la accuracy esperada).
+:::
+:::
+
+::: {.column width="50%" .fragment}
+- Es el mejor clasificador posible **si conociéramos** $\Pr(Y\mid X)$ exactamente. Su error, el **error de Bayes**, es un piso irreducible: ni el modelo verdadero puede bajarlo. En la práctica usamos $\hat p$ en vez de $p$, y aproximamos esa regla.
+- **En nuestros datos:** a $\tau=0.5$ el modelo clasifica bien a `r m05$TP + m05$TN` de `r nrow(test_default)` personas; al mejor $\tau$ para accuracy (`r f2(tau_acc_best)`), a `r m_acc$TP + m_acc$TN`. La teoría y los datos coinciden.
+:::
+::::
+
+. . .
+
+::: {.content-box-primary}
+Esta es la respuesta a la pregunta del comienzo: $\tau=0.5$ es óptimo **para accuracy**. No para F1, y no cuando los errores cuestan distinto.
+:::
+
+## Cuando los errores no cuestan lo mismo
+
+El banco decide si **intervenir** (por ejemplo, reducir el cupo de la tarjeta) a cada cliente. Problemas si:
+
+- **FP:** intervenimos a alguien que iba a pagar. Costo $C_{FP}$ (un buen cliente molesto).
+- **FN:** no intervenimos a alguien que no pagará. Costo $C_{FN}$ (una deuda perdida).
+
+. . .
+
+Para una persona con probabilidad $p$ de hacer default, el **costo esperado** de cada opción es:
+
+$$
+\text{intervenir: } C_{FP}\, \times (1-p) \qquad\qquad \text{no intervenir: } C_{FN}\,\times p
+$$
+
+. . .
+
+Conviene intervenir cuando eso cuesta menos: $C_{FP}(1-p) < C_{FN}\,p \iff C_{FP} < (C_{FP}+C_{FN})\,p$. Es decir, cuando $p$ supera:
+
+::: {.content-box-yellow}
+$$
+\tau^*=\frac{C_{FP}}{C_{FP}+C_{FN}}
+$$
+:::
+
+. . .
+
+- Si $C_{FP}=C_{FN}$, entonces $\tau^*=0.5$: **el clasificador de Bayes es el caso de costos iguales**.
+- Si no detectar un default cuesta 5 veces más que una falsa alarma ($C_{FN}=5$, $C_{FP}=1$): $\tau^*=1/6\approx`r f2(tau_cost_theory)`$.
+
+## Aplicando el costo a `Default`
+
+:::: {.columns}
+::: {.column width="55%"}
+```{r cost-plot, echo=FALSE, fig.width=7, fig.height=4.6, out.width="100%"}
+cost_marks <- tibble(
+  tau = c(tau_cost_theory, tau_f1_best, 0.5),
+  label = c(paste0("τ* = ", f2(tau_cost_theory)), paste0("máx. F1: ", f2(tau_f1_best)), "Bayes: 0.50")
+) %>%
+  mutate(costo_100 = map_dbl(tau, ~ class_metrics(y_default, p_default, .x)$costo_100))
+
+ggplot(metrics_grid %>% filter(tau >= 0.05, tau <= 0.8), aes(tau, costo_100)) +
+  geom_line(linewidth = 1.3, color = col_pos) +
+  geom_point(data = cost_marks, color = col_tau, size = 4) +
+  geom_label_repel(data = cost_marks, aes(label = label), size = 4.8, seed = 3,
+                   nudge_y = 1.2, min.segment.length = 0, segment.color = col_tau) +
+  scale_x_continuous(breaks = seq(0, 0.8, 0.1)) +
+  labs(x = "Umbral τ", y = "Costo por 100 personas") +
+  theme(panel.grid.minor = element_blank())
+```
+:::
+
+::: {.column width="45%"}
+```{r cost-table, echo=FALSE}
+tibble(
+  Criterio = c("Bayes", "Máxima accuracy", "Máximo F1", "τ* teórico"),
+  tau = c(0.5, tau_acc_best, tau_f1_best, tau_cost_theory)
+) %>%
+  mutate(costo = map_dbl(tau, ~ class_metrics(y_default, p_default, .x)$costo_100)) %>%
+  knitr::kable(col.names = c("Criterio", "τ", "Costo / 100"), digits = 2)
+```
+
+. . .
+
+- Pasar de $\tau=0.5$ a $\tau^*$ baja el costo de `r f2(m05$costo_100)` a `r f2(m_cost_theory$costo_100)` por cada 100 personas (`r pct(1 - m_cost_theory$costo_100 / m05$costo_100, 0)` menos), **sin tocar el modelo**.
+- La curva es casi plana alrededor del mínimo: umbrales entre ≈0.15 y 0.35 cuestan parecido.
+:::
+::::
+
+. . .
+
+::: {.content-box-primary}
+El costo cambia la **decisión**, no el modelo ni sus métricas de calidad. Con dos clases colapsa en un número ($\tau^*$); con $J$ clases necesitaremos una matriz de costos.
+:::
+
+# De binaria a multinomial {.inverse .center .middle}
+
+## Más de dos clases: softmax
+
+<br>
+
+
+*Softmax* generaliza la función logística a $J$ categorías. Cada categoría tiene su predictor lineal $\eta_j=\beta_{j0}+\beta_{j1}x_1+\cdots$, y:
+
+$$
+\Pr(Y=j\mid X)=\frac{\exp(\eta_j)}{\sum_{k=1}^J\exp(\eta_k)}
+$$
+
+<br>
+
+. . .
+
+- Ejemplo con 3 categorías: $\eta=(0,\,1,\,2)\Rightarrow\exp(\eta)=(1,\,2.72,\,7.39)\Rightarrow\Pr(Y\mid X)\approx(0.09,\,0.24,\,0.67)$. Las probabilidades suman 1.
+
+
+## Binario vs. multinomial: la misma estructura
+
+<br>
+
+|  | Binario | Multinomial |
 |---|---|---|
-| Outcome | alta / baja | baja / media / alta |
-| Enlace | sigmoide | softmax |
-| Pérdida | cross-entropy binaria | cross-entropy multiclase |
-| Output | $p$ | vector $(p_1,\dots,p_J)$ |
-| Decisión | umbral | costo por matriz de acciones |
+| Outcome | 2 clases | $J$ clases |
+| Link | sigmoide (logística) | softmax |
+| Salida | $\hat p$ | vector $(\hat p_1,\dots,\hat p_J)$ que suma 1 |
+| Ajuste | minimizar log-loss | minimizar log-loss multiclase: $-\frac1n\sum_i\ln\hat p_{i,y_i}$ |
+| Regla por defecto (Bayes) | predecir 1 si $\hat p>0.5$ | predecir la clase de mayor $\hat p_j$ |
+| Métricas | matriz 2×2, sensitivity, precision, F1, AUC | matriz $J\times J$ y las mismas métricas, por clase |
+| Con costos | $\tau^*=C_{FP}/(C_{FP}+C_{FN})$ | matriz de costos (al final de esta sección) |
 
-En varias clases, accuracy macro puede ocultar una categoría rara. Se reportan métricas por clase y promedios macro.
+<br>
 
-## El costo se vuelve una matriz
+. . .
 
-Con tres clases, no todos los errores son equivalentes:
+La lógica es la misma; lo que cambia es el tamaño del problema. Por eso esta sección es más corta: solo vemos lo que cambia respecto del caso binario.
 
-| Observado \ Acción | Retirar | No intervenir | Agregar |
-|---|---:|---:|---:|
-| Baja | 0 | 1 | 4 |
-| Media | 2 | 0 | 2 |
-| Alta | 6 | 2 | 0 |
+```{r multinomial-setup, include=FALSE}
+# bikeshare con split cronológico training/test: primer 80% de los días para
+# ajustar, último 20% para evaluar (el mismo test set de las clases 16 a 18).
+bike_setup <- bikeshare_learning_setup(course$data)
+bikedata <- bike_setup$data
+train <- bikedata[c(bike_setup$id_train, bike_setup$id_valid), ]
+test <- bikedata[bike_setup$id_test, ]
 
-La decisión óptima minimiza costo esperado:
+# Los cortes se calculan solo con el training set.
+demand_tertiles_train <- quantile(train$bikers, probs = c(1 / 3, 2 / 3))
+
+to_demand_level <- function(bikers) {
+  cut(bikers, breaks = c(-Inf, demand_tertiles_train, Inf), labels = c("baja", "media", "alta"))
+}
+
+train$demand_level <- to_demand_level(train$bikers)
+test$demand_level <- to_demand_level(test$bikers)
+
+multinomial_formula <- demand_level ~
+  temp + I(temp^2) + hum + I(hum^2) + windspeed +
+  holiday + factor(weathersit) + factor(hr) * workingday +
+  sin(2 * pi * month / 12) + cos(2 * pi * month / 12)
+
+mlogit_train <- multinom(multinomial_formula, data = train, trace = FALSE, MaxNWts = 5000)
+
+predicted_level <- function(probs) colnames(probs)[apply(probs, 1, which.max)]
+
+# El test set se abre una sola vez, con el modelo ya ajustado.
+test_probs_multi <- predict(mlogit_train, newdata = test, type = "probs")
+test_predicted_level <- predicted_level(test_probs_multi)
+accuracy_test_multi <- mean(test_predicted_level == as.character(test$demand_level))
+
+class_level_metrics <- function(y, predicted, levels = c("baja", "media", "alta")) {
+  map_dfr(levels, function(lvl) {
+    tp <- sum(predicted == lvl & y == lvl)
+    fp <- sum(predicted == lvl & y != lvl)
+    fn <- sum(predicted != lvl & y == lvl)
+    tibble(nivel = lvl,
+           precision = safe_ratio(tp, tp + fp),
+           sensitivity = safe_ratio(tp, tp + fn),
+           F1 = safe_ratio(2 * tp, 2 * tp + fp + fn))
+  })
+}
+test_class_metrics <- class_level_metrics(as.character(test$demand_level), test_predicted_level)
+macro_f1_test <- mean(test_class_metrics$F1)
+ovr_auc_test <- map_dbl(c("baja", "media", "alta"), function(lvl) {
+  as.numeric(auc(roc(as.integer(test$demand_level == lvl), test_probs_multi[, lvl], quiet = TRUE)))
+})
+names(ovr_auc_test) <- c("baja", "media", "alta")
+
+confusion_multi <- table(
+  predicho = factor(test_predicted_level, levels = c("baja", "media", "alta")),
+  observado = test$demand_level
+)
+
+# Matriz de costos: filas = acción (como las filas de la matriz de confusión),
+# columnas = demanda observada.
+action_cost <- matrix(
+  c(0, 2, 6,
+    1, 0, 2,
+    4, 2, 0),
+  nrow = 3, byrow = TRUE,
+  dimnames = list(c("retirar", "no_intervenir", "agregar"), c("baja", "media", "alta"))
+)
+
+# Regla por defecto: la acción "natural" de la clase más probable (Bayes).
+level_to_action <- c(baja = "retirar", media = "no_intervenir", alta = "agregar")
+
+# Regla con costos: minimizar el costo esperado. probs (n × 3) %*% t(costos) (3 × 3).
+optimal_action <- function(probs, cost) {
+  expected_cost <- probs[, colnames(cost), drop = FALSE] %*% t(cost)
+  colnames(expected_cost)[apply(expected_cost, 1, which.min)]
+}
+realized_cost <- function(observed, action, cost) cost[cbind(action, as.character(observed))]
+
+test_action_argmax <- unname(level_to_action[test_predicted_level])
+test_action_optimal <- optimal_action(test_probs_multi, action_cost)
+divergence_id <- which(test_action_argmax != test_action_optimal)
+n_changed <- length(divergence_id)
+case_id_multi <- divergence_id[1]
+case_expected_cost <- drop(test_probs_multi[case_id_multi, colnames(action_cost)] %*% t(action_cost))
+
+cost_argmax_100 <- 100 * mean(realized_cost(test$demand_level, test_action_argmax, action_cost))
+cost_optimal_100 <- 100 * mean(realized_cost(test$demand_level, test_action_optimal, action_cost))
+```
+
+## Bikeshare: tres niveles de demanda
+
+<br>
+
+- Número de usuarios por hora (`bikers`) de Capital Bikeshare (Washington D.C.) durante un año.
+  
+- Un **split cronológico** (como trabaja una empresa real): training set = primer 80% de los días (enero a octubre) y test set = último 20% (fines de octubre a diciembre). Entrenamos con el pasado y evaluamos con el futuro.
+
+- Outcome: `bikers` en tres niveles, cortado en **tertiles** del training set: baja $\le$ `r demand_tertiles_train[[1]]`, media hasta `r demand_tertiles_train[[2]]`, alta sobre `r demand_tertiles_train[[2]]` usuarios por hora.
+
+<br>
+
+. . .
+
+```{r demand-shares, echo=FALSE}
+tibble(
+  Conjunto = c("Training set", "Test set"),
+  Baja = c(mean(train$demand_level == "baja"), mean(test$demand_level == "baja")),
+  Media = c(mean(train$demand_level == "media"), mean(test$demand_level == "media")),
+  Alta = c(mean(train$demand_level == "alta"), mean(test$demand_level == "alta"))
+) %>%
+  knitr::kable(digits = 3)
+```
+
+## Ajustar con `nnet::multinom()`
+
+<br>
+
+```{r fit-mlogit, echo=TRUE, eval=FALSE}
+multinomial_formula <- demand_level ~
+  temp + I(temp^2) + hum + I(hum^2) + windspeed +
+  holiday + factor(weathersit) + factor(hr) * workingday +
+  sin(2 * pi * month / 12) + cos(2 * pi * month / 12)
+
+mlogit_train <- multinom(multinomial_formula, data = train, MaxNWts = 5000)
+```
+
+<br>
+
+```{r fit-mlogit-table, echo=FALSE}
+tibble(
+  ecuación = paste0("ln[ P(", rownames(coef(mlogit_train)), ") / P(baja) ]"),
+  parámetros = ncol(coef(mlogit_train))
+) %>%
+  knitr::kable(col.names = c("Ecuación", "Parámetros"))
+```
+
+<br>
+
+- Predictores: los de la clase 14 (temperatura, humedad, hora × día hábil) más viento, feriado, clima y estación del año. El seno y coseno del mes hacen que diciembre y enero queden cerca.
+- `multinom()` toma `baja` como referencia y estima las dos ecuaciones a la vez.
+- Son `r 2 * ncol(coef(mlogit_train))` parámetros. ¿Son demasiados? Esa pregunta abre la clase 16 (regularización).
+
+## Probabilidades y clase predicha
+
+<br>
+
+```{r mlogit-probs-example, echo=FALSE}
+multi_case_ids <- c(
+  which.max(test_probs_multi[, "alta"]),
+  which.max(test_probs_multi[, "baja"]),
+  which.min(apply(test_probs_multi, 1, max))
+)
+
+tibble(
+  Hora = c("La más claramente alta", "La más claramente baja", "La más incierta"),
+  `P(baja)` = test_probs_multi[multi_case_ids, "baja"],
+  `P(media)` = test_probs_multi[multi_case_ids, "media"],
+  `P(alta)` = test_probs_multi[multi_case_ids, "alta"],
+  `Clase predicha` = predicted_level(test_probs_multi[multi_case_ids, , drop = FALSE]),
+  Observado = as.character(test$demand_level[multi_case_ids])
+) %>%
+  knitr::kable(digits = 3, format.args = list(nsmall = 3))
+```
+
+<br>
+
+. . .
+
+- Las tres probabilidades de cada hora suman 1.
+- La clase predicha es la de **mayor probabilidad**: el clasificador de Bayes con $J$ clases, el equivalente de $\tau=0.5$ en el caso binomial.
+
+
+## La matriz de confusión ahora es 3×3
+
+<br>
+
+:::: {.columns}
+::: {.column width="44%"}
+```{r mlogit-confusion, echo=FALSE}
+confusion_multi %>%
+  as.data.frame.matrix() %>%
+  tibble::rownames_to_column("predicho") %>%
+  mutate(predicho = paste("Predice", predicho)) %>%
+  knitr::kable(col.names = c("", "Real baja", "Real media", "Real alta"))
+```
+:::
+
+::: {.column width="56%" .fragment}
+- Misma orientación que antes: **filas = predicción, columnas = realidad**. La diagonal son los aciertos.
+- El error se concentra en la frontera media–alta: `r confusion_multi["media", "alta"]` horas de demanda alta fueron predichas como media.
+- Baja y alta casi nunca se confunden (`r confusion_multi["alta", "baja"] + confusion_multi["baja", "alta"]` casos): están lejos en la escala de `bikers`.
+- Lo mismo se ve en el AUC uno-contra-el-resto: `r f2(ovr_auc_test[["baja"]])` para baja, `r f2(ovr_auc_test[["alta"]])` para alta y solo `r f2(ovr_auc_test[["media"]])` para media, que queda "entre" las otras dos.
+:::
+::::
+
+
+## Las métricas, generalizadas a $J$ clases
+
+| Binario | Multiclase |
+|---|---|
+| Matriz 2×2 | Matriz $J\times J$ |
+| Sensitivity, precision, F1 | Las mismas, **por clase** (uno contra el resto), y su promedio: macro-F1 |
+| ROC y AUC | Una curva por clase (uno contra el resto) |
+| Calibración | El mismo gráfico, una vez por clase |
+| Clasificador de Bayes: $\tau=0.5$ | Clasificador de Bayes: la clase de mayor $\hat p_j$ |
+
+<br>
+
+. . .
+
+La pregunta de fondo no cambia: ¿el modelo ordena bien? ¿Sus probabilidades son creíbles? ¿En qué clases se equivoca?
+
+
+## La accuracy esconde a la clase difícil
+
+<br>
+
+Accuracy en el test set: `r f2(accuracy_test_multi)`. Parece bien, pero miremos cada clase por separado:
+
+<br>
+
+```{r mlogit-class-metrics, echo=FALSE}
+test_class_metrics %>%
+  bind_rows(tibble(nivel = "Promedio (macro)", precision = mean(test_class_metrics$precision),
+                   sensitivity = mean(test_class_metrics$sensitivity), F1 = macro_f1_test)) %>%
+  knitr::kable(col.names = c("Nivel", "Precision", "Sensitivity", "F1"), digits = 3)
+```
+
+<br>
+
+. . .
+
+- Cada clase se evalúa como "positiva" contra las demás (uno contra el resto).
+- **Alta** tiene la sensitivity más baja: se nos escapa `r pct(1 - test_class_metrics$sensitivity[test_class_metrics$nivel == "alta"], 0)` de las horas de demanda alta. La accuracy global no lo muestra.
+- **macro-F1** = promedio simple de los F1 por clase: cada clase pesa lo mismo, sea grande o chica.
+
+
+
+## Incorporando los costos
+
+<br>
+
+- El multinomial ya es un clasificador completo: softmax entrega $\widehat{\Pr}(Y=j\mid X)$, la regla "clase más probable" decide, y acabamos de evaluarlo de punta a punta.
+
+. . .
+
+- La matriz de costos es la misma capa **adicional**, ahora con $J$ clases.
+
+. . .
+
+- Se vuelve necesaria cuando los errores tienen consecuencias distintas entre sí y queremos que la decisión lo refleje. Con $J$ clases hay $J(J-1)$ errores posibles (6 con tres clases), y no tienen por qué costar lo mismo: un solo número como $\tau^*$ ya no alcanza.
+
+
+## Construyendo la matriz de costos
+
+Antes de cada hora, el operador decide qué hacer en una estación: **retirar** bicicletas, **no intervenir** o **agregar** bicicletas.
+
+:::: {.columns}
+::: {.column width="44%"}
+| Acción \\ Demanda | Baja | Media | Alta |
+|---|:---:|:---:|:---:|
+| **Retirar** | 0 | 2 | 6 |
+| **No intervenir** | 1 | 0 | 2 |
+| **Agregar** | 4 | 2 | 0 |
+
+Filas = acción (como las filas de la matriz de confusión); columnas = demanda observada.
+:::
+
+::: {.column width="56%" .fragment}
+- **Diagonal:** la acción adecuada para lo que pasó. Costo 0.
+- **Peor error:** retirar cuando la demanda resulta alta (6): estación vacía en hora punta.
+- **Agregar cuando es baja** (4): camión y personal para nada, y una estación llena donde nadie puede devolver.
+- **No intervenir:** sus errores son moderados (1 y 2). Es la opción **segura** cuando no estamos seguros.
+:::
+::::
+
+. . .
+
+Los costos **no se estiman con los datos**: los fija quien conoce la operación, igual que $C_{FP}$ y $C_{FN}$ en el caso binario.
+
+## La regla: minimizar el costo esperado
+
+Para cada acción $a$, el costo esperado pondera cada costo por la probabilidad de que ocurra esa demanda:
 
 $$
-a^*(x)=\arg\min_a\sum_j C(a,j)\,\widehat P(Y=j\mid x).
+a^*(x)=\arg\min_a\ \sum_{j} C(a,j)\,\widehat{\Pr}(Y=j\mid x)
 $$
 
-Predecir probabilidades permite cambiar la política sin reajustar el modelo.
+<br>
 
-## Ejercicio aplicado
+. . .
 
-1. Cambie el costo de falso negativo de 3 a 5.
-2. Elija un nuevo umbral usando **solo validación**.
-3. Compare costo y sensibilidad en test.
-4. Identifique dos horas con alta probabilidad y explique sus predictores.
-5. Proponga una variable disponible 24 horas antes que podría reducir errores.
-6. Explique por qué agregar el conteo de bicicletas de la misma hora sería filtración.
+Ejemplo con $\widehat{\Pr}(\text{baja},\text{media},\text{alta})=(0.50,\ 0.15,\ 0.35)$. La clase más probable es baja, así que la regla de Bayes diría **retirar**. Pero:
 
-## En resumen
+$$
+\begin{aligned}
+\text{retirar:}\quad & 0(0.50)+2(0.15)+6(0.35)=2.4\\
+\text{no intervenir:}\quad & 1(0.50)+0(0.15)+2(0.35)=\mathbf{1.2}\\
+\text{agregar:}\quad & 4(0.50)+2(0.15)+0(0.35)=2.3
+\end{aligned}
+$$
 
-- La solicitud predictiva define unidad, horizonte, información, acción y costo.
-- El logit estima probabilidades; el umbral pertenece a la decisión.
-- Likelihood, devianza y log-loss describen la misma pérdida en escalas distintas.
-- Train estima, validación decide y test evalúa.
-- Discriminación, calibración y costo responden preguntas diferentes.
-- La extensión multinomial conserva la lógica y generaliza la política de acción.
+<br>
 
-## Cierre {.inverse .center .middle .closing}
+. . .
 
-**Primero la probabilidad. Después la decisión.**
+La regla de costos elige **no intervenir**: baja es lo más probable, pero si nos equivocamos y la demanda es alta, retirar es carísimo. 
 
-En la próxima clase: controlar complejidad sin perder honestidad predictiva.
+
+## Dos reglas, un mismo modelo
+
+<br>
+
+```{r mlogit-policy-comparison, echo=FALSE}
+tibble(
+  Regla = c("Bayes: acción de la clase más probable", "Costos: mínimo costo esperado"),
+  `Costo por 100 horas` = c(cost_argmax_100, cost_optimal_100)
+) %>%
+  knitr::kable(digits = 2)
+```
+
+<br>
+
+. . .
+
+- Las probabilidades son las mismas en las dos filas. Solo cambia la regla.
+- La regla de costos cambia la acción en `r n_changed` de `r nrow(test)` horas (`r pct(n_changed / nrow(test))`), casi siempre de "retirar" a "no intervenir", y baja el costo total en `r pct(1 - cost_optimal_100 / cost_argmax_100)`.
+- Es la misma lección del caso binario: **la decisión puede cambiar aunque el modelo no cambie**.
+
+
+# Elegir $\tau$ sin tocar el test set: validation set y cross-validation {.inverse .center .middle}
+
+## El problema: elegimos $\tau$ mirando el test set
+
+<br>
+
+- En la sección de `Default` elegimos $\tau$ **mirando el test set** (F1 máximo en `r f2(tau_f1_best)`; costo mínimo en `r f2(tau_cost_test)`) y medimos el desempeño en ese **mismo** test set.
+- Es el doble uso de datos: el número que reportamos queda **optimista**, porque elegimos justo el $\tau$ que mejor le funcionó a esas `r nrow(test_default)` personas.
+
+. . .
+
+- $\tau$ es un **hiperparámetro**: un valor que fijamos desde afuera, no algo que la likelihood estime.
+
+<br>
+
+. . .
+
+::: {.content-box-primary}
+Elegir un hiperparámetro también es usar datos. Si lo elegimos con el test set, el test set ya no mide el desempeño en casos nuevos.
+:::
+
+## Tres conjuntos, tres trabajos
+
+<br>
+
+En la anterior usamos dos conjuntos: training set y test/testing set . Eso alcanza para **medir** un modelo ya decidido. Para **elegir** algo con datos necesitamos un tercer conjunto, el **validation set**:
+
+| Conjunto | Para qué se usa |
+|---|---|
+| **Training set** | estimar los coeficientes $\beta$ |
+| **Validation set** | elegir hiperparámetros, como $\tau$, con casos que no se usaron para estimar $\beta$ |
+| **Test set** | evaluar **una sola vez**, al final, con $\beta$ y $\tau$ ya fijos |
+
+<br>
+
+. . .
+
+::: {.content-box-primary}
+El validation set sirve para **elegir**; el test set, para **reportar**. El test set no participa en ninguna decisión.
+:::
+
+## ¿Basta con un solo validation set?
+
+<br>
+
+Un solo split es frágil (clase 14). Repetimos el split 70/30 de `Default` con 8 semillas distintas, mismo modelo:
+
+:::: {.columns}
+::: {.column width="42%"}
+```{r split-variability, echo=FALSE}
+split_variability %>%
+  knitr::kable(col.names = c("Split", "Defaults en el 30%", "AUC", "F1 (τ = 0.5)"), digits = 3)
+```
+:::
+
+::: {.column width="58%"}
+- El AUC varía entre `r f2(min(split_variability$AUC))` y `r f2(max(split_variability$AUC))`.
+- El F1 varía mucho más: entre `r f2(min(split_variability$F1))` y `r f2(max(split_variability$F1))`.
+
+. . .
+
+- No cambió el modelo: cambió **qué personas** quedaron del lado de evaluación. Las métricas que dependen de un umbral son más ruidosas, porque dependen de unas 90 personas que hicieron default.
+- Un $\tau$ elegido con un solo validation set heredaría esa suerte.
+:::
+::::
+
+## Validation set con $k$-fold cross-validation
+
+- Es la CV de la clase anterior pero ahora se hace **dentro del training set**, y el test set queda aparte, sin tocar.
+- En cada iteración, un fold hace de **validation set**: el modelo se ajusta con los otros 4 folds y se evalúa en ese. (En la clase 14 a ese fold le decíamos testing set; hoy es validation set porque lo usamos para **elegir**).
+- Cada caso del training set es validation exactamente una vez: promediamos sobre 5 validation sets en vez de depender de uno.
+
+```{r cv-diagram, echo=FALSE, fig.width=12, fig.height=3.4, out.width="80%"}
+cv_grid <- expand_grid(iter = 1:5, bloque = 1:6) %>%
+  mutate(tipo = case_when(
+    bloque == 6 ~ "Test set (no se toca)",
+    bloque == iter ~ "Validation set de la iteración",
+    TRUE ~ "Ajustar el modelo (estimar β)"
+  ),
+  tipo = factor(tipo, levels = c("Ajustar el modelo (estimar β)", "Validation set de la iteración", "Test set (no se toca)")))
+
+ggplot(cv_grid, aes(bloque, 6 - iter, fill = tipo)) +
+  geom_tile(color = "white", linewidth = 2) +
+  scale_fill_manual(values = c(course_palette[["series-1"]], course_palette[["series-3"]], "grey75"), name = NULL) +
+  scale_y_continuous(breaks = 5:1, labels = paste("Iteración", 1:5)) +
+  scale_x_continuous(breaks = c(3, 6), labels = c("Training set, dividido en 5 folds", "Test set")) +
+  labs(x = NULL, y = NULL) +
+  theme(legend.position = "top", axis.ticks = element_blank(), axis.line = element_blank(),
+        panel.border = element_blank(), panel.grid = element_blank())
+```
+
+## Las métricas en los 5 validation sets
+
+```{r cv-table, echo=FALSE}
+cv_table %>%
+  knitr::kable(col.names = c("Fold", "Defaults", "Log-loss", "AUC", "Accuracy", "Sensitivity",
+                             "Specificity", "Precision", "F1"),
+               digits = 3)
+```
+
+Cada fila: el modelo ajustado con 4 folds y evaluado en el quinto, su validation set. Métricas con umbral a $\tau=0.5$. DE = desviación estándar entre folds.
+
+. . .
+
+- **Sin umbral** (log-loss, AUC): estables entre folds.
+- **Accuracy:** estable, pero siempre alta; ya sabemos por qué no basta.
+- **Con umbral** (sensitivity, precision, F1): mucho más variables. Cada validation set tiene solo entre `r min(cv_results$defaults)` y `r max(cv_results$defaults)` defaults: un par de casos difíciles mueven el número.
+
+## La tentación: el mejor $\tau$ de cada validation set
+
+<br>
+
+```{r tau-cv-naive, echo=FALSE}
+tau_best_per_fold %>%
+  dplyr::select(fold, defaults, tau_f1, tau_costo) %>%
+  knitr::kable(col.names = c("Fold", "Defaults", "Mejor τ para F1", "Mejor τ para costo"), digits = 2)
+```
+
+. . .
+
+- El mejor $\tau$ para F1 va de `r f2(min(tau_best_per_fold$tau_f1))` a `r f2(max(tau_best_per_fold$tau_f1))` según el validation set; el mejor para costo, de `r f2(min(tau_best_per_fold$tau_costo))` a `r f2(max(tau_best_per_fold$tau_costo))`.
+- Cada validation set tiene pocos defaults, y alrededor del óptimo las curvas son casi planas: un par de casos basta para mover el máximo de un lado a otro.
+
+## La forma correcta: promediar la curva, y después optimizar
+
+:::: {.columns}
+::: {.column width="60%"}
+```{r tau-cv-plot, echo=FALSE, fig.width=8.2, fig.height=5.4, out.width="92%"}
+metric_levels <- c("F1", "costo_100")
+curves_long <- tau_cv_curves %>%
+  dplyr::select(fold, tau, F1, costo_100) %>%
+  pivot_longer(c(F1, costo_100), names_to = "métrica", values_to = "valor") %>%
+  mutate(métrica = factor(métrica, levels = metric_levels))
+avg_long <- tau_cv_avg %>%
+  pivot_longer(c(F1, costo_100), names_to = "métrica", values_to = "valor") %>%
+  mutate(métrica = factor(métrica, levels = metric_levels))
+best_long <- tibble(métrica = factor(metric_levels, levels = metric_levels),
+                    tau = c(tau_cv_f1_best, tau_cv_cost_best))
+facet_names <- c(F1 = "F1 (más alto es mejor)", costo_100 = "Costo por 100 personas (más bajo es mejor)")
+
+ggplot(curves_long, aes(tau, valor)) +
+  geom_line(aes(group = fold), color = "grey70", linewidth = 0.6) +
+  geom_line(data = avg_long, color = col_pos, linewidth = 1.6) +
+  geom_vline(data = best_long, aes(xintercept = tau), linetype = "dashed", color = col_tau, linewidth = 0.9) +
+  geom_text(data = best_long, aes(x = tau, y = Inf, label = paste0("τ = ", f2(tau))),
+            hjust = -0.1, vjust = 1.6, size = 5, color = col_tau) +
+  facet_wrap(~ métrica, ncol = 1, scales = "free_y", labeller = as_labeller(facet_names)) +
+  scale_x_continuous(breaks = seq(0, 0.9, 0.1)) +
+  labs(x = "Umbral τ", y = NULL) +
+  theme(strip.text = element_text(size = rel(1), face = "bold"),
+        panel.grid.minor = element_blank())
+```
+:::
+
+::: {.column width="40%"}
+::: {.fragment}
+- **Líneas grises:** la curva en cada validation set. **Línea gruesa:** el promedio de las 5 curvas.
+- Promediar suaviza el ruido de cada validation set, y el óptimo de la curva promedio es estable.
+:::
+
+::: {.fragment}
+- Resultado: $\tau_{F1}^{CV}=`r f2(tau_cv_f1_best)`$ y $\tau_{\text{costo}}^{CV}=`r f2(tau_cv_cost_best)`$.
+- El $\tau$ elegido con CV para costo coincide con el $\tau^*$ teórico (1/6 ≈ `r f2(tau_cost_theory)`). El `r f2(tau_cost_test)` que encontramos en el test set era ruido.
+:::
+:::
+::::
+
+. . .
+
+::: {.content-box-primary}
+No promediar "el mejor $\tau$ de cada validation set": promedien la curva completa y busquen el óptimo de la curva promedio.
+:::
+
+
+## El flujo completo: el test set, una sola vez
+
+1. **Split:** training set y test set. El test set se guarda.
+2. **Validation:** 5-fold CV dentro del training set; cada fold hace una vez de validation set. Ahí estimamos las métricas y elegimos $\tau$.
+3. **Training:** ajustar el modelo final ($\beta$) con todo el training set.
+4. **Test:** evaluar **una sola vez**, con $\beta$ y $\tau$ ya fijos.
+
+. . .
+
+```{r final-eval, echo=FALSE}
+final_eval %>%
+  mutate(tau = f2(tau),
+         F1 = if_else(is.na(F1), "", formatC(F1, format = "f", digits = 3)),
+         costo_100 = if_else(is.na(costo_100), "", f2(costo_100))) %>%
+  knitr::kable(col.names = c("Cómo se eligió τ", "τ", "F1 en test", "Costo / 100 en test"),
+               align = "lrrr")
+```
+
+. . .
+
+Los $\tau$ elegidos mirando el test set "ganan" en el test set, pero por construcción: se eligieron ahí. Esa ventaja es optimismo, no desempeño real. Los números honestos son los de las filas donde $\tau$ se eligió en validation.
+
+
+## En resumen:
+
+1. **Clasificar:** convertir una probabilidad $\hat p$ en una clase $\hat y$.
+2. **Medir:** matriz de confusión, métricas, curvas ROC y precision-recall, calibración.
+3. **Decidir:** clasificador de Bayes y costo de los errores.
+4. **Validar:** training set para estimar, validation set (con CV) para elegir $\tau$, test set una sola vez para reportar.
+
+. . .
+
+Referencia: James et al. (2021), *An Introduction to Statistical Learning* (ISLR), 2ª ed., capítulo 4 (secciones 4.3 y 4.4.2, que usan los mismos datos `Default` de hoy) y capítulo 5 (cross-validation).
+
+
+## Gracias {.inverse .center .middle .closing}
+
+**Hasta la próxima clase**
 
 Mauricio Bucca

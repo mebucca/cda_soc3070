@@ -64,7 +64,7 @@ generalización, overfitting y validación cruzada.
 ::: {.content-box-secondary}
 **Después**
 
-clasificador logístico: métricas y umbrales.
+de una probabilidad a una decisión: el logit como clasificador, con métricas, umbrales y costos.
 :::
 
 :::

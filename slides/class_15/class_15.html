@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-29">
+  <meta name="dcterms.date" content="2026-11-16">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -32,6 +32,72 @@
       margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
       vertical-align: middle;
     }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      { color: #24292e;  }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #24292e; } /* Normal */
+    code span.al { color: #ff5555; font-weight: bold; } /* Alert */
+    code span.an { color: #6a737d; } /* Annotation */
+    code span.at { color: #d73a49; } /* Attribute */
+    code span.bn { color: #005cc5; } /* BaseN */
+    code span.bu { color: #d73a49; } /* BuiltIn */
+    code span.cf { color: #d73a49; } /* ControlFlow */
+    code span.ch { color: #032f62; } /* Char */
+    code span.cn { color: #005cc5; } /* Constant */
+    code span.co { color: #6a737d; } /* Comment */
+    code span.cv { color: #6a737d; } /* CommentVar */
+    code span.do { color: #6a737d; } /* Documentation */
+    code span.dt { color: #d73a49; } /* DataType */
+    code span.dv { color: #005cc5; } /* DecVal */
+    code span.er { color: #ff5555; text-decoration: underline; } /* Error */
+    code span.ex { color: #d73a49; font-weight: bold; } /* Extension */
+    code span.fl { color: #005cc5; } /* Float */
+    code span.fu { color: #6f42c1; } /* Function */
+    code span.im { color: #032f62; } /* Import */
+    code span.in { color: #6a737d; } /* Information */
+    code span.kw { color: #d73a49; } /* Keyword */
+    code span.op { color: #24292e; } /* Operator */
+    code span.ot { color: #6f42c1; } /* Other */
+    code span.pp { color: #d73a49; } /* Preprocessor */
+    code span.re { color: #6a737d; } /* RegionMarker */
+    code span.sc { color: #005cc5; } /* SpecialChar */
+    code span.ss { color: #032f62; } /* SpecialString */
+    code span.st { color: #032f62; } /* String */
+    code span.va { color: #e36209; } /* Variable */
+    code span.vs { color: #032f62; } /* VerbatimString */
+    code span.wa { color: #ff5555; } /* Warning */
   </style>
   <link rel="stylesheet" href="class_15_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
   <link rel="stylesheet" href="_shared/course.css">
@@ -142,6 +208,10 @@
       margin-right: 0; 
     }
   </style>
+  <style>
+  /* Código legible al proyectar (el default de revealjs + curso queda muy chico). */
+  .reveal div.sourceCode pre code { font-size: 1.15em !important; line-height: 1.4; }
+  </style>
 </head>
 <body class="theme-milan quarto-light">
   <div class="reveal">
@@ -149,7 +219,7 @@
 
 <section id="title-slide" data-background-color="#8B1E2D" class="quarto-title-block center">
   <h1 class="title">Análisis de Datos Categóricos (SOC3070)</h1>
-  <p class="subtitle">Clasificación Logística: Probabilidades, Umbrales y Decisiones</p>
+  <p class="subtitle">Clasificador Logístico</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -159,282 +229,1152 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-29</p>
+  <p class="date">2026-11-16</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
 <div class="full-width">
 <div class="content-box">
 <p><strong>Antes</strong></p>
-<p>estimación, incertidumbre y validación: qué aprende un modelo de una muestra.</p>
+<p>overfitting y cross-validation</p>
 </div>
 <div class="content-box-primary">
 <p><strong>Hoy</strong></p>
-<p>usar un logit para producir probabilidades y convertirlas en decisiones.</p>
+<p>clasificación: de una probabilidad a una decisión</p>
 </div>
 <div class="content-box-secondary">
 <p><strong>Después</strong></p>
-<p>regularizar cuando la matriz de predictores se vuelve grande e inestable.</p>
+<p>Regularización: Ridge, LASSO y Elastic Net</p>
 </div>
 </div>
 </section>
 <section>
-<section id="el-problema-antes-que-el-algoritmo" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
-<h1>El problema antes que el algoritmo</h1>
+<section id="uso-predictivo-de-modelos-de-regresión" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
+<h1>Uso predictivo de modelos de regresión</h1>
 
 </section>
-<section id="la-solicitud-predictiva-del-módulo" class="slide level2">
-<h2>La solicitud predictiva del módulo</h2>
-<blockquote>
-<p><strong>Al cierre de cada día, estimar qué horas del día siguiente tendrán demanda alta, para priorizar el rebalanceo de bicicletas.</strong></p>
-</blockquote>
-<table class="caption-top">
-<thead>
-<tr class="header">
-<th>Elemento</th>
-<th>Definición</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Unidad</td>
-<td>una hora del sistema</td>
-</tr>
-<tr class="even">
-<td>Target</td>
-<td>demanda sobre el percentil 75 histórico</td>
-</tr>
-<tr class="odd">
-<td>Horizonte</td>
-<td>hasta 24 horas</td>
-</tr>
-<tr class="even">
-<td>Información</td>
-<td>calendario, hora y pronóstico meteorológico</td>
-</tr>
-<tr class="odd">
-<td>Acción</td>
-<td>priorizar capacidad en horas con alto riesgo</td>
-</tr>
-<tr class="even">
-<td>Costo</td>
-<td>omitir una hora alta cuesta 3× una falsa alarma</td>
-</tr>
-</tbody>
-</table>
-<p>Las clases 15–18 resolverán <strong>la misma solicitud</strong> con modelos distintos.</p>
-</section>
-<section id="qué-significa-predecir-mañana" class="slide level2">
-<h2>Qué significa “predecir mañana”</h2>
-<p>Al momento de puntuar conocemos:</p>
+<section id="regresión-como-machine-learning" class="slide level2">
+<h2>Regresión como machine learning</h2>
+<p><br></p>
+<div class="columns">
+<div class="column" style="width:58%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="https://www.researchgate.net/publication/376856079/figure/fig1/AS:11431281226110814@1709092685557/Famous-internet-meme-displaying-the-relation-between-statistics-Machine-Learning-and.png" class="quarto-figure quarto-figure-center" style="width:100.0%"></p>
+</figure>
+</div>
+</div><div class="column fragment" style="width:42%;">
 <ul>
-<li>hora y mes;</li>
-<li>día hábil y feriado;</li>
-<li>pronóstico de temperatura, humedad, viento y condición climática.</li>
+<li>Regresión logística: el <strong>“hello world”</strong> de ML.</li>
+<li>La conexión:</li>
 </ul>
-<p>No conocemos:</p>
-<ul>
-<li><code>bikers</code> de mañana;</li>
-<li>el umbral recalculado con datos futuros;</li>
-<li>errores reales del pronóstico meteorológico.</li>
-</ul>
-<p>En este dataset usamos clima observado como sustituto del pronóstico. Un despliegue real debe incorporar el error de ese pronóstico.</p>
-</section>
-<section id="la-definición-del-outcome-también-se-aprende" class="slide level2">
-<h2>La definición del outcome también se aprende</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 4
-  umbral_bikers prevalencia_train prevalencia_valid prevalencia_test
-          &lt;dbl&gt; &lt;chr&gt;             &lt;chr&gt;             &lt;chr&gt;           
-1           196 25.000%             38.300%             26.400%           </code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="https://images-na.ssl-images-amazon.com/images/I/61atw0HUOPL._AC_UL600_SR600,600_.jpg" class="quarto-figure quarto-figure-center" alt="IESL" height="430"></p>
+</figure>
 </div>
-</div>
-<p>“Demanda alta” significa <code>bikers &gt;</code> 196.000. El percentil se calcula <strong>solo con entrenamiento</strong>. Calcularlo con todo el dataset usaría información del futuro incluso antes de ajustar el modelo.</p>
-</section>
-<section id="el-tiempo-define-el-examen" class="slide level2">
-<h2>El tiempo define el examen</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 3 × 5
-  conjunto       días horas período uso            
-  &lt;chr&gt;         &lt;int&gt; &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;          
-1 Entrenamiento   219  5162 1–219   estimar β      
-2 Validación       73  1735 220–292 elegir umbral  
-3 Test             73  1748 293–365 evaluar una vez</code></pre>
-</div>
-</div>
-<p>Una partición aleatoria permitiría que horas vecinas del mismo período aparezcan a ambos lados del examen. La partición cronológica reproduce mejor el uso futuro.</p>
-</section>
-<section id="train-validación-y-test-no-son-sinónimos" class="slide level2">
-<h2>Train, validación y test no son sinónimos</h2>
-<table class="caption-top">
-<thead>
-<tr class="header">
-<th>Conjunto</th>
-<th>Pregunta</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Entrenamiento</td>
-<td>¿qué coeficientes explican mejor el pasado?</td>
-</tr>
-<tr class="even">
-<td>Validación</td>
-<td>¿qué regla de decisión funciona en un futuro cercano?</td>
-</tr>
-<tr class="odd">
-<td>Test</td>
-<td>¿qué desempeño esperamos en un período todavía no usado?</td>
-</tr>
-</tbody>
-</table>
-<p>Cada vez que miramos test para cambiar una decisión, deja de ser test y se convierte en validación.</p>
+</div></div>
 </section></section>
 <section>
-<section id="teoría-del-clasificador-logístico" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
-<h1>Teoría del clasificador logístico</h1>
+<section id="regresión-logística-como-clasificador" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
+<h1>Regresión logística como clasificador</h1>
 
 </section>
-<section id="el-output-primario-es-una-probabilidad" class="slide level2">
-<h2>El output primario es una probabilidad</h2>
-<p>Para cada hora <span class="math inline">i</span>:</p>
-<p><span class="math display">
-Y_i\in\{0,1\},
-\qquad
-p_i=\mathbb P(Y_i=1\mid X_i).
-</span></p>
-<p>La probabilidad responde: “con la información disponible, ¿qué riesgo hay de que esta hora tenga demanda alta?”.</p>
-<p>La etiqueta <code>alta/baja</code> aparece después, cuando una decisión aplica un umbral.</p>
-</section>
-<section id="de-probabilidad-a-log-odds" class="slide level2">
-<h2>De probabilidad a log-odds</h2>
-<p>La probabilidad vive entre 0 y 1. El predictor lineal vive entre <span class="math inline">-\infty</span> y <span class="math inline">\infty</span>. El logit conecta ambas escalas:</p>
-<p><span class="math display">
-\log\left(\frac{p_i}{1-p_i}\right)
-=\beta_0+x_i^\top\boldsymbol\beta.
-</span></p>
-<p>Un aumento unitario en <span class="math inline">x_j</span> multiplica las odds por <span class="math inline">\exp(\beta_j)</span>, manteniendo el resto constante.</p>
-</section>
-<section id="la-sigmoide-devuelve-la-probabilidad" class="slide level2">
-<h2>La sigmoide devuelve la probabilidad</h2>
-<p><span class="math display">
-p_i=\sigma(\eta_i)
-=\frac{1}{1+\exp(-\eta_i)},
-\qquad
-\eta_i=\beta_0+x_i^\top\boldsymbol\beta.
-</span></p>
-
-<img data-src="class_15_files/figure-revealjs/sigmoid-1.png" width="960" class="r-stretch"></section>
-<section id="aprender-significa-minimizar-log-loss" class="slide level2">
-<h2>Aprender significa minimizar log-loss</h2>
-<p>Para una observación Bernoulli:</p>
-<p><span class="math display">
-L_i(\beta)
-=-\left[
-y_i\log(p_i)+(1-y_i)\log(1-p_i)
-\right].
-</span></p>
-<p>La pérdida:</p>
+<section id="de-probabilidades-a-clases" class="slide level2">
+<h2>De probabilidades a clases</h2>
 <ul>
-<li>recompensa alta probabilidad para el resultado observado;</li>
-<li>castiga especialmente una predicción equivocada y segura;</li>
-<li>evalúa la calidad de la <strong>probabilidad</strong>, no todavía la acción.</li>
+<li>El input de una regresión logística es una observacion dicotomica: <span class="math inline">y_i \in \{0,1\}</span></li>
 </ul>
-<p>Maximizar likelihood equivale a minimizar la suma de estas pérdidas.</p>
-</section>
-<section id="devianza-la-misma-pérdida-en-otra-escala" class="slide level2">
-<h2>Devianza: la misma pérdida en otra escala</h2>
+<div class="fragment">
+<ul>
+<li>La regresión logística estima una probabilidad para cada caso, también llamada <strong>score</strong>: <span class="math inline">\hat{p}_i = \widehat{\Pr}(Y_i=1\mid X_i)</span>.</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Para convertir el score en una clase usamos un <strong>umbral</strong> <span class="math inline">\tau</span>:</li>
+</ul>
 <p><span class="math display">
-D(M)=-2\ell(M),
-\qquad
-D_{\text{residual}}=2n\times\overline{\text{log-loss}}.
+\hat{y}_i =
+\begin{cases}
+1 &amp; \text{si } \hat{p}_i &gt; \tau \\
+0 &amp; \text{si } \hat{p}_i \leq \tau
+\end{cases}
 </span></p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 3
-  devianza_reportada dos_n_log_loss devianza_nula
-               &lt;dbl&gt;          &lt;dbl&gt;         &lt;dbl&gt;
-1              1282.          1282.         5802.</code></pre>
+</div>
+<div class="fragment">
+<ul>
+<li>El valor por defecto es <span class="math inline">\tau=0.5</span>.</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>En la práctica, el umbral se ajusta al problema:
+<ul>
+<li><strong>Spam:</strong> es peor mandar un correo real a la carpeta de spam que dejar pasar un spam → umbral alto.</li>
+<li><strong>Subsidio:</strong> es peor dejar fuera a quien lo necesita → umbral bajo.</li>
+<li><strong>Examen médico:</strong> detección temprana → umbral bajo; confirmar un diagnóstico → umbral alto.</li>
+</ul></li>
+</ul>
+</div>
+<div class="fragment">
+<div class="content-box-primary">
+<p>Un clasificador = un modelo que entrega <span class="math inline">\hat p</span> + una regla de decisión que lo convierte en <span class="math inline">\hat y</span>.</p>
 </div>
 </div>
-<p>La devianza es útil para comparar ajuste; para comunicar predicción usamos log-loss promedio porque mantiene una escala por observación.</p>
 </section>
-<section id="inferencia-y-predicción-hacen-preguntas-distintas" class="slide level2">
-<h2>Inferencia y predicción hacen preguntas distintas</h2>
+<section id="de-probabilidades-a-clases-1" class="slide level2">
+<h2>De probabilidades a clases</h2>
+<p><br> <br></p>
+
+<img data-src="https://miro.medium.com/v2/resize:fit:1400/format:webp/1*I0VM3MoGudyoW3ZGGpT8Dg@2x.png" class="quarto-figure quarto-figure-center r-stretch"></section>
+<section id="matriz-de-confusión-realidad-vs.-predicción" class="slide level2">
+<h2>Matriz de confusión: realidad vs.&nbsp;predicción</h2>
+<p><br></p>
+<div class="columns">
+<div class="column" style="width:55%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="https://miro.medium.com/1*mL-nYY6MFhiG0uoR5kJaCA.jpeg" class="quarto-figure quarto-figure-center" style="width:100.0%"></p>
+</figure>
+</div>
+</div><div class="column fragment" style="width:45%;">
+<p><br></p>
+<ul>
+<li><strong>TP</strong> (<em>true positive</em>): predijimos 1 y era 1.</li>
+<li><strong>FP</strong> (<em>false positive</em>): predijimos 1 y era 0. Falsa alarma.</li>
+<li><strong>FN</strong> (<em>false negative</em>): predijimos 0 y era 1. Un caso que se nos escapó.</li>
+<li><strong>TN</strong> (<em>true negative</em>): predijimos 0 y era 0.</li>
+</ul>
+</div></div>
+</section>
+<section id="las-métricas-cada-una-responde-una-pregunta-distinta" class="slide level2">
+<h2>Las métricas: cada una responde una pregunta distinta</h2>
 <table class="caption-top">
 <colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
+<col style="width: 27%">
+<col style="width: 45%">
+<col style="width: 27%">
 </colgroup>
 <thead>
 <tr class="header">
-<th>Énfasis inferencial</th>
-<th>Énfasis predictivo</th>
+<th>Métrica</th>
+<th style="text-align: center;">Fórmula</th>
+<th>Pregunta que responde</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>¿qué parámetro es compatible con los datos?</td>
-<td>¿qué tan bien generaliza a horas futuras?</td>
+<td><strong>Accuracy</strong></td>
+<td style="text-align: center;"><span class="math inline">(TP+TN)/N</span></td>
+<td>¿Qué fracción de los casos clasifico bien?</td>
 </tr>
 <tr class="even">
-<td>errores estándar e intervalos</td>
-<td>test temporal y calibración</td>
+<td><strong>Error rate</strong></td>
+<td style="text-align: center;"><span class="math inline">(FP+FN)/N = 1-\text{accuracy}</span></td>
+<td>¿Qué fracción clasifico mal?</td>
 </tr>
 <tr class="odd">
-<td>forma funcional interpretable</td>
-<td>pérdida y costo operacional</td>
+<td><strong>Sensitivity</strong></td>
+<td style="text-align: center;"><span class="math inline">TP/(TP+FN)</span></td>
+<td>De los positivos reales, ¿qué fracción detecto?</td>
 </tr>
 <tr class="even">
-<td>coeficientes individuales</td>
-<td>probabilidades caso a caso</td>
+<td><strong>Specificity</strong></td>
+<td style="text-align: center;"><span class="math inline">TN/(TN+FP)</span></td>
+<td>De los negativos reales, ¿qué fracción clasifico como negativos?</td>
+</tr>
+<tr class="odd">
+<td><strong>Precision</strong></td>
+<td style="text-align: center;"><span class="math inline">TP/(TP+FP)</span></td>
+<td>Cuando predigo positivo, ¿qué fracción de las veces acierto?</td>
+</tr>
+<tr class="even">
+<td><strong>Prevalence</strong></td>
+<td style="text-align: center;"><span class="math inline">(TP+FN)/N</span></td>
+<td>¿Qué tan común es la clase positiva?</td>
 </tr>
 </tbody>
 </table>
-<p>No son proyectos rivales. El mismo logit sirve para ambos, pero el diseño de evaluación cambia.</p>
-</section>
-<section id="un-umbral-no-pertenece-al-modelo" class="slide level2">
-<h2>Un umbral no pertenece al modelo</h2>
-<p>La regla:</p>
-<p><span class="math display">
-\widehat y_i(t)=\mathbb 1(\widehat p_i\ge t)
-</span></p>
-<p>traduce riesgo en acción.</p>
+<p><br></p>
+<div class="fragment">
 <ul>
-<li><span class="math inline">t</span> bajo: detecta más horas altas, con más falsas alarmas.</li>
-<li><span class="math inline">t</span> alto: interviene menos, pero omite más horas altas.</li>
-<li><span class="math inline">t=0.50</span> no es “neutral”; solo supone costos y prevalencias particulares.</li>
+<li><p>Sensitivity y specificity leen la tabla <strong>por columna</strong> (condicionan en la realidad).</p></li>
+<li><p>Precision lee la tabla <strong>por fila</strong> (condiciona en la predicción).</p></li>
+<li><p>Sinónimos en la literatura: sensitivity = <strong>recall</strong> = <strong>TPR</strong> (<em>true positive rate</em>). Y <strong>FPR</strong> (<em>false positive rate</em>) <span class="math inline">= FP/(FP+TN) = 1-\text{specificity}</span>.</p></li>
 </ul>
+</div>
 </section>
-<section id="la-matriz-de-confusión-nombra-los-errores" class="slide level2">
-<h2>La matriz de confusión nombra los errores</h2>
+<section id="un-ejemplo-con-números" class="slide level2">
+<h2>Un ejemplo con números</h2>
+<p><br></p>
+<div class="columns">
+<div class="column" style="width:48%;">
+<p>100 casos simulados:</p>
 <table class="caption-top">
 <thead>
 <tr class="header">
 <th></th>
-<th style="text-align: right;">Observado alto</th>
-<th style="text-align: right;">Observado bajo</th>
+<th style="text-align: center;">Real 1</th>
+<th style="text-align: center;">Real 0</th>
+<th style="text-align: center;">Total</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Priorizar</td>
-<td style="text-align: right;">verdadero positivo</td>
-<td style="text-align: right;">falso positivo</td>
+<td><strong>Predice 1</strong></td>
+<td style="text-align: center;">TP = 18</td>
+<td style="text-align: center;">FP = 12</td>
+<td style="text-align: center;">30</td>
 </tr>
 <tr class="even">
-<td>No priorizar</td>
-<td style="text-align: right;"><strong>falso negativo</strong></td>
-<td style="text-align: right;">verdadero negativo</td>
+<td><strong>Predice 0</strong></td>
+<td style="text-align: center;">FN = 6</td>
+<td style="text-align: center;">TN = 64</td>
+<td style="text-align: center;">70</td>
+</tr>
+<tr class="odd">
+<td><strong>Total</strong></td>
+<td style="text-align: center;">24</td>
+<td style="text-align: center;">76</td>
+<td style="text-align: center;">100</td>
 </tr>
 </tbody>
 </table>
-<p>Para rebalanceo, un falso negativo puede producir falta de bicicletas o docks; un falso positivo usa capacidad operativa de más. Por eso fijamos costo 3:1.</p>
+</div><div class="column" style="width:52%;">
+<ul>
+<li>Accuracy <span class="math inline">=(18+64)/100=0.82</span></li>
+<li>Sensitivity <span class="math inline">=18/(18+6)=0.75</span></li>
+<li>Specificity <span class="math inline">=64/(64+12)\approx0.84</span></li>
+<li>Precision <span class="math inline">=18/(18+12)=0.60</span></li>
+<li>Prevalence <span class="math inline">=(18+6)/100=0.24</span></li>
+</ul>
+</div></div>
 </section>
-<section id="tres-familias-de-métricas" class="slide level2">
-<h2>Tres familias de métricas</h2>
+<section id="f1-un-solo-número-para-precision-y-sensitivity" class="slide level2">
+<h2>F1: un solo número para precision y sensitivity</h2>
+<p>Recordemos:</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 27%">
+<col style="width: 45%">
+<col style="width: 27%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Métrica</th>
+<th style="text-align: center;">Fórmula</th>
+<th>Pregunta que responde</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Sensitivity</strong></td>
+<td style="text-align: center;"><span class="math inline">TP/(TP+FN)</span></td>
+<td>De los positivos reales, ¿qué fracción detecto?</td>
+</tr>
+<tr class="even">
+<td><strong>Precision</strong></td>
+<td style="text-align: center;"><span class="math inline">TP/(TP+FP)</span></td>
+<td>Cuando predigo positivo, ¿qué fracción de las veces acierto?</td>
+</tr>
+</tbody>
+</table>
+<div class="fragment">
+<p>Precision y sensitivity suelen moverse en direcciones opuestas (dependen del umbral en sentido opuesto). <strong>F1</strong> las resume en un número:</p>
+<p><span class="math display">
+F_1=2\cdot\frac{\text{precision}\cdot\text{sensitivity}}{\text{precision}+\text{sensitivity}}=\frac{2\,TP}{2\,TP+FP+FN}
+</span></p>
+</div>
+<div class="fragment">
+<p>En el ejemplo anterior: <span class="math inline">F_1=2(0.60)(0.75)/(0.60+0.75)\approx0.67</span>.</p>
+</div>
+<div class="fragment">
+<ul>
+<li><span class="math inline">F_1</span> es la <strong>media armónica</strong> de las dos: castiga cuando cualquiera de las dos es baja. Con precision <span class="math inline">=0.60</span> y sensitivity <span class="math inline">=0.10</span>, <span class="math inline">F_1\approx0.17</span>: refleja que el clasificador casi no detecta positivos.</li>
+<li><span class="math inline">F_1</span> <strong>no usa los TN</strong>. Por eso es útil cuando los negativos son la inmensa mayoría: los TN inflan la accuracy, pero no mueven <span class="math inline">F_1</span>.</li>
+</ul>
+</div>
+</section>
+<section id="mover-tau-mueve-casos-entre-celdas" class="slide level2">
+<h2>Mover <span class="math inline">\tau</span> mueve casos entre celdas</h2>
+<p><br></p>
+<ul>
+<li><p><strong>Bajar <span class="math inline">\tau</span>:</strong> más casos cruzan a “predice 1”. Algunos FN se vuelven TP (sube sensitivity), pero algunos TN se vuelven FP (baja specificity, y en general baja precision).</p></li>
+<li><p><strong>Subir <span class="math inline">\tau</span>:</strong> lo contrario. Menos falsas alarmas, más casos que se escapan.</p></li>
+</ul>
+<div class="fragment">
+<ul>
+<li>Por eso <strong>todas</strong> las métricas de la matriz de confusión dependen de <span class="math inline">\tau</span>: no existe “la accuracy del modelo”, sino “la accuracy del modelo con umbral <span class="math inline">\tau</span>”.</li>
+</ul>
+<p><br></p>
+</div>
+<div class="fragment">
+<div class="content-box-primary">
+<p>Las métricas de la matriz de confusión evalúan el par (modelo, <span class="math inline">\tau</span>), no el modelo solo. Lo vamos a ver con datos reales.</p>
+</div>
+</div>
+</section></section>
+<section>
+<section id="quién-no-paga-su-tarjeta-de-crédito" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
+<h1>¿Quién no paga su tarjeta de crédito?</h1>
+
+</section>
+<section id="los-datos-default-islr" class="slide level2">
+<h2>Los datos: <code>Default</code> (ISLR)</h2>
+<p><br></p>
+<ul>
+<li><p>10&nbsp;000 clientes de un banco (datos simulados del libro ISLR). Pregunta: ¿quién hará <strong>default</strong>, es decir, dejará de pagar su deuda?</p></li>
+<li><p>Predictores: <code>balance</code> (saldo promedio que queda en la tarjeta después del pago mensual, en US$), <code>income</code> (ingreso anual, en US$) y <code>student</code> (¿es estudiante?).</p></li>
+<li><p>Outcome: <code>default</code> = Yes / No.&nbsp;La clase positiva (<span class="math inline">Y=1</span>) es Yes.</p></li>
+</ul>
+<p><br></p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">default</th>
+<th style="text-align: left;">student</th>
+<th style="text-align: right;">balance</th>
+<th style="text-align: right;">income</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">No</td>
+<td style="text-align: left;">No</td>
+<td style="text-align: right;">730</td>
+<td style="text-align: right;">44362</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">No</td>
+<td style="text-align: left;">Yes</td>
+<td style="text-align: right;">817</td>
+<td style="text-align: right;">12106</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">No</td>
+<td style="text-align: left;">No</td>
+<td style="text-align: right;">1074</td>
+<td style="text-align: right;">31767</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">No</td>
+<td style="text-align: left;">No</td>
+<td style="text-align: right;">529</td>
+<td style="text-align: right;">35704</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><br></p>
+<div class="fragment">
+<p><strong>Importante</strong>: Hacemos un <strong>split al azar</strong> 70/30: un training set de 7000 personas para ajustar y un test set de 3000 para evaluar. Todas las métricas de esta sección se calculan en el test set.</p>
+</div>
+</section>
+<section id="por-qué-este-ejemplo" class="slide level2">
+<h2>Por qué este ejemplo</h2>
+<p><br></p>
+<ul>
+<li>Solo 3.3% de las personas hace default: la prevalence es muy baja.</li>
+</ul>
+<div class="fragment">
+<ul>
+<li>Un clasificador que <strong>nunca</strong> predice default acierta en 96.8% de los casos, por puro desbalance.</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Es un caso donde la métrica que usemos y el umbral que elijamos cambian por completo qué tan “bueno” parece el modelo.</li>
+</ul>
+<p><br></p>
+<div class="content-box-primary">
+<p>En este ejemplo el umbral importa, y mucho.</p>
+</div>
+</div>
+</section>
+<section id="ajustamos-el-modelo" class="slide level2">
+<h2>Ajustamos el modelo</h2>
+<p><br></p>
+<p><span class="math display">
+\ln\frac{p_i}{1-p_i}=\beta_0+\beta_1\,\text{balance}_i+\beta_2\,\text{income}_i+\beta_3\,\text{student}_i
+</span></p>
+<p><br></p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Variable</th>
+<th style="text-align: right;">Coeficiente</th>
+<th style="text-align: right;">z</th>
+<th style="text-align: right;">p-valor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Intercepto</td>
+<td style="text-align: right;">-10.773</td>
+<td style="text-align: right;">-18.640</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">balance (por US$100)</td>
+<td style="text-align: right;">0.573</td>
+<td style="text-align: right;">20.818</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">income (por US$10 000)</td>
+<td style="text-align: right;">-0.002</td>
+<td style="text-align: right;">-0.016</td>
+<td style="text-align: right;">0.987</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">student (Yes vs.&nbsp;No)</td>
+<td style="text-align: right;">-0.562</td>
+<td style="text-align: right;">-2.053</td>
+<td style="text-align: right;">0.040</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><br></p>
+<div class="fragment">
+<ul>
+<li><p><code>balance</code> es, por lejos, el predictor más fuerte.</p></li>
+<li><p>Para predecir no necesitamos interpretar cada <span class="math inline">\beta</span>: de aquí en adelante, lo que usamos es <span class="math inline">\hat p_i</span>.</p></li>
+</ul>
+</div>
+</section>
+<section id="la-trampa-de-la-accuracy" class="slide level2">
+<h2>La trampa de la accuracy</h2>
+<p><br></p>
+<p>Comparemos el logit con <span class="math inline">\tau=0.5</span> contra un clasificador que <strong>nunca</strong> predice default (ignora <code>balance</code>, <code>income</code> y <code>student</code>):</p>
+<p><br></p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Clasificador</th>
+<th style="text-align: right;">Accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Siempre predice “No”</td>
+<td style="text-align: right;">0.968</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Logit con τ = 0.5</td>
+<td style="text-align: right;">0.975</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><br></p>
+<div class="fragment">
+<p>El modelo apenas mejora a un clasificador que no mira los datos. Pero el modelo <strong>sí</strong> sabe algo: el problema está en cómo lo estamos evaluando. Miremos la matriz de confusión.</p>
+</div>
+</section>
+<section id="la-matriz-de-confusión-a-tau-0.5" class="slide level2">
+<h2>La matriz de confusión a <span class="math inline">\tau = 0.5</span></h2>
+<p><br></p>
+<div class="columns">
+<div class="column" style="width:52%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: center;">Real Sí</th>
+<th style="text-align: center;">Real No</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Predice Sí</strong></td>
+<td style="text-align: center;">TP = 33</td>
+<td style="text-align: center;">FP = 12</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Predice No</strong></td>
+<td style="text-align: center;">FN = 63</td>
+<td style="text-align: center;">TN = 2892</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Total</strong></td>
+<td style="text-align: center;">96</td>
+<td style="text-align: center;">2904</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div><div class="column" style="width:48%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Métrica</th>
+<th style="text-align: right;">Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Sensitivity</td>
+<td style="text-align: right;">0.344</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Specificity</td>
+<td style="text-align: right;">0.996</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Precision</td>
+<td style="text-align: right;">0.733</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">F1</td>
+<td style="text-align: right;">0.468</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div></div>
+<p><br></p>
+<div class="fragment">
+<ul>
+<li>De 96 personas que hicieron default, el modelo detectó solo 33 (sensitivity 34%).</li>
+<li>Cuando predice “Sí”, casi siempre acierta (precision 73%). El problema es que casi nunca lo hace.</li>
+</ul>
+</div>
+</section>
+<section id="por-qué-la-distribución-de-los-scores" class="slide level2">
+<h2>¿Por qué? La distribución de los scores</h2>
+<p><br></p>
+<div class="columns">
+<div class="column" style="width:58%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="class_15_files/figure-revealjs/score-plot-05-1.png" class="quarto-figure quarto-figure-center" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:42%;">
+<ul>
+<li><strong>Arriba:</strong> casi todos los que pagan tienen un score cercano a 0. Bien.</li>
+</ul>
+<div class="fragment">
+<ul>
+<li><strong>Abajo:</strong> la mayoría de quienes hicieron default también queda a la izquierda de 0.5. El score mediano entre ellos es 0.34.</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>El modelo <strong>sí</strong> les asigna un riesgo alto en términos relativos (muy por encima del 3.3% promedio), pero ese riesgo casi nunca supera 0.5. Con <span class="math inline">\tau=0.5</span>, quedan como FN.</li>
+</ul>
+</div>
+</div></div>
+</section>
+<section id="tres-umbrales-tres-matrices-de-confusión" class="slide level2">
+<h2>Tres umbrales, tres matrices de confusión</h2>
+<p><br></p>
+<div class="columns">
+<div class="column" style="width:58%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="class_15_files/figure-revealjs/score-plot-3-1.png" class="quarto-figure quarto-figure-center" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:42%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: right;">τ</th>
+<th style="text-align: right;">TP</th>
+<th style="text-align: right;">FP</th>
+<th style="text-align: right;">FN</th>
+<th style="text-align: right;">TN</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.1</td>
+<td style="text-align: right;">70</td>
+<td style="text-align: right;">157</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">2747</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.3</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">2867</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.5</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">2892</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="fragment">
+<p>Al bajar <span class="math inline">\tau</span> de 0.5 a 0.1:</p>
+<ul>
+<li>TP sube de 33 a 70: detectamos 37 defaults más.</li>
+<li>FP sube de 12 a 157: el precio son 145 falsas alarmas más.</li>
+</ul>
+<p>¿Vale la pena? Depende de la métrica.</p>
+</div>
+</div></div>
+</section>
+<section id="el-mejor-modelo-depende-de-la-métrica" class="slide level2">
+<h2>El “mejor” modelo depende de la métrica</h2>
+<p><br></p>
+<div class="columns">
+<div class="column" style="width:56%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: right;">τ</th>
+<th style="text-align: right;">Accuracy</th>
+<th style="text-align: right;">Sensitivity</th>
+<th style="text-align: right;">Specificity</th>
+<th style="text-align: right;">Precision</th>
+<th style="text-align: right;">F1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.894</td>
+<td style="text-align: right;">0.823</td>
+<td style="text-align: right;">0.896</td>
+<td style="text-align: right;">0.208</td>
+<td style="text-align: right;">0.332</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.10</td>
+<td style="text-align: right;">0.939</td>
+<td style="text-align: right;">0.729</td>
+<td style="text-align: right;">0.946</td>
+<td style="text-align: right;">0.308</td>
+<td style="text-align: right;">0.433</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.20</td>
+<td style="text-align: right;">0.962</td>
+<td style="text-align: right;">0.594</td>
+<td style="text-align: right;">0.974</td>
+<td style="text-align: right;">0.432</td>
+<td style="text-align: right;">0.500</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.30</td>
+<td style="text-align: right;">0.972</td>
+<td style="text-align: right;">0.521</td>
+<td style="text-align: right;">0.987</td>
+<td style="text-align: right;">0.575</td>
+<td style="text-align: right;">0.546</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.40</td>
+<td style="text-align: right;">0.974</td>
+<td style="text-align: right;">0.406</td>
+<td style="text-align: right;">0.992</td>
+<td style="text-align: right;">0.639</td>
+<td style="text-align: right;">0.497</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;">0.975</td>
+<td style="text-align: right;">0.344</td>
+<td style="text-align: right;">0.996</td>
+<td style="text-align: right;">0.733</td>
+<td style="text-align: right;">0.468</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.60</td>
+<td style="text-align: right;">0.976</td>
+<td style="text-align: right;">0.281</td>
+<td style="text-align: right;">0.999</td>
+<td style="text-align: right;">0.871</td>
+<td style="text-align: right;">0.425</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.70</td>
+<td style="text-align: right;">0.974</td>
+<td style="text-align: right;">0.229</td>
+<td style="text-align: right;">0.999</td>
+<td style="text-align: right;">0.880</td>
+<td style="text-align: right;">0.364</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div><div class="column fragment" style="width:44%;">
+<p>Buscando en una grilla fina de umbrales:</p>
+<ul>
+<li><strong>Accuracy</strong> es máxima en <span class="math inline">\tau=0.58</span>, pero casi plana entre 0.5 y 0.6.</li>
+<li><strong>F1</strong> es máximo en <span class="math inline">\tau=0.33</span>.</li>
+<li><strong>Sensitivity</strong> solo sube al bajar <span class="math inline">\tau</span>; <strong>precision</strong>, en general, baja.</li>
+</ul>
+<p>No hay un umbral que gane en todo: primero hay que decidir qué métrica importa.</p>
+</div></div>
+<div class="fragment">
+<div class="content-box-yellow">
+<p><strong>Ojo:</strong> estos <span class="math inline">\tau</span> los elegimos mirando el <strong>test set</strong>, el mismo con que los evaluamos. Sirve para ver el trade-off, pero es hacer trampa. Al final de la clase vemos cómo elegir <span class="math inline">\tau</span> sin tocar el test set.</p>
+</div>
+</div>
+</section>
+<section id="el-mejor-modelo-depende-de-la-métrica-1" class="slide level2">
+<h2>El “mejor” modelo depende de la métrica</h2>
+<p><br></p>
+
+<img data-src="class_15_files/figure-revealjs/tau-plot-1.png" class="quarto-figure quarto-figure-center r-stretch" style="width:88.0%"><p>Accuracy queda alta en casi todo el rango (predecir “No” casi siempre es gratis cuando el default es raro). Sensitivity cae al subir <span class="math inline">\tau</span>; precision sube. F1 vive en la tensión entre ambas: por eso su óptimo está en un punto intermedio.</p>
+</section></section>
+<section>
+<section id="curvas-evaluar-todos-los-umbrales-a-la-vez" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
+<h1>Curvas: evaluar todos los umbrales a la vez</h1>
+
+</section>
+<section id="curva-roc" class="slide level2">
+<h2>Curva ROC</h2>
+<div class="columns">
+<div class="column" style="width:45%;">
+<ul>
+<li>Cada <span class="math inline">\tau</span> produce un par (FPR, sensitivity): un punto en el gráfico.</li>
+<li>Al recorrer <span class="math inline">\tau</span> de 1 a 0, esos puntos trazan la <strong>curva ROC</strong>.</li>
+</ul>
+<div class="fragment">
+<ul>
+<li>Los tres umbrales que ya vimos están marcados: bajar <span class="math inline">\tau</span> nos mueve hacia arriba (más sensitivity) y hacia la derecha (más FPR).</li>
+<li>La diagonal es un clasificador al azar. Mientras más arriba a la izquierda, mejor.</li>
+</ul>
+</div>
+</div><div class="column" style="width:55%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="class_15_files/figure-revealjs/plot-roc-1.png" class="quarto-figure quarto-figure-center" style="width:82.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+</div></div>
+</section>
+<section id="auc-área-bajo-la-curva-roc" class="slide level2">
+<h2>AUC: área bajo la curva ROC</h2>
+<div class="columns">
+<div class="column" style="width:48%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="class_15_files/figure-revealjs/plot-auc-1.png" class="quarto-figure quarto-figure-center" style="width:88.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:52%;">
+<ul>
+<li>El <strong>AUC</strong> resume la curva ROC en un número entre 0.5 (azar) y 1 (perfecto).</li>
+<li><strong>Interpretación:</strong> si tomamos al azar una persona que hizo default y una que no, el AUC es la probabilidad de que el modelo le dé mayor score a la primera.</li>
+</ul>
+<div class="fragment">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>AUC</th>
+<th>Discriminación</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>≈ 0.5</td>
+<td>ninguna (azar)</td>
+</tr>
+<tr class="even">
+<td>0.7 – 0.8</td>
+<td>aceptable</td>
+</tr>
+<tr class="odd">
+<td>0.8 – 0.9</td>
+<td>buena</td>
+</tr>
+<tr class="even">
+<td>&gt; 0.9</td>
+<td>excelente</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="fragment">
+<p>Nuestro modelo: AUC = 0.946, excelente. Y sin embargo, a <span class="math inline">\tau=0.5</span> detecta solo 34% de los defaults. No hay contradicción: el AUC mide si el modelo <strong>ordena</strong> bien, no si el umbral es bueno.</p>
+</div>
+</div></div>
+</section>
+<section id="elegir-tau-con-la-curva-roc-índice-de-youden" class="slide level2">
+<h2>Elegir <span class="math inline">\tau</span> con la curva ROC: índice de Youden</h2>
+<p><br></p>
+<p>Dos criterios estándar que solo usan la curva ROC:</p>
+<ul>
+<li><p><strong>Índice de Youden:</strong> Es el punto de la curva más alejado de la diagonal.</p></li>
+<li><p><strong>Más cercano a <span class="math inline">(0,1)</span>:</strong> el <span class="math inline">\tau</span> cuyo punto está más cerca de la esquina superior izquierda (sensitivity y specificity perfectas).</p></li>
+</ul>
+<p><br></p>
+<div class="fragment">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Criterio</th>
+<th style="text-align: right;">τ</th>
+<th style="text-align: right;">Sensitivity</th>
+<th style="text-align: right;">Specificity</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Youden</td>
+<td style="text-align: right;">0.032</td>
+<td style="text-align: right;">0.875</td>
+<td style="text-align: right;">0.860</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Más cercano a (0,1)</td>
+<td style="text-align: right;">0.032</td>
+<td style="text-align: right;">0.875</td>
+<td style="text-align: right;">0.860</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><br></p>
+</div>
+<div class="fragment">
+<p>Ambos eligen <span class="math inline">\tau\approx0.03</span>: muy bajo, porque le dan <strong>el mismo peso</strong> a sensitivity y specificity, y con 3.3% de positivos eso implica marcar a mucha gente. A ese umbral, la precision es solo 0.17. Es un criterio más, no “el” óptimo.</p>
+</div>
+</section>
+<section id="curva-precision-recall-alternativa-a-la-roc" class="slide level2">
+<h2>Curva precision-recall (alternativa a la ROC)</h2>
+<p><br></p>
+<div class="columns">
+<div class="column" style="width:52%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="class_15_files/figure-revealjs/pr-curve-1.png" class="quarto-figure quarto-figure-center" style="width:95.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:48%;">
+<ul>
+<li>La ROC usa FPR <span class="math inline">=FP/(FP+TN)</span>. Con casi 2904 negativos en el denominador, incluso muchas falsas alarmas producen un FPR chico.</li>
+<li>Precision <span class="math inline">=TP/(TP+FP)</span> compara las falsas alarmas con los <strong>pocos</strong> TP.</li>
+</ul>
+<div class="fragment">
+<p><strong>Ejemplo, <span class="math inline">\tau=0.1</span>:</strong> 157 falsas alarmas dan un FPR de solo 0.05 (en la ROC se ve muy bien), pero precision <span class="math inline">=0.31</span>: de cada 10 alarmas, solo 3 son defaults reales.</p>
+</div>
+<div class="fragment">
+<p>Con una clase positiva rara, la curva precision-recall es más honesta. F1 resume un punto de esta curva.</p>
+</div>
+</div></div>
+</section>
+<section id="calibración-hat-p-significa-lo-que-dice" class="slide level2">
+<h2>Calibración: ¿<span class="math inline">\hat p</span> significa lo que dice?</h2>
+<p><br></p>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="class_15_files/figure-revealjs/calibration-plot-1.png" class="quarto-figure quarto-figure-center" style="width:90.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:50%;">
+<p>ROC y precision-recall evalúan si el modelo <strong>ordena</strong> bien. La <strong>calibración</strong> evalúa si <span class="math inline">\hat p</span> es una probabilidad creíble: entre las personas con <span class="math inline">\hat p\approx0.3</span>, ¿cerca de 30% hace default?</p>
+<div class="fragment">
+<ul>
+<li>Agrupamos por score y comparamos el promedio predicho con la frecuencia observada. Calibración perfecta = puntos sobre la diagonal.</li>
+<li>Nuestro modelo está <strong>bien calibrado</strong>: el total de defaults esperado (<span class="math inline">\sum\hat p_i</span>) es 98.4, y ocurrieron 96. Los grupos de scores altos son pequeños, por eso se alejan más.</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Ordenar bien y estar calibrado son cosas distintas: si dividimos todos los <span class="math inline">\hat p</span> por 2, el orden no cambia (mismo AUC), pero la calibración se arruina.</li>
+</ul>
+</div>
+</div></div>
+</section>
+<section id="mapa-de-métricas" class="slide level2">
+<h2>Mapa de métricas</h2>
+<p><br></p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 21%">
+<col style="width: 21%">
+<col style="width: 35%">
+<col style="width: 21%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Métrica</th>
+<th>Pregunta</th>
+<th style="text-align: center;">¿Depende de <span class="math inline">\tau</span>?</th>
+<th>Úsala cuando…</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Log-loss</strong></td>
+<td>¿Las probabilidades son buenas?</td>
+<td style="text-align: center;">No</td>
+<td>importan las probabilidades</td>
+</tr>
+<tr class="even">
+<td><strong>AUC (ROC)</strong></td>
+<td>¿Ordena positivos sobre negativos?</td>
+<td style="text-align: center;">No</td>
+<td>comparas modelos</td>
+</tr>
+<tr class="odd">
+<td><strong>Curva precision-recall</strong></td>
+<td>¿Cuánta precision cuesta la sensitivity?</td>
+<td style="text-align: center;">No</td>
+<td>la clase positiva es rara</td>
+</tr>
+<tr class="even">
+<td><strong>Calibración</strong></td>
+<td>¿<span class="math inline">\hat p</span> significa lo que dice?</td>
+<td style="text-align: center;">No</td>
+<td>usarás <span class="math inline">\hat p</span> como probabilidad</td>
+</tr>
+<tr class="odd">
+<td><strong>Accuracy</strong></td>
+<td>¿Qué fracción acierto?</td>
+<td style="text-align: center;">Sí</td>
+<td>clases balanceadas, errores iguales</td>
+</tr>
+<tr class="even">
+<td><strong>Sensitivity</strong></td>
+<td>¿Detecto a los positivos?</td>
+<td style="text-align: center;">Sí</td>
+<td>perder un positivo es grave</td>
+</tr>
+<tr class="odd">
+<td><strong>Precision</strong></td>
+<td>Cuando digo “positivo”, ¿acierto?</td>
+<td style="text-align: center;">Sí</td>
+<td>las falsas alarmas son caras</td>
+</tr>
+<tr class="even">
+<td><strong>F1</strong></td>
+<td>¿Equilibro precision y sensitivity?</td>
+<td style="text-align: center;">Sí</td>
+<td>positivos raros; FP y FN igual de graves</td>
+</tr>
+</tbody>
+</table>
+</section></section>
+<section>
+<section id="del-diagnóstico-a-la-decisión" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
+<h1>Del diagnóstico a la decisión</h1>
+
+</section>
+<section id="medir-no-es-decidir" class="slide level2">
+<h2>Medir no es decidir</h2>
+<p><br></p>
+<ul>
+<li>Ya calculamos log-loss, accuracy, sensitivity, precision, F1, ROC, AUC, precision-recall y calibración para este modelo.</li>
+</ul>
+<div class="fragment">
+<ul>
+<li><p>Ninguna métricas sabe que, para el banco, <strong>no detectar</strong> a quien no pagará cuesta más que <strong>molestar</strong> a un buen cliente.</p></li>
+<li><p>Eso no es una propiedad del modelo: es una decisión del banco (o de una política pública) que se agrega <strong>después</strong> de medir qué tan bueno es el modelo.</p></li>
+</ul>
+</div>
+<div class="fragment">
+<p>Dos preguntas:</p>
+<ol type="1">
+<li>Si todos los errores cuestan lo mismo, ¿qué umbral es el óptimo? → <strong>clasificador de Bayes</strong>.</li>
+<li>Si no cuestan lo mismo, ¿cómo cambia el umbral? → <strong>costo de los errores</strong>.</li>
+</ol>
+</div>
+</section>
+<section id="el-clasificador-de-bayes" class="slide level2">
+<h2>El clasificador de Bayes</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p>El <strong>clasificador de Bayes</strong> asigna cada caso a su clase más probable:</p>
+<p><span class="math display">
+\hat y(x)=\arg\max_k \Pr(Y=k\mid X=x)
+</span></p>
+<div class="fragment">
+<p>Con dos clases, eso es exactamente <span class="math inline">\tau=0.5</span>. <strong>¿Por qué es óptimo?</strong></p>
+<ul>
+<li>Si <span class="math inline">p&gt;0.5</span> y predecimos 1, nos equivocamos con probabilidad <span class="math inline">1-p&lt;0.5</span>.</li>
+<li>Si predecimos 0, con probabilidad <span class="math inline">p&gt;0.5</span>.</li>
+</ul>
+<p>Elegir siempre la opción con menor probabilidad de error <strong>minimiza el error rate esperado</strong> (es decir, maximiza la accuracy esperada).</p>
+</div>
+</div><div class="column fragment" style="width:50%;">
+<ul>
+<li>Es el mejor clasificador posible <strong>si conociéramos</strong> <span class="math inline">\Pr(Y\mid X)</span> exactamente. Su error, el <strong>error de Bayes</strong>, es un piso irreducible: ni el modelo verdadero puede bajarlo. En la práctica usamos <span class="math inline">\hat p</span> en vez de <span class="math inline">p</span>, y aproximamos esa regla.</li>
+<li><strong>En nuestros datos:</strong> a <span class="math inline">\tau=0.5</span> el modelo clasifica bien a 2925 de 3000 personas; al mejor <span class="math inline">\tau</span> para accuracy (0.58), a 2927. La teoría y los datos coinciden.</li>
+</ul>
+</div></div>
+<div class="fragment">
+<div class="content-box-primary">
+<p>Esta es la respuesta a la pregunta del comienzo: <span class="math inline">\tau=0.5</span> es óptimo <strong>para accuracy</strong>. No para F1, y no cuando los errores cuestan distinto.</p>
+</div>
+</div>
+</section>
+<section id="cuando-los-errores-no-cuestan-lo-mismo" class="slide level2">
+<h2>Cuando los errores no cuestan lo mismo</h2>
+<p>El banco decide si <strong>intervenir</strong> (por ejemplo, reducir el cupo de la tarjeta) a cada cliente. Problemas si:</p>
+<ul>
+<li><strong>FP:</strong> intervenimos a alguien que iba a pagar. Costo <span class="math inline">C_{FP}</span> (un buen cliente molesto).</li>
+<li><strong>FN:</strong> no intervenimos a alguien que no pagará. Costo <span class="math inline">C_{FN}</span> (una deuda perdida).</li>
+</ul>
+<div class="fragment">
+<p>Para una persona con probabilidad <span class="math inline">p</span> de hacer default, el <strong>costo esperado</strong> de cada opción es:</p>
+<p><span class="math display">
+\text{intervenir: } C_{FP}\, \times (1-p) \qquad\qquad \text{no intervenir: } C_{FN}\,\times p
+</span></p>
+</div>
+<div class="fragment">
+<p>Conviene intervenir cuando eso cuesta menos: <span class="math inline">C_{FP}(1-p) &lt; C_{FN}\,p \iff C_{FP} &lt; (C_{FP}+C_{FN})\,p</span>. Es decir, cuando <span class="math inline">p</span> supera:</p>
+<div class="content-box-yellow">
+<p><span class="math display">
+\tau^*=\frac{C_{FP}}{C_{FP}+C_{FN}}
+</span></p>
+</div>
+</div>
+<div class="fragment">
+<ul>
+<li>Si <span class="math inline">C_{FP}=C_{FN}</span>, entonces <span class="math inline">\tau^*=0.5</span>: <strong>el clasificador de Bayes es el caso de costos iguales</strong>.</li>
+<li>Si no detectar un default cuesta 5 veces más que una falsa alarma (<span class="math inline">C_{FN}=5</span>, <span class="math inline">C_{FP}=1</span>): <span class="math inline">\tau^*=1/6\approx0.17</span>.</li>
+</ul>
+</div>
+</section>
+<section id="aplicando-el-costo-a-default" class="slide level2">
+<h2>Aplicando el costo a <code>Default</code></h2>
+<div class="columns">
+<div class="column" style="width:55%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="class_15_files/figure-revealjs/cost-plot-1.png" class="quarto-figure quarto-figure-center" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:45%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Criterio</th>
+<th style="text-align: right;">τ</th>
+<th style="text-align: right;">Costo / 100</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Bayes</td>
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;">10.90</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Máxima accuracy</td>
+<td style="text-align: right;">0.58</td>
+<td style="text-align: right;">11.50</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Máximo F1</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">8.83</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">τ* teórico</td>
+<td style="text-align: right;">0.17</td>
+<td style="text-align: right;">9.03</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="fragment">
+<ul>
+<li>Pasar de <span class="math inline">\tau=0.5</span> a <span class="math inline">\tau^*</span> baja el costo de 10.90 a 9.03 por cada 100 personas (17% menos), <strong>sin tocar el modelo</strong>.</li>
+<li>La curva es casi plana alrededor del mínimo: umbrales entre ≈0.15 y 0.35 cuestan parecido.</li>
+</ul>
+</div>
+</div></div>
+<div class="fragment">
+<div class="content-box-primary">
+<p>El costo cambia la <strong>decisión</strong>, no el modelo ni sus métricas de calidad. Con dos clases colapsa en un número (<span class="math inline">\tau^*</span>); con <span class="math inline">J</span> clases necesitaremos una matriz de costos.</p>
+</div>
+</div>
+</section></section>
+<section>
+<section id="de-binaria-a-multinomial" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
+<h1>De binaria a multinomial</h1>
+
+</section>
+<section id="más-de-dos-clases-softmax" class="slide level2">
+<h2>Más de dos clases: softmax</h2>
+<p><br></p>
+<p><em>Softmax</em> generaliza la función logística a <span class="math inline">J</span> categorías. Cada categoría tiene su predictor lineal <span class="math inline">\eta_j=\beta_{j0}+\beta_{j1}x_1+\cdots</span>, y:</p>
+<p><span class="math display">
+\Pr(Y=j\mid X)=\frac{\exp(\eta_j)}{\sum_{k=1}^J\exp(\eta_k)}
+</span></p>
+<p><br></p>
+<div class="fragment">
+<ul>
+<li>Ejemplo con 3 categorías: <span class="math inline">\eta=(0,\,1,\,2)\Rightarrow\exp(\eta)=(1,\,2.72,\,7.39)\Rightarrow\Pr(Y\mid X)\approx(0.09,\,0.24,\,0.67)</span>. Las probabilidades suman 1.</li>
+</ul>
+</div>
+</section>
+<section id="binario-vs.-multinomial-la-misma-estructura" class="slide level2">
+<h2>Binario vs.&nbsp;multinomial: la misma estructura</h2>
+<p><br></p>
 <table class="caption-top">
 <colgroup>
 <col style="width: 33%">
@@ -443,197 +1383,7 @@ D_{\text{residual}}=2n\times\overline{\text{log-loss}}.
 </colgroup>
 <thead>
 <tr class="header">
-<th>Propiedad</th>
-<th>Pregunta</th>
-<th>Métrica</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Probabilidades</td>
-<td>¿asigna riesgo correcto?</td>
-<td>log-loss, Brier</td>
-</tr>
-<tr class="even">
-<td>Ranking</td>
-<td>¿ordena altas sobre bajas?</td>
-<td>ROC AUC</td>
-</tr>
-<tr class="odd">
-<td>Decisión</td>
-<td>¿qué errores produce al actuar?</td>
-<td>sensibilidad, precisión, costo</td>
-</tr>
-</tbody>
-</table>
-<p>Una sola accuracy mezcla las tres preguntas y depende del umbral.</p>
-</section>
-<section id="discriminación-no-es-calibración" class="slide level2">
-<h2>Discriminación no es calibración</h2>
-<ul>
-<li><strong>Discriminación:</strong> una hora alta recibe más score que una baja.</li>
-<li><strong>Calibración:</strong> entre horas con <span class="math inline">\widehat p\approx0.7</span>, cerca de 70% son altas.</li>
-</ul>
-<p>Un modelo puede ordenar bien y exagerar los riesgos. La operación necesita ambas: priorizar y dimensionar capacidad.</p>
-</section></section>
-<section>
-<section id="aplicación-capital-bikeshare" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
-<h1>Aplicación: Capital Bikeshare</h1>
-
-</section>
-<section id="especificar-el-modelo-con-información-disponible" class="slide level2">
-<h2>1 · Especificar el modelo con información disponible</h2>
-<ul>
-<li>clima: relaciones potencialmente no lineales;</li>
-<li>hora × día hábil: picos de commuting;</li>
-<li>seno/coseno del mes: estacionalidad circular.</li>
-</ul>
-<p>No usamos <code>bikers</code>: sería conocer el outcome al puntuar.</p>
-</section>
-<section id="empezar-por-un-baseline" class="slide level2">
-<h2>2 · Empezar por un baseline</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 3
-  modelo                       probabilidad_constante log_loss_validación
-  &lt;chr&gt;                                         &lt;dbl&gt;               &lt;dbl&gt;
-1 Prevalencia de entrenamiento                  0.250               0.708</code></pre>
-</div>
-</div>
-<p>Un modelo útil debe superar esta regla: asignar a toda hora el mismo riesgo histórico.</p>
-</section>
-<section id="ajustar-solo-con-el-pasado" class="slide level2">
-<h2>3 · Ajustar solo con el pasado</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 10 × 5
-   término      Estimate `Std. Error` `z value` `Pr(&gt;|z|)`
-   &lt;chr&gt;           &lt;dbl&gt;        &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;
- 1 temp             48.900         4.110   11.900      0.000
- 2 I(temp^2)       -38.400         3.340  -11.500      0.000
- 3 (Intercept)     -38.100      1683.     -0.023   9.820e- 1
- 4 factor(hr)14     26.200      1683.      0.016   9.880e- 1
- 5 factor(hr)13     25.700      1683.      0.015   9.880e- 1
- 6 factor(hr)15     25.700      1683.      0.015   9.880e- 1
- 7 factor(hr)12     25.500      1683.      0.015   9.880e- 1
- 8 factor(hr)16     25.300      1683.      0.015   9.880e- 1
- 9 factor(hr)17     25.100      1683.      0.015   9.880e- 1
-10 factor(hr)11     24.600      1683.      0.015   9.880e- 1</code></pre>
-</div>
-</div>
-<p>Los coeficientes describen cambios condicionales en log-odds. En un flujo predictivo, su primer examen no es el valor-<span class="math inline">p</span>: es si las probabilidades generalizan a validación.</p>
-</section>
-<section id="evaluar-probabilidades-en-validación" class="slide level2">
-<h2>4 · Evaluar probabilidades en validación</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2 × 4
-  modelo      log_loss  brier ROC_AUC
-  &lt;chr&gt;          &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;
-1 Prevalencia    0.708 0.254    0.500  
-2 Logit          0.301 0.089   0.967</code></pre>
-</div>
-</div>
-<p>Log-loss y Brier evalúan magnitud de probabilidades; ROC AUC evalúa ranking sin fijar todavía una acción.</p>
-</section>
-<section id="elegir-el-umbral-por-costo" class="slide level2">
-<h2>5 · Elegir el umbral por costo</h2>
-
-<img data-src="class_15_files/figure-revealjs/threshold-cost-1.png" width="960" class="r-stretch"><div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 2
-  umbral_elegido costo_validación
-           &lt;dbl&gt;            &lt;dbl&gt;
-1           0.060              275</code></pre>
-</div>
-</div>
-<p>El test no participa en esta elección.</p>
-</section>
-<section id="reajustar-y-abrir-el-test-una-vez" class="slide level2">
-<h2>6 · Reajustar y abrir el test una vez</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2 × 8
-  modelo      log_loss brier ROC_AUC sensitivity specificity precision cost_per_100
-  &lt;chr&gt;          &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;     &lt;dbl&gt;        &lt;dbl&gt;
-1 Prevalencia    0.577 0.194   0.500         1           0         0.264         73.600
-2 Logit          0.418 0.110   0.942       0.824       0.884     0.718         22.400</code></pre>
-</div>
-</div>
-<p>El resultado final debe reportar probabilidad, ranking y costo. Elegir solo la métrica que “se ve mejor” después de observar test sería otra forma de filtración.</p>
-</section>
-<section id="leer-los-errores-como-decisiones" class="slide level2">
-<h2>7 · Leer los errores como decisiones</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>         acción
-observado no priorizar priorizar
-     baja         1138       149
-     alta           81       380</code></pre>
-</div>
-</div>
-<p>La matriz debe leerse con la solicitud al lado: ¿cuántas horas críticas no anticipamos y cuánta capacidad extra movilizamos?</p>
-</section>
-<section id="la-curva-roc-muestra-el-intercambio-completo" class="slide level2">
-<h2>8 · La curva ROC muestra el intercambio completo</h2>
-
-<img data-src="class_15_files/figure-revealjs/roc-plot-1.png" width="960" class="r-stretch"><p>ROC AUC es la probabilidad de que una hora alta reciba mayor score que una baja elegidas al azar. No dice qué umbral usar: eso exige costos.</p>
-</section>
-<section id="verificar-calibración-fuera-de-muestra" class="slide level2">
-<h2>9 · Verificar calibración fuera de muestra</h2>
-
-<img data-src="class_15_files/figure-revealjs/calibration-1.png" width="960" class="r-stretch"></section>
-<section id="seguir-una-predicción-concreta" class="slide level2">
-<h2>10 · Seguir una predicción concreta</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 9
-    día  hora día_hábil temperatura probabilidad umbral acción    demanda_observada clase_observada
-  &lt;dbl&gt; &lt;int&gt; &lt;fct&gt;           &lt;dbl&gt;        &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;                 &lt;dbl&gt; &lt;chr&gt;          
-1   298     8 hábil            0.440        1.000   0.060 priorizar               408 alta           </code></pre>
-</div>
-</div>
-<p>Ésta es la interfaz real del modelo: una fila conocida al cierre del día → una probabilidad → una acción trazable.</p>
-</section>
-<section id="localizar-dónde-falla" class="slide level2">
-<h2>11 · Localizar dónde falla</h2>
-
-<img data-src="class_15_files/figure-revealjs/error-by-hour-1.png" width="960" class="r-stretch"><p>Una métrica global puede ocultar franjas horarias sistemáticamente difíciles. Ese patrón puede justificar nuevas variables o un modelo más flexible.</p>
-</section>
-<section id="lo-que-esta-demostración-todavía-no-resuelve" class="slide level2">
-<h2>Lo que esta demostración todavía no resuelve</h2>
-<ul>
-<li><strong>Forecast real:</strong> usamos clima observado como proxy.</li>
-<li><strong>Deriva:</strong> la demanda y la red de estaciones pueden cambiar.</li>
-<li><strong>Capacidad:</strong> una probabilidad no indica cuántas bicicletas mover.</li>
-<li><strong>Interferencia:</strong> rebalancear cambia el outcome que queremos predecir.</li>
-<li><strong>Causalidad:</strong> un coeficiente no mide el efecto de intervenir sobre el clima o el calendario.</li>
-</ul>
-<p>Una aplicación honesta separa desempeño del modelo, política operativa e impacto causal.</p>
-</section></section>
-<section>
-<section id="extensión-multinomial" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
-<h1>Extensión multinomial</h1>
-
-</section>
-<section id="cuando-hay-más-de-dos-acciones" class="slide level2">
-<h2>Cuando hay más de dos acciones</h2>
-<p>Podríamos clasificar la demanda en <code>baja</code>, <code>media</code> y <code>alta</code>:</p>
-<p><span class="math display">
-\mathbb P(Y=j\mid X)
-=
-\frac{\exp(\eta_j)}
-{\sum_{k=1}^{J}\exp(\eta_k)},
-\qquad j=1,\dots,J.
-</span></p>
-<p>El softmax genera una distribución que suma 1. La acción podría ser “retirar”, “no intervenir” o “agregar” bicicletas.</p>
-</section>
-<section id="binario-y-multinomial-comparten-la-lógica" class="slide level2">
-<h2>Binario y multinomial comparten la lógica</h2>
-<table class="caption-top">
-<thead>
-<tr class="header">
-<th>Paso</th>
+<th></th>
 <th>Binario</th>
 <th>Multinomial</th>
 </tr>
@@ -641,98 +1391,895 @@ observado no priorizar priorizar
 <tbody>
 <tr class="odd">
 <td>Outcome</td>
-<td>alta / baja</td>
-<td>baja / media / alta</td>
+<td>2 clases</td>
+<td><span class="math inline">J</span> clases</td>
 </tr>
 <tr class="even">
-<td>Enlace</td>
-<td>sigmoide</td>
+<td>Link</td>
+<td>sigmoide (logística)</td>
 <td>softmax</td>
 </tr>
 <tr class="odd">
-<td>Pérdida</td>
-<td>cross-entropy binaria</td>
-<td>cross-entropy multiclase</td>
+<td>Salida</td>
+<td><span class="math inline">\hat p</span></td>
+<td>vector <span class="math inline">(\hat p_1,\dots,\hat p_J)</span> que suma 1</td>
 </tr>
 <tr class="even">
-<td>Output</td>
-<td><span class="math inline">p</span></td>
-<td>vector <span class="math inline">(p_1,\dots,p_J)</span></td>
+<td>Ajuste</td>
+<td>minimizar log-loss</td>
+<td>minimizar log-loss multiclase: <span class="math inline">-\frac1n\sum_i\ln\hat p_{i,y_i}</span></td>
 </tr>
 <tr class="odd">
-<td>Decisión</td>
-<td>umbral</td>
-<td>costo por matriz de acciones</td>
+<td>Regla por defecto (Bayes)</td>
+<td>predecir 1 si <span class="math inline">\hat p&gt;0.5</span></td>
+<td>predecir la clase de mayor <span class="math inline">\hat p_j</span></td>
+</tr>
+<tr class="even">
+<td>Métricas</td>
+<td>matriz 2×2, sensitivity, precision, F1, AUC</td>
+<td>matriz <span class="math inline">J\times J</span> y las mismas métricas, por clase</td>
+</tr>
+<tr class="odd">
+<td>Con costos</td>
+<td><span class="math inline">\tau^*=C_{FP}/(C_{FP}+C_{FN})</span></td>
+<td>matriz de costos (al final de esta sección)</td>
 </tr>
 </tbody>
 </table>
-<p>En varias clases, accuracy macro puede ocultar una categoría rara. Se reportan métricas por clase y promedios macro.</p>
+<p><br></p>
+<div class="fragment">
+<p>La lógica es la misma; lo que cambia es el tamaño del problema. Por eso esta sección es más corta: solo vemos lo que cambia respecto del caso binario.</p>
+</div>
 </section>
-<section id="el-costo-se-vuelve-una-matriz" class="slide level2">
-<h2>El costo se vuelve una matriz</h2>
-<p>Con tres clases, no todos los errores son equivalentes:</p>
+<section id="bikeshare-tres-niveles-de-demanda" class="slide level2">
+<h2>Bikeshare: tres niveles de demanda</h2>
+<p><br></p>
+<ul>
+<li><p>Número de usuarios por hora (<code>bikers</code>) de Capital Bikeshare (Washington D.C.) durante un año.</p></li>
+<li><p>Un <strong>split cronológico</strong> (como trabaja una empresa real): training set = primer 80% de los días (enero a octubre) y test set = último 20% (fines de octubre a diciembre). Entrenamos con el pasado y evaluamos con el futuro.</p></li>
+<li><p>Outcome: <code>bikers</code> en tres niveles, cortado en <strong>tertiles</strong> del training set: baja <span class="math inline">\le</span> 56, media hasta 175, alta sobre 175 usuarios por hora.</p></li>
+</ul>
+<p><br></p>
+<div class="fragment">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
 <table class="caption-top">
 <thead>
 <tr class="header">
-<th>Observado &nbsp;Acción</th>
-<th style="text-align: right;">Retirar</th>
-<th style="text-align: right;">No intervenir</th>
-<th style="text-align: right;">Agregar</th>
+<th style="text-align: left;">Conjunto</th>
+<th style="text-align: right;">Baja</th>
+<th style="text-align: right;">Media</th>
+<th style="text-align: right;">Alta</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Baja</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">4</td>
+<td style="text-align: left;">Training set</td>
+<td style="text-align: right;">0.336</td>
+<td style="text-align: right;">0.331</td>
+<td style="text-align: right;">0.333</td>
 </tr>
 <tr class="even">
-<td>Media</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">2</td>
-</tr>
-<tr class="odd">
-<td>Alta</td>
-<td style="text-align: right;">6</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">0</td>
+<td style="text-align: left;">Test set</td>
+<td style="text-align: right;">0.345</td>
+<td style="text-align: right;">0.348</td>
+<td style="text-align: right;">0.307</td>
 </tr>
 </tbody>
 </table>
-<p>La decisión óptima minimiza costo esperado:</p>
-<p><span class="math display">
-a^*(x)=\arg\min_a\sum_j C(a,j)\,\widehat P(Y=j\mid x).
-</span></p>
-<p>Predecir probabilidades permite cambiar la política sin reajustar el modelo.</p>
+</div>
+</div>
+</div>
 </section>
-<section id="ejercicio-aplicado" class="slide level2">
-<h2>Ejercicio aplicado</h2>
-<ol type="1">
-<li>Cambie el costo de falso negativo de 3 a 5.</li>
-<li>Elija un nuevo umbral usando <strong>solo validación</strong>.</li>
-<li>Compare costo y sensibilidad en test.</li>
-<li>Identifique dos horas con alta probabilidad y explique sus predictores.</li>
-<li>Proponga una variable disponible 24 horas antes que podría reducir errores.</li>
-<li>Explique por qué agregar el conteo de bicicletas de la misma hora sería filtración.</li>
-</ol>
-</section>
-<section id="en-resumen" class="slide level2">
-<h2>En resumen</h2>
+<section id="ajustar-con-nnetmultinom" class="slide level2">
+<h2>Ajustar con <code>nnet::multinom()</code></h2>
+<p><br></p>
+<div class="cell" data-layout-align="center">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href=""></a>multinomial_formula <span class="ot">&lt;-</span> demand_level <span class="sc">~</span></span>
+<span id="cb1-2"><a href=""></a>  temp <span class="sc">+</span> <span class="fu">I</span>(temp<span class="sc">^</span><span class="dv">2</span>) <span class="sc">+</span> hum <span class="sc">+</span> <span class="fu">I</span>(hum<span class="sc">^</span><span class="dv">2</span>) <span class="sc">+</span> windspeed <span class="sc">+</span></span>
+<span id="cb1-3"><a href=""></a>  holiday <span class="sc">+</span> <span class="fu">factor</span>(weathersit) <span class="sc">+</span> <span class="fu">factor</span>(hr) <span class="sc">*</span> workingday <span class="sc">+</span></span>
+<span id="cb1-4"><a href=""></a>  <span class="fu">sin</span>(<span class="dv">2</span> <span class="sc">*</span> pi <span class="sc">*</span> month <span class="sc">/</span> <span class="dv">12</span>) <span class="sc">+</span> <span class="fu">cos</span>(<span class="dv">2</span> <span class="sc">*</span> pi <span class="sc">*</span> month <span class="sc">/</span> <span class="dv">12</span>)</span>
+<span id="cb1-5"><a href=""></a></span>
+<span id="cb1-6"><a href=""></a>mlogit_train <span class="ot">&lt;-</span> <span class="fu">multinom</span>(multinomial_formula, <span class="at">data =</span> train, <span class="at">MaxNWts =</span> <span class="dv">5000</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><br></p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Ecuación</th>
+<th style="text-align: right;">Parámetros</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">ln[ P(media) / P(baja) ]</td>
+<td style="text-align: right;">59</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ln[ P(alta) / P(baja) ]</td>
+<td style="text-align: right;">59</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><br></p>
 <ul>
-<li>La solicitud predictiva define unidad, horizonte, información, acción y costo.</li>
-<li>El logit estima probabilidades; el umbral pertenece a la decisión.</li>
-<li>Likelihood, devianza y log-loss describen la misma pérdida en escalas distintas.</li>
-<li>Train estima, validación decide y test evalúa.</li>
-<li>Discriminación, calibración y costo responden preguntas diferentes.</li>
-<li>La extensión multinomial conserva la lógica y generaliza la política de acción.</li>
+<li>Predictores: los de la clase 14 (temperatura, humedad, hora × día hábil) más viento, feriado, clima y estación del año. El seno y coseno del mes hacen que diciembre y enero queden cerca.</li>
+<li><code>multinom()</code> toma <code>baja</code> como referencia y estima las dos ecuaciones a la vez.</li>
+<li>Son 118 parámetros. ¿Son demasiados? Esa pregunta abre la clase 16 (regularización).</li>
 </ul>
 </section>
-<section id="cierre" class="slide level2 inverse center middle closing" data-background-color="#8B1E2D">
-<h2>Cierre</h2>
-<p><strong>Primero la probabilidad. Después la decisión.</strong></p>
-<p>En la próxima clase: controlar complejidad sin perder honestidad predictiva.</p>
+<section id="probabilidades-y-clase-predicha" class="slide level2">
+<h2>Probabilidades y clase predicha</h2>
+<p><br></p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<table class="caption-top" style="width:100%;">
+<colgroup>
+<col style="width: 31%">
+<col style="width: 10%">
+<col style="width: 12%">
+<col style="width: 10%">
+<col style="width: 20%">
+<col style="width: 13%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Hora</th>
+<th style="text-align: right;">P(baja)</th>
+<th style="text-align: right;">P(media)</th>
+<th style="text-align: right;">P(alta)</th>
+<th style="text-align: left;">Clase predicha</th>
+<th style="text-align: left;">Observado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">La más claramente alta</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: left;">alta</td>
+<td style="text-align: left;">alta</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">La más claramente baja</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: left;">baja</td>
+<td style="text-align: left;">baja</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">La más incierta</td>
+<td style="text-align: right;">0.020</td>
+<td style="text-align: right;">0.492</td>
+<td style="text-align: right;">0.488</td>
+<td style="text-align: left;">media</td>
+<td style="text-align: left;">media</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><br></p>
+<div class="fragment">
+<ul>
+<li>Las tres probabilidades de cada hora suman 1.</li>
+<li>La clase predicha es la de <strong>mayor probabilidad</strong>: el clasificador de Bayes con <span class="math inline">J</span> clases, el equivalente de <span class="math inline">\tau=0.5</span> en el caso binomial.</li>
+</ul>
+</div>
+</section>
+<section id="la-matriz-de-confusión-ahora-es-33" class="slide level2">
+<h2>La matriz de confusión ahora es 3×3</h2>
+<p><br></p>
+<div class="columns">
+<div class="column" style="width:44%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: right;">Real baja</th>
+<th style="text-align: right;">Real media</th>
+<th style="text-align: right;">Real alta</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Predice baja</td>
+<td style="text-align: right;">544</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Predice media</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">464</td>
+<td style="text-align: right;">232</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Predice alta</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">304</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div><div class="column fragment" style="width:56%;">
+<ul>
+<li>Misma orientación que antes: <strong>filas = predicción, columnas = realidad</strong>. La diagonal son los aciertos.</li>
+<li>El error se concentra en la frontera media–alta: 232 horas de demanda alta fueron predichas como media.</li>
+<li>Baja y alta casi nunca se confunden (2 casos): están lejos en la escala de <code>bikers</code>.</li>
+<li>Lo mismo se ve en el AUC uno-contra-el-resto: 0.97 para baja, 0.94 para alta y solo 0.83 para media, que queda “entre” las otras dos.</li>
+</ul>
+</div></div>
+</section>
+<section id="las-métricas-generalizadas-a-j-clases" class="slide level2">
+<h2>Las métricas, generalizadas a <span class="math inline">J</span> clases</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Binario</th>
+<th>Multiclase</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Matriz 2×2</td>
+<td>Matriz <span class="math inline">J\times J</span></td>
+</tr>
+<tr class="even">
+<td>Sensitivity, precision, F1</td>
+<td>Las mismas, <strong>por clase</strong> (uno contra el resto), y su promedio: macro-F1</td>
+</tr>
+<tr class="odd">
+<td>ROC y AUC</td>
+<td>Una curva por clase (uno contra el resto)</td>
+</tr>
+<tr class="even">
+<td>Calibración</td>
+<td>El mismo gráfico, una vez por clase</td>
+</tr>
+<tr class="odd">
+<td>Clasificador de Bayes: <span class="math inline">\tau=0.5</span></td>
+<td>Clasificador de Bayes: la clase de mayor <span class="math inline">\hat p_j</span></td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<div class="fragment">
+<p>La pregunta de fondo no cambia: ¿el modelo ordena bien? ¿Sus probabilidades son creíbles? ¿En qué clases se equivoca?</p>
+</div>
+</section>
+<section id="la-accuracy-esconde-a-la-clase-difícil" class="slide level2">
+<h2>La accuracy esconde a la clase difícil</h2>
+<p><br></p>
+<p>Accuracy en el test set: 0.75. Parece bien, pero miremos cada clase por separado:</p>
+<p><br></p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Nivel</th>
+<th style="text-align: right;">Precision</th>
+<th style="text-align: right;">Sensitivity</th>
+<th style="text-align: right;">F1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">baja</td>
+<td style="text-align: right;">0.842</td>
+<td style="text-align: right;">0.902</td>
+<td style="text-align: right;">0.871</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">media</td>
+<td style="text-align: right;">0.616</td>
+<td style="text-align: right;">0.762</td>
+<td style="text-align: right;">0.681</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">alta</td>
+<td style="text-align: right;">0.871</td>
+<td style="text-align: right;">0.567</td>
+<td style="text-align: right;">0.687</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Promedio (macro)</td>
+<td style="text-align: right;">0.776</td>
+<td style="text-align: right;">0.744</td>
+<td style="text-align: right;">0.746</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><br></p>
+<div class="fragment">
+<ul>
+<li>Cada clase se evalúa como “positiva” contra las demás (uno contra el resto).</li>
+<li><strong>Alta</strong> tiene la sensitivity más baja: se nos escapa 43% de las horas de demanda alta. La accuracy global no lo muestra.</li>
+<li><strong>macro-F1</strong> = promedio simple de los F1 por clase: cada clase pesa lo mismo, sea grande o chica.</li>
+</ul>
+</div>
+</section>
+<section id="incorporando-los-costos" class="slide level2">
+<h2>Incorporando los costos</h2>
+<p><br></p>
+<ul>
+<li>El multinomial ya es un clasificador completo: softmax entrega <span class="math inline">\widehat{\Pr}(Y=j\mid X)</span>, la regla “clase más probable” decide, y acabamos de evaluarlo de punta a punta.</li>
+</ul>
+<div class="fragment">
+<ul>
+<li>La matriz de costos es la misma capa <strong>adicional</strong>, ahora con <span class="math inline">J</span> clases.</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Se vuelve necesaria cuando los errores tienen consecuencias distintas entre sí y queremos que la decisión lo refleje. Con <span class="math inline">J</span> clases hay <span class="math inline">J(J-1)</span> errores posibles (6 con tres clases), y no tienen por qué costar lo mismo: un solo número como <span class="math inline">\tau^*</span> ya no alcanza.</li>
+</ul>
+</div>
+</section>
+<section id="construyendo-la-matriz-de-costos" class="slide level2">
+<h2>Construyendo la matriz de costos</h2>
+<p>Antes de cada hora, el operador decide qué hacer en una estación: <strong>retirar</strong> bicicletas, <strong>no intervenir</strong> o <strong>agregar</strong> bicicletas.</p>
+<div class="columns">
+<div class="column" style="width:44%;">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Acción \ Demanda</th>
+<th style="text-align: center;">Baja</th>
+<th style="text-align: center;">Media</th>
+<th style="text-align: center;">Alta</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Retirar</strong></td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">6</td>
+</tr>
+<tr class="even">
+<td><strong>No intervenir</strong></td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">2</td>
+</tr>
+<tr class="odd">
+<td><strong>Agregar</strong></td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">0</td>
+</tr>
+</tbody>
+</table>
+<p>Filas = acción (como las filas de la matriz de confusión); columnas = demanda observada.</p>
+</div><div class="column fragment" style="width:56%;">
+<ul>
+<li><strong>Diagonal:</strong> la acción adecuada para lo que pasó. Costo 0.</li>
+<li><strong>Peor error:</strong> retirar cuando la demanda resulta alta (6): estación vacía en hora punta.</li>
+<li><strong>Agregar cuando es baja</strong> (4): camión y personal para nada, y una estación llena donde nadie puede devolver.</li>
+<li><strong>No intervenir:</strong> sus errores son moderados (1 y 2). Es la opción <strong>segura</strong> cuando no estamos seguros.</li>
+</ul>
+</div></div>
+<div class="fragment">
+<p>Los costos <strong>no se estiman con los datos</strong>: los fija quien conoce la operación, igual que <span class="math inline">C_{FP}</span> y <span class="math inline">C_{FN}</span> en el caso binario.</p>
+</div>
+</section>
+<section id="la-regla-minimizar-el-costo-esperado" class="slide level2">
+<h2>La regla: minimizar el costo esperado</h2>
+<p>Para cada acción <span class="math inline">a</span>, el costo esperado pondera cada costo por la probabilidad de que ocurra esa demanda:</p>
+<p><span class="math display">
+a^*(x)=\arg\min_a\ \sum_{j} C(a,j)\,\widehat{\Pr}(Y=j\mid x)
+</span></p>
+<p><br></p>
+<div class="fragment">
+<p>Ejemplo con <span class="math inline">\widehat{\Pr}(\text{baja},\text{media},\text{alta})=(0.50,\ 0.15,\ 0.35)</span>. La clase más probable es baja, así que la regla de Bayes diría <strong>retirar</strong>. Pero:</p>
+<p><span class="math display">
+\begin{aligned}
+\text{retirar:}\quad &amp; 0(0.50)+2(0.15)+6(0.35)=2.4\\
+\text{no intervenir:}\quad &amp; 1(0.50)+0(0.15)+2(0.35)=\mathbf{1.2}\\
+\text{agregar:}\quad &amp; 4(0.50)+2(0.15)+0(0.35)=2.3
+\end{aligned}
+</span></p>
+<p><br></p>
+</div>
+<div class="fragment">
+<p>La regla de costos elige <strong>no intervenir</strong>: baja es lo más probable, pero si nos equivocamos y la demanda es alta, retirar es carísimo.</p>
+</div>
+</section>
+<section id="dos-reglas-un-mismo-modelo" class="slide level2">
+<h2>Dos reglas, un mismo modelo</h2>
+<p><br></p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Regla</th>
+<th style="text-align: right;">Costo por 100 horas</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Bayes: acción de la clase más probable</td>
+<td style="text-align: right;">46.85</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Costos: mínimo costo esperado</td>
+<td style="text-align: right;">44.74</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><br></p>
+<div class="fragment">
+<ul>
+<li>Las probabilidades son las mismas en las dos filas. Solo cambia la regla.</li>
+<li>La regla de costos cambia la acción en 83 de 1748 horas (4.7%), casi siempre de “retirar” a “no intervenir”, y baja el costo total en 4.5%.</li>
+<li>Es la misma lección del caso binario: <strong>la decisión puede cambiar aunque el modelo no cambie</strong>.</li>
+</ul>
+</div>
+</section></section>
+<section>
+<section id="elegir-tau-sin-tocar-el-test-set-validation-set-y-cross-validation" class="title-slide slide level1 inverse center middle" data-background-color="#4A1942">
+<h1>Elegir <span class="math inline">\tau</span> sin tocar el test set: validation set y cross-validation</h1>
+
+</section>
+<section id="el-problema-elegimos-tau-mirando-el-test-set" class="slide level2">
+<h2>El problema: elegimos <span class="math inline">\tau</span> mirando el test set</h2>
+<p><br></p>
+<ul>
+<li>En la sección de <code>Default</code> elegimos <span class="math inline">\tau</span> <strong>mirando el test set</strong> (F1 máximo en 0.33; costo mínimo en 0.28) y medimos el desempeño en ese <strong>mismo</strong> test set.</li>
+<li>Es el doble uso de datos: el número que reportamos queda <strong>optimista</strong>, porque elegimos justo el <span class="math inline">\tau</span> que mejor le funcionó a esas 3000 personas.</li>
+</ul>
+<div class="fragment">
+<ul>
+<li><span class="math inline">\tau</span> es un <strong>hiperparámetro</strong>: un valor que fijamos desde afuera, no algo que la likelihood estime.</li>
+</ul>
+<p><br></p>
+</div>
+<div class="fragment">
+<div class="content-box-primary">
+<p>Elegir un hiperparámetro también es usar datos. Si lo elegimos con el test set, el test set ya no mide el desempeño en casos nuevos.</p>
+</div>
+</div>
+</section>
+<section id="tres-conjuntos-tres-trabajos" class="slide level2">
+<h2>Tres conjuntos, tres trabajos</h2>
+<p><br></p>
+<p>En la anterior usamos dos conjuntos: training set y test/testing set . Eso alcanza para <strong>medir</strong> un modelo ya decidido. Para <strong>elegir</strong> algo con datos necesitamos un tercer conjunto, el <strong>validation set</strong>:</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Conjunto</th>
+<th>Para qué se usa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Training set</strong></td>
+<td>estimar los coeficientes <span class="math inline">\beta</span></td>
+</tr>
+<tr class="even">
+<td><strong>Validation set</strong></td>
+<td>elegir hiperparámetros, como <span class="math inline">\tau</span>, con casos que no se usaron para estimar <span class="math inline">\beta</span></td>
+</tr>
+<tr class="odd">
+<td><strong>Test set</strong></td>
+<td>evaluar <strong>una sola vez</strong>, al final, con <span class="math inline">\beta</span> y <span class="math inline">\tau</span> ya fijos</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<div class="fragment">
+<div class="content-box-primary">
+<p>El validation set sirve para <strong>elegir</strong>; el test set, para <strong>reportar</strong>. El test set no participa en ninguna decisión.</p>
+</div>
+</div>
+</section>
+<section id="basta-con-un-solo-validation-set" class="slide level2">
+<h2>¿Basta con un solo validation set?</h2>
+<p><br></p>
+<p>Un solo split es frágil (clase 14). Repetimos el split 70/30 de <code>Default</code> con 8 semillas distintas, mismo modelo:</p>
+<div class="columns">
+<div class="column" style="width:42%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Split</th>
+<th style="text-align: right;">Defaults en el 30%</th>
+<th style="text-align: right;">AUC</th>
+<th style="text-align: right;">F1 (τ = 0.5)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">0.938</td>
+<td style="text-align: right;">0.336</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: right;">0.964</td>
+<td style="text-align: right;">0.528</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">83</td>
+<td style="text-align: right;">0.932</td>
+<td style="text-align: right;">0.353</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">86</td>
+<td style="text-align: right;">0.943</td>
+<td style="text-align: right;">0.474</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">94</td>
+<td style="text-align: right;">0.932</td>
+<td style="text-align: right;">0.453</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">97</td>
+<td style="text-align: right;">0.941</td>
+<td style="text-align: right;">0.361</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">91</td>
+<td style="text-align: right;">0.947</td>
+<td style="text-align: right;">0.504</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">97</td>
+<td style="text-align: right;">0.958</td>
+<td style="text-align: right;">0.421</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div><div class="column" style="width:58%;">
+<ul>
+<li>El AUC varía entre 0.93 y 0.96.</li>
+<li>El F1 varía mucho más: entre 0.34 y 0.53.</li>
+</ul>
+<div class="fragment">
+<ul>
+<li>No cambió el modelo: cambió <strong>qué personas</strong> quedaron del lado de evaluación. Las métricas que dependen de un umbral son más ruidosas, porque dependen de unas 90 personas que hicieron default.</li>
+<li>Un <span class="math inline">\tau</span> elegido con un solo validation set heredaría esa suerte.</li>
+</ul>
+</div>
+</div></div>
+</section>
+<section id="validation-set-con-k-fold-cross-validation" class="slide level2">
+<h2>Validation set con <span class="math inline">k</span>-fold cross-validation</h2>
+<ul>
+<li>Es la CV de la clase anterior pero ahora se hace <strong>dentro del training set</strong>, y el test set queda aparte, sin tocar.</li>
+<li>En cada iteración, un fold hace de <strong>validation set</strong>: el modelo se ajusta con los otros 4 folds y se evalúa en ese. (En la clase 14 a ese fold le decíamos testing set; hoy es validation set porque lo usamos para <strong>elegir</strong>).</li>
+<li>Cada caso del training set es validation exactamente una vez: promediamos sobre 5 validation sets en vez de depender de uno.</li>
+</ul>
+
+<img data-src="class_15_files/figure-revealjs/cv-diagram-1.png" class="quarto-figure quarto-figure-center r-stretch" style="width:80.0%"></section>
+<section id="las-métricas-en-los-5-validation-sets" class="slide level2">
+<h2>Las métricas en los 5 validation sets</h2>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<table class="caption-top">
+<colgroup>
+<col style="width: 7%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 7%">
+<col style="width: 11%">
+<col style="width: 15%">
+<col style="width: 15%">
+<col style="width: 12%">
+<col style="width: 7%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Fold</th>
+<th style="text-align: right;">Defaults</th>
+<th style="text-align: right;">Log-loss</th>
+<th style="text-align: right;">AUC</th>
+<th style="text-align: right;">Accuracy</th>
+<th style="text-align: right;">Sensitivity</th>
+<th style="text-align: right;">Specificity</th>
+<th style="text-align: right;">Precision</th>
+<th style="text-align: right;">F1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">0.106</td>
+<td style="text-align: right;">0.937</td>
+<td style="text-align: right;">0.964</td>
+<td style="text-align: right;">0.279</td>
+<td style="text-align: right;">0.995</td>
+<td style="text-align: right;">0.708</td>
+<td style="text-align: right;">0.400</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">0.057</td>
+<td style="text-align: right;">0.965</td>
+<td style="text-align: right;">0.983</td>
+<td style="text-align: right;">0.353</td>
+<td style="text-align: right;">0.999</td>
+<td style="text-align: right;">0.857</td>
+<td style="text-align: right;">0.500</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">0.071</td>
+<td style="text-align: right;">0.949</td>
+<td style="text-align: right;">0.979</td>
+<td style="text-align: right;">0.357</td>
+<td style="text-align: right;">0.998</td>
+<td style="text-align: right;">0.833</td>
+<td style="text-align: right;">0.500</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">0.086</td>
+<td style="text-align: right;">0.955</td>
+<td style="text-align: right;">0.969</td>
+<td style="text-align: right;">0.327</td>
+<td style="text-align: right;">0.993</td>
+<td style="text-align: right;">0.654</td>
+<td style="text-align: right;">0.436</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">0.082</td>
+<td style="text-align: right;">0.950</td>
+<td style="text-align: right;">0.971</td>
+<td style="text-align: right;">0.292</td>
+<td style="text-align: right;">0.996</td>
+<td style="text-align: right;">0.700</td>
+<td style="text-align: right;">0.412</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Media</td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;">0.080</td>
+<td style="text-align: right;">0.951</td>
+<td style="text-align: right;">0.973</td>
+<td style="text-align: right;">0.321</td>
+<td style="text-align: right;">0.996</td>
+<td style="text-align: right;">0.751</td>
+<td style="text-align: right;">0.450</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DE</td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;">0.018</td>
+<td style="text-align: right;">0.010</td>
+<td style="text-align: right;">0.008</td>
+<td style="text-align: right;">0.035</td>
+<td style="text-align: right;">0.002</td>
+<td style="text-align: right;">0.089</td>
+<td style="text-align: right;">0.048</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Cada fila: el modelo ajustado con 4 folds y evaluado en el quinto, su validation set. Métricas con umbral a <span class="math inline">\tau=0.5</span>. DE = desviación estándar entre folds.</p>
+<div class="fragment">
+<ul>
+<li><strong>Sin umbral</strong> (log-loss, AUC): estables entre folds.</li>
+<li><strong>Accuracy:</strong> estable, pero siempre alta; ya sabemos por qué no basta.</li>
+<li><strong>Con umbral</strong> (sensitivity, precision, F1): mucho más variables. Cada validation set tiene solo entre 34 y 61 defaults: un par de casos difíciles mueven el número.</li>
+</ul>
+</div>
+</section>
+<section id="la-tentación-el-mejor-tau-de-cada-validation-set" class="slide level2">
+<h2>La tentación: el mejor <span class="math inline">\tau</span> de cada validation set</h2>
+<p><br></p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Fold</th>
+<th style="text-align: right;">Defaults</th>
+<th style="text-align: right;">Mejor τ para F1</th>
+<th style="text-align: right;">Mejor τ para costo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">61</td>
+<td style="text-align: right;">0.25</td>
+<td style="text-align: right;">0.25</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">0.31</td>
+<td style="text-align: right;">0.31</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">0.31</td>
+<td style="text-align: right;">0.17</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">0.22</td>
+<td style="text-align: right;">0.20</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">0.15</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="fragment">
+<ul>
+<li>El mejor <span class="math inline">\tau</span> para F1 va de 0.22 a 0.33 según el validation set; el mejor para costo, de 0.15 a 0.31.</li>
+<li>Cada validation set tiene pocos defaults, y alrededor del óptimo las curvas son casi planas: un par de casos basta para mover el máximo de un lado a otro.</li>
+</ul>
+</div>
+</section>
+<section id="la-forma-correcta-promediar-la-curva-y-después-optimizar" class="slide level2">
+<h2>La forma correcta: promediar la curva, y después optimizar</h2>
+<div class="columns">
+<div class="column" style="width:60%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="class_15_files/figure-revealjs/tau-cv-plot-1.png" class="quarto-figure quarto-figure-center" style="width:92.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:40%;">
+<div class="fragment">
+<ul>
+<li><strong>Líneas grises:</strong> la curva en cada validation set. <strong>Línea gruesa:</strong> el promedio de las 5 curvas.</li>
+<li>Promediar suaviza el ruido de cada validation set, y el óptimo de la curva promedio es estable.</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>Resultado: <span class="math inline">\tau_{F1}^{CV}=0.31</span> y <span class="math inline">\tau_{\text{costo}}^{CV}=0.17</span>.</li>
+<li>El <span class="math inline">\tau</span> elegido con CV para costo coincide con el <span class="math inline">\tau^*</span> teórico (1/6 ≈ 0.17). El 0.28 que encontramos en el test set era ruido.</li>
+</ul>
+</div>
+</div></div>
+<div class="fragment">
+<div class="content-box-primary">
+<p>No promediar “el mejor <span class="math inline">\tau</span> de cada validation set”: promedien la curva completa y busquen el óptimo de la curva promedio.</p>
+</div>
+</div>
+</section>
+<section id="el-flujo-completo-el-test-set-una-sola-vez" class="slide level2">
+<h2>El flujo completo: el test set, una sola vez</h2>
+<ol type="1">
+<li><strong>Split:</strong> training set y test set. El test set se guarda.</li>
+<li><strong>Validation:</strong> 5-fold CV dentro del training set; cada fold hace una vez de validation set. Ahí estimamos las métricas y elegimos <span class="math inline">\tau</span>.</li>
+<li><strong>Training:</strong> ajustar el modelo final (<span class="math inline">\beta</span>) con todo el training set.</li>
+<li><strong>Test:</strong> evaluar <strong>una sola vez</strong>, con <span class="math inline">\beta</span> y <span class="math inline">\tau</span> ya fijos.</li>
+</ol>
+<div class="fragment">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<table class="caption-top">
+<colgroup>
+<col style="width: 49%">
+<col style="width: 7%">
+<col style="width: 15%">
+<col style="width: 28%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Cómo se eligió τ</th>
+<th style="text-align: right;">τ</th>
+<th style="text-align: right;">F1 en test</th>
+<th style="text-align: right;">Costo / 100 en test</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Por defecto: clasificador de Bayes</td>
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;">0.468</td>
+<td style="text-align: right;">10.90</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Para F1, en validation (CV)</td>
+<td style="text-align: right;">0.31</td>
+<td style="text-align: right;">0.544</td>
+<td style="text-align: right;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Para F1, mirando el test set</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">0.560</td>
+<td style="text-align: right;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Para costo, en validation (CV)</td>
+<td style="text-align: right;">0.17</td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;">9.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Para costo, mirando el test set</td>
+<td style="text-align: right;">0.28</td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;">8.70</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="fragment">
+<p>Los <span class="math inline">\tau</span> elegidos mirando el test set “ganan” en el test set, pero por construcción: se eligieron ahí. Esa ventaja es optimismo, no desempeño real. Los números honestos son los de las filas donde <span class="math inline">\tau</span> se eligió en validation.</p>
+</div>
+</section>
+<section id="en-resumen" class="slide level2">
+<h2>En resumen:</h2>
+<ol type="1">
+<li><strong>Clasificar:</strong> convertir una probabilidad <span class="math inline">\hat p</span> en una clase <span class="math inline">\hat y</span>.</li>
+<li><strong>Medir:</strong> matriz de confusión, métricas, curvas ROC y precision-recall, calibración.</li>
+<li><strong>Decidir:</strong> clasificador de Bayes y costo de los errores.</li>
+<li><strong>Validar:</strong> training set para estimar, validation set (con CV) para elegir <span class="math inline">\tau</span>, test set una sola vez para reportar.</li>
+</ol>
+<div class="fragment">
+<p>Referencia: James et al.&nbsp;(2021), <em>An Introduction to Statistical Learning</em> (ISLR), 2ª ed., capítulo 4 (secciones 4.3 y 4.4.2, que usan los mismos datos <code>Default</code> de hoy) y capítulo 5 (cross-validation).</p>
+</div>
+</section>
+<section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#8B1E2D">
+<h2>Gracias</h2>
+<p><strong>Hasta la próxima clase</strong></p>
 <p>Mauricio Bucca</p>
 
 </section></section>

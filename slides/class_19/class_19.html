@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-29">
+  <meta name="dcterms.date" content="2026-11-15">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -149,7 +149,7 @@
 
 <section id="title-slide" data-background-color="#034694" class="quarto-title-block center">
   <h1 class="title">Análisis de Datos Categóricos (SOC3070)</h1>
-  <p class="subtitle">Clasificación de Texto: de Bag-of-Words a los LLM</p>
+  <p class="subtitle">Clasificación de texto: de TF–IDF a representaciones contextuales</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -159,7 +159,7 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-29</p>
+  <p class="date">2026-11-15</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
@@ -177,6 +177,99 @@ Mauricio Bucca · Sociología UC
 <p>cierre: qué técnica usar, qué evidencia reportar y qué límites reconocer.</p>
 </div>
 </div>
+</section>
+<section id="objetivos-de-aprendizaje" class="slide level2">
+<h2>Objetivos de aprendizaje</h2>
+<p>Al finalizar la clase podrás:</p>
+<ol type="1">
+<li>Formular una tarea de clasificación de texto como una decisión operativa, con una etiqueta y costos explícitos.</li>
+<li>Construir una matriz documento–término sin filtrar información del futuro.</li>
+<li>Explicar qué hacen TF–IDF, la regresión logística y LASSO en conjunto.</li>
+<li>Elegir el modelo con validación, evaluar el ranking con <code>precision@20</code> y <code>recall@20</code>, y usar umbral/costo como extensión.</li>
+<li>Explicar cómo comparar un baseline lineal interpretable con representaciones contextuales preentrenadas.</li>
+</ol>
+<div class="callout callout-note callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Note</strong></p>
+</div>
+<div class="callout-content">
+<p><strong>Criterio de salida.</strong> Podrás justificar cada decisión del pipeline y señalar qué evidencia todavía faltaría antes de desplegarlo.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="ritmo-sugerido-para-un-bloque-de-70-minutos" class="slide level2">
+<h2>Ritmo sugerido para un bloque de 70 minutos</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 30%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Minutos</th>
+<th>Foco</th>
+<th>Evidencia de aprendizaje</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0–5</td>
+<td>activación y costos</td>
+<td>etiqueta, acción y error relevante</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">5–15</td>
+<td>corpus y corte temporal</td>
+<td>partición sin leakage</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">15–30</td>
+<td>tokens, conteos y TF–IDF</td>
+<td>matriz de dos documentos</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">30–42</td>
+<td>logit y LASSO</td>
+<td>interpretación de <span class="math inline">\lambda</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">42–57</td>
+<td>validación y evaluación</td>
+<td><code>precision@20</code>, <code>recall@20</code> y costo opcional</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">57–65</td>
+<td>errores, deriva y límites</td>
+<td>una conclusión condicionada</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">65–70</td>
+<td>encoder, LLM y salida</td>
+<td>respuesta al ticket</td>
+</tr>
+</tbody>
+</table>
+<p>Las diapositivas de comparación de encoders y del protocolo de despliegue funcionan como extensión si el grupo necesita más tiempo en la construcción de la matriz.</p>
+</section>
+<section id="activación-una-predicción-es-una-decisión" class="slide level2">
+<h2>Activación · una predicción es una decisión</h2>
+<p>En parejas, durante 90 segundos:</p>
+<blockquote>
+<p>Un servicio puede revisar 20 mensajes por hora. ¿Qué mensaje priorizarías y qué error te preocuparía más?</p>
+</blockquote>
+<p>Escriban una frase para cada pregunta:</p>
+<ul>
+<li>¿Qué observamos al momento de decidir?</li>
+<li>¿Qué significa “crítico” en este ejercicio?</li>
+<li>¿Qué costo relativo tienen un falso negativo y un falso positivo?</li>
+</ul>
+<p>La respuesta de hoy empieza en estas tres decisiones. El algoritmo llega después.</p>
 </section>
 <section>
 <section id="texto-como-problema-predictivo" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
@@ -224,6 +317,64 @@ Mauricio Bucca · Sociología UC
 </table>
 <p>El modelo <strong>prioriza</strong>; no elimina la revisión humana ni responde automáticamente.</p>
 </section>
+<section id="la-ruta-de-trabajo" class="slide level2">
+<h2>La ruta de trabajo</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Paso</th>
+<th>Pregunta que resolvemos</th>
+<th>Evidencia que dejamos</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0. Definir</td>
+<td>¿Qué significa “crítica” y qué decisión apoya?</td>
+<td>etiqueta, horizonte y costos</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>1. Separar</td>
+<td>¿Qué información estaría disponible al predecir?</td>
+<td>corte temporal y protocolo</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>2. Representar</td>
+<td>¿Cómo convertimos texto en variables?</td>
+<td>tokens, vocabulario y matriz</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>3. Ajustar</td>
+<td>¿Qué relación aprendemos y cómo la regularizamos?</td>
+<td>logit + LASSO</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>4. Seleccionar</td>
+<td>¿Qué modelo y ranking elegimos?</td>
+<td>validación, no test</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>5. Auditar</td>
+<td>¿Funciona en mensajes futuros y para quién falla?</td>
+<td>métricas, calibración y errores</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Cada paso responde una pregunta distinta. Si una decisión no queda registrada, no podremos interpretar el resultado ni reproducirlo.</p>
+</section>
 <section id="por-qué-este-problema-sí-es-real" class="slide level2">
 <h2>Por qué este problema sí es real</h2>
 <p>Capital Bikeshare recibe texto libre sobre cobros, desbloqueo, estaciones, bicicletas y soporte. La tarea no es “generar una oración bonita”: es transformar ese texto en una señal útil para una decisión concreta.</p>
@@ -232,6 +383,29 @@ Mauricio Bucca · Sociología UC
 </div>
 <div class="fragment">
 <p>Una etiqueta débil reduce costo de anotación, pero no equivale a “urgencia verdadera”. Esa diferencia será parte de la evaluación.</p>
+</div>
+</section>
+<section id="la-variable-objetivo-tiene-dos-capas" class="slide level2">
+<h2>La variable objetivo tiene dos capas</h2>
+<p>En los datos observamos:</p>
+<p><span class="math display">
+r_i = \text{número de estrellas},
+\qquad
+y_i = \mathbb{1}(r_i \le 2).
+</span></p>
+<p>El modelo aprende <span class="math inline">\mathbb{P}(y_i=1\mid x_i)</span>, no aprende directamente “urgencia”. Para usarlo en un canal nuevo necesitamos validar la relación entre la etiqueta histórica y la decisión que realmente importa.</p>
+<div class="callout callout-warning callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Warning</strong></p>
+</div>
+<div class="callout-content">
+<p>Una buena métrica sobre una etiqueta equivocada puede producir una mala decisión. La validación sustantiva de la etiqueta es parte del trabajo de ML.</p>
+</div>
+</div>
 </div>
 </section>
 <section id="el-corpus-reseñas-reales-de-capital-bikeshare" class="slide level2">
@@ -268,10 +442,83 @@ Mauricio Bucca · Sociología UC
 </div>
 <ul>
 <li>Entrenamiento aprende palabras y coeficientes.</li>
-<li>Validación elige regularización y umbral.</li>
+<li>Validación elige la regularización y la regla de acción: umbral o top-<span class="math inline">k</span>.</li>
 <li>Test representa los mensajes más recientes y se abre <strong>una sola vez</strong>.</li>
 </ul>
 <p>Una partición aleatoria mezclaría versiones antiguas y nuevas de la app, ocultando deriva temporal.</p>
+</section>
+<section id="la-prevalencia-también-cambia-con-el-tiempo" class="slide level2">
+<h2>La prevalencia también cambia con el tiempo</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 4
+  conjunto      desde      hasta      proporción_crítica
+  &lt;chr&gt;         &lt;date&gt;     &lt;date&gt;     &lt;chr&gt;             
+1 Entrenamiento 2017-08-13 2021-09-27 36.100%             
+2 Validación    2021-10-02 2024-07-27 77.600%             
+3 Test          2024-08-14 2026-06-22 86.000%             </code></pre>
+</div>
+</div>
+<p>Si la prevalencia cambia mucho, el test sigue siendo honesto para ese período, pero no representa automáticamente todos los períodos futuros. El resultado debe leerse como una evaluación <strong>condicional a una ventana temporal</strong>, no como una garantía permanente.</p>
+<div class="callout callout-warning callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Warning</strong></p>
+</div>
+<div class="callout-content">
+<p>Con pocos casos en el test, una curva de calibración o una diferencia de métricas puede ser inestable. Para una afirmación de despliegue usaríamos varias ventanas temporales, idealmente con validación rolling-origin.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="qué-se-aprende-en-cada-conjunto" class="slide level2">
+<h2>Qué se aprende en cada conjunto</h2>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Objeto</th>
+<th style="text-align: right;">Entrenamiento</th>
+<th style="text-align: right;">Validación</th>
+<th style="text-align: right;">Test</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Vocabulario</td>
+<td style="text-align: right;">se aprende</td>
+<td style="text-align: right;">se aplica</td>
+<td style="text-align: right;">se aplica</td>
+</tr>
+<tr class="even">
+<td>IDF</td>
+<td style="text-align: right;">se estima</td>
+<td style="text-align: right;">se aplica</td>
+<td style="text-align: right;">se aplica</td>
+</tr>
+<tr class="odd">
+<td>Coeficientes</td>
+<td style="text-align: right;">se estiman</td>
+<td style="text-align: right;">no se estiman</td>
+<td style="text-align: right;">no se estiman</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\lambda</span> y umbral</td>
+<td style="text-align: right;">no</td>
+<td style="text-align: right;">se eligen</td>
+<td style="text-align: right;">no se tocan</td>
+</tr>
+<tr class="odd">
+<td>Resultado</td>
+<td style="text-align: right;">ajuste</td>
+<td style="text-align: right;">selección</td>
+<td style="text-align: right;">evaluación final</td>
+</tr>
+</tbody>
+</table>
+<p>La regla práctica es sencilla: cualquier transformación que “mire” los datos debe ajustarse con entrenamiento y luego aplicarse sin recalcularla.</p>
 </section></section>
 <section>
 <section id="de-palabras-a-números" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
@@ -293,6 +540,57 @@ Mauricio Bucca · Sociología UC
 \widehat p(\text{crítica}\mid\text{texto}).
 </span></p>
 <p>Cada fila de <span class="math inline">X</span> es un documento. Cada columna es una palabra del vocabulario aprendido <strong>solo en entrenamiento</strong>.</p>
+</section>
+<section id="una-predicción-escrita-completa" class="slide level2">
+<h2>Una predicción, escrita completa</h2>
+<p>Para un mensaje con título y cuerpo:</p>
+<ol type="1">
+<li>La función de tokens conserva palabras permitidas y descarta las demás.</li>
+<li>La matriz cuenta cuántas veces aparece cada término del vocabulario.</li>
+<li>TF–IDF repondera esos conteos usando el IDF estimado en entrenamiento.</li>
+<li>El vector resultante entra al logit regularizado.</li>
+<li>La salida es una probabilidad. El umbral convierte esa probabilidad en una acción.</li>
+</ol>
+<p><span class="math display">
+\widehat p_i = \sigma(\widehat\beta_0 + x_{i,1}\widehat\beta_1 + \cdots + x_{i,p}\widehat\beta_p),
+\qquad
+\widehat y_i = \mathbb{1}(\widehat p_i \ge t).
+</span></p>
+<p>Si falla el paso 1, el modelo nunca podrá recuperar la señal perdida en los pasos siguientes.</p>
+</section>
+<section id="ejemplo-mínimo-dos-documentos" class="slide level2">
+<h2>Ejemplo mínimo · dos documentos</h2>
+<p>Para ver la mecánica, usamos un vocabulario pequeño y conservamos la negación:</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Documento</th>
+<th>Texto</th>
+<th>Tokens</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">D_1</span></td>
+<td><code>unlock not work</code></td>
+<td><code>unlock</code>, <code>not</code>, <code>work</code></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">D_2</span></td>
+<td><code>unlock works</code></td>
+<td><code>unlock</code>, <code>works</code></td>
+</tr>
+</tbody>
+</table>
+<p>Con el vocabulario ordenado (<code>unlock</code>, <code>not</code>, <code>work</code>, <code>works</code>), la matriz de conteos es:</p>
+<p><span class="math display">
+C = \begin{pmatrix}
+1 &amp; 1 &amp; 1 &amp; 0\\
+1 &amp; 0 &amp; 0 &amp; 1
+\end{pmatrix}.
+</span></p>
+<p><code>unlock</code> aparece en los dos documentos, por lo que su <span class="math inline">df=2</span> y su <span class="math inline">idf=1</span>. Cada término restante aparece en un documento, por lo que su <span class="math inline">idf=\log(3/2)+1\approx1.41</span>. TF–IDF repondera las columnas y luego normaliza cada fila antes de entrar al logit.</p>
+<p>Este ejemplo no reemplaza el corpus real: hace visible una transformación que el código ejecuta sobre cientos de documentos.</p>
 </section>
 <section id="tokenizar-es-tomar-decisiones" class="slide level2">
 <h2>Tokenizar es tomar decisiones</h2>
@@ -331,7 +629,7 @@ Mauricio Bucca · Sociología UC
 <pre><code># A tibble: 1 × 3
   términos documentos_train densidad
      &lt;int&gt;            &lt;int&gt; &lt;chr&gt;   
-1      304              147 3.950%   </code></pre>
+1      305              147 4.020%   </code></pre>
 </div>
 </div>
 <p>Conservamos palabras presentes en al menos 3 documentos de entrenamiento y en no más del 80%. La matriz es <strong>dispersa</strong>: casi todas sus celdas valen cero.</p>
@@ -378,6 +676,46 @@ Mauricio Bucca · Sociología UC
 <div class="fragment">
 <p>Su fortaleza es otra: con pocos datos ofrece un baseline rápido, transparente y difícil de superar por casualidad.</p>
 </div>
+</section>
+<section id="una-escalera-de-representaciones" class="slide level2">
+<h2>Una escalera de representaciones</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Representación</th>
+<th>Captura</th>
+<th>Cuándo probarla</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Unigramas TF–IDF</td>
+<td>presencia y frecuencia de palabras</td>
+<td>primer baseline interpretable</td>
+</tr>
+<tr class="even">
+<td>N-gramas de palabras</td>
+<td>expresiones locales y negaciones cortas</td>
+<td>cuando el orden cercano importa</td>
+</tr>
+<tr class="odd">
+<td>N-gramas de caracteres</td>
+<td>errores, abreviaturas y morfología</td>
+<td>cuando el texto es ruidoso</td>
+</tr>
+<tr class="even">
+<td>Encoder preentrenado</td>
+<td>contexto y similitud semántica</td>
+<td>cuando hay suficiente señal o transferencia útil</td>
+</tr>
+</tbody>
+</table>
+<p>La práctica moderna compara esta escalera con el <strong>mismo corte temporal, la misma etiqueta y el mismo protocolo de evaluación</strong>. “Más grande” no significa automáticamente “mejor para esta tarea”.</p>
 </section></section>
 <section>
 <section id="regresión-logística-para-texto" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
@@ -447,52 +785,131 @@ Mauricio Bucca · Sociología UC
 </tbody>
 </table>
 <p>Confundirlos es común. <span class="math inline">\lambda</span> controla el <strong>modelo</strong>; <span class="math inline">t</span> traduce una probabilidad ya estimada en una <strong>acción</strong>.</p>
+</section>
+<section id="comprobación-rápida-dos-decisiones-distintas" class="slide level2">
+<h2>Comprobación rápida · dos decisiones distintas</h2>
+<p>Supón que el costo de un falso negativo sube de 3 a 8, pero el corpus y el modelo no cambian.</p>
+<ol type="1">
+<li>¿Debemos volver a elegir <span class="math inline">\lambda</span>?</li>
+<li>¿Debemos revisar el umbral <span class="math inline">t</span>?</li>
+<li>¿Qué parte del pipeline debe permanecer intacta hasta el test?</li>
+</ol>
+<p><strong>Respuesta esperada:</strong> el costo cambia la regla de decisión y, por tanto, el umbral. El test sigue cerrado hasta fijar todas las decisiones.</p>
 </section></section>
 <section>
 <section id="aplicación-completa" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
 <h1>Aplicación completa</h1>
 
 </section>
-<section id="ajustar-una-trayectoria-de-modelos" class="slide level2">
-<h2>1 · Ajustar una trayectoria de modelos</h2>
+<section id="paso-0-fijar-el-protocolo" class="slide level2">
+<h2>Paso 0 · Fijar el protocolo</h2>
+<p>Antes de mirar el test, dejamos por escrito:</p>
+<ul>
+<li>la definición de la etiqueta;</li>
+<li>el orden temporal de los conjuntos;</li>
+<li>la métrica principal y las métricas de seguridad;</li>
+<li>el costo relativo de cada error;</li>
+<li>el criterio para cambiar o detener el modelo.</li>
+</ul>
+<p>Este protocolo evita escoger después la historia que más favorece al resultado.</p>
+</section>
+<section id="cómo-leer-el-laboratorio" class="slide level2">
+<h2>Cómo leer el laboratorio</h2>
+<p>El bloque <code>setup</code> prepara datos, funciones y objetos intermedios para que las láminas sean reproducibles. Los bloques visibles muestran una decisión por vez, pero dependen de esa preparación.</p>
+<p>Orden recomendado:</p>
+<ol type="1">
+<li>ejecuta el bloque completo de preparación;</li>
+<li>verifica el corte temporal y la prevalencia;</li>
+<li>sigue las decisiones de <span class="math inline">\lambda</span> y de la regla de acción;</li>
+<li>abre el test solo al final;</li>
+<li>vuelve a ejecutar desde cero para comprobar que no dependes de objetos antiguos.</li>
+</ol>
+</section>
+<section id="paso-1-ajustar-una-trayectoria-de-modelos" class="slide level2">
+<h2>Paso 1 · Ajustar una trayectoria de modelos</h2>
 <p>Una sola llamada estima 60 modelos: desde fuerte contracción hasta un vocabulario más activo.</p>
 </section>
-<section id="elegir-lambda-sin-abrir-el-test" class="slide level2">
-<h2>2 · Elegir <span class="math inline">\lambda</span> sin abrir el test</h2>
+<section id="paso-2-elegir-lambda-sin-abrir-el-test" class="slide level2">
+<h2>Paso 2 · Elegir <span class="math inline">\lambda</span> sin abrir el test</h2>
 
 <img data-src="class_19_files/figure-revealjs/validation-curve-1.png" width="960" class="r-stretch"><div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1 × 3
   lambda_elegido log_loss_validación términos_activos
            &lt;dbl&gt;               &lt;dbl&gt;            &lt;int&gt;
-1        0.003               0.539               31</code></pre>
+1        0.003               0.559               24</code></pre>
 </div>
 </div>
 </section>
-<section id="convertir-probabilidades-en-prioridad" class="slide level2">
-<h2>3 · Convertir probabilidades en prioridad</h2>
+<section id="paso-3-convertir-probabilidades-en-prioridad" class="slide level2">
+<h2>Paso 3 · Convertir probabilidades en prioridad</h2>
 <p>Fijamos antes del test:</p>
 <p><span class="math display">
 \operatorname{Costo}(t)=3\,FN(t)+1\,FP(t).
 </span></p>
 
 <img data-src="class_19_files/figure-revealjs/threshold-curve-1.png" width="960" class="r-stretch"><p>El umbral óptimo no tiene por qué ser 0.50: depende de la prevalencia y del costo relativo de los errores.</p>
-</section>
-<section id="reajustar-y-abrir-el-test-una-vez" class="slide level2">
-<h2>4 · Reajustar y abrir el test una vez</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2 × 7
-  modelo                log_loss ROC_AUC sensitivity specificity precision cost_per_100
-  &lt;chr&gt;                    &lt;dbl&gt;   &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;     &lt;dbl&gt;        &lt;dbl&gt;
-1 Prevalencia histórica    0.940   0.500             1       0         0.860            14
-2 TF–IDF + LASSO           0.475   0.676           1       0.286     0.896           10</code></pre>
+<pre><code># A tibble: 1 × 3
+  umbral_elegido en_borde_de_grilla umbral_baseline
+           &lt;dbl&gt; &lt;lgl&gt;                        &lt;dbl&gt;
+1            0.100 FALSE                            0</code></pre>
+</div>
+</div>
+<p>Si el mínimo cae en el borde de la grilla, la búsqueda no identificó un óptimo interior. En ese caso ampliamos la grilla o usamos directamente una regla top-<span class="math inline">k</span> si la capacidad de revisión es fija.</p>
+</section>
+<section id="paso-4-reajustar-y-abrir-el-test-una-vez" class="slide level2">
+<h2>Paso 4 · Reajustar y abrir el test una vez</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 10
+  modelo                log_loss ROC_AUC    AP Brier sensitivity specificity precision n_prioritized cost_per_100
+  &lt;chr&gt;                    &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;     &lt;dbl&gt;         &lt;int&gt;        &lt;dbl&gt;
+1 Prevalencia histórica    0.940   0.500   0.860  0.370           1       0         0.860             50           14
+2 TF–IDF + LASSO           0.479   0.706 0.931 0.153           1       0.286     0.896            48           10</code></pre>
 </div>
 </div>
 <p>El baseline emite la misma probabilidad para toda reseña. El modelo de texto debe mejorar <strong>probabilidades</strong>, <strong>ranking</strong> y <strong>costo</strong>, no solo accuracy.</p>
+<p>Aquí mantenemos vocabulario e IDF aprendidos solo en entrenamiento para hacer visible la separación. En un pipeline de producción, después de fijar la receta y antes del siguiente período de uso, reajustaríamos todas las transformaciones con entrenamiento + validación y conservaríamos un test futuro completamente separado.</p>
+<p>En el baseline constante, AP coincide con la prevalencia porque todos los scores empatan: no hay un ranking informativo. Por eso la comparación operativa principal ocurre en <code>precision@20</code> y <code>recall@20</code>.</p>
 </section>
-<section id="leer-la-matriz-de-confusión" class="slide level2">
-<h2>5 · Leer la matriz de confusión</h2>
+<section id="evaluar-el-score-antes-de-elegir-una-clase" class="slide level2">
+<h2>Evaluar el score antes de elegir una clase</h2>
+<p>Para una cola de revisión, la etiqueta binaria final es solo una parte de la historia:</p>
+<ul>
+<li><strong>Log-loss</strong> penaliza probabilidades seguras y equivocadas.</li>
+<li><strong>Average Precision (AP)</strong> resume el ranking cuando la clase positiva es poco frecuente.</li>
+<li><strong>Brier</strong> mide el error cuadrático de las probabilidades.</li>
+<li><strong>Calibración</strong> pregunta si los mensajes con probabilidad cercana a 0.7 son críticos aproximadamente 70% de las veces.</li>
+<li><strong>Costo</strong> evalúa la regla de acción con las consecuencias acordadas.</li>
+</ul>
+<p>ROC-AUC sigue siendo útil para comparar rankings, pero puede verse optimista con clases desbalanceadas. Por eso reportamos Average Precision, una métrica de ranking orientada a la clase positiva, y una métrica de probabilidad.</p>
+</section>
+<section id="si-la-capacidad-es-fija-se-evalúa-el-top-k" class="slide level2">
+<h2>Si la capacidad es fija, se evalúa el top-<span class="math inline">k</span></h2>
+<p>Un umbral responde “¿priorizo este mensaje?”. Una capacidad fija responde “¿qué 20 mensajes reviso primero?”. En ese caso reportamos:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 4
+  modelo                                 k precision_at_k recall_at_k
+  &lt;chr&gt;                              &lt;dbl&gt;          &lt;dbl&gt;       &lt;dbl&gt;
+1 Baseline: orden aleatorio esperado    20           0.860       0.400  
+2 TF–IDF + LASSO                        20           0.950       0.442</code></pre>
+</div>
+</div>
+<p><code>precision@20</code> es la fracción crítica dentro de los 20 mensajes revisados. <code>recall@20</code> es la fracción de todos los mensajes críticos que capturamos en esa cuota. El modelo debe mejorar el baseline y mantener claro que el ranking depende del período evaluado.</p>
+<p>En esta clase, <code>precision@20</code> es la métrica operativa principal. El valor observado resume solo 20 casos del test y no demuestra una superioridad estable. Si la capacidad cambia, volvemos a reportar la curva completa de costo y elegimos un umbral.</p>
+<p>En el ejemplo, <span class="math inline">\lambda</span> se selecciona con log-loss para conservar la calidad de las probabilidades. Si el objetivo operativo fuera exclusivamente llenar una cuota fija, seleccionaríamos <span class="math inline">\lambda</span> con <code>precision@20</code> en validación y dejaríamos el test cerrado hasta fijar esa elección.</p>
+</section>
+<section id="calibración-una-probabilidad-debe-significar-algo" class="slide level2">
+<h2>Calibración: una probabilidad debe significar algo</h2>
+
+<img data-src="class_19_files/figure-revealjs/calibration-plot-1.png" width="960" class="r-stretch"><p>Puntos cerca de la diagonal indican mejor calibración. Una curva discriminante puede ordenar bien los mensajes y, aun así, entregar probabilidades mal calibradas. Si la decisión depende de un costo, conviene revisar ambas propiedades.</p>
+<p>Esta figura es un diagnóstico ilustrativo de esta ventana temporal. Con 50 casos y aproximadamente cinco observaciones por grupo, no demuestra calibración estable para producción. Una evaluación más seria usaría ventanas temporales repetidas y calibraría con datos separados del ajuste.</p>
+</section>
+<section id="paso-5-leer-la-matriz-de-confusión" class="slide level2">
+<h2>Paso 5 · Leer la matriz de confusión</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>            priorizado
@@ -507,35 +924,35 @@ observado    no sí
 </ul>
 <p>El costo 3:1 expresa que el primer error es operacionalmente más grave.</p>
 </section>
-<section id="inspeccionar-qué-aprendió" class="slide level2">
-<h2>6 · Inspeccionar qué aprendió</h2>
+<section id="paso-6-inspeccionar-qué-aprendió" class="slide level2">
+<h2>Paso 6 · Inspeccionar qué aprendió</h2>
 
 <img data-src="class_19_files/figure-revealjs/coefficient-plot-1.png" width="960" class="r-stretch"><p>Los términos positivos elevan la prioridad; los negativos la reducen. Son asociaciones condicionadas al vocabulario y al período de entrenamiento, no “causas” de una mala experiencia.</p>
 </section>
-<section id="seguir-una-predicción-de-punta-a-punta" class="slide level2">
-<h2>7 · Seguir una predicción de punta a punta</h2>
+<section id="paso-7-seguir-una-predicción-de-punta-a-punta" class="slide level2">
+<h2>Paso 7 · Seguir una predicción de punta a punta</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1 × 6
   fecha      texto                                                 probabilidad_crítica umbral decisión rating_observado
   &lt;date&gt;     &lt;chr&gt;                                                                &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;               &lt;dbl&gt;
-1 2025-07-25 Station map never loads I have been unable to load s…                0.972    0.100 prioriz…                1</code></pre>
+1 2025-07-25 Station map never loads I have been unable to load s…                0.964    0.100 prioriz…                1</code></pre>
 </div>
 </div>
 <p>Ésta es la unidad de uso real: texto nuevo → vector TF–IDF → probabilidad → regla de decisión → revisión humana.</p>
 </section>
-<section id="los-errores-enseñan-más-que-el-promedio" class="slide level2">
-<h2>8 · Los errores enseñan más que el promedio</h2>
+<section id="paso-8-los-errores-enseñan-más-que-el-promedio" class="slide level2">
+<h2>Paso 8 · Los errores enseñan más que el promedio</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 5 × 4
   error          rating probabilidad texto                                                                             
   &lt;chr&gt;           &lt;dbl&gt;        &lt;dbl&gt; &lt;chr&gt;                                                                             
-1 falso positivo      3        0.804 Support is a headache No matter what you do just try avoid having a Lyft accoun...
-2 falso positivo      3        0.649 What happened to Bike Angels? I don’t see the Bike Angels tab anywhere anymore ...
-3 falso positivo      4        0.639 It works App is good, with a few minor nits. As noted by other reviewers, they ...
-4 falso positivo      5        0.594 Parking is extortion Charging people to park bikes when bike stations are full ...
-5 falso positivo      3        0.377 Where are the bikes. There are 8 stations near my home. On average there will b...</code></pre>
+1 falso positivo      3        0.769 Support is a headache No matter what you do just try avoid having a Lyft accoun...
+2 falso positivo      3        0.633 What happened to Bike Angels? I don’t see the Bike Angels tab anywhere anymore ...
+3 falso positivo      4        0.623 It works App is good, with a few minor nits. As noted by other reviewers, they ...
+4 falso positivo      5        0.585 Parking is extortion Charging people to park bikes when bike stations are full ...
+5 falso positivo      3        0.402 Where are the bikes. There are 8 stations near my home. On average there will b...</code></pre>
 </div>
 </div>
 <p>Preguntas para leerlos:</p>
@@ -546,74 +963,124 @@ observado    no sí
 <li>¿el vocabulario de entrenamiento no conocía el término decisivo?</li>
 </ul>
 </section>
-<section id="medir-palabras-fuera-de-vocabulario" class="slide level2">
-<h2>9 · Medir palabras fuera de vocabulario</h2>
+<section id="paso-9-medir-palabras-fuera-de-vocabulario" class="slide level2">
+<h2>Paso 9 · Medir palabras fuera de vocabulario</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 3 × 2
-  conjunto      tasa_tokens_fuera_vocabulario
-  &lt;chr&gt;         &lt;chr&gt;                        
-1 Entrenamiento 37.800%                        
-2 Validación    50.500%                        
-3 Test          51.200%                        </code></pre>
+<pre><code># A tibble: 3 × 4
+  conjunto      cobertura_tokens documentos_sin_token_conocido tipos_fuera_vocabulario
+  &lt;chr&gt;         &lt;chr&gt;            &lt;chr&gt;                                           &lt;int&gt;
+1 Entrenamiento 62.800%            0.700%                                              983
+2 Validación    50.200%            0.000%                                              610
+3 Test          49.600%            2.000%                                              404</code></pre>
 </div>
 </div>
-<p>Una tasa creciente indica deriva lingüística: versiones nuevas, precios nuevos o problemas nuevos generan palabras que el modelo no puede usar.</p>
+<p>La cobertura baja puede deberse a dos cosas distintas: el vocabulario excluyó términos raros por diseño o el lenguaje cambió con el tiempo. Por eso no llamamos a toda palabra desconocida “deriva”. Los encoders con subwords tampoco tienen OOV literal en el mismo sentido.</p>
+<p>La cobertura se calcula sobre los tokens que sobrevivieron al preprocesamiento, no sobre todas las palabras originales.</p>
 </section></section>
 <section>
-<section id="qué-falta-para-llegar-a-un-llm" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
-<h1>Qué falta para llegar a un LLM</h1>
+<section id="representaciones-contextuales-y-modelos-preentrenados" class="title-slide slide level1 inverse center middle" data-background-color="#FFC20E">
+<h1>Representaciones contextuales y modelos preentrenados</h1>
 
 </section>
-<section id="bag-of-words-y-un-llm-resuelven-tareas-distintas" class="slide level2">
-<h2>Bag-of-words y un LLM resuelven tareas distintas</h2>
+<section id="tres-niveles-de-modelamiento-de-texto" class="slide level2">
+<h2>Tres niveles de modelamiento de texto</h2>
 <table class="caption-top">
 <colgroup>
-<col style="width: 33%">
-<col style="width: 33%">
-<col style="width: 33%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
 </colgroup>
 <thead>
 <tr class="header">
 <th>Dimensión</th>
-<th>Clasificador de hoy</th>
-<th>LLM moderno</th>
+<th>Baseline de hoy</th>
+<th>Encoder preentrenado</th>
+<th>LLM generativo</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td>Entrada</td>
 <td>TF–IDF disperso</td>
-<td>tokens + embeddings</td>
+<td>tokens contextualizados</td>
+<td>tokens contextualizados</td>
 </tr>
 <tr class="even">
 <td>Orden</td>
 <td>se pierde</td>
-<td>se modela con posición y atención</td>
+<td>se representa con atención</td>
+<td>se representa con atención</td>
 </tr>
 <tr class="odd">
 <td>Objetivo</td>
 <td>crítica / no crítica</td>
+<td>tarea supervisada</td>
 <td>próxima unidad de texto</td>
 </tr>
 <tr class="even">
 <td>Datos</td>
 <td>cientos de documentos</td>
-<td>corpus masivos</td>
+<td>preentrenamiento + etiquetas</td>
+<td>preentrenamiento masivo</td>
 </tr>
 <tr class="odd">
 <td>Salida</td>
 <td>una probabilidad</td>
-<td>distribución sobre vocabulario</td>
+<td>una probabilidad por clase</td>
+<td>texto o distribución de tokens</td>
 </tr>
 <tr class="even">
-<td>Interpretación</td>
+<td>Auditoría</td>
 <td>coeficientes por palabra</td>
-<td>representaciones distribuidas</td>
+<td>ejemplos, scores y análisis de errores</td>
+<td>más difícil de atribuir</td>
 </tr>
 </tbody>
 </table>
-<p>Comparten pérdida probabilística y optimización; no comparten escala ni representación.</p>
+<p>Los tres pueden evaluarse como predictores. Lo que cambia es la representación, el costo computacional y la evidencia necesaria para confiar en la salida.</p>
+</section>
+<section id="qué-significa-contextual" class="slide level2">
+<h2>Qué significa “contextual”</h2>
+<p>En bag-of-words, una palabra aporta casi siempre la misma columna. En un encoder, la representación depende de las palabras que la rodean: “unlock” puede aparecer en una solución o en una falla y no tiene por qué producir el mismo vector.</p>
+<p>El encoder se preentrena con texto no etiquetado y luego se adapta a la tarea con una cabeza de clasificación. Esta transferencia puede ayudar cuando hay pocas etiquetas, pero debe demostrar una mejora en el test temporal del curso.</p>
+<div class="callout callout-note callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Note</strong></p>
+</div>
+<div class="callout-content">
+<p>El modelo preentrenado no reemplaza el protocolo: todavía necesitamos una etiqueta válida, un corte temporal, un baseline y análisis de errores.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="comparar-modelos-de-manera-justa" class="slide level2">
+<h2>Comparar modelos de manera justa</h2>
+<p>Una comparación moderna puede incluir:</p>
+<ol type="1">
+<li>prevalencia histórica;</li>
+<li>TF–IDF con unigramas y LASSO;</li>
+<li>n-gramas de palabras o caracteres con regularización;</li>
+<li>embeddings de un encoder preentrenado y un clasificador lineal;</li>
+<li>fine-tuning, solo si el tamaño de muestra y los recursos lo justifican.</li>
+</ol>
+<p>Todos reciben la misma información disponible en cada fecha. Todos eligen hiperparámetros con validación. Todos se reportan en el mismo test temporal. El modelo ganador es el que mejora la métrica principal sin perder calibración, estabilidad ni auditabilidad.</p>
+</section>
+<section id="actividad-elegir-el-siguiente-experimento" class="slide level2">
+<h2>Actividad · elegir el siguiente experimento</h2>
+<p>El baseline de TF–IDF falla sobre todo cuando hay negación, abreviaturas y vocabulario nuevo.</p>
+<p>En grupos, elijan <strong>una</strong> extensión y justifiquen:</p>
+<ul>
+<li>n-gramas de caracteres;</li>
+<li>un encoder preentrenado congelado;</li>
+<li>una nueva ronda de anotación de urgencia real.</li>
+</ul>
+<p>La respuesta debe incluir: hipótesis, cambio en el pipeline, métrica primaria, riesgo de leakage y criterio de éxito.</p>
 </section>
 <section id="la-próxima-palabra-también-es-categórica" class="slide level2">
 <h2>La próxima palabra también es categórica</h2>
@@ -653,13 +1120,16 @@ observado    no sí
 <h2>Un protocolo de despliegue mínimo</h2>
 <ol type="1">
 <li>Registrar texto, probabilidad, decisión y resultado humano.</li>
-<li>Auditar falsos negativos semanalmente.</li>
-<li>Medir costo y calibración por versión y mes.</li>
+<li>Versionar datos, código, vocabulario, hiperparámetros y semilla.</li>
+<li>Auditar falsos negativos semanalmente, empezando por los casos de mayor costo.</li>
+<li>Medir costo, Average Precision y calibración por versión de la app y por mes.</li>
+<li>Vigilar deriva de vocabulario y cambios en la prevalencia de la etiqueta.</li>
 <li>Actualizar vocabulario solo con una nueva ventana de entrenamiento.</li>
 <li>Revalidar <span class="math inline">\lambda</span> y umbral antes de reemplazar el modelo.</li>
 <li>Mantener una vía para que todo mensaje sea revisado.</li>
 </ol>
 <p>El modelo entra en producción con un plan de monitoreo, no solo con una métrica.</p>
+<p>Cuando llegan las etiquetas del período evaluado, ese período deja de ser futuro y puede incorporarse al historial para el siguiente entrenamiento. Entonces definimos un nuevo test con fechas posteriores.</p>
 </section>
 <section id="en-resumen" class="slide level2">
 <h2>En resumen</h2>
@@ -668,9 +1138,32 @@ observado    no sí
 <li>TF–IDF convierte documentos en una matriz dispersa sin mirar el futuro.</li>
 <li>LASSO controla miles de posibles predictores y conserva auditabilidad.</li>
 <li><span class="math inline">\lambda</span> optimiza probabilidades; el umbral optimiza una decisión con costos.</li>
+<li>Con capacidad fija, <code>precision@k</code> y <code>recall@k</code> traducen el ranking a trabajo humano.</li>
 <li>El test temporal y el análisis de errores sostienen la afirmación predictiva.</li>
 <li>Un LLM mejora la representación contextual; no elimina la necesidad de un protocolo de evaluación.</li>
 </ul>
+</section>
+<section id="salida-tres-respuestas-breves" class="slide level2">
+<h2>Salida · tres respuestas breves</h2>
+<p>Antes de cerrar, responde sin mirar el código:</p>
+<ol type="1">
+<li>¿Por qué el vocabulario y el IDF se ajustan solo en entrenamiento?</li>
+<li>¿Qué diferencia hay entre elegir <span class="math inline">\lambda</span> y elegir el umbral?</li>
+<li>¿Qué evidencia pedirías antes de reemplazar TF–IDF + logit por un encoder preentrenado?</li>
+</ol>
+<p>Si puedes responder las tres y ubicar dónde aparece cada decisión en el pipeline, la clase cumplió su objetivo.</p>
+</section>
+<section id="lecturas-y-documentación" class="slide level2">
+<h2>Lecturas y documentación</h2>
+<ul>
+<li>James, Witten, Hastie y Tibshirani, <a href="https://www.statlearning.com/"><em>An Introduction to Statistical Learning</em></a>, 2.ª ed.</li>
+<li>Devlin et al., <a href="https://aclanthology.org/N19-1423/"><em>BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding</em></a>.</li>
+<li>Reimers y Gurevych, <a href="https://aclanthology.org/D19-1410/"><em>Sentence-BERT</em></a>, como puente entre embeddings y clasificación.</li>
+<li>Hu et al., <a href="https://arxiv.org/abs/2106.09685"><em>LoRA</em></a>, como ejemplo de adaptación eficiente de modelos grandes.</li>
+<li>Documentación de scikit-learn sobre <a href="https://scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html">curvas precision–recall</a>.</li>
+<li><a href="data/SOURCE.txt">Fuente del corpus</a> y <a href="data/capital_bikeshare_app_reviews.csv">datos de la clase</a>.</li>
+</ul>
+<p>Estas referencias separan la teoría estadística, la representación contextual y la evaluación de clasificadores.</p>
 </section>
 <section id="cierre" class="slide level2 inverse center middle closing" data-background-color="#034694">
 <h2>Cierre</h2>

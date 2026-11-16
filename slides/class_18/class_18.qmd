@@ -975,13 +975,13 @@ Cambiar estas condiciones confunde diferencias metodológicas con diferencias de
 - Clasificación y regresión requieren salidas y pérdidas distintas.
 - Una red debe superar baselines simples bajo una comparación justa.
 
-## Mapa conceptual del módulo (clases 16–18)
+## Mapa conceptual del módulo (clases 16, 17 y 18)
 
 Tres clases, una sola pregunta de fondo —¿cómo controlar la complejidad de un modelo sin decidirla arbitrariamente?— respondida cada vez de forma distinta:
 
 | Clase | Pregunta que resuelve | Pregunta que deja abierta |
 |---|---|---|
-| **16. Regularización** | ¿cuánta complejidad usar, dado un conjunto de predictores fijado por nosotros? | ¿y si no sabemos qué interacciones importan? |
+| **15. Regularización** | ¿cuánta complejidad usar, dado un conjunto de predictores fijado por nosotros? | ¿y si no sabemos qué interacciones importan? |
 | **17. Árboles y ensambles** | ¿puede el modelo descubrir interacciones y no linealidades por sí solo? | ¿puede esa función ser suave, no escalonada? |
 | **18. Redes neuronales** | ¿puede aprender transformaciones suaves y no lineales, capa por capa? | (ver evaluación responsable: el costo es interpretabilidad y estabilidad) |
 
