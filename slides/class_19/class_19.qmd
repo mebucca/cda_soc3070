@@ -1,6 +1,6 @@
 ---
 title: "Análisis de Datos Categóricos (SOC3070)"
-subtitle: "Clasificación de Texto: de Bag-of-Words a los LLM"
+subtitle: "Clasificación de texto: de TF–IDF a representaciones contextuales"
 author: "Mauricio Bucca · Sociología UC"
 date: today
 body-classes: theme-chelsea
@@ -62,13 +62,15 @@ reviews <- read_csv(review_path, show_col_types = FALSE) %>%
 
 stop_words_en <- c(
   "the", "and", "for", "that", "this", "with", "you", "your", "are", "was",
-  "were", "have", "has", "had", "but", "not", "from", "they", "their", "them",
+  "were", "have", "has", "had", "but", "from", "they", "their", "them",
   "then", "than", "there", "here", "when", "where", "what", "who", "why", "how",
   "can", "could", "would", "should", "will", "just", "into", "out", "about",
   "after", "before", "because", "while", "also", "very", "really", "only", "more",
   "most", "some", "any", "all", "our", "its", "it's", "i'm", "i've", "i'll",
   "app", "bike", "bikes", "bikeshare", "capital", "ride", "riding", "use", "used"
 )
+
+# Conservamos negaciones como `not`, `never` y `no`: pueden cambiar el sentido.
 
 tokenize_documents <- function(text) {
   tibble(doc_id = seq_along(text), text = text) %>%
@@ -136,10 +138,36 @@ log_loss <- function(y, p) {
   -mean(y * log(p) + (1 - y) * log(1 - p))
 }
 
+safe_divide <- function(a, b) {
+  ifelse(b == 0, NA_real_, a / b)
+}
+
 roc_auc <- function(y, p) {
   n1 <- sum(y == 1); n0 <- sum(y == 0)
   (sum(rank(p, ties.method = "average")[y == 1]) - n1 * (n1 + 1) / 2) /
     (n1 * n0)
+}
+
+average_precision <- function(y, p) {
+  if (!any(y == 1)) return(NA_real_)
+  if (length(unique(p)) == 1) return(mean(y))
+  order_p <- order(p, decreasing = TRUE)
+  y_ordered <- y[order_p]
+  tp <- cumsum(y_ordered == 1)
+  fp <- cumsum(y_ordered == 0)
+  recall <- tp / sum(y == 1)
+  precision <- safe_divide(tp, tp + fp)
+  sum(diff(c(0, recall)) * precision)
+}
+
+top_k_metrics <- function(y, p, k) {
+  k <- min(k, length(y))
+  selected <- order(p, decreasing = TRUE)[seq_len(k)]
+  tibble(
+    k = k,
+    precision_at_k = mean(y[selected]),
+    recall_at_k = sum(y[selected]) / sum(y)
+  )
 }
 
 classification_metrics <- function(y, p, threshold) {
@@ -151,9 +179,12 @@ classification_metrics <- function(y, p, threshold) {
   tibble(
     log_loss = log_loss(y, p),
     ROC_AUC = roc_auc(y, p),
-    sensitivity = tp / (tp + fn),
-    specificity = tn / (tn + fp),
-    precision = tp / (tp + fp),
+    AP = average_precision(y, p),
+    Brier = mean((y - p)^2),
+    sensitivity = safe_divide(tp, tp + fn),
+    specificity = safe_divide(tn, tn + fp),
+    precision = safe_divide(tp, tp + fp),
+    n_prioritized = sum(predicted == 1),
     cost_per_100 = 100 * (3 * fn + fp) / length(y)
   )
 }
@@ -205,7 +236,7 @@ valid_prob <- as.numeric(predict(
 
 # Un falso negativo (mensaje crítico no priorizado) cuesta tres veces un falso
 # positivo (mensaje no crítico revisado antes). El costo se fija antes del test.
-threshold_curve <- map_dfr(seq(0.10, 0.90, by = 0.02), function(threshold) {
+threshold_curve <- map_dfr(seq(0, 1, by = 0.02), function(threshold) {
   predicted <- as.integer(valid_prob >= threshold)
   tibble(
     threshold = threshold,
@@ -215,6 +246,20 @@ threshold_curve <- map_dfr(seq(0.10, 0.90, by = 0.02), function(threshold) {
 }) %>%
   mutate(cost = 3 * false_negative + false_positive)
 selected_threshold <- threshold_curve %>%
+  slice_min(cost, n = 1, with_ties = FALSE) %>%
+  pull(threshold)
+threshold_at_boundary <- selected_threshold %in% range(threshold_curve$threshold)
+
+baseline_valid_prob <- rep(mean(y_train), length(y_valid))
+baseline_threshold_curve <- map_dfr(seq(0, 1, by = 0.02), function(threshold) {
+  predicted <- as.integer(baseline_valid_prob >= threshold)
+  tibble(
+    threshold = threshold,
+    cost = 3 * sum(predicted == 0 & y_valid == 1) +
+      sum(predicted == 1 & y_valid == 0)
+  )
+})
+baseline_selected_threshold <- baseline_threshold_curve %>%
   slice_min(cost, n = 1, with_ties = FALSE) %>%
   pull(threshold)
 
@@ -229,6 +274,29 @@ test_prob <- as.numeric(predict(
   text_final, newx = x_test, s = best_lambda, type = "response"
 ))
 test_pred <- as.integer(test_prob >= selected_threshold)
+baseline_test_prob <- rep(mean(y_train), length(y_test))
+baseline_test_threshold <- as.integer(
+  baseline_test_prob >= baseline_selected_threshold
+)
+test_top20 <- top_k_metrics(y_test, test_prob, k = 20)
+baseline_top20 <- tibble(
+  k = 20,
+  precision_at_k = mean(y_test),
+  recall_at_k = 20 * mean(y_test) / sum(y_test)
+)
+
+calibration_test <- tibble(
+  observed = y_test,
+  probability = test_prob
+) %>%
+  mutate(bin = ntile(probability, 10)) %>%
+  group_by(bin) %>%
+  summarise(
+    mean_probability = mean(probability),
+    observed_rate = mean(observed),
+    n = n(),
+    .groups = "drop"
+  )
 ```
 
 ## Antes · Hoy · Después {.class-rhythm}
@@ -255,6 +323,48 @@ cierre: qué técnica usar, qué evidencia reportar y qué límites reconocer.
 
 :::
 
+## Objetivos de aprendizaje
+
+Al finalizar la clase podrás:
+
+1. Formular una tarea de clasificación de texto como una decisión operativa, con una etiqueta y costos explícitos.
+2. Construir una matriz documento–término sin filtrar información del futuro.
+3. Explicar qué hacen TF–IDF, la regresión logística y LASSO en conjunto.
+4. Elegir el modelo con validación, evaluar el ranking con `precision@20` y `recall@20`, y usar umbral/costo como extensión.
+5. Explicar cómo comparar un baseline lineal interpretable con representaciones contextuales preentrenadas.
+
+::: {.callout-note}
+**Criterio de salida.** Podrás justificar cada decisión del pipeline y señalar qué evidencia todavía faltaría antes de desplegarlo.
+:::
+
+## Ritmo sugerido para un bloque de 70 minutos
+
+| Minutos | Foco | Evidencia de aprendizaje |
+|---:|---|---|
+| 0–5 | activación y costos | etiqueta, acción y error relevante |
+| 5–15 | corpus y corte temporal | partición sin leakage |
+| 15–30 | tokens, conteos y TF–IDF | matriz de dos documentos |
+| 30–42 | logit y LASSO | interpretación de $\lambda$ |
+| 42–57 | validación y evaluación | `precision@20`, `recall@20` y costo opcional |
+| 57–65 | errores, deriva y límites | una conclusión condicionada |
+| 65–70 | encoder, LLM y salida | respuesta al ticket |
+
+Las diapositivas de comparación de encoders y del protocolo de despliegue funcionan como extensión si el grupo necesita más tiempo en la construcción de la matriz.
+
+## Activación · una predicción es una decisión
+
+En parejas, durante 90 segundos:
+
+> Un servicio puede revisar 20 mensajes por hora. ¿Qué mensaje priorizarías y qué error te preocuparía más?
+
+Escriban una frase para cada pregunta:
+
+- ¿Qué observamos al momento de decidir?
+- ¿Qué significa “crítico” en este ejercicio?
+- ¿Qué costo relativo tienen un falso negativo y un falso positivo?
+
+La respuesta de hoy empieza en estas tres decisiones. El algoritmo llega después.
+
 # Texto como problema predictivo {.inverse .center .middle}
 
 ## La solicitud predictiva
@@ -272,6 +382,19 @@ cierre: qué técnica usar, qué evidencia reportar y qué límites reconocer.
 
 El modelo **prioriza**; no elimina la revisión humana ni responde automáticamente.
 
+## La ruta de trabajo
+
+| Paso | Pregunta que resolvemos | Evidencia que dejamos |
+|---|---|---|---|
+| 0. Definir | ¿Qué significa “crítica” y qué decisión apoya? | etiqueta, horizonte y costos |
+| 1. Separar | ¿Qué información estaría disponible al predecir? | corte temporal y protocolo |
+| 2. Representar | ¿Cómo convertimos texto en variables? | tokens, vocabulario y matriz |
+| 3. Ajustar | ¿Qué relación aprendemos y cómo la regularizamos? | logit + LASSO |
+| 4. Seleccionar | ¿Qué modelo y ranking elegimos? | validación, no test |
+| 5. Auditar | ¿Funciona en mensajes futuros y para quién falla? | métricas, calibración y errores |
+
+Cada paso responde una pregunta distinta. Si una decisión no queda registrada, no podremos interpretar el resultado ni reproducirlo.
+
 ## Por qué este problema sí es real
 
 Capital Bikeshare recibe texto libre sobre cobros, desbloqueo, estaciones, bicicletas y soporte. La tarea no es “generar una oración bonita”: es transformar ese texto en una señal útil para una decisión concreta.
@@ -283,6 +406,22 @@ Las estrellas funcionan aquí como **etiqueta débil**: permiten aprender con hi
 . . .
 
 Una etiqueta débil reduce costo de anotación, pero no equivale a “urgencia verdadera”. Esa diferencia será parte de la evaluación.
+
+## La variable objetivo tiene dos capas
+
+En los datos observamos:
+
+$$
+r_i = \text{número de estrellas},
+\qquad
+y_i = \mathbb{1}(r_i \le 2).
+$$
+
+El modelo aprende $\mathbb{P}(y_i=1\mid x_i)$, no aprende directamente “urgencia”. Para usarlo en un canal nuevo necesitamos validar la relación entre la etiqueta histórica y la decisión que realmente importa.
+
+::: {.callout-warning}
+Una buena métrica sobre una etiqueta equivocada puede producir una mala decisión. La validación sustantiva de la etiqueta es parte del trabajo de ML.
+:::
 
 ## El corpus: reseñas reales de Capital Bikeshare
 
@@ -331,10 +470,40 @@ tibble(
 ```
 
 - Entrenamiento aprende palabras y coeficientes.
-- Validación elige regularización y umbral.
+- Validación elige la regularización y la regla de acción: umbral o top-$k$.
 - Test representa los mensajes más recientes y se abre **una sola vez**.
 
 Una partición aleatoria mezclaría versiones antiguas y nuevas de la app, ocultando deriva temporal.
+
+## La prevalencia también cambia con el tiempo
+
+```{r temporal-drift}
+tibble(
+  conjunto = c("Entrenamiento", "Validación", "Test"),
+  desde = c(min(train$date), min(valid$date), min(test$date)),
+  hasta = c(max(train$date), max(valid$date), max(test$date)),
+  proporción_crítica = c(mean(y_train), mean(y_valid), mean(y_test))
+) %>%
+  mutate(proporción_crítica = scales::percent(proporción_crítica, accuracy = 0.1))
+```
+
+Si la prevalencia cambia mucho, el test sigue siendo honesto para ese período, pero no representa automáticamente todos los períodos futuros. El resultado debe leerse como una evaluación **condicional a una ventana temporal**, no como una garantía permanente.
+
+::: {.callout-warning}
+Con pocos casos en el test, una curva de calibración o una diferencia de métricas puede ser inestable. Para una afirmación de despliegue usaríamos varias ventanas temporales, idealmente con validación rolling-origin.
+:::
+
+## Qué se aprende en cada conjunto
+
+| Objeto | Entrenamiento | Validación | Test |
+|---|---:|---:|---:|
+| Vocabulario | se aprende | se aplica | se aplica |
+| IDF | se estima | se aplica | se aplica |
+| Coeficientes | se estiman | no se estiman | no se estiman |
+| $\lambda$ y umbral | no | se eligen | no se tocan |
+| Resultado | ajuste | selección | evaluación final |
+
+La regla práctica es sencilla: cualquier transformación que “mire” los datos debe ajustarse con entrenamiento y luego aplicarse sin recalcularla.
 
 # De palabras a números {.inverse .center .middle}
 
@@ -355,6 +524,46 @@ $$
 $$
 
 Cada fila de $X$ es un documento. Cada columna es una palabra del vocabulario aprendido **solo en entrenamiento**.
+
+## Una predicción, escrita completa
+
+Para un mensaje con título y cuerpo:
+
+1. La función de tokens conserva palabras permitidas y descarta las demás.
+2. La matriz cuenta cuántas veces aparece cada término del vocabulario.
+3. TF–IDF repondera esos conteos usando el IDF estimado en entrenamiento.
+4. El vector resultante entra al logit regularizado.
+5. La salida es una probabilidad. El umbral convierte esa probabilidad en una acción.
+
+$$
+\widehat p_i = \sigma(\widehat\beta_0 + x_{i,1}\widehat\beta_1 + \cdots + x_{i,p}\widehat\beta_p),
+\qquad
+\widehat y_i = \mathbb{1}(\widehat p_i \ge t).
+$$
+
+Si falla el paso 1, el modelo nunca podrá recuperar la señal perdida en los pasos siguientes.
+
+## Ejemplo mínimo · dos documentos
+
+Para ver la mecánica, usamos un vocabulario pequeño y conservamos la negación:
+
+| Documento | Texto | Tokens |
+|---|---|---|
+| $D_1$ | `unlock not work` | `unlock`, `not`, `work` |
+| $D_2$ | `unlock works` | `unlock`, `works` |
+
+Con el vocabulario ordenado (`unlock`, `not`, `work`, `works`), la matriz de conteos es:
+
+$$
+C = \begin{pmatrix}
+1 & 1 & 1 & 0\\
+1 & 0 & 0 & 1
+\end{pmatrix}.
+$$
+
+`unlock` aparece en los dos documentos, por lo que su $df=2$ y su $idf=1$. Cada término restante aparece en un documento, por lo que su $idf=\log(3/2)+1\approx1.41$. TF–IDF repondera las columnas y luego normaliza cada fila antes de entrar al logit.
+
+Este ejemplo no reemplaza el corpus real: hace visible una transformación que el código ejecuta sobre cientos de documentos.
 
 ## Tokenizar es tomar decisiones
 
@@ -435,6 +644,17 @@ Bag-of-words ignora:
 
 Su fortaleza es otra: con pocos datos ofrece un baseline rápido, transparente y difícil de superar por casualidad.
 
+## Una escalera de representaciones
+
+| Representación | Captura | Cuándo probarla |
+|---|---|---|
+| Unigramas TF–IDF | presencia y frecuencia de palabras | primer baseline interpretable |
+| N-gramas de palabras | expresiones locales y negaciones cortas | cuando el orden cercano importa |
+| N-gramas de caracteres | errores, abreviaturas y morfología | cuando el texto es ruidoso |
+| Encoder preentrenado | contexto y similitud semántica | cuando hay suficiente señal o transferencia útil |
+
+La práctica moderna compara esta escalera con el **mismo corte temporal, la misma etiqueta y el mismo protocolo de evaluación**. “Más grande” no significa automáticamente “mejor para esta tarea”.
+
 # Regresión logística para texto {.inverse .center .middle}
 
 ## La teoría conocida reaparece
@@ -488,9 +708,43 @@ La penalización:
 
 Confundirlos es común. $\lambda$ controla el **modelo**; $t$ traduce una probabilidad ya estimada en una **acción**.
 
+## Comprobación rápida · dos decisiones distintas
+
+Supón que el costo de un falso negativo sube de 3 a 8, pero el corpus y el modelo no cambian.
+
+1. ¿Debemos volver a elegir $\lambda$?
+2. ¿Debemos revisar el umbral $t$?
+3. ¿Qué parte del pipeline debe permanecer intacta hasta el test?
+
+**Respuesta esperada:** el costo cambia la regla de decisión y, por tanto, el umbral. El test sigue cerrado hasta fijar todas las decisiones.
+
 # Aplicación completa {.inverse .center .middle}
 
-## 1 · Ajustar una trayectoria de modelos
+## Paso 0 · Fijar el protocolo
+
+Antes de mirar el test, dejamos por escrito:
+
+- la definición de la etiqueta;
+- el orden temporal de los conjuntos;
+- la métrica principal y las métricas de seguridad;
+- el costo relativo de cada error;
+- el criterio para cambiar o detener el modelo.
+
+Este protocolo evita escoger después la historia que más favorece al resultado.
+
+## Cómo leer el laboratorio
+
+El bloque `setup` prepara datos, funciones y objetos intermedios para que las láminas sean reproducibles. Los bloques visibles muestran una decisión por vez, pero dependen de esa preparación.
+
+Orden recomendado:
+
+1. ejecuta el bloque completo de preparación;
+2. verifica el corte temporal y la prevalencia;
+3. sigue las decisiones de $\lambda$ y de la regla de acción;
+4. abre el test solo al final;
+5. vuelve a ejecutar desde cero para comprobar que no dependes de objetos antiguos.
+
+## Paso 1 · Ajustar una trayectoria de modelos
 
 ```{r fit-path, eval=FALSE}
 text_path <- glmnet(
@@ -507,7 +761,7 @@ valid_prob_path <- predict(
 
 Una sola llamada estima 60 modelos: desde fuerte contracción hasta un vocabulario más activo.
 
-## 2 · Elegir $\lambda$ sin abrir el test
+## Paso 2 · Elegir $\lambda$ sin abrir el test
 
 ```{r validation-curve, fig.height=5}
 validation_curve %>%
@@ -528,7 +782,7 @@ tibble(
 )
 ```
 
-## 3 · Convertir probabilidades en prioridad
+## Paso 3 · Convertir probabilidades en prioridad
 
 Fijamos antes del test:
 
@@ -549,14 +803,24 @@ threshold_curve %>%
 
 El umbral óptimo no tiene por qué ser 0.50: depende de la prevalencia y del costo relativo de los errores.
 
-## 4 · Reajustar y abrir el test una vez
+```{r threshold-boundary}
+tibble(
+  umbral_elegido = selected_threshold,
+  en_borde_de_grilla = threshold_at_boundary,
+  umbral_baseline = baseline_selected_threshold
+)
+```
+
+Si el mínimo cae en el borde de la grilla, la búsqueda no identificó un óptimo interior. En ese caso ampliamos la grilla o usamos directamente una regla top-$k$ si la capacidad de revisión es fija.
+
+## Paso 4 · Reajustar y abrir el test una vez
 
 ```{r final-test}
 bind_rows(
   classification_metrics(
     y_test,
-    rep(mean(y_train), length(y_test)),
-    threshold = selected_threshold
+    baseline_test_prob,
+    threshold = baseline_selected_threshold
   ) %>% mutate(modelo = "Prevalencia histórica"),
   classification_metrics(
     y_test, test_prob, threshold = selected_threshold
@@ -567,7 +831,60 @@ bind_rows(
 
 El baseline emite la misma probabilidad para toda reseña. El modelo de texto debe mejorar **probabilidades**, **ranking** y **costo**, no solo accuracy.
 
-## 5 · Leer la matriz de confusión
+Aquí mantenemos vocabulario e IDF aprendidos solo en entrenamiento para hacer visible la separación. En un pipeline de producción, después de fijar la receta y antes del siguiente período de uso, reajustaríamos todas las transformaciones con entrenamiento + validación y conservaríamos un test futuro completamente separado.
+
+En el baseline constante, AP coincide con la prevalencia porque todos los scores empatan: no hay un ranking informativo. Por eso la comparación operativa principal ocurre en `precision@20` y `recall@20`.
+
+## Evaluar el score antes de elegir una clase
+
+Para una cola de revisión, la etiqueta binaria final es solo una parte de la historia:
+
+- **Log-loss** penaliza probabilidades seguras y equivocadas.
+- **Average Precision (AP)** resume el ranking cuando la clase positiva es poco frecuente.
+- **Brier** mide el error cuadrático de las probabilidades.
+- **Calibración** pregunta si los mensajes con probabilidad cercana a 0.7 son críticos aproximadamente 70% de las veces.
+- **Costo** evalúa la regla de acción con las consecuencias acordadas.
+
+ROC-AUC sigue siendo útil para comparar rankings, pero puede verse optimista con clases desbalanceadas. Por eso reportamos Average Precision, una métrica de ranking orientada a la clase positiva, y una métrica de probabilidad.
+
+## Si la capacidad es fija, se evalúa el top-$k$
+
+Un umbral responde “¿priorizo este mensaje?”. Una capacidad fija responde “¿qué 20 mensajes reviso primero?”. En ese caso reportamos:
+
+```{r top20-table}
+bind_rows(
+  baseline_top20 %>% mutate(modelo = "Baseline: orden aleatorio esperado"),
+  test_top20 %>% mutate(modelo = "TF–IDF + LASSO")
+) %>%
+  select(modelo, everything())
+```
+
+`precision@20` es la fracción crítica dentro de los 20 mensajes revisados. `recall@20` es la fracción de todos los mensajes críticos que capturamos en esa cuota. El modelo debe mejorar el baseline y mantener claro que el ranking depende del período evaluado.
+
+En esta clase, `precision@20` es la métrica operativa principal. El valor observado resume solo 20 casos del test y no demuestra una superioridad estable. Si la capacidad cambia, volvemos a reportar la curva completa de costo y elegimos un umbral.
+
+En el ejemplo, $\lambda$ se selecciona con log-loss para conservar la calidad de las probabilidades. Si el objetivo operativo fuera exclusivamente llenar una cuota fija, seleccionaríamos $\lambda$ con `precision@20` en validación y dejaríamos el test cerrado hasta fijar esa elección.
+
+## Calibración: una probabilidad debe significar algo
+
+```{r calibration-plot, fig.height=4.8}
+ggplot(calibration_test,
+       aes(mean_probability, observed_rate, size = n)) +
+  geom_abline(linetype = 2, color = "grey50") +
+  geom_point(color = course_palette[["primary"]]) +
+  coord_equal(xlim = c(0, 1), ylim = c(0, 1)) +
+  labs(
+    x = "Probabilidad media predicha",
+    y = "Frecuencia crítica observada",
+    size = "Mensajes"
+  )
+```
+
+Puntos cerca de la diagonal indican mejor calibración. Una curva discriminante puede ordenar bien los mensajes y, aun así, entregar probabilidades mal calibradas. Si la decisión depende de un costo, conviene revisar ambas propiedades.
+
+Esta figura es un diagnóstico ilustrativo de esta ventana temporal. Con 50 casos y aproximadamente cinco observaciones por grupo, no demuestra calibración estable para producción. Una evaluación más seria usaría ventanas temporales repetidas y calibraría con datos separados del ajuste.
+
+## Paso 5 · Leer la matriz de confusión
 
 ```{r confusion}
 table(
@@ -583,7 +900,7 @@ table(
 
 El costo 3:1 expresa que el primer error es operacionalmente más grave.
 
-## 6 · Inspeccionar qué aprendió
+## Paso 6 · Inspeccionar qué aprendió
 
 ```{r coefficient-plot, fig.height=5.2}
 text_coef <- as.matrix(coef(text_final, s = best_lambda))[-1, 1]
@@ -611,7 +928,7 @@ coef_table %>%
 
 Los términos positivos elevan la prioridad; los negativos la reducen. Son asociaciones condicionadas al vocabulario y al período de entrenamiento, no “causas” de una mala experiencia.
 
-## 7 · Seguir una predicción de punta a punta
+## Paso 7 · Seguir una predicción de punta a punta
 
 ```{r case-trace}
 case_id <- which.max(test_prob)
@@ -627,7 +944,7 @@ tibble(
 
 Ésta es la unidad de uso real: texto nuevo → vector TF–IDF → probabilidad → regla de decisión → revisión humana.
 
-## 8 · Los errores enseñan más que el promedio
+## Paso 8 · Los errores enseñan más que el promedio
 
 ```{r error-examples}
 tibble(
@@ -655,40 +972,88 @@ Preguntas para leerlos:
 - ¿aparecen funciones nuevas de la app?
 - ¿el vocabulario de entrenamiento no conocía el término decisivo?
 
-## 9 · Medir palabras fuera de vocabulario
+## Paso 9 · Medir palabras fuera de vocabulario
 
 ```{r out-of-vocabulary}
-oov_rate <- function(text, vocabulary) {
+oov_diagnostics <- function(text, vocabulary) {
   tokens <- tokenize_documents(text)
-  mean(!tokens$token %in% vocabulary)
+  known <- tokens$token %in% vocabulary
+  known_doc_ids <- unique(tokens$doc_id[known])
+  tibble(
+    cobertura_tokens = mean(known),
+    documentos_sin_token_conocido = mean(
+      !(seq_along(text) %in% known_doc_ids)
+    ),
+    tipos_fuera_vocabulario = n_distinct(tokens$token[!known])
+  )
 }
 
-tibble(
-  conjunto = c("Entrenamiento", "Validación", "Test"),
-  tasa_tokens_fuera_vocabulario = scales::percent(c(
-    oov_rate(train$document, vocabulary),
-    oov_rate(valid$document, vocabulary),
-    oov_rate(test$document, vocabulary)
-  ), accuracy = 0.1)
-)
+bind_rows(
+  Entrenamiento = oov_diagnostics(train$document, vocabulary),
+  Validación = oov_diagnostics(valid$document, vocabulary),
+  Test = oov_diagnostics(test$document, vocabulary),
+  .id = "conjunto"
+) %>%
+  mutate(
+    cobertura_tokens = scales::percent(cobertura_tokens, accuracy = 0.1),
+    documentos_sin_token_conocido = scales::percent(
+      documentos_sin_token_conocido, accuracy = 0.1
+    )
+  )
 ```
 
-Una tasa creciente indica deriva lingüística: versiones nuevas, precios nuevos o problemas nuevos generan palabras que el modelo no puede usar.
+La cobertura baja puede deberse a dos cosas distintas: el vocabulario excluyó términos raros por diseño o el lenguaje cambió con el tiempo. Por eso no llamamos a toda palabra desconocida “deriva”. Los encoders con subwords tampoco tienen OOV literal en el mismo sentido.
 
-# Qué falta para llegar a un LLM {.inverse .center .middle}
+La cobertura se calcula sobre los tokens que sobrevivieron al preprocesamiento, no sobre todas las palabras originales.
 
-## Bag-of-words y un LLM resuelven tareas distintas
+# Representaciones contextuales y modelos preentrenados {.inverse .center .middle}
 
-| Dimensión | Clasificador de hoy | LLM moderno |
-|---|---|---|
-| Entrada | TF–IDF disperso | tokens + embeddings |
-| Orden | se pierde | se modela con posición y atención |
-| Objetivo | crítica / no crítica | próxima unidad de texto |
-| Datos | cientos de documentos | corpus masivos |
-| Salida | una probabilidad | distribución sobre vocabulario |
-| Interpretación | coeficientes por palabra | representaciones distribuidas |
+## Tres niveles de modelamiento de texto
 
-Comparten pérdida probabilística y optimización; no comparten escala ni representación.
+| Dimensión | Baseline de hoy | Encoder preentrenado | LLM generativo |
+|---|---|---|---|
+| Entrada | TF–IDF disperso | tokens contextualizados | tokens contextualizados |
+| Orden | se pierde | se representa con atención | se representa con atención |
+| Objetivo | crítica / no crítica | tarea supervisada | próxima unidad de texto |
+| Datos | cientos de documentos | preentrenamiento + etiquetas | preentrenamiento masivo |
+| Salida | una probabilidad | una probabilidad por clase | texto o distribución de tokens |
+| Auditoría | coeficientes por palabra | ejemplos, scores y análisis de errores | más difícil de atribuir |
+
+Los tres pueden evaluarse como predictores. Lo que cambia es la representación, el costo computacional y la evidencia necesaria para confiar en la salida.
+
+## Qué significa “contextual”
+
+En bag-of-words, una palabra aporta casi siempre la misma columna. En un encoder, la representación depende de las palabras que la rodean: “unlock” puede aparecer en una solución o en una falla y no tiene por qué producir el mismo vector.
+
+El encoder se preentrena con texto no etiquetado y luego se adapta a la tarea con una cabeza de clasificación. Esta transferencia puede ayudar cuando hay pocas etiquetas, pero debe demostrar una mejora en el test temporal del curso.
+
+::: {.callout-note}
+El modelo preentrenado no reemplaza el protocolo: todavía necesitamos una etiqueta válida, un corte temporal, un baseline y análisis de errores.
+:::
+
+## Comparar modelos de manera justa
+
+Una comparación moderna puede incluir:
+
+1. prevalencia histórica;
+2. TF–IDF con unigramas y LASSO;
+3. n-gramas de palabras o caracteres con regularización;
+4. embeddings de un encoder preentrenado y un clasificador lineal;
+5. fine-tuning, solo si el tamaño de muestra y los recursos lo justifican.
+
+Todos reciben la misma información disponible en cada fecha. Todos eligen hiperparámetros con validación. Todos se reportan en el mismo test temporal. El modelo ganador es el que mejora la métrica principal sin perder calibración, estabilidad ni auditabilidad.
+
+## Actividad · elegir el siguiente experimento
+
+El baseline de TF–IDF falla sobre todo cuando hay negación, abreviaturas y vocabulario nuevo.
+
+En grupos, elijan **una** extensión y justifiquen:
+
+- n-gramas de caracteres;
+- un encoder preentrenado congelado;
+- una nueva ronda de anotación de urgencia real.
+
+La respuesta debe incluir: hipótesis, cambio en el pipeline, métrica primaria, riesgo de leakage y criterio de éxito.
 
 ## La próxima palabra también es categórica
 
@@ -729,13 +1094,17 @@ Antes de desplegar, una organización debería anotar una muestra con la variabl
 ## Un protocolo de despliegue mínimo
 
 1. Registrar texto, probabilidad, decisión y resultado humano.
-2. Auditar falsos negativos semanalmente.
-3. Medir costo y calibración por versión y mes.
-4. Actualizar vocabulario solo con una nueva ventana de entrenamiento.
-5. Revalidar $\lambda$ y umbral antes de reemplazar el modelo.
-6. Mantener una vía para que todo mensaje sea revisado.
+2. Versionar datos, código, vocabulario, hiperparámetros y semilla.
+3. Auditar falsos negativos semanalmente, empezando por los casos de mayor costo.
+4. Medir costo, Average Precision y calibración por versión de la app y por mes.
+5. Vigilar deriva de vocabulario y cambios en la prevalencia de la etiqueta.
+6. Actualizar vocabulario solo con una nueva ventana de entrenamiento.
+7. Revalidar $\lambda$ y umbral antes de reemplazar el modelo.
+8. Mantener una vía para que todo mensaje sea revisado.
 
 El modelo entra en producción con un plan de monitoreo, no solo con una métrica.
+
+Cuando llegan las etiquetas del período evaluado, ese período deja de ser futuro y puede incorporarse al historial para el siguiente entrenamiento. Entonces definimos un nuevo test con fechas posteriores.
 
 ## En resumen
 
@@ -743,8 +1112,30 @@ El modelo entra en producción con un plan de monitoreo, no solo con una métric
 - TF–IDF convierte documentos en una matriz dispersa sin mirar el futuro.
 - LASSO controla miles de posibles predictores y conserva auditabilidad.
 - $\lambda$ optimiza probabilidades; el umbral optimiza una decisión con costos.
+- Con capacidad fija, `precision@k` y `recall@k` traducen el ranking a trabajo humano.
 - El test temporal y el análisis de errores sostienen la afirmación predictiva.
 - Un LLM mejora la representación contextual; no elimina la necesidad de un protocolo de evaluación.
+
+## Salida · tres respuestas breves
+
+Antes de cerrar, responde sin mirar el código:
+
+1. ¿Por qué el vocabulario y el IDF se ajustan solo en entrenamiento?
+2. ¿Qué diferencia hay entre elegir $\lambda$ y elegir el umbral?
+3. ¿Qué evidencia pedirías antes de reemplazar TF–IDF + logit por un encoder preentrenado?
+
+Si puedes responder las tres y ubicar dónde aparece cada decisión en el pipeline, la clase cumplió su objetivo.
+
+## Lecturas y documentación
+
+- James, Witten, Hastie y Tibshirani, [*An Introduction to Statistical Learning*](https://www.statlearning.com/), 2.ª ed.
+- Devlin et al., [*BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding*](https://aclanthology.org/N19-1423/).
+- Reimers y Gurevych, [*Sentence-BERT*](https://aclanthology.org/D19-1410/), como puente entre embeddings y clasificación.
+- Hu et al., [*LoRA*](https://arxiv.org/abs/2106.09685), como ejemplo de adaptación eficiente de modelos grandes.
+- Documentación de scikit-learn sobre [curvas precision–recall](https://scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html).
+- [Fuente del corpus](data/SOURCE.txt) y [datos de la clase](data/capital_bikeshare_app_reviews.csv).
+
+Estas referencias separan la teoría estadística, la representación contextual y la evaluación de clasificadores.
 
 ## Cierre {.inverse .center .middle .closing}
 

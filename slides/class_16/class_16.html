@@ -10,7 +10,7 @@
   <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Mauricio Bucca · Sociología UC">
-  <meta name="dcterms.date" content="2026-07-29">
+  <meta name="dcterms.date" content="2026-11-15">
   <title>Análisis de Datos Categóricos (SOC3070)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -159,14 +159,14 @@ Mauricio Bucca · Sociología UC
 </div>
 </div>
 
-  <p class="date">2026-07-29</p>
+  <p class="date">2026-11-15</p>
 </section>
 <section id="antes-hoy-después" class="slide level2 class-rhythm">
 <h2>Antes · Hoy · Después</h2>
 <div class="full-width">
 <div class="content-box">
 <p><strong>Antes</strong></p>
-<p>GLM, logit, inferencia, bootstrap: modelos donde <em>nosotros</em> elegimos la forma.</p>
+<p>cross-validation (clase 14) y el logit como clasificador, con umbrales y costos (clase 15). Siempre con modelos donde <em>nosotros</em> elegimos la forma (variables, transformaciones e interacciones).</p>
 </div>
 <div class="content-box-primary">
 <p><strong>Hoy</strong></p>
@@ -174,8 +174,11 @@ Mauricio Bucca · Sociología UC
 </div>
 <div class="content-box-secondary">
 <p><strong>Después</strong></p>
-<p>dejar que el propio algoritmo aprenda la forma: árboles y ensambles.</p>
+<p>árboles, Random Forest y Gradient Boosting.</p>
 </div>
+</div>
+<div class="footnote">
+<p>Ridge, LASSO y Elastic Net <strong>no descubren cualquier relación desde cero</strong>: regularizan una matriz <span class="math inline">X</span> cuya forma básica todavía especificamos nosotros.</p>
 </div>
 </section>
 <section>
@@ -183,391 +186,315 @@ Mauricio Bucca · Sociología UC
 <h1>Regularización</h1>
 
 </section>
-<section id="un-nuevo-módulo-una-nueva-pregunta" class="slide level2">
-<h2>Un nuevo módulo, una nueva pregunta</h2>
+<section id="qué-cambia-en-este-módulo" class="slide level2">
+<h2>Qué cambia en este módulo</h2>
 <p>Durante todo el curso, cada modelo (LPM, logit, Poisson) compartió un mismo supuesto: <strong>nosotros</strong> elegimos qué variables entran, qué interacciones importan, qué transformaciones usar. El modelo solo estima los coeficientes.</p>
 <div class="fragment">
-<p>Las clases 16–18 exploran una pregunta distinta: <strong>¿qué pasa cuando dejamos de confiar en que esa forma elegida a mano sea la correcta?</strong> ¿Puede el propio procedimiento de ajuste decidir cuánta complejidad usar — o incluso qué forma tomar?</p>
-</div>
-<div class="fragment">
-<p>Referencia principal para las tres clases: James et al.&nbsp;(2021), <em>An Introduction to Statistical Learning</em>, 2ª ed., capítulos 5–6, 8 y 10 (<a href="https://www.statlearning.com/">sitio oficial</a>).</p>
-</div>
-</section>
-<section id="la-solicitud-predictiva-no-cambia" class="slide level2">
-<h2>La solicitud predictiva no cambia</h2>
-<blockquote>
-<p><strong>Al cierre de cada día, estimar qué horas del día siguiente tendrán demanda alta, para priorizar el rebalanceo de bicicletas.</strong></p>
-</blockquote>
+<p>Esta clase, junto con las clases 17 y 18, explora una pregunta distinta: <strong>¿qué pasa cuando dejamos de confiar en que esa forma elegida a mano sea la correcta?</strong> En esta clase, el procedimiento decide cuánta complejidad usar y qué coeficientes encoger; todavía no descubre todas las interacciones posibles.</p>
 <table class="caption-top">
 <thead>
 <tr class="header">
-<th>Elemento</th>
-<th>Se mantiene desde la clase 15</th>
+<th>Método</th>
+<th>¿Qué decide automáticamente?</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Unidad y horizonte</td>
-<td>una hora, hasta 24 horas</td>
+<td>Ridge</td>
+<td>cuánto encoger cada coeficiente</td>
 </tr>
 <tr class="even">
-<td>Target</td>
-<td>sobre el percentil 75 aprendido en train</td>
+<td>LASSO</td>
+<td>cuánto encoger y cuáles llevar a cero</td>
 </tr>
 <tr class="odd">
-<td>Información</td>
-<td>calendario, hora y pronóstico meteorológico</td>
-</tr>
-<tr class="even">
-<td>Costo</td>
-<td>falso negativo = 3; falso positivo = 1</td>
-</tr>
-<tr class="odd">
-<td>Evaluación</td>
-<td>partición temporal 60/20/20</td>
+<td>Árboles</td>
+<td>particiones e interacciones de manera más flexible</td>
 </tr>
 </tbody>
 </table>
-<p>Hoy no cambiamos la pregunta para favorecer al método. Cambiamos solo cómo se controla una matriz de predictores amplia y correlacionada.</p>
-</section>
-<section id="el-problema-en-carne-propia" class="slide level2">
-<h2>El problema, en carne propia</h2>
-<p>Sigamos usando la misma pregunta sustantiva del curso — ¿cuándo hay demanda alta de bicicletas? — pero démosle al logit una interacción <strong>completa</strong> entre hora (24 categorías) y mes (12 categorías): mucho más flexible que la interacción hora × día hábil que usamos hasta ahora. Agreguemos esas variables de a poco y observemos qué pasa.</p>
-
-<img data-src="class_16_files/figure-revealjs/overfit-demo-1.png" width="960" class="r-stretch"></section>
-<section id="leer-la-curva" class="slide level2">
-<h2>Leer la curva</h2>
-<ul>
-<li>Con pocos parámetros, <strong>ambos</strong> errores bajan juntos: el modelo aprende señal real (temperatura, hora, clima).</li>
-<li>Pasado cierto punto, el error de <strong>entrenamiento</strong> sigue bajando —más parámetros siempre ajustan mejor <em>esos</em> datos— pero el de <strong>validación</strong> empieza a <strong>subir</strong>: el modelo empieza a ajustar celdas hora×mes con pocas observaciones, memorizando ruido específico de esa combinación particular.</li>
-<li>Este divorcio entre “ajusta mejor” y “predice mejor” es el problema que motiva toda la clase de hoy.</li>
-</ul>
+</div>
 <div class="fragment">
-<p>Nótese algo importante: <strong>no sabíamos de antemano</strong> cuál de estas variables hora×mes era señal y cuál era ruido — todas entraron con la misma justificación teórica (“la demanda varía por hora y por estación”). Hasta ahora controlábamos la complejidad <strong>a mano</strong>, decidiendo qué interacciones incluir. La pregunta de hoy es si el propio procedimiento de ajuste puede controlar esa complejidad automáticamente, de forma validada.</p>
+<p>Referencia principal: James et al.&nbsp;(2021), <em>An Introduction to Statistical Learning</em> (ISLR), 2ª ed., <strong>capítulo 6</strong> (<a href="https://www.statlearning.com/">sitio oficial</a>). Hoy seguimos ese capítulo en dos partes: primero los <strong>conceptos</strong>, después el <strong>laboratorio</strong> con datos de bicicletas y <code>glmnet</code> — exactamente como está organizado el libro.</p>
 </div>
-</section>
-<section id="intuición-sesgo-y-varianza" class="slide level2">
-<h2>Intuición: sesgo y varianza</h2>
-<p>Antes de la solución, pongamos nombre al fenómeno que acabamos de ver, con una analogía simple.</p>
+</section></section>
+<section>
+<section id="parte-1-conceptos" class="title-slide slide level1 inverse center middle" data-background-color="#1B4B5A">
+<h1>Parte 1 · Conceptos</h1>
 
-<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20251212100155382352/frame_3244.webp" style="width:55.0%" class="r-stretch quarto-figure-center"><p class="caption">Sesgo = qué tan lejos del centro caen los tiros en promedio. Varianza = qué tan dispersos están entre sí.</p><div class="footnote">
-<p>Fuente: <a href="https://www.geeksforgeeks.org/machine-learning/bias-vs-variance-in-machine-learning/">GeeksforGeeks — Bias vs Variance in Machine Learning</a></p>
-</div>
-<ul>
-<li><strong>Pocos parámetros</strong> (modelo rígido): los tiros caen agrupados, pero lejos del centro — <strong>sesgo alto</strong>.</li>
-<li><strong>Muchos parámetros</strong> (modelo flexible): los tiros rodean el centro en promedio, pero dispersos — <strong>varianza alta</strong>.</li>
-<li>Nuestra curva de arriba es exactamente esto: pocos parámetros = sesgo (mal ajuste, en train y en validación); muchos parámetros = varianza (ajusta train, falla en validación).</li>
-</ul>
 </section>
-<section id="la-intuición-formalizada" class="slide level2">
-<h2>La intuición, formalizada</h2>
-<p>Para un punto <span class="math inline">x_0</span>, el error cuadrático esperado de un estimador <span class="math inline">\hat f</span> se descompone en tres piezas:</p>
-<p><span class="math display">
-\mathbb{E}\big[(y_0-\hat f(x_0))^2\big]
-= \underbrace{\big(\mathbb{E}[\hat f(x_0)]-f(x_0)\big)^2}_{\text{sesgo}^2}
-+ \underbrace{\mathrm{Var}(\hat f(x_0))}_{\text{varianza}}
-+ \underbrace{\sigma^2}_{\text{irreducible}}.
-</span></p>
+<section id="la-regla-de-evaluación-antes-de-ver-los-datos" class="slide level2">
+<h2>La regla de evaluación antes de ver los datos</h2>
+<p>Antes de discutir Ridge o LASSO fijamos una regla que vale para todo el laboratorio:</p>
 <table class="caption-top">
 <colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
 </colgroup>
 <thead>
 <tr class="header">
-<th>Símbolo</th>
-<th>Significado</th>
+<th>Nombre</th>
+<th>Función</th>
+<th>Pregunta</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><span class="math inline">f(x_0)</span></td>
-<td>la relación verdadera (desconocida) entre predictores y outcome</td>
+<td><code>train</code></td>
+<td>ajustar</td>
+<td>¿qué coeficientes aprende el modelo?</td>
 </tr>
 <tr class="even">
-<td><span class="math inline">\hat f(x_0)</span></td>
-<td>nuestra estimación, que cambiaría si cambiara la muestra</td>
+<td><code>valid</code></td>
+<td>elegir</td>
+<td>¿qué complejidad o hiperparámetro funciona mejor fuera de ajuste?</td>
 </tr>
 <tr class="odd">
-<td><span class="math inline">\mathbb{E}[\hat f(x_0)]-f(x_0)</span></td>
-<td><strong>sesgo</strong>: error sistemático por usar un modelo demasiado rígido</td>
-</tr>
-<tr class="even">
-<td><span class="math inline">\mathrm{Var}(\hat f(x_0))</span></td>
-<td><strong>varianza</strong>: cuánto cambia el ajuste de muestra a muestra</td>
-</tr>
-<tr class="odd">
-<td><span class="math inline">\sigma^2</span></td>
-<td>ruido irreducible; ninguna técnica lo elimina</td>
+<td><code>test</code></td>
+<td>reportar</td>
+<td>¿cómo rinde la decisión ya congelada en datos nuevos?</td>
 </tr>
 </tbody>
 </table>
-<p>Regularizar <em>aumenta</em> el sesgo a propósito para <em>reducir</em> la varianza — conviene exactamente cuando la caída de varianza supera el aumento de sesgo, que es lo que vimos en la curva de validación.</p>
+<p>En la Parte 1 hablamos del <strong>principio</strong>. En la Parte 2 lo implementamos con bloques temporales concretos de <code>Bikeshare</code>: primero se define la partición y después se usa <code>valid</code> para seleccionar.</p>
+<div class="callout callout-warning callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Warning</strong></p>
+</div>
+<div class="callout-content">
+<p><code>test</code> no es “otra validación”. Es el último chequeo y se consulta una sola vez, después de cerrar todas las decisiones.</p>
+</div>
+</div>
+</div>
 </section>
-<section id="el-compromiso-en-una-imagen" class="slide level2">
-<h2>El compromiso, en una imagen</h2>
+<section id="la-historia-detrás-del-método" class="slide level2">
+<h2>La historia detrás del método</h2>
+<p>Estos métodos no nacieron en ciencias sociales ni con bicicletas — nacieron de dos problemas concretos:</p>
+<ul>
+<li><strong>Ridge (Hoerl &amp; Kennard, 1970):</strong> en química analítica, decenas de mediciones espectrales altamente correlacionadas entre sí producían coeficientes de mínimos cuadrados enormes e inestables, aunque el ajuste se viera perfecto. La solución: sumar una pequeña penalización para estabilizar la estimación.</li>
+<li><strong>LASSO (Tibshirani, 1996):</strong> en genómica y otros campos con miles de predictores y pocos casos, Ridge estabilizaba pero no simplificaba — seguía usando todas las variables. Tibshirani buscó un método que, además de estabilizar, <strong>eligiera</strong> automáticamente cuáles variables importan.</li>
+</ul>
+<div class="fragment">
+<p>El hilo común: ambos métodos nacen cuando los predictores son <strong>muchos, correlacionados, o ambos</strong>. En la Parte 2 vamos a ver el dataset real que usó el propio Tibshirani.</p>
+</div>
+</section>
+<section id="por-qué-no-basta-con-mínimos-cuadrados" class="slide level2">
+<h2>Por qué no basta con mínimos cuadrados</h2>
+<p>ISLR da dos razones para buscar alternativas al logit/OLS sin penalizar:</p>
+<ul>
+<li><strong>Precisión predictiva:</strong> si <span class="math inline">p</span> (número de predictores) se acerca a <span class="math inline">n</span> (observaciones), mínimos cuadrados tiene <strong>varianza altísima</strong>; si <span class="math inline">p&gt;n</span>, ni siquiera hay una solución única. Encoger los coeficientes reduce mucho la varianza a cambio de un poco de sesgo.</li>
+<li><strong>Interpretabilidad:</strong> con muchas variables irrelevantes, el modelo es difícil de leer. Mínimos cuadrados casi nunca pone un coeficiente en <strong>exactamente cero</strong> — no elimina nada por sí solo.</li>
+</ul>
 
-<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20251209150317698595/model_complexity.webp" style="width:60.0%" class="r-stretch quarto-figure-center"><p class="caption">Sesgo, varianza y error total en función de la complejidad del modelo.</p><div class="footnote">
-<p>Fuente: <a href="https://www.geeksforgeeks.org/machine-learning/what-is-ridge-regression/">GeeksforGeeks — What is Ridge Regression</a></p>
+<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20251212100155382352/frame_3244.webp" style="width:42.0%" class="r-stretch quarto-figure-center"><p class="caption">Sesgo = qué tan lejos del centro caen los tiros en promedio. Varianza = qué tan dispersos están entre sí.</p><div class="footnote">
+<p>Fuente: <a href="https://www.geeksforgeeks.org/machine-learning/bias-vs-variance-in-machine-learning/">GeeksforGeeks — Bias vs Variance in Machine Learning</a></p>
 </div>
+<p>Ya vimos esta descomposición con polinomios en la clase 14: <span class="math inline">E[(Y-\hat f)^2]=\text{sesgo}^2+\text{varianza}+\sigma^2</span>. Regularizar <strong>aumenta</strong> el sesgo a propósito para <strong>reducir</strong> la varianza.</p>
+</section>
+<section id="la-alternativa-obvia-elegir-variables-a-mano" class="slide level2">
+<h2>6.1 — La alternativa obvia: elegir variables a mano</h2>
+<p>Si el problema es tener demasiados parámetros, lo más directo parece ser <strong>probar subconjuntos de variables</strong> y quedarnos con el mejor:</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Método</th>
+<th>Cómo busca</th>
+<th>Selección</th>
+<th>Problema</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mejor subconjunto</td>
+<td>prueba <strong>todas</strong> las combinaciones posibles</td>
+<td>dura (0/1)</td>
+<td><span class="math inline">2^p</span> modelos — inviable con <span class="math inline">p</span> grande</td>
+</tr>
+<tr class="even">
+<td>Paso a paso (<em>stepwise</em>)</td>
+<td>agrega o quita una variable a la vez</td>
+<td>dura</td>
+<td><em>greedy</em>: puede quedar atrapado en un óptimo local</td>
+</tr>
+</tbody>
+</table>
+
+<img data-src="https://www.mihaileric.com/static/model-selection-meme-bd4a6a86f615583d1a1bbc497ca4640e-67414.jpeg" class="quarto-figure quarto-figure-center r-stretch" style="width:38.0%"><div class="fragment">
+<p>Con <span class="math inline">p=20</span> predictores, el mejor subconjunto ya exige evaluar <span class="math inline">2^{20}\approx 1</span> millón de modelos. Con interacciones (como hora × mes) <span class="math inline">p</span> puede pasar de 250. Stepwise es rápido, pero cada decisión de incluir o excluir una variable es <strong>discreta</strong>: un cambio mínimo en los datos puede alterar qué variables entran.</p>
+</div>
+</section>
+<section id="cómo-se-elige-el-mejor-subconjunto" class="slide level2">
+<h2>6.1.3 — ¿Cómo se elige el mejor subconjunto?</h2>
+<p><strong>Nunca</strong> comparando RSS o <span class="math inline">R^2</span> en entrenamiento — siempre favorecen al modelo con más variables. ISLR ofrece dos caminos, ambos ya vistos en la clase 14:</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Camino</th>
+<th>Qué hace</th>
+<th>Visto en</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">C_p</span>, AIC, BIC, <span class="math inline">R^2</span> ajustado</td>
+<td>ajustan el error de entrenamiento con una penalización analítica por <span class="math inline">k</span> parámetros</td>
+<td>clase 14</td>
+</tr>
+<tr class="even">
+<td>Validación / validación cruzada</td>
+<td>miden el error directamente en datos que el modelo no usó para ajustar</td>
+<td>clase 14</td>
+</tr>
+</tbody>
+</table>
+<p>Aquí “validación” todavía es el <strong>principio general</strong>. En el laboratorio definiremos explícitamente qué observaciones son <code>train</code>, cuáles son <code>valid</code> y cuál bloque queda sellado como <code>test</code>.</p>
+<p>Ridge y LASSO reemplazan la búsqueda <strong>discreta</strong> de subconjuntos por una penalización <strong>continua</strong>: un solo problema de optimización convexo, no una búsqueda combinatoria. Para ver por qué, primero hay que nombrar el punto de partida.</p>
+</section>
+<section id="el-punto-de-partida-estimación-sin-restricción" class="slide level2">
+<h2>El punto de partida: estimación sin restricción</h2>
+<p>Todo el curso, hasta hoy, resolvimos:</p>
+<p><span class="math display">
+\widehat{\boldsymbol\beta}^{\text{MLE}}=\arg\min_{\boldsymbol\beta}\big\{-\ell(\boldsymbol\beta)\big\}.
+</span></p>
+<p>Sin restricción sobre <span class="math inline">\boldsymbol\beta</span>: el óptimo es el que mejor ajusta estos datos, sin importar cuán grandes salgan los coeficientes. Esta es la estimación de <strong>máxima verosimilitud</strong> de siempre — GLM, logit, Poisson. Hoy le agregamos una restricción sobre el <strong>tamaño</strong> de <span class="math inline">\boldsymbol\beta</span>.</p>
+</section>
+<section id="el-marco-general-penalizar-con-una-norma" class="slide level2">
+<h2>El marco general: penalizar con una norma</h2>
+<p>Para <span class="math inline">q\ge 1</span>, la norma <span class="math inline">L_q</span> de un vector es <span class="math inline">\|\boldsymbol\beta\|_q=\big(\sum_j|\beta_j|^q\big)^{1/q}</span>. En la práctica penalizamos <span class="math inline">\|\boldsymbol\beta\|_q^q=\sum_j|\beta_j|^q</span> — mismo mínimo, sin la raíz incómoda de derivar:</p>
+<p><span class="math display">
+\widehat{\boldsymbol\beta}_{\lambda,q}=\arg\min_{\boldsymbol\beta}\left\{-\ell(\boldsymbol\beta)+\lambda\sum_j|\beta_j|^q\right\}.
+</span></p>
 <ul>
-<li><span class="math inline">\lambda=0</span> (sin penalizar): sesgo bajo, varianza alta → la mitad derecha de nuestra curva de validación.</li>
-<li><span class="math inline">\lambda\to\infty</span>: sesgo alto, varianza baja → subajuste.</li>
-<li>Existe un <span class="math inline">\lambda^{*}</span> intermedio que minimiza el error fuera de muestra — no lo conocemos, lo <strong>estimamos con validación</strong>.</li>
+<li><span class="math inline">\lambda=0</span>: para cualquier <span class="math inline">q</span>, recupera exactamente <span class="math inline">\widehat{\boldsymbol\beta}^{\text{MLE}}</span> — la estimación sin restricción de la slide anterior.</li>
+<li><span class="math inline">q=2</span>: Ridge. <span class="math inline">q=1</span>: LASSO. Ambas son normas verdaderas — ambas convexas.</li>
 </ul>
-</section>
-<section id="tres-formas-de-penalizar-en-una-frase" class="slide level2">
-<h2>Tres formas de penalizar, en una frase</h2>
-<p>Antes de cualquier fórmula, la idea completa en tres oraciones:</p>
-<ul>
-<li><strong>Ridge</strong>: encoge <strong>todos</strong> los coeficientes hacia cero, sin eliminar ninguno.</li>
-<li><strong>LASSO</strong>: encoge y además puede llevar algunos coeficientes <strong>exactamente a cero</strong> — selecciona variables.</li>
-<li><strong>Elastic Net</strong>: un punto intermedio entre ambos.</li>
-</ul>
-<p>Todo lo que sigue en esta clase es la formalización — y luego la implementación — de estas tres frases.</p>
-</section>
-<section id="configuración-outcome-y-partición" class="slide level2">
-<h2>Configuración: outcome y partición</h2>
-<p>El módulo completo (clases 15–18) comparte la misma preparación de datos. Primero definimos el outcome y partimos los datos:</p>
-</section>
-<section id="configuración-la-matriz-de-diseño" class="slide level2">
-<h2>Configuración: la matriz de diseño</h2>
-<p>Sobre esos datos construimos la matriz de predictores <span class="math inline">X</span> que usarán Ridge, LASSO y Elastic Net:</p>
-</section>
-<section id="el-diseño-de-datos-de-hoy" class="slide level2">
-<h2>El diseño de datos de hoy</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 3
-  observaciones_train variables_base columnas_modelo
-                &lt;int&gt;          &lt;dbl&gt;           &lt;int&gt;
-1                5162              9              60</code></pre>
-</div>
-</div>
-<p>La expansión incluye no linealidad en clima, indicadores de calendario e interacción hora × día hábil — exactamente el tipo de términos que, en la curva de arriba, empujaba el modelo hacia el sobreajuste. <code>temp</code> y <code>atemp</code> son además deliberadamente casi idénticas: veremos que ese tipo de colinealidad es precisamente donde Ridge resulta más útil.</p>
-</section>
-<section id="tres-conjuntos-tres-funciones" class="slide level2">
-<h2>Tres conjuntos, tres funciones</h2>
-<p>Antes de penalizar nada, fijemos la disciplina de evaluación — ya la usamos antes (bootstrap, validación) pero aquí es central, no un anexo:</p>
+<div class="fragment">
+<p>¿Y “mejor subconjunto”? Penaliza <span class="math inline">\#\{j:\beta_j\ne0\}</span> — cuántos coeficientes son distintos de cero. A veces se le llama “norma” <span class="math inline">L_0</span>, pero no cumple las propiedades de una norma (no es homogénea: duplicar <span class="math inline">\boldsymbol\beta</span> no duplica el conteo). Es exactamente lo que vimos antes, y explica por qué no es convexo: <strong>contar no es una función suave</strong>.</p>
 <table class="caption-top">
 <thead>
 <tr class="header">
-<th>Conjunto</th>
-<th style="text-align: right;">Proporción</th>
-<th>Función</th>
+<th>Penalización</th>
+<th>Convexa</th>
+<th>Selecciona variables</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Entrenamiento</td>
-<td style="text-align: right;">60%</td>
-<td>estimar coeficientes</td>
+<td><span class="math inline">\#\{\beta_j\ne0\}</span> — mejor subconjunto</td>
+<td>no</td>
+<td>sí — combinatoria</td>
 </tr>
 <tr class="even">
-<td>Validación</td>
-<td style="text-align: right;">20%</td>
-<td>elegir <span class="math inline">\alpha</span> y <span class="math inline">\lambda</span></td>
+<td><span class="math inline">L_1=\sum_j|\beta_j|</span> — LASSO</td>
+<td>sí</td>
+<td>sí — continua</td>
 </tr>
 <tr class="odd">
-<td>Test</td>
-<td style="text-align: right;">20%</td>
-<td>estimar desempeño final, <strong>una sola vez</strong></td>
+<td><span class="math inline">L_2=\sum_j\beta_j^2</span> — Ridge</td>
+<td>sí</td>
+<td>no</td>
 </tr>
 </tbody>
 </table>
-<p>Mirar el test durante el tuning produce <strong>filtración de información</strong>: el desempeño deja de ser genuinamente fuera de muestra — el mismo problema, en miniatura, que acabamos de ver en la curva de sobreajuste.</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 3 × 4
-  conjunto      primer_día último_día horas
-  &lt;chr&gt;              &lt;dbl&gt;      &lt;dbl&gt; &lt;int&gt;
-1 Entrenamiento          1        219  5162
-2 Validación           220        292  1735
-3 Test                 293        365  1748</code></pre>
-</div>
-</div>
-<p>Entrenamos con el pasado, elegimos hiperparámetros en un período posterior y reservamos los últimos días para test: una partición aleatoria sería optimista si horas vecinas comparten patrones no observados.</p>
-</section></section>
-<section>
-<section id="ridge" class="title-slide slide level1 inverse center middle" data-background-color="#1B4B5A">
-<h1>Ridge</h1>
-
-</section>
-<section id="motivación-cuando-los-predictores-se-parecen-entre-sí" class="slide level2">
-<h2>Motivación: cuando los predictores se parecen entre sí</h2>
-<p><code>temp</code> y <code>atemp</code> están altamente correlacionadas. En un GLM sin penalizar, esto genera un problema específico: <span class="math inline">X^\top X</span> se vuelve casi no invertible, y pequeños cambios en la muestra producen coeficientes muy distintos — alta varianza, tal como vimos arriba.</p>
-<div class="fragment">
-<p><strong>Ridge</strong> ataca exactamente ese síntoma: en vez de dejar que los coeficientes crezcan sin control para “explicar” la colinealidad, los penaliza por tamaño.</p>
+<p>LASSO es, en este sentido, un puente: la relajación convexa más cercana al conteo que todavía puede poner un coeficiente en exactamente 0.</p>
 </div>
 </section>
-<section id="intuición-el-estimador-como-compromiso" class="slide level2">
-<h2>Intuición: el estimador como compromiso</h2>
-<p>En la geometría familiar de mínimos cuadrados, agregar una penalización por el tamaño de <span class="math inline">\boldsymbol\beta</span> es “tirar” al estimador hacia el origen, un poco menos lejos de donde los datos solos lo llevarían.</p>
-
-<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20251209150233295936/ridge_estimate.webp" style="width:50.0%" class="r-stretch quarto-figure-center"><p class="caption">El estimador Ridge (verde) es el punto donde las curvas de nivel de la pérdida (elipses) tocan primero la región de restricción circular.</p><div class="footnote">
-<p>Fuente: <a href="https://www.geeksforgeeks.org/machine-learning/what-is-ridge-regression/">GeeksforGeeks — What is Ridge Regression</a></p>
-</div>
-</section>
-<section id="definición-formal-penalización-l_2" class="slide level2">
-<h2>Definición formal: penalización <span class="math inline">L_2</span></h2>
-<p>Partimos de la pérdida logística y agregamos un costo por coeficientes grandes:</p>
+<section id="ridge-la-penalización-l_2" class="slide level2">
+<h2>6.2.1 — Ridge: la penalización <span class="math inline">L_2</span></h2>
 <p><span class="math display">
 \widehat{\boldsymbol\beta}^{\text{ridge}}
 =\arg\min_{\boldsymbol\beta}
-\left\{-\ell(\boldsymbol\beta)+\lambda \underbrace{\frac{1}{2}\sum_{j=1}^{p}\beta_j^2}_{P(\boldsymbol\beta)}\right\}.
-</span></p>
-<table class="caption-top">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Símbolo</th>
-<th>Significado</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><span class="math inline">\ell(\boldsymbol\beta)</span></td>
-<td>log-verosimilitud logística: qué tan bien predicen las probabilidades</td>
-</tr>
-<tr class="even">
-<td><span class="math inline">P(\boldsymbol\beta)</span></td>
-<td>penalización: qué tan grandes son los coeficientes</td>
-</tr>
-<tr class="odd">
-<td><span class="math inline">\lambda\ge 0</span></td>
-<td>intensidad de la penalización: el “dial” que elegiremos con validación</td>
-</tr>
-</tbody>
-</table>
-<p><span class="math inline">\lambda=0</span> recupera el ajuste sin penalizar; <span class="math inline">\lambda</span> grande empuja todos los coeficientes hacia 0. El intercepto nunca se penaliza — no tiene sentido “encogerlo” hacia una demanda promedio de cero.</p>
-</section>
-<section id="la-verosimilitud-que-penalizamos" class="slide level2">
-<h2>La verosimilitud que penalizamos</h2>
-<p>Con log-odds <span class="math inline">\eta_i=\beta_0+x_i^\top\boldsymbol\beta</span> y <span class="math inline">p_i=\sigma(\eta_i)</span>:</p>
-<p><span class="math display">
-\ell(\boldsymbol\beta)=\sum_{i=1}^{n}\big[\,y_i\,\eta_i-\log(1+e^{\eta_i})\,\big].
+\left\{\text{RSS (o }-\ell\text{)}+\lambda \underbrace{\sum_{j=1}^{p}\beta_j^2}_{P(\boldsymbol\beta)}\right\},
+\qquad \lambda \ge 0.
 </span></p>
 <ul>
-<li><span class="math inline">y_i\in\{0,1\}</span>: demanda alta observada.</li>
-<li><span class="math inline">\eta_i</span>: log-odds predicho; <span class="math inline">p_i=\sigma(\eta_i)</span>: probabilidad predicha — el mismo logit de las clases 9 a 11.</li>
-<li>Maximizar <span class="math inline">\ell</span> equivale a minimizar la <strong>devianza</strong> <span class="math inline">-2\ell</span>.</li>
-</ul>
-<p>Minimizar <span class="math inline">-\ell+\lambda P(\boldsymbol\beta)</span> es, entonces, “ajustar bien las probabilidades <strong>sin</strong> coeficientes desmesurados”.</p>
-</section>
-<section id="descomposición-matemática-solución-cerrada" class="slide level2">
-<h2>Descomposición matemática: solución cerrada</h2>
-<p>En regresión lineal, Ridge tiene solución explícita — útil para ver <em>qué hace</em> la penalización:</p>
-<p><span class="math display">
-\widehat{\boldsymbol\beta}^{\text{ridge}}=(X^\top X+\lambda I)^{-1}X^\top y.
-</span></p>
-<ul>
-<li>Sumar <span class="math inline">\lambda I</span> vuelve <strong>invertible</strong> a <span class="math inline">X^\top X</span> aunque haya colinealidad casi perfecta (<code>temp</code> y <code>atemp</code>) — resuelve exactamente el problema que motivó esta técnica.</li>
-<li><span class="math inline">\lambda=0</span> recupera mínimos cuadrados; <span class="math inline">\lambda\to\infty</span> lleva <span class="math inline">\widehat{\boldsymbol\beta}\to 0</span>.</li>
-<li>En regresión logística no hay fórmula cerrada, pero la misma penalización <span class="math inline">+\lambda I</span> estabiliza cada paso del ajuste iterativo (IRLS).</li>
-</ul>
-</section>
-<section id="descomposición-matemática-qué-hace-ridge-dirección-por-dirección" class="slide level2">
-<h2>Descomposición matemática: qué hace Ridge, dirección por dirección</h2>
-<p>Con la descomposición <span class="math inline">X=UDV^\top</span> (columnas estandarizadas), las predicciones Ridge se contraen <strong>dirección por dirección</strong>:</p>
-<p><span class="math display">
-\widehat y=\sum_{j}u_j\,\frac{d_j^{2}}{d_j^{2}+\lambda}\,u_j^\top y.
-</span></p>
-<ul>
-<li><span class="math inline">d_j</span>: valor singular de la dirección <span class="math inline">j</span> — cuánta varianza tiene esa combinación de predictores.</li>
-<li>Factor de contracción <span class="math inline">d_j^{2}/(d_j^{2}+\lambda)\in(0,1)</span>.</li>
-<li>Direcciones de <strong>poca varianza</strong> (colineales, <span class="math inline">d_j</span> pequeño) se contraen <strong>más</strong> — son justo las que producen coeficientes inestables.</li>
+<li><span class="math inline">\lambda=0</span>: recupera el ajuste sin penalizar.</li>
+<li><span class="math inline">\lambda\to\infty</span>: todos los coeficientes (menos el intercepto) → 0.</li>
+<li>El intercepto <strong>nunca se penaliza</strong>: no representa el efecto de un predictor, sino el nivel base.</li>
 </ul>
 
-<img data-src="class_16_files/figure-revealjs/svd-shrinkage-1.png" width="960" class="r-stretch"><p>Las direcciones de menor varianza —donde viven combinaciones como <code>temp</code><span class="math inline">\approx</span><code>atemp</code>— son las más contraídas. Ridge no las elimina; les quita influencia.</p>
-</section>
-<section id="por-qué-estandarizar-antes-de-penalizar" class="slide level2">
-<h2>Por qué estandarizar antes de penalizar</h2>
-<p>La penalización opera sobre el tamaño <em>numérico</em> de cada coeficiente. Si <code>temp</code> variara entre 0 y 1 y otra variable entre 0 y 1.000, una misma magnitud de coeficiente no sería comparable — la penalización castigaría por unidades, no por importancia real.</p>
-<p><span class="math display">z_{ij}=\frac{x_{ij}-\bar{x}_{j,\text{train}}}{s_{j,\text{train}}}.</span></p>
-<p><code>glmnet</code> estandariza los predictores por defecto, usando solo estadísticas del conjunto de entrenamiento (nunca de validación o test).</p>
-</section>
-<section id="ridge-ejemplo-empírico" class="slide level2">
-<h2>Ridge: ejemplo empírico</h2>
-
-<img data-src="class_16_files/figure-revealjs/ridge-path-1.png" width="960" class="r-stretch"></section>
-<section id="interpretación-leer-la-trayectoria" class="slide level2">
-<h2>Interpretación: leer la trayectoria</h2>
-<ul>
-<li>Hacia la derecha aumenta <span class="math inline">\lambda</span>; todos los coeficientes se contraen <strong>suavemente</strong>, sin saltos.</li>
-<li>Ninguna variable desaparece de forma abrupta — consistente con lo que la SVD predijo.</li>
-<li>El signo y el tamaño de cada coeficiente deben interpretarse condicionalmente al resto del modelo, igual que en cualquier GLM.</li>
-<li>Esta trayectoria muestra <strong>cómo cambia el modelo</strong> con <span class="math inline">\lambda</span>; todavía no nos dice cuál <span class="math inline">\lambda</span> predice mejor — eso lo resolveremos con validación, más adelante en la clase.</li>
-</ul>
-</section></section>
-<section>
-<section id="lasso-y-elastic-net" class="title-slide slide level1 inverse center middle" data-background-color="#1B4B5A">
-<h1>LASSO y Elastic Net</h1>
-
-</section>
-<section id="motivación-ridge-nunca-elige" class="slide level2">
-<h2>Motivación: Ridge nunca elige</h2>
-<p>Ridge resuelve la inestabilidad, pero deja un problema abierto: <strong>nunca elimina un predictor</strong>. Con muchas variables (interacciones, indicadores de calendario), sería útil que el propio ajuste nos dijera cuáles sobran — no solo que las encoja un poco.</p>
-<div class="fragment">
-<p><strong>LASSO</strong> cambia la forma de la penalización para lograr justamente eso: contracción <strong>y</strong> selección de variables, en el mismo procedimiento.</p>
+<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20251209150233295936/ridge_estimate.webp" style="width:42.0%" class="r-stretch quarto-figure-center"><p class="caption">El estimador Ridge (verde) es el punto donde las curvas de nivel de la pérdida (elipses) tocan primero la región de restricción circular.</p><div class="footnote">
+<p>Fuente: <a href="https://www.geeksforgeeks.org/machine-learning/what-is-ridge-regression/">GeeksforGeeks — What is Ridge Regression</a></p>
 </div>
+<p>Geométricamente: agregar una penalización por el tamaño de <span class="math inline">\boldsymbol\beta</span> es “tirar” al estimador hacia el origen, un poco menos lejos de donde los datos solos lo llevarían. Ridge <strong>nunca</strong> lleva un coeficiente a exactamente 0 — la región circular no tiene esquinas.</p>
 </section>
-<section id="intuición-por-qué-una-forma-distinta-selecciona" class="slide level2">
-<h2>Intuición: por qué una forma distinta selecciona</h2>
-<p>Ridge penaliza <span class="math inline">\sum\beta_j^2</span> (un círculo, en dos dimensiones). LASSO penaliza <span class="math inline">\sum|\beta_j|</span> (un diamante). La diferencia de forma no es cosmética: cambia dónde el óptimo puede caer.</p>
-
-<img data-src="class_16_files/figure-revealjs/l1l2-geometry-1.png" width="960" class="r-stretch"><p>Elipses = curvas de nivel de <span class="math inline">-\ell</span>; círculo = restricción Ridge; diamante = restricción LASSO. El estimador penalizado vive donde esas curvas <strong>tocan por primera vez</strong> la región de restricción. El diamante tiene vértices sobre los ejes — es fácil tocar justo ahí, y en un vértice algún <span class="math inline">\beta_j=0</span>. El círculo no tiene esquinas: contrae, pero casi nunca anula.</p>
+<section id="por-qué-ridge-estabiliza-predictores-correlacionados" class="slide level2">
+<h2>Por qué Ridge estabiliza: predictores correlacionados</h2>
+<p>Si dos predictores (p.&nbsp;ej. <code>temp</code> y <code>atemp</code>, temperatura y sensación térmica) contienen casi la misma información, distintas combinaciones de coeficientes producen casi la misma predicción: <span class="math inline">(\beta_1,\beta_2)=(1,0)</span>, <span class="math inline">(0.5,0.5)</span> o <span class="math inline">(0,1)</span> ajustan casi igual de bien. Sin penalizar, <span class="math inline">X^\top X</span> es casi no invertible y pequeños cambios en la muestra producen coeficientes muy distintos.</p>
+<p>Ridge penaliza por <strong>tamaño</strong>, no solo por ajuste: entre soluciones casi empatadas, prefiere la de coeficientes más chicos y repartidos. Eso es lo que la estabiliza.</p>
 </section>
-<section id="definición-formal-penalización-l_1" class="slide level2">
-<h2>Definición formal: penalización <span class="math inline">L_1</span></h2>
+<section id="lasso-la-penalización-l_1" class="slide level2">
+<h2>6.2.2 — LASSO: la penalización <span class="math inline">L_1</span></h2>
 <p><span class="math display">
 \widehat{\boldsymbol\beta}^{\text{lasso}}
 =\arg\min_{\boldsymbol\beta}
-\left\{-\ell(\boldsymbol\beta)+\lambda \underbrace{\sum_{j=1}^{p}|\beta_j|}_{P(\boldsymbol\beta)}\right\}.
+\left\{\text{RSS (o }-\ell\text{)}+\lambda \underbrace{\sum_{j=1}^{p}|\beta_j|}_{P(\boldsymbol\beta)}\right\}.
 </span></p>
-<p>Misma estructura que Ridge — mismo <span class="math inline">\ell</span>, mismo rol de <span class="math inline">\lambda</span> — la única diferencia es la forma de <span class="math inline">P(\boldsymbol\beta)</span>. Eso basta para cambiar por completo el comportamiento del estimador, como acabamos de ver.</p>
-<p>La selección no implica causalidad: que un coeficiente sea exactamente 0 no prueba que esa variable sea irrelevante sustantivamente, solo que no ayudó a predecir en esta muestra bajo esta penalización.</p>
+<p>Misma estructura que Ridge — mismo rol de <span class="math inline">\lambda</span> — la única diferencia es la <strong>forma</strong> de la penalización: suma de cuadrados vs.&nbsp;suma de valores absolutos. Eso basta para cambiar por completo el comportamiento del estimador.</p>
 </section>
-<section id="descomposición-matemática-soft-thresholding" class="slide level2">
-<h2>Descomposición matemática: soft-thresholding</h2>
-<p>Con predictores ortonormales, la solución LASSO es explícita — y deja ver el mecanismo exacto de la selección:</p>
+<section id="por-qué-lasso-selecciona-y-ridge-no" class="slide level2">
+<h2>Por qué LASSO selecciona y Ridge no</h2>
+
+<img data-src="ridge_lasso_geometry.png" class="quarto-figure quarto-figure-center r-stretch" style="width:58.0%"><p>Círculo = restricción Ridge (<span class="math inline">\sum\beta_j^2\le s</span>); diamante = restricción LASSO (<span class="math inline">\sum|\beta_j|\le s</span>). El estimador penalizado es donde las curvas de nivel de la pérdida (elipses) <strong>tocan primero</strong> la región de restricción.</p>
+<ul>
+<li>El diamante tiene <strong>vértices sobre los ejes</strong> — es fácil tocar justo ahí, y en un vértice algún <span class="math inline">\beta_j=0</span>.</li>
+<li>El círculo no tiene esquinas: contrae, pero casi nunca anula.</li>
+</ul>
+</section>
+<section id="la-mecánica-soft-thresholding" class="slide level2">
+<h2>La mecánica: soft-thresholding</h2>
+<p>Con predictores ortonormales, la solución LASSO es explícita y deja ver el mecanismo exacto:</p>
 <p><span class="math display">
 \widehat\beta_j^{\text{lasso}}
 =\operatorname{sign}\!\big(\widehat\beta_j^{\text{OLS}}\big)\,
 \big(|\widehat\beta_j^{\text{OLS}}|-\lambda\big)_+ .
 </span></p>
-<ul>
-<li><span class="math inline">(\cdot)_+</span> = parte positiva: si <span class="math inline">|\widehat\beta_j^{\text{OLS}}|&lt;\lambda</span>, el coeficiente se vuelve <strong>exactamente 0</strong>.</li>
-<li>Ridge, en cambio, <strong>escala</strong> todos por igual: <span class="math inline">\widehat\beta_j^{\text{ridge}}=\widehat\beta_j^{\text{OLS}}/(1+\lambda)</span> — nunca llega a 0 exacto.</li>
-</ul>
-
-<img data-src="class_16_files/figure-revealjs/soft-threshold-1.png" width="960" class="r-stretch"></section>
-<section id="cómo-se-optimiza-en-la-práctica" class="slide level2">
-<h2>Cómo se optimiza en la práctica</h2>
-<p><code>glmnet</code> usa <strong>descenso por coordenadas</strong>: fija todos los coeficientes menos uno y lo actualiza con la fórmula de soft-thresholding sobre los <em>residuos parciales</em>, ciclando hasta converger. En logística se combina con IRLS (mínimos cuadrados ponderados iterados, la misma idea que vimos en la clase de MLE).</p>
-<ul>
-<li>Existe un <span class="math inline">\lambda_{\max}=\max_j |x_j^\top(y-\bar y)|/n</span> donde <strong>todos</strong> los coeficientes son 0; por eso la trayectoria empieza vacía.</li>
-<li>La ruta se calcula desde <span class="math inline">\lambda_{\max}</span> hacia abajo con <em>warm starts</em>: cada solución inicializa la siguiente.</li>
-<li>Alternativa clásica con el mismo resultado: <strong>LARS</strong> (<em>Least Angle Regression</em>), un algoritmo distinto que también traza la ruta completa de LASSO.</li>
-</ul>
+<p>Ridge, en cambio, solo <strong>escala</strong>: <span class="math inline">\widehat\beta_j^{\text{ridge}}=\widehat\beta_j^{\text{OLS}}/(1+\lambda)</span> — nunca llega a 0 exacto.</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: right;">Ridge</th>
+<th style="text-align: right;">LASSO</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Si <span class="math inline">\widehat\beta^{\text{OLS}}=0.6</span>, <span class="math inline">\lambda=1</span></td>
+<td style="text-align: right;"><span class="math inline">0.30</span></td>
+<td style="text-align: right;"><span class="math inline">0</span></td>
+</tr>
+<tr class="even">
+<td>Si <span class="math inline">\widehat\beta^{\text{OLS}}=2.0</span>, <span class="math inline">\lambda=1</span></td>
+<td style="text-align: right;"><span class="math inline">1.00</span></td>
+<td style="text-align: right;"><span class="math inline">1.00</span></td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">(\cdot)_+</span> = parte positiva: si <span class="math inline">|\widehat\beta_j^{\text{OLS}}|&lt;\lambda</span>, LASSO manda el coeficiente a <strong>exactamente 0</strong>. Ridge solo lo encoge.</p>
 </section>
-<section id="lasso-ejemplo-empírico" class="slide level2">
-<h2>LASSO: ejemplo empírico</h2>
-
-<img data-src="class_16_files/figure-revealjs/lasso-path-1.png" width="960" class="r-stretch"></section>
-<section id="interpretación-a-diferencia-de-ridge" class="slide level2">
-<h2>Interpretación: a diferencia de Ridge</h2>
-<p>Compare esta trayectoria con la de Ridge: aquí las variables <strong>entran y salen</strong> del modelo en puntos concretos de <span class="math inline">\lambda</span>, no se contraen todas parejo. Cada vez que una línea toca el cero y se queda ahí, esa variable fue <strong>excluida</strong> para ese nivel de penalización.</p>
-</section>
-<section id="motivación-cuando-además-hay-bloques-correlacionados" class="slide level2">
-<h2>Motivación: cuando además hay bloques correlacionados</h2>
-<p>LASSO selecciona, pero con predictores muy correlacionados (<code>temp</code>, <code>atemp</code>, mes, estacionalidad) tiende a <strong>elegir uno arbitrariamente y descartar el resto</strong> — muestras parecidas pueden terminar con variables distintas seleccionadas.</p>
-<p><strong>Elastic Net</strong> combina ambas penalizaciones para resolver esto:</p>
+<section id="elastic-net-lo-mejor-de-ambos" class="slide level2">
+<h2>Elastic Net: lo mejor de ambos</h2>
+<p>LASSO selecciona, pero con predictores muy correlacionados tiende a <strong>elegir uno arbitrariamente y descartar el resto</strong>. Elastic Net combina ambas penalizaciones:</p>
 <p><span class="math display">
 P_{\alpha}(\boldsymbol\beta)=
-(1-\alpha)\frac{1}{2}\sum_j\beta_j^2+
+(1-\alpha)\sum_j\beta_j^2+
 \alpha\sum_j|\beta_j|.
 </span></p>
 <table class="caption-top">
@@ -598,9 +525,9 @@ P_{\alpha}(\boldsymbol\beta)=
 </table>
 <p>El término <span class="math inline">L_2</span> reparte el peso entre variables correlacionadas (<strong>efecto de agrupamiento</strong>); el término <span class="math inline">L_1</span> conserva la capacidad de anular bloques irrelevantes.</p>
 </section>
-<section id="otros-casos-de-uso" class="slide level2">
-<h2>Otros casos de uso</h2>
-<p>La misma familia de penalizaciones (<span class="math inline">L_1</span>, <span class="math inline">L_2</span>, combinadas) aparece, con el mismo objetivo — controlar complejidad cuando hay muchos predictores o predictores correlacionados —, en dominios muy distintos:</p>
+<section id="ridge-vs.-lasso-cuál-conviene" class="slide level2">
+<h2>Ridge vs.&nbsp;LASSO: ¿cuál conviene?</h2>
+<p>ISLR es explícito: <strong>ninguno domina siempre</strong>. Depende de la estructura real de los coeficientes:</p>
 <table class="caption-top">
 <colgroup>
 <col style="width: 50%">
@@ -608,37 +535,50 @@ P_{\alpha}(\boldsymbol\beta)=
 </colgroup>
 <thead>
 <tr class="header">
-<th>Dominio</th>
-<th>Uso típico</th>
+<th>Situación</th>
+<th>Gana</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Genómica</td>
-<td>LASSO para seleccionar genes relevantes entre miles, con pocos pacientes</td>
+<td>Muchos predictores con efectos moderados, ninguno domina</td>
+<td><strong>Ridge</strong></td>
 </tr>
 <tr class="even">
-<td>Finanzas</td>
-<td>Ridge para estabilizar modelos de riesgo con indicadores macroeconómicos correlacionados</td>
+<td>Pocos predictores con efecto fuerte, el resto irrelevante</td>
+<td><strong>LASSO</strong></td>
 </tr>
 <tr class="odd">
-<td>Texto / NLP</td>
-<td>LASSO sobre miles de frecuencias de palabras, para quedarse con las predictivas</td>
-</tr>
-<tr class="even">
-<td>Marketing</td>
-<td>Elastic Net en modelos de <em>churn</em> con decenas de variables de comportamiento correlacionadas</td>
-</tr>
-<tr class="odd">
-<td>Neuroimagen</td>
-<td>Elastic Net para seleccionar vóxeles relevantes entre decenas de miles</td>
+<td>No sabemos cuál escenario es cierto</td>
+<td><strong>validación decide</strong>, no una preferencia a priori</td>
 </tr>
 </tbody>
 </table>
-<p>En todos los casos, el problema de fondo es el mismo que vimos hoy: muchos predictores, posible colinealidad, y la necesidad de controlar complejidad sin decidir a mano qué variable entra.</p>
+<div class="fragment">
+<p>Interpretación bayesiana (opcional): Ridge equivale a un <em>prior</em> gaussiano sobre <span class="math inline">\boldsymbol\beta</span>; LASSO equivale a un <em>prior</em> doble-exponencial (Laplace), que concentra más masa en 0. Mismo problema, dos supuestos distintos sobre dónde “esperamos” encontrar los coeficientes antes de ver los datos.</p>
+</div>
 </section>
-<section id="comparación-sistemática" class="slide level2">
-<h2>Comparación sistemática</h2>
+<section id="elegir-lambda-y-alpha" class="slide level2">
+<h2>6.2.3 — Elegir <span class="math inline">\lambda</span> (y <span class="math inline">\alpha</span>)</h2>
+<p><span class="math inline">\lambda</span> no se estima maximizando la verosimilitud — si lo hiciéramos, siempre ganaría <span class="math inline">\lambda=0</span> (cero penalización, máximo ajuste, el problema del comienzo). Es un hiperparámetro, y se elige <strong>igual que el grado del polinomio (clase 14) o el umbral <span class="math inline">\tau</span> (clase 15)</strong>: con una curva de validación o <span class="math inline">k</span>-fold CV, minimizando el error fuera de muestra.</p>
+
+<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20251209150317698595/model_complexity.webp" style="width:52.0%" class="r-stretch quarto-figure-center"><p class="caption">Sesgo, varianza y error total en función de la complejidad del modelo — aquí, en función de <span class="math inline">\lambda</span>.</p><div class="footnote">
+<p>Fuente: <a href="https://www.geeksforgeeks.org/machine-learning/what-is-ridge-regression/">GeeksforGeeks — What is Ridge Regression</a></p>
+</div>
+<p><span class="math inline">\lambda=0</span>: sesgo bajo, varianza alta. <span class="math inline">\lambda\to\infty</span>: sesgo alto, varianza baja (subajuste). Existe un <span class="math inline">\lambda^{*}</span> intermedio que minimiza el error — no lo conocemos, lo <strong>estimamos con validación</strong>. Con Elastic Net, <span class="math inline">\alpha</span> se elige igual: una grilla más, evaluada con la misma validación.</p>
+</section>
+<section id="alta-dimensión-cuando-p-se-acerca-a-n-o-lo-supera" class="slide level2">
+<h2>Alta dimensión: cuando <span class="math inline">p</span> se acerca a <span class="math inline">n</span> (o lo supera)</h2>
+<p>Esto conecta con la historia del comienzo (genómica: miles de genes, pocos pacientes):</p>
+<ul>
+<li>Si <span class="math inline">p&gt;n</span>, mínimos cuadrados <strong>no tiene solución única</strong> — ni siquiera se puede calcular.</li>
+<li>LASSO sí puede ajustarse, pero selecciona <strong>a lo sumo <span class="math inline">n</span> variables</strong>, aunque más sean relevantes.</li>
+<li><span class="math inline">R^2</span> y los <span class="math inline">p</span>-valores clásicos de un GLM sin penalizar <strong>dejan de ser confiables</strong> en alta dimensión: un modelo con <span class="math inline">p\approx n</span> puede ajustar perfecto el entrenamiento y no servir para nada fuera de muestra.</li>
+</ul>
+<p>La regularización no es un lujo en este escenario — es la única forma de obtener un modelo.</p>
+</section>
+<section id="síntesis-de-la-parte-1" class="slide level2">
+<h2>Síntesis de la Parte 1</h2>
 <table class="caption-top">
 <colgroup>
 <col style="width: 25%">
@@ -668,112 +608,459 @@ P_{\alpha}(\boldsymbol\beta)=
 <td>algunos en 0, resto achicado</td>
 </tr>
 <tr class="odd">
-<td>Supuesto implícito</td>
-<td>todos los predictores aportan algo</td>
-<td>pocos predictores realmente importan</td>
-<td>hay bloques correlacionados</td>
+<td>Resuelve</td>
+<td>colinealidad / inestabilidad</td>
+<td>selección de variables</td>
+<td>ambos, con bloques correlacionados</td>
 </tr>
 <tr class="even">
 <td>Hiperparámetros</td>
 <td><span class="math inline">\lambda</span></td>
 <td><span class="math inline">\lambda</span></td>
-<td><span class="math inline">\lambda</span> y <span class="math inline">\alpha</span> (2 dimensiones)</td>
+<td><span class="math inline">\lambda</span> y <span class="math inline">\alpha</span></td>
 </tr>
 <tr class="odd">
-<td>Costo computacional</td>
-<td>bajo (ruta cerrada por dirección)</td>
-<td>bajo (coordenadas)</td>
-<td>bajo, pero grilla 2D más cara</td>
-</tr>
-<tr class="even">
-<td>Interpretabilidad</td>
-<td>media (todos los coeficientes activos)</td>
-<td>alta (modelo disperso)</td>
-<td>media-alta</td>
-</tr>
-<tr class="odd">
-<td>Debilidad típica</td>
-<td>no simplifica el modelo</td>
-<td>descarta arbitrariamente entre correlacionados</td>
-<td>más costoso de tunear</td>
+<td>Elección de <span class="math inline">\lambda</span> (y <span class="math inline">\alpha</span>)</td>
+<td>validación / CV — nunca maximizando el ajuste en entrenamiento</td>
+<td></td>
+<td></td>
 </tr>
 </tbody>
 </table>
-<p>La decisión final es empírica: se compara desempeño de validación, no una preferencia a priori — lo hacemos a continuación.</p>
-</section>
-<section id="extensiones" class="slide level2">
-<h2>Extensiones</h2>
-<ul>
-<li><strong>Adaptive LASSO</strong>: pondera la penalización de cada coeficiente según una estimación previa, reduciendo el sesgo de selección de LASSO estándar.</li>
-<li><strong>Group LASSO</strong>: en vez de anular coeficientes individuales, anula <strong>grupos completos</strong> — por ejemplo, todos los indicadores de una variable categórica (como <code>factor(hr)</code>) entran o salen juntos.</li>
-<li><strong>SCAD / MCP</strong>: penalizaciones no convexas que corrigen el sesgo hacia cero que Ridge y LASSO imponen a coeficientes grandes.</li>
-</ul>
-<p>Todas resuelven variantes del mismo problema — controlar complejidad automáticamente — con ajustes a cómo se reparte la penalización.</p>
+<div class="fragment">
+<p>Todo lo anterior es <strong>conceptual</strong> — no hemos tocado una sola fila de datos. Ahora sí: bicicletas, <code>glmnet</code>, y cada línea de código en detalle.</p>
+</div>
 </section></section>
 <section>
-<section id="validación" class="title-slide slide level1 inverse center middle" data-background-color="#1B4B5A">
-<h1>Validación</h1>
+<section id="parte-2-laboratorio-bicicletas-con-glmnet" class="title-slide slide level1 inverse center middle" data-background-color="#1B4B5A">
+<h1>Parte 2 · Laboratorio: bicicletas con <code>glmnet</code></h1>
 
 </section>
-<section id="por-qué-la-validación-no-es-un-anexo" class="slide level2">
-<h2>Por qué la validación no es un anexo</h2>
-<p>Elegimos <span class="math inline">\alpha</span> y <span class="math inline">\lambda</span>; ninguno de los dos se estima maximizando la verosimilitud del modelo. Si los eligiéramos mirando qué tan bien ajustan el conjunto de entrenamiento, siempre ganaría <span class="math inline">\lambda=0</span> — el problema con el que empezamos la clase. Por eso la validación no es un paso posterior: es la forma concreta de resolver el compromiso sesgo-varianza sin hacer trampa.</p>
+<section id="antes-de-ajustar-el-contrato-de-tres-conjuntos" class="slide level2">
+<h2>Antes de ajustar: el contrato de tres conjuntos</h2>
+<p>Desde este punto usaremos siempre los mismos nombres:</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Conjunto</th>
+<th>Qué contiene</th>
+<th>Qué está permitido hacer</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Training / <code>train</code></strong></td>
+<td>pasado temprano</td>
+<td>ajustar coeficientes, estandarizar y aprender el corte de demanda</td>
+</tr>
+<tr class="even">
+<td><strong>Validation / <code>valid</code></strong></td>
+<td>periodo siguiente</td>
+<td>elegir complejidad, <span class="math inline">\alpha</span>, <span class="math inline">\lambda</span> y umbral operativo</td>
+</tr>
+<tr class="odd">
+<td><strong>Testing / <code>test</code></strong></td>
+<td>periodo final, reservado</td>
+<td>reportar desempeño final una sola vez</td>
+</tr>
+</tbody>
+</table>
+<p>La regla es:</p>
+<p><span class="math display">
+\underbrace{\text{ajustar en train}}_{\text{aprender}}\;\longrightarrow\;
+\underbrace{\text{comparar en valid}}_{\text{elegir}}\;\longrightarrow\;
+\underbrace{\text{reajustar train+valid}}_{\text{congelar la decisión}}\;\longrightarrow\;
+\underbrace{\text{evaluar en test}}_{\text{reportar}}
+</span></p>
+<p><strong>El <code>test</code> no participa en ninguna elección.</strong> Si miramos su desempeño para cambiar <span class="math inline">\alpha</span>, <span class="math inline">\lambda</span>, variables o umbral, deja de ser un test y pasa a ser otra validación.</p>
+<div class="callout callout-note callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Note</strong></p>
+</div>
+<div class="callout-content">
+<p>En la clase, “validación” significará por defecto este <strong>bloque temporal <code>valid</code></strong>. Más adelante mostraremos <code>cv.glmnet()</code> como una alternativa de validación cruzada interna, no como un cuarto conjunto.</p>
+</div>
+</div>
+</div>
 </section>
-<section id="protocolo-de-tuning" class="slide level2">
-<h2>Protocolo de tuning</h2>
+<section id="la-solicitud-predictiva" class="slide level2">
+<h2>La solicitud predictiva</h2>
+<blockquote>
+<p><strong>Al cierre de cada día, estimar qué horas del día siguiente tendrán demanda alta, para priorizar el rebalanceo de bicicletas.</strong></p>
+</blockquote>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Elemento</th>
+<th>Definición</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Unidad y horizonte</td>
+<td>una hora, hasta 24 horas</td>
+</tr>
+<tr class="even">
+<td>Target</td>
+<td>sobre el percentil 75 aprendido en train</td>
+</tr>
+<tr class="odd">
+<td>Información</td>
+<td>calendario, hora y pronóstico meteorológico</td>
+</tr>
+<tr class="even">
+<td>Costo</td>
+<td>falso negativo = 3; falso positivo = 1</td>
+</tr>
+<tr class="odd">
+<td>Evaluación</td>
+<td>partición temporal 60/20/20</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Dos cortes distintos:</strong> el percentil 75 transforma demanda observada en <span class="math inline">Y\in\{0,1\}</span>; el umbral de probabilidad transforma <span class="math inline">\hat p</span> en una acción. El primero se aprende en <code>train</code>; el segundo se elegirá después usando costos en <code>valid</code>, como en la clase 15.</p>
+</section>
+<section id="el-problema-con-datos-reales" class="slide level2">
+<h2>El problema, con datos reales</h2>
+<p>Démosle al logit una interacción <strong>completa</strong> entre hora (24 categorías) y mes (12 categorías): mucho más flexible que la interacción hora × día hábil que usamos hasta ahora. Agreguemos esas variables de a poco y observemos qué pasa.</p>
+<p>Aquí aparece por primera vez el uso operativo de la partición: cada modelo se <strong>ajusta solamente en <code>train</code></strong> y se mide en <strong><code>valid</code></strong>. El conjunto <strong><code>test</code> permanece cerrado</strong> y no se toca en esta curva.</p>
+
+<img data-src="class_16_files/figure-revealjs/overfit-demo-1.png" width="960" class="r-stretch"><p>La interacción completa no genera <span class="math inline">24\times12=288</span> columnas porque <code>model.matrix</code> usa una categoría de referencia: genera <span class="math inline">(24-1)(12-1)=253</span> columnas de interacción. Aquí <span class="math inline">k</span> solo controla cuántas de esas columnas agregamos.</p>
+</section>
+<section id="leer-la-curva" class="slide level2">
+<h2>Leer la curva</h2>
+<ul>
+<li>Con pocos parámetros, <strong>ambos</strong> errores bajan juntos: el modelo aprende señal real (temperatura, hora, clima).</li>
+<li>Pasado cierto punto, el error de <strong><code>train</code></strong> sigue bajando, pero el de <strong><code>valid</code></strong> empieza a <strong>subir</strong>: el modelo empieza a ajustar celdas hora×mes con pocas observaciones, memorizando ruido específico de esa combinación.</li>
+<li><strong>No sabíamos de antemano</strong> cuál de estas 253 variables era señal y cuál era ruido — todas entraron con la misma justificación teórica (“la demanda varía por hora y por estación”).</li>
+</ul>
+<p>La decisión concreta en esta curva es: <strong>qué nivel de complejidad sobrevive en <code>valid</code></strong>. Todavía no estamos reportando desempeño final; eso ocurrirá recién cuando el modelo y sus hiperparámetros estén congelados y usemos <code>test</code> una sola vez.</p>
+<p>Exactamente el problema de la Parte 1: demasiados parámetros, elegidos a mano. Veamos si Ridge y LASSO lo resuelven.</p>
+</section>
+<section id="configuración-outcome-y-partición" class="slide level2">
+<h2>Configuración: outcome y partición</h2>
+<p>El módulo completo (clases 15–18) comparte la misma preparación de datos.</p>
+</section>
+<section id="configuración-la-matriz-de-diseño" class="slide level2">
+<h2>Configuración: la matriz de diseño</h2>
+<p>Sobre esos datos construimos la matriz de predictores <span class="math inline">X</span> que usarán Ridge, LASSO y Elastic Net:</p>
+<p><span class="math display">
+X=\texttt{setup\$x\_all}
+=\texttt{model.matrix(setup\$features,\ bikedata)[,-1]}.
+</span></p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  observaciones_train términos_formula columnas_modelo
+                &lt;int&gt;            &lt;dbl&gt;           &lt;int&gt;
+1                5162               12              60</code></pre>
+</div>
+</div>
+<p><code>temp</code> y <code>atemp</code> son deliberadamente casi idénticas: ese es precisamente el tipo de colinealidad donde Ridge resulta más útil. <code>I(temp^2)</code> le dice a R que eleve la variable al cuadrado; <code>[, -1]</code> elimina el intercepto porque <code>glmnet</code> lo estima por separado y no lo penaliza.</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Término</th>
+<th>Qué agrega</th>
+<th style="text-align: right;">Columnas típicas</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>temp</code>, <code>atemp</code></td>
+<td>efectos lineales</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="even">
+<td><code>I(temp^2)</code>, <code>I(hum^2)</code></td>
+<td>curvatura</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="odd">
+<td><code>factor(weathersit)</code></td>
+<td>indicadores con referencia</td>
+<td style="text-align: right;">varias</td>
+</tr>
+<tr class="even">
+<td><code>factor(hr)</code></td>
+<td>una columna por hora menos una referencia</td>
+<td style="text-align: right;">23</td>
+</tr>
+<tr class="odd">
+<td><code>factor(hr) * workingday</code></td>
+<td>interacción hora × día hábil</td>
+<td style="text-align: right;">23</td>
+</tr>
+<tr class="even">
+<td>seno/coseno del mes</td>
+<td>estacionalidad circular</td>
+<td style="text-align: right;">2</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ampliando-la-matriz-metemos-el-problema-que-ya-vimos" class="slide level2">
+<h2>Ampliando la matriz: metemos el problema que ya vimos</h2>
+<p>Con esta matriz el logit sin penalizar no sobreajusta demasiado — el contraste con Ridge/LASSO se notaría poco. Agreguemos exactamente el problema de la sección “El problema, con datos reales”: la interacción completa hora × mes. <code>x_hour_month</code> ya está calculada — no la recalculamos.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  columnas_antes columnas_hora_mes_agregadas columnas_después
+           &lt;int&gt;                       &lt;int&gt;            &lt;int&gt;
+1             60                         192              252</code></pre>
+</div>
+</div>
+<p>De aquí en adelante, Ridge, LASSO y Elastic Net compiten contra exactamente esa matriz difícil — la misma que, sin penalizar, hizo subir el log-loss de validación en la curva de sobreajuste.</p>
+</section>
+<section id="qué-hacemos-y-qué-no-hacemos-en-cada-conjunto" class="slide level2">
+<h2>Qué hacemos —y qué no hacemos— en cada conjunto</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 5
+  conjunto      proporción función                                 primer_día último_día
+  &lt;chr&gt;         &lt;chr&gt;      &lt;chr&gt;                                        &lt;dbl&gt;      &lt;dbl&gt;
+1 Entrenamiento 60%        "estimar coeficientes y escalas"                 1        219
+2 Validación    20%        "elegir $\\alpha$, $\\lambda$ y umbral"        220        292
+3 Test          20%        "estimar desempeño final, una sola vez"        293        365</code></pre>
+</div>
+</div>
+<p>Este cuadro es el protocolo de toda la clase. Mirar <code>test</code> durante el <em>tuning</em> produce <strong>filtración de información</strong>. Ajustamos con el pasado, elegimos hiperparámetros y umbral en <code>valid</code>, y reservamos los últimos días para <code>test</code>: una partición aleatoria sería optimista si horas vecinas comparten patrones no observados.</p>
+</section></section>
+<section>
+<section id="ridge-en-glmnet" class="title-slide slide level1 inverse center middle" data-background-color="#1B4B5A">
+<h1>Ridge en <code>glmnet</code></h1>
+
+</section>
+<section id="glmnet-una-función-tres-penalizaciones" class="slide level2">
+<h2><code>glmnet</code>: una función, tres penalizaciones</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Argumento</th>
+<th>Qué controla</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>alpha</code></td>
+<td><code>0</code> = Ridge, <code>1</code> = LASSO, entre 0 y 1 = Elastic Net</td>
+</tr>
+<tr class="even">
+<td><code>lambda</code></td>
+<td>un valor o una secuencia — si se omite, <code>glmnet</code> calcula su propia ruta</td>
+</tr>
+<tr class="odd">
+<td><code>standardize</code></td>
+<td>estandariza <span class="math inline">X</span> antes de penalizar (por defecto <code>TRUE</code>, usando solo train)</td>
+</tr>
+<tr class="even">
+<td><code>family</code></td>
+<td><code>"binomial"</code> aquí, porque el outcome es 0/1</td>
+</tr>
+</tbody>
+</table>
+<p><code>glmnet</code> estandariza con media y desviación de <strong>entrenamiento únicamente</strong> — nunca de validación o test. La penalización opera sobre el tamaño <em>numérico</em> del coeficiente: sin estandarizar, castigaría por unidades (metros vs.&nbsp;kilómetros), no por importancia real.</p>
+</section>
+<section id="ajustando-ridge-la-ruta-completa-de-lambda" class="slide level2">
+<h2>Ajustando Ridge: la ruta completa de <span class="math inline">\lambda</span></h2>
+
+<img data-src="class_16_files/figure-revealjs/ridge-path-1.png" width="960" class="r-stretch"><p><code>alpha = 0</code> le dice a <code>glmnet</code> que use <span class="math inline">L_2</span> pura. <code>lambda_path</code> va de 100 (mucha penalización) a 0.001 (casi nada) — por eso <code>glmnet</code> recorre <span class="math inline">\lambda</span> de mayor a menor internamente. Nótese que <strong>ninguna</strong> curva toca exactamente 0: se acercan, pero Ridge nunca las anula del todo.</p>
+</section>
+<section id="interpretación-leer-la-trayectoria" class="slide level2">
+<h2>Interpretación: leer la trayectoria</h2>
+<ul>
+<li>Como el eje muestra <code>log(lambda)</code> y la secuencia va de mayor a menor, hacia la <strong>izquierda</strong> aumenta <span class="math inline">\lambda</span>; todos los coeficientes se contraen <strong>suavemente</strong>, sin saltos.</li>
+<li>Ninguna variable desaparece de forma abrupta — Ridge nunca las anula.</li>
+<li>Esta trayectoria muestra <strong>cómo cambia el modelo</strong> con <span class="math inline">\lambda</span>; todavía no nos dice cuál <span class="math inline">\lambda</span> predice mejor — eso lo resolvemos con validación, más adelante.</li>
+</ul>
+</section>
+<section id="cápsula-opcional-qué-hace-ridge-dirección-por-dirección" class="slide level2">
+<h2>Cápsula opcional: qué hace Ridge, dirección por dirección</h2>
+<p><strong>No necesitas esto para usar Ridge</strong> — es para quienes quieran ver <em>por qué</em> funciona. Con la descomposición <span class="math inline">X=UDV^\top</span> (columnas estandarizadas), las predicciones Ridge se contraen <strong>dirección por dirección</strong>:</p>
+<p><span class="math display">
+\widehat y=\sum_{j}u_j\,\frac{d_j^{2}}{d_j^{2}+\lambda}\,u_j^\top y.
+</span></p>
+
+<img data-src="class_16_files/figure-revealjs/svd-shrinkage-1.png" width="960" class="r-stretch"><p>Direcciones de <strong>poca varianza</strong> (colineales, como <code>temp</code><span class="math inline">\approx</span><code>atemp</code>) se contraen <strong>más</strong> — son justo las que producen coeficientes inestables. Ridge no las elimina; les quita influencia.</p>
+</section></section>
+<section>
+<section id="lasso-y-elastic-net-en-glmnet" class="title-slide slide level1 inverse center middle" data-background-color="#1B4B5A">
+<h1>LASSO y Elastic Net en <code>glmnet</code></h1>
+
+</section>
+<section id="ajustando-lasso-alpha-1" class="slide level2">
+<h2>Ajustando LASSO: <code>alpha = 1</code></h2>
+
+<img data-src="class_16_files/figure-revealjs/lasso-path-1.png" width="960" class="r-stretch"><p>Mismo código que Ridge, misma escala estandarizada, mismas cuatro variables — solo cambió <code>alpha</code>. Ahora sí se ve el contraste: cada curva <strong>toca exactamente 0 y se queda ahí</strong>, plana, en vez de solo acercarse.</p>
+</section>
+<section id="interpretación-a-diferencia-de-ridge" class="slide level2">
+<h2>Interpretación: a diferencia de Ridge</h2>
+<p>Con LASSO las cuatro variables entran en puntos distintos de <span class="math inline">\lambda</span> — no se contraen todas parejo. <code>cos(2*pi*month/12)</code> (estacionalidad) es la primera en aparecer; <code>factor(hr)14</code> (la hora 14) es la última, solo entra cuando <span class="math inline">\lambda</span> cae casi a su mínimo. Cada vez que una línea toca el cero y se queda ahí, esa variable fue <strong>excluida</strong> en ese nivel de penalización — eso es justamente lo que Ridge, en el gráfico anterior, nunca hace.</p>
+</section>
+<section id="qué-variables-llegan-a-cero-y-cuándo" class="slide level2">
+<h2>Qué variables llegan a cero (y cuándo)</h2>
+<p>El gráfico anterior solo muestra cuatro variables. <code>coef()</code> sobre varios <span class="math inline">\lambda</span> a la vez muestra las 252 — <code>glmnet</code> las imprime como <strong>matriz dispersa</strong>, con un punto (<code>.</code>) donde el coeficiente es <strong>exactamente 0</strong>:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>13 x 6 sparse Matrix of class "dgCMatrix"
+                        λ=100 λ=9.700 λ=0.940 λ=0.110  λ=0.010 λ=0.001
+(Intercept)              -1.100  -1.100   -1.100 -1.916 -3.075  -8.411
+temp                      .     .      .    0.864  3.691  16.768
+I(temp^2)                 .     .      .    1.201  .      -11.710
+factor(hr)8:workingday    .     .      .    .      4.698   9.239
+factor(hr)7:workingday    .     .      .    .      2.223   7.243
+factor(hr)10:workingday   .     .      .    .     -1.295  -5.166
+factor(hr)18:workingday   .     .      .    .      2.134   4.805
+factor(hr)11:workingday   .     .      .    .     -1.095  -4.379
+factor(hr)17              .     .      .    .      1.582   4.060
+factor(hr)14              .     .      .    .      0.356   3.940
+factor(hr)17:workingday   .     .      .    .      1.888   3.799
+factor(hr)13              .     .      .    .      0.115   3.790
+factor(hr)16              .     .      .    .      1.472   3.732</code></pre>
+</div>
+</div>
+<p>Mismo formato que imprime <code>cv.glmnet()</code> en la viñeta de <code>glmnet</code> (Hastie, Qian y Tay). Columnas = <span class="math inline">\lambda</span> decreciente, de izquierda a derecha. Con <span class="math inline">\lambda</span> grande casi todo es punto; a medida que <span class="math inline">\lambda</span> baja, las variables entran <strong>una por una</strong> — nunca todas a la vez. Ridge, con la misma tabla, no tendría un solo punto.</p>
+<p><code>glmnet</code> resuelve esto con <strong>descenso por coordenadas</strong>: fija todos los coeficientes menos uno, actualiza el restante, repite hasta converger — calculando toda la ruta de una vez con <em>warm starts</em>.</p>
+</section>
+<section id="elastic-net-cuando-hay-bloques-correlacionados" class="slide level2">
+<h2>Elastic Net: cuando hay bloques correlacionados</h2>
+<p>LASSO selecciona, pero con predictores muy correlacionados (<code>temp</code>, <code>atemp</code>, mes, estacionalidad) tiende a <strong>elegir uno arbitrariamente y descartar el resto</strong>. En <code>glmnet</code>, Elastic Net es solo otro valor de <code>alpha</code>:</p>
+<p>Con <code>temp</code> y <code>atemp</code>, Ridge (<code>alpha=0</code>) suele conservar ambas y repartir el peso; LASSO (<code>alpha=1</code>) puede quedarse con una de manera inestable; Elastic Net (<code>0&lt;alpha&lt;1</code>) puede conservar el bloque y encogerlo.</p>
+</section>
+<section id="otros-casos-de-uso" class="slide level2">
+<h2>Otros casos de uso</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Dominio</th>
+<th>Uso típico</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Genómica</td>
+<td>LASSO para seleccionar genes relevantes entre miles, con pocos pacientes</td>
+</tr>
+<tr class="even">
+<td>Finanzas</td>
+<td>Ridge para estabilizar modelos de riesgo con indicadores correlacionados</td>
+</tr>
+<tr class="odd">
+<td>Texto / NLP</td>
+<td>LASSO sobre miles de frecuencias de palabras, para quedarse con las predictivas</td>
+</tr>
+<tr class="even">
+<td>Marketing</td>
+<td>Elastic Net en modelos de <em>churn</em> con variables de comportamiento correlacionadas</td>
+</tr>
+</tbody>
+</table>
+</section></section>
+<section>
+<section id="validación-eligiendo-alpha-y-lambda" class="title-slide slide level1 inverse center middle" data-background-color="#1B4B5A">
+<h1>Validación: eligiendo <span class="math inline">\alpha</span> y <span class="math inline">\lambda</span></h1>
+
+</section>
+<section id="cápsula-opcional-validación-cruzada-dentro-de-train" class="slide level2">
+<h2>Cápsula opcional · validación cruzada dentro de <code>train</code></h2>
+<p>La <a href="https://hastie.su.domains/Papers/Glmnet_Vignette.pdf">viñeta de <code>glmnet</code></a> (Hastie, Qian y Tay) usa <code>cv.glmnet()</code>: divide <strong>solo <code>train</code></strong> en folds internos y entrega <code>lambda.min</code> (el <span class="math inline">\lambda</span> de menor error de validación cruzada) y <code>lambda.1se</code>, sin que el usuario escriba el <em>loop</em>:</p>
+<div class="callout callout-warning callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Warning</strong></p>
+</div>
+<div class="callout-content">
+<p>Esto es una comparación metodológica opcional. <strong>No reemplaza</strong> el bloque temporal <code>valid</code> que gobierna el resultado de esta clase y no se usa para abrir o elegir con <code>test</code>.</p>
+</div>
+</div>
+</div>
+<p>Esto es una <strong>alternativa</strong> al <code>validation set</code> temporal que usamos como protocolo principal. No es un cuarto conjunto ni se combina con <code>test</code>. Para comparar <span class="math inline">\alpha</span>, la viñeta usa el <strong>mismo</strong> <code>foldid</code> en todos los ajustes, para que la comparación sea justa — textual de la viñeta: <em>“Users can control the folds used… Here we use the same folds so we can also select a value for α.”</em> Por defecto <code>foldid</code> es aleatorio; con dependencia temporal eso es optimista (horas vecinas quedan en folds distintos). Usemos un bloque por <strong>semana</strong> en cambio, y corrámoslo de verdad:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 5
+  alpha lambda.min lambda.1se cv_deviance coeficientes_activos
+  &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;       &lt;dbl&gt;                &lt;int&gt;
+1  0      0.019      0.028        0.365                  252
+2  0.250   0.000    0.005       0.309                  213
+3  0.500    0.000    0.003       0.303                  187
+4  0.750   0.000    0.002       0.299                  166
+5  1      0.000    0.001       0.294                  147</code></pre>
+</div>
+</div>
+<p>Hasta con folds por semana, el <span class="math inline">\alpha</span> ganador aquí (LASSO puro, el más disperso) <strong>no coincide</strong> con el de nuestro <code>valid</code> temporal más adelante (Elastic Net). No es un error: son dos procedimientos de validación distintos. <span class="math inline">k</span>-fold —incluso por bloques— puede entrenar un fold con semanas <em>posteriores</em> a la que deja afuera; nuestro <code>valid</code> temporal jamás toca el futuro. Por eso el resultado que gobierna la decisión final será el del bloque <code>valid</code>, y dejamos <code>cv.glmnet()</code> como comparación didáctica.</p>
+</section>
+<section id="cápsula-opcional-lasso-relajado-relax-true" class="slide level2">
+<h2>Cápsula opcional: LASSO relajado (<code>relax = TRUE</code>)</h2>
+<p>La penalización de LASSO <strong>encoge</strong> incluso a las variables que deja activas — un costo del mismo mecanismo que selecciona. El LASSO relajado (viñeta <em>“The Relaxed Lasso”</em>) corrige esto: para cada <span class="math inline">\lambda</span>, reestima <strong>sin penalizar</strong> sobre las variables activas — la estimación sin restricción de la Parte 1, pero solo sobre lo que LASSO ya seleccionó.</p>
+<p><span class="math display">
+\tilde\eta_{\lambda,\gamma}=(1-\gamma)\,\tilde\eta_\lambda(x)+\gamma\,\widehat\eta_\lambda(x)
+</span></p>
+<p><span class="math inline">\gamma=1</span>: LASSO de siempre. <span class="math inline">\gamma=0</span>: MLE sin restricción, solo con las variables activas. <code>cv.glmnet(..., relax = TRUE)</code> elige <span class="math inline">\lambda</span> <strong>y</strong> <span class="math inline">\gamma</span> juntos (no lo corremos aquí: cada fold reestima un GLM completo por cada combinación — mucho más lento). Esta es, literalmente, la técnica detrás de estudios reales de movilidad social: LASSO relajado sobre un <code>mlogit</code> origen × destino × generación × país, para que el modelo elija qué interacciones importan sin pagar el sesgo de encogimiento en las que sí quedan.</p>
+</section>
+<section id="protocolo-de-tuning-lo-que-usamos-de-aquí-en-más" class="slide level2">
+<h2>Protocolo de tuning (lo que usamos de aquí en más)</h2>
+<p>Aquí retomamos el <strong>protocolo principal con el bloque temporal <code>valid</code></strong>. La cápsula anterior mostró una alternativa basada en folds internos dentro de <code>train</code>; no mezclamos sus ganadores con esta selección.</p>
 <ol type="1">
 <li>Definir una grilla de <span class="math inline">\alpha</span>.</li>
-<li>Ajustar una trayectoria de <span class="math inline">\lambda</span> en entrenamiento.</li>
-<li>Predecir validación para cada combinación.</li>
-<li>Elegir la menor pérdida de validación.</li>
+<li>Para cada <span class="math inline">\alpha</span>, ajustar <code>glmnet()</code> <strong>solo</strong> en entrenamiento — sin fijar <span class="math inline">\lambda</span> a mano, como recomienda la viñeta: <code>glmnet</code> calcula su propia ruta.</li>
+<li><code>predict()</code> esa ruta sobre <strong><code>valid</code></strong> y medir log-loss (equivalente a la devianza binomial que usa <code>cv.glmnet</code> internamente).</li>
+<li>Elegir la combinación <span class="math inline">(\alpha,\lambda)</span> de menor pérdida — nuestro análogo de <code>lambda.min</code>, pero sin folds.</li>
 <li>Reajustar con entrenamiento + validación.</li>
 <li>Evaluar una vez en test.</li>
 </ol>
-</section>
-<section id="validación-simple-vs.-validación-cruzada" class="slide level2">
-<h2>Validación simple vs.&nbsp;validación cruzada</h2>
-<p>La idea de fondo de cualquier validación: en vez de “memorizar una única prueba”, evaluar el modelo como si rindiera <strong>varios exámenes distintos</strong> y ver si el desempeño es consistente.</p>
-<p><span class="math display">
-\text{CV}(\lambda)=\frac{1}{k}\sum_{f=1}^{k}\text{pérdida}_f(\lambda).
-</span></p>
-
-<img data-src="https://media.geeksforgeeks.org/wp-content/uploads/20250927122541290704/222.webp" style="width:50.0%" class="r-stretch quarto-figure-center"><p class="caption">k-fold cross-validation: los datos se dividen en k bloques; en cada ronda uno actúa como validación y el resto como entrenamiento.</p><div class="footnote">
-<p>Fuente: <a href="https://www.geeksforgeeks.org/machine-learning/cross-validation-machine-learning/">GeeksforGeeks — Cross Validation in Machine Learning</a></p>
-</div>
-<p>Con dependencia temporal como la nuestra, la CV aleatoria de la figura es <strong>optimista</strong>: horas vecinas se filtran entre pliegues. Por eso usamos un conjunto de validación fijo, cronológico.</p>
-</section>
-<section id="validación-cronológica-rolling-origin" class="slide level2">
-<h2>Validación cronológica (“rolling-origin”)</h2>
-<p>El análogo correcto de k-fold cuando los datos son series de tiempo se llama <strong>validación cruzada de series de tiempo</strong> (<em>rolling-origin</em> / <em>walk-forward</em>): cada “pliegue” entrena solo con el pasado y valida con un bloque futuro, avanzando el origen de entrenamiento en cada ronda. Es la generalización, a <span class="math inline">k</span> rondas, de la partición cronológica única que usamos hoy.</p>
-<p>Otras alternativas para elegir <span class="math inline">\lambda</span> sin re-ajustar muchas veces: <strong>validación cruzada generalizada (GCV)</strong>, y criterios de información como AIC/BIC.</p>
 </section>
 <section id="validación-de-α-y-λ-ejemplo-empírico" class="slide level2">
 <h2>Validación de α y λ: ejemplo empírico</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 5 × 3
-  alpha  lambda  loss
-  &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;
-1     0 0.003   0.351
-2     0 0.004 0.351
-3     0 0.005 0.352
-4     0 0.006 0.352
-5     0 0.007 0.353</code></pre>
+<pre><code># A tibble: 10 × 3
+   alpha    lambda  loss
+   &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt;
+ 1   0.500 0.000 0.298
+ 2   0.500 0.000 0.298
+ 3   0.500 0.000 0.298
+ 4   0.500 0.000 0.298
+ 5   0.500 0.000 0.298
+ 6   0.500 0.000 0.298
+ 7   0.500 0.000 0.298
+ 8   0.500 0.000 0.298
+ 9   0.500 0.000 0.298
+10   0.500 0.000 0.298</code></pre>
 </div>
 </div>
 
-<img data-src="class_16_files/figure-revealjs/validation-plot-1.png" width="960" class="r-stretch"></section>
-<section id="reajuste-final-y-test-ejemplo-empírico" class="slide level2">
-<h2>Reajuste final y test: ejemplo empírico</h2>
+<img data-src="class_16_files/figure-revealjs/validacion-temporal-plot-1.png" width="960" class="r-stretch"></section>
+<section id="reajuste-final-y-test" class="slide level2">
+<h2>Reajuste final y test</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1 × 3
-  alpha lambda validation_log_loss
-  &lt;dbl&gt;  &lt;dbl&gt;               &lt;dbl&gt;
-1     0  0.003               0.351</code></pre>
+  alpha    lambda valid_log_loss
+  &lt;dbl&gt;     &lt;dbl&gt;          &lt;dbl&gt;
+1   0.500 0.000          0.298</code></pre>
 </div>
 </div>
-<p>El umbral se elige en validación minimizando el mismo costo de la clase 15: un falso negativo cuesta tres veces un falso positivo. El test no participó en ninguna de estas decisiones.</p>
+<p>El umbral se elige en <strong><code>valid</code></strong>, minimizando el costo asumido: un falso negativo cuesta tres veces un falso positivo. La secuencia completa: (1) ajustar candidatos en <code>train</code>; (2) elegir <span class="math inline">\alpha,\lambda</span> con log-loss en <code>valid</code>; (3) elegir el umbral con costos en <code>valid</code>; (4) reajustar con <code>train + valid</code>; (5) evaluar <code>test</code> una sola vez.</p>
 </section>
 <section id="interpretación-la-penalización-aporta" class="slide level2">
 <h2>Interpretación: ¿la penalización aporta?</h2>
@@ -782,97 +1069,52 @@ P_{\alpha}(\boldsymbol\beta)=
 <pre><code># A tibble: 2 × 7
   modelo              log_loss accuracy sensitivity specificity precision cost_per_100
   &lt;chr&gt;                  &lt;dbl&gt;    &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;     &lt;dbl&gt;        &lt;dbl&gt;
-1 Logit sin penalizar    0.323    0.822       0.937       0.781     0.605         21.100
-2 Ridge                  0.306    0.747       0.991       0.659     0.510         25.800</code></pre>
+1 Logit sin penalizar    3.330     0.819       0.401       0.969     0.822         49.700
+2 Elastic Net            0.286    0.858       0.909       0.839     0.669         19.100</code></pre>
 </div>
 </div>
-<p>La penalización se juzga contra el logit sin penalizar bajo el mismo protocolo. Puede mejorar log-loss o estabilidad sin reducir el costo operacional; en ese caso, la solicitud predictiva —no la novedad del método— decide cuál preferir.</p>
-</section>
-<section id="interpretación-clasificación-y-calibración" class="slide level2">
-<h2>Interpretación: clasificación y calibración</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>         predicho
-observado baja alta
-     baja  848  439
-     alta    4  457</code></pre>
-</div>
-</div>
-
-<img data-src="class_16_files/figure-revealjs/calibration-1.png" width="960" class="r-stretch"><p>Los falsos negativos son horas de demanda alta que el sistema no anticipó. Discriminación (matriz de confusión) y calibración (¿las probabilidades predichas se cumplen en la frecuencia correcta?) son propiedades distintas — un modelo puede discriminar bien y calibrar mal, o viceversa.</p>
-</section>
-<section id="una-predicción-regularizada-de-punta-a-punta" class="slide level2">
-<h2>Una predicción regularizada, de punta a punta</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 10
-    día  hora temperatura alpha lambda probabilidad umbral acción    demanda_observada clase_observada
-  &lt;dbl&gt; &lt;int&gt;       &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;        &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;                 &lt;dbl&gt; &lt;chr&gt;          
-1   354     8        0.420     0  0.003        0.997    0.100 priorizar               432 alta           </code></pre>
-</div>
-</div>
-<p>La regularización modifica cómo se estiman los coeficientes; la interfaz operacional sigue siendo la misma: fila futura → probabilidad → umbral → acción.</p>
+<p><strong>Este es el primer momento en que abrimos <code>test</code>.</strong> La elección de <span class="math inline">\alpha</span>, <span class="math inline">\lambda</span> y del umbral ya ocurrió usando <code>train</code> y <code>valid</code>; aquí solo describimos el desempeño final.</p>
+<p>Con 252 columnas, la diferencia ya no es sutil: el logit sin penalizar memoriza combinaciones hora×mes con pocas observaciones (igual que en la curva de sobreajuste) y su log-loss de <code>test</code> se dispara. El modelo penalizado generaliza mucho mejor con <strong>el mismo set de variables disponibles</strong> — la única diferencia es <span class="math inline">\lambda P_\alpha(\boldsymbol\beta)</span>.</p>
+<p>El bloque temporal <code>valid</code> suele elegir <strong>Elastic Net</strong> aquí, no LASSO puro: con 192 columnas hora×mes correlacionadas entre sí (horas vecinas, meses vecinos), es exactamente el escenario de bloques correlacionados que motivó Elastic Net en la Parte 1. LASSO puro también mejora mucho sobre el logit sin penalizar, pero le va algo peor que a Elastic Net porque tiene que “elegir” arbitrariamente entre columnas casi redundantes.</p>
 </section>
 <section id="interpretación-qué-variables-quedan" class="slide level2">
 <h2>Interpretación: ¿qué variables quedan?</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 10 × 3
-   variable                coefficient selected
-   &lt;chr&gt;                         &lt;dbl&gt; &lt;lgl&gt;   
- 1 factor(hr)8:workingday         8.590 TRUE    
- 2 factor(hr)7:workingday         5.650 TRUE    
- 3 factor(hr)10:workingday       -4.550 TRUE    
- 4 factor(hr)16                   4.120 TRUE    
- 5 factor(hr)14                   4.090 TRUE    
- 6 atemp                          4.010 TRUE    
- 7 factor(hr)17                   3.990 TRUE    
- 8 factor(hr)11:workingday       -3.860 TRUE    
- 9 factor(hr)13                   3.760 TRUE    
-10 factor(hr)12                   3.730 TRUE    </code></pre>
+<pre><code># A tibble: 1 × 3
+  coeficientes_totales coeficientes_en_cero coeficientes_activos
+                 &lt;int&gt;                &lt;int&gt;                &lt;int&gt;
+1                  252                   53                  199</code></pre>
 </div>
 </div>
-<p>Un coeficiente igual a cero no demuestra irrelevancia sustantiva: solo dice que, bajo esta penalización y esta muestra, esa variable no ayudó a predecir. La selección puede cambiar entre muestras parecidas — no es una prueba de hipótesis.</p>
-</section>
-<section id="comparación-con-selección-clásica" class="slide level2">
-<h2>Comparación con selección clásica</h2>
-<table class="caption-top">
-<colgroup>
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Método</th>
-<th>Controla complejidad</th>
-<th>Selección</th>
-<th>Nota</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Mejor subconjunto</td>
-<td>prueba todas las combinaciones</td>
-<td>dura (0/1)</td>
-<td>inviable con <span class="math inline">p</span> grande</td>
-</tr>
-<tr class="even">
-<td>Paso a paso (stepwise)</td>
-<td>agrega/quita una variable a la vez</td>
-<td>dura</td>
-<td><em>greedy</em>, inestable</td>
-</tr>
-<tr class="odd">
-<td>Ridge / LASSO / Elastic Net</td>
-<td>penalización continua</td>
-<td>según método</td>
-<td>convexo, reproducible</td>
-</tr>
-</tbody>
-</table>
-<p>La regularización reemplaza la selección <strong>discreta</strong> (combinatoria, inestable, la que un GLM clásico haría “a mano” comparando AIC entre modelos) por una <strong>continua</strong> — el mismo objetivo del stepwise selection de la clase 15, resuelto de forma más estable.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 20 × 3
+   variable                    coefficient selected
+   &lt;chr&gt;                             &lt;dbl&gt; &lt;lgl&gt;   
+ 1 temp                              37.000  TRUE    
+ 2 I(temp^2)                        -31.400  TRUE    
+ 3 factor(hr)7:workingday            11.700  TRUE    
+ 4 factor(hr)8:workingday            10.700  TRUE    
+ 5 factor(hr)10:workingday          -10.600  TRUE    
+ 6 factor(hr)16                       9.090 TRUE    
+ 7 factor(hr)12                       7.910 TRUE    
+ 8 factor(hr)10                       7.830 TRUE    
+ 9 factor(hr)14                       7.610 TRUE    
+10 factor(hr)15                       7.370 TRUE    
+11 factor(hr)11                       7.300 TRUE    
+12 I(hum^2)                          -6.990 TRUE    
+13 factor(hr)13                       6.950 TRUE    
+14 factor(hr)19:factor(month)2       -6.380 TRUE    
+15 factor(hr)11:workingday           -6.320 TRUE    
+16 factor(hr)10:factor(month)3       -6.240 TRUE    
+17 factor(hr)19                       6.140 TRUE    
+18 factor(hr)17:factor(month)6        6.020 TRUE    
+19 factor(hr)12:factor(month)2       -5.800 TRUE    
+20 factor(hr)17                       5.690 TRUE    </code></pre>
+</div>
+</div>
+<p>De los 252.000 coeficientes, 53.000 quedaron en <strong>exactamente cero</strong> — en su mayoría, columnas hora×mes con poca evidencia. Un coeficiente igual a cero no demuestra irrelevancia sustantiva: solo dice que, bajo esta penalización y esta muestra, esa variable no ayudó a predecir. <code>glmnet</code> devuelve los coeficientes ya retransformados a las unidades originales.</p>
 </section>
 <section id="cuándo-puede-engañar" class="slide level2">
 <h2>Cuándo puede engañar</h2>
@@ -881,47 +1123,36 @@ observado baja alta
 <li><strong>Inferencia post-selección</strong>: los <span class="math inline">p</span>-valores clásicos no son válidos tras seleccionar con los mismos datos que se usan para inferencia.</li>
 <li><strong><span class="math inline">p\gg n</span></strong>: LASSO selecciona a lo sumo <span class="math inline">n</span> variables, aunque más sean relevantes.</li>
 <li><strong>Escalas ignoradas</strong>: sin estandarizar, la penalización castiga por unidades, no por importancia.</li>
-<li><strong>Fuga de información</strong>: estandarizar o elegir <span class="math inline">\lambda</span> mirando el test infla el desempeño reportado.</li>
+<li><strong>Fuga de información</strong>: elegir <span class="math inline">\lambda</span> mirando el test infla el desempeño reportado.</li>
 </ul>
-</section>
-<section id="síntesis-conceptual" class="slide level2">
-<h2>Síntesis conceptual</h2>
-<p>La regularización es una respuesta directa al compromiso sesgo–varianza con el que abrimos la clase: introducimos un sesgo controlado (<span class="math inline">\lambda P_\alpha</span>) a cambio de mucha menos varianza y un ajuste reproducible.</p>
-<ul>
-<li><strong>Ridge</strong> (<span class="math inline">L_2</span>): estabiliza, no selecciona; resuelve la colinealidad.</li>
-<li><strong>LASSO</strong> (<span class="math inline">L_1</span>): contrae y selecciona vía soft-thresholding.</li>
-<li><strong>Elastic Net</strong>: combina ambos cuando hay bloques correlacionados.</li>
-</ul>
-<p>Todo el resto del flujo —partición, estandarización, test intacto, calibración— existe para que ese compromiso se resuelva <strong>honestamente</strong>, sin volver a caer en la curva de sobreajuste del comienzo.</p>
 </section>
 <section id="ejercicio" class="slide level2">
 <h2>Ejercicio</h2>
 <ol type="1">
-<li>Agregue una interacción entre <code>workingday</code> y <code>factor(hr)</code>.</li>
-<li>Repita el tuning sin observar el test.</li>
-<li>Compare log-loss, costo y calibración contra el modelo de esta clase.</li>
-<li>Examine qué coeficientes sobreviven con LASSO.</li>
-<li>Cambie el costo falso negativo:falso positivo de 3:1 a 5:1.</li>
+<li>Construya una nueva matriz de diseño agregando <code>factor(weathersit):workingday</code>; use <code>model.matrix</code> con la fórmula completa antes de crear <code>x_train</code>, <code>x_valid</code> y <code>x_test</code>.</li>
+<li>Repita el tuning de <span class="math inline">\alpha</span> y <span class="math inline">\lambda</span> sin observar el test.</li>
+<li>Elija el umbral operativo en validación usando <span class="math inline">C_{FN}=3</span> y <span class="math inline">C_{FP}=1</span>.</li>
+<li>Compare en test log-loss, costo, sensibilidad y calibración contra el modelo de esta clase.</li>
+<li>Cambie <code>false_negative_cost &lt;- 5</code> y repita <strong>solo</strong> <code>threshold_choice</code>; no reajuste <span class="math inline">\alpha</span>, <span class="math inline">\lambda</span> ni el modelo.</li>
+<li>Ajuste un LASSO separado (<code>alpha = 1</code>) y elija su propio <span class="math inline">\lambda</span> con validación; reporte qué coeficientes quedan no nulos.</li>
 <li>Explique por qué una mejora predictiva no basta para hablar de causalidad.</li>
 </ol>
 </section>
-<section id="la-pregunta-que-queda-abierta" class="slide level2">
-<h2>La pregunta que queda abierta</h2>
+<section id="qué-queda-sin-resolver" class="slide level2">
+<h2>Qué queda sin resolver</h2>
 <p>Regularización controla la complejidad de un modelo cuya <strong>forma</strong> seguimos eligiendo nosotros: seguimos escribiendo a mano <code>I(temp^2)</code>, <code>factor(hr) * workingday</code>, y esperando haber adivinado las interacciones correctas.</p>
 <div class="fragment">
-<p><strong>¿Qué pasa si no sabemos qué interacciones importan?</strong> ¿Puede el algoritmo, además de controlar cuánta complejidad usar, <strong>descubrir por sí solo</strong> qué variables interactúan y cómo? Esa es exactamente la pregunta que abre la próxima clase.</p>
-<p>Seguimos usando bicicletas como único caso — pero el mismo procedimiento (penalizar, validar sin mirar el test, elegir hiperparámetros honestamente) es exactamente el que corre detrás de un puntaje de crédito o un score de riesgo: la disciplina que practicamos aquí es la misma que se exige cuando el error afecta a una persona, no a una bicicleta.</p>
+<p><strong>¿Qué pasa si no sabemos qué interacciones importan?</strong> ¿Puede el algoritmo, además de controlar cuánta complejidad usar, descubrir por sí solo qué variables interactúan y cómo? Esa es la pregunta que exploran los árboles de decisión, más adelante en el curso.</p>
 </div>
 </section>
 <section id="en-resumen" class="slide level2">
 <h2>En resumen</h2>
 <ul>
-<li>Un modelo demasiado flexible ajusta mejor el entrenamiento pero predice peor datos nuevos: sesgo-varianza.</li>
-<li>Ridge estabiliza modelos con predictores correlacionados, sin seleccionar.</li>
-<li>LASSO favorece parsimonia y selección vía soft-thresholding.</li>
-<li>Elastic Net ofrece un continuo entre ambos cuando hay bloques correlacionados.</li>
+<li><strong>Parte 1 (ISLR cap. 6):</strong> mínimos cuadrados falla con muchos predictores o predictores correlacionados; subset selection es discreto e inviable; Ridge y LASSO lo resuelven con una penalización continua.</li>
+<li><strong>Ridge</strong> (<span class="math inline">L_2</span>): estabiliza, no selecciona. <strong>LASSO</strong> (<span class="math inline">L_1</span>): contrae y selecciona vía soft-thresholding. <strong>Elastic Net</strong>: combina ambos.</li>
 <li><span class="math inline">\alpha</span> y <span class="math inline">\lambda</span> se eligen con validación, nunca maximizando el ajuste en entrenamiento.</li>
-<li>La forma funcional del modelo, sin embargo, la seguimos eligiendo nosotros — eso cambia en la próxima clase.</li>
+<li><strong>Parte 2:</strong> mismo procedimiento, aplicado exclusivamente con <code>glmnet</code> a <code>Bikeshare</code>.</li>
+<li>La forma funcional del modelo, sin embargo, la seguimos eligiendo nosotros — eso cambia cuando lleguemos a los árboles de decisión.</li>
 </ul>
 </section>
 <section id="gracias" class="slide level2 inverse center middle closing" data-background-color="#E87500">

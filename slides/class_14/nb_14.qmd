@@ -101,8 +101,8 @@ flexible_formula <- bikers ~
 ## 4. ¿Qué regla ajusta mejor en los mismos datos que se usaron para estimar?
 
 ```{r aic-bic-demo, echo=TRUE}
-m_simple <- lm(simple_formula, data = bikedata)
-m_flexible <- lm(flexible_formula, data = bikedata)
+m_simple <- lm(simple_formula, data = bikedata); summary(m_simple)
+m_flexible <- lm(flexible_formula, data = bikedata) ; summary(m_flexible)
 
 tibble(
   modelo = c("Simple", "Flexible"),

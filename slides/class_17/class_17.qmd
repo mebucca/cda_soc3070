@@ -48,7 +48,7 @@ course_palette <- course$palette
 ::: {.content-box}
 **Antes**
 
-regularización y selección de hiperparámetros.
+Ridge, LASSO y Elastic Net: controlar cuánta complejidad usar.
 :::
 
 ::: {.content-box-primary}
@@ -148,7 +148,7 @@ Referencia principal: James et al. (2021), *An Introduction to Statistical Learn
 
 > **Al cierre de cada día, estimar qué horas del día siguiente tendrán demanda alta, para priorizar el rebalanceo de bicicletas.**
 
-Mantenemos unidad, horizonte, predictores disponibles, partición temporal y costo 3:1 de las clases 15–16. Así, cualquier diferencia en desempeño proviene del modelo y no de haber cambiado la pregunta.
+Mantenemos unidad, horizonte, predictores disponibles, partición temporal y costo 3:1 de la clase 16. Así, cualquier diferencia en desempeño proviene del modelo y no de haber cambiado la pregunta.
 
 Hoy preguntamos si reglas aprendidas de los datos pueden capturar picos, umbrales e interacciones sin escribir `I(temp^2)` o `factor(hr) * workingday` a mano.
 
