@@ -48,7 +48,7 @@ Clases los días Lunes, bloques 12:20-13:30 (B1) y 14:50-16:00 (B2). Calendario 
 | Día | Mes     | Bloque | Contenido                                                        | Material |
 |-----|---------|--------|---------------------------------------------------------------------|----------|
 | 19  | Octubre | B1     | Causalidad y Asociación                                          | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_13/class_13#0) [`[Code]`](slides/class_13/class_13.qmd) |
-| 19  | Octubre | B2     | Predicción (trade-off sesgo-varianza, overfitting, cross-validation) | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_14/class_14#0) [`[Code]`](slides/class_14/class_14.qmd) |
+| 19  | Octubre | B2     | Predicción (trade-off sesgo-varianza, overfitting, cross-validation) | [`[Pres]`](https://mebucca.github.io/cda_soc3070/slides/class_14/class_14#0) [`[Code]`](slides/class_14/class_14.qmd) [`[Notebook]`](https://mebucca.github.io/cda_soc3070/slides/class_14/nb_14#0)|
 
 ### Modelos para datos categóricos — uso predictivo
 
